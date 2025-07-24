@@ -1,12 +1,13 @@
 package com.andriybobchuk.mooney.mooney.domain.usecase
 
+import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Currency
-import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
 
-class CurrencyManagerUseCase(
-    private val exchangeRates: ExchangeRates,
-    private val baseCurrency: Currency
-) {
+class CurrencyManagerUseCase {
+    val exchangeRates = GlobalConfig.testExchangeRates
+    val baseCurrency = GlobalConfig.baseCurrency
+
+
     private val availableCurrencies = exchangeRates.rates.keys.toList()
     private var selectedCurrencyIndex = 0
     private var selectedCurrency = baseCurrency

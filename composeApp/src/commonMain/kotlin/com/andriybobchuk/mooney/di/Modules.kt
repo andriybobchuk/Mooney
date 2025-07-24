@@ -16,6 +16,8 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import com.andriybobchuk.mooney.mooney.data.GlobalConfig
+import com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase
 
 expect val platformModule: Module
 
@@ -40,6 +42,12 @@ val sharedModule = module {
     singleOf(::DeleteAccountUseCase)
     singleOf(::GetAccountsUseCase)
     singleOf(::CalculateMonthlyAnalyticsUseCase)
+    singleOf(::CalculateTransactionTotalUseCase)
+    singleOf(::CalculateNetWorthUseCase)
+    singleOf(::GetCategoriesUseCase)
+    singleOf(::ConvertAccountsToUiUseCase)
+    singleOf(::CurrencyManagerUseCase)
+
 
     viewModelOf(::AccountViewModel)
     viewModelOf(::TransactionViewModel)

@@ -1,5 +1,6 @@
 package com.andriybobchuk.mooney.mooney.domain.usecase
 
+import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
@@ -11,8 +12,9 @@ import kotlinx.datetime.LocalDate
 
 class CalculateMonthlyAnalyticsUseCase(
     private val getTransactionsUseCase: GetTransactionsUseCase,
-    private val exchangeRates: ExchangeRates
 ) {
+    val exchangeRates = GlobalConfig.testExchangeRates
+
     suspend operator fun invoke(
         startDate: LocalDate,
         endDate: LocalDate,

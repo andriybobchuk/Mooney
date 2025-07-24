@@ -1,13 +1,13 @@
 package com.andriybobchuk.mooney.mooney.domain.usecase
 
+import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
 import com.andriybobchuk.mooney.mooney.domain.Transaction
 
-class CalculateTransactionTotalUseCase(
-    private val exchangeRates: ExchangeRates
-) {
+class CalculateTransactionTotalUseCase {
+    val exchangeRates = GlobalConfig.testExchangeRates
     data class TotalResult(
         val total: Double,
         val currency: Currency

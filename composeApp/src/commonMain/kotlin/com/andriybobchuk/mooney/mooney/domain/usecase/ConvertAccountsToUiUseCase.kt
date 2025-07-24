@@ -1,14 +1,15 @@
 package com.andriybobchuk.mooney.mooney.domain.usecase
 
+import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
 import com.andriybobchuk.mooney.mooney.presentation.account.UiAccount
 
-class ConvertAccountsToUiUseCase(
-    private val exchangeRates: ExchangeRates,
-    private val baseCurrency: Currency
-) {
+class ConvertAccountsToUiUseCase {
+    val exchangeRates = GlobalConfig.testExchangeRates
+    val baseCurrency = GlobalConfig.baseCurrency
+
     operator fun invoke(accounts: List<Account?>): List<UiAccount?> {
         return accounts.map { account ->
             if (account?.currency == baseCurrency) {

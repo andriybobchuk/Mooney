@@ -48,6 +48,7 @@ class TransactionViewModel(
     private val getAccountsUseCase: GetAccountsUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val calculateTransactionTotalUseCase: CalculateTransactionTotalUseCase,
+    private val calculateDailyTotalUseCase: CalculateDailyTotalUseCase,
     private val convertAccountsToUiUseCase: ConvertAccountsToUiUseCase,
     private val currencyManagerUseCase: CurrencyManagerUseCase
 ) : ViewModel() {
@@ -150,5 +151,10 @@ class TransactionViewModel(
             observeTransactions(_uiState.value.selectedMonth)
             loadTotal()
         }
+    }
+
+    fun getDailyTotal(date: kotlinx.datetime.LocalDate): Double {
+        val allTransactions = _uiState.value.transactions.filterNotNull()
+        return calculateDailyTotalUseCase(allTransactions, date)
     }
 }

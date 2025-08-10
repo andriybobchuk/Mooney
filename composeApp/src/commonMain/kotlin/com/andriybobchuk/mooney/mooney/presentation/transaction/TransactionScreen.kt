@@ -57,6 +57,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.presentation.Toolbars
+import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
@@ -125,7 +126,8 @@ fun TransactionsScreen(
                     transactionToEdit = it
                     isBottomSheetOpen = true
                 },
-                onDelete = viewModel::deleteTransaction
+                onDelete = viewModel::deleteTransaction,
+                onDailyTotal = viewModel::getDailyTotal
             )
 
             if (isBottomSheetOpen) {
@@ -168,7 +170,8 @@ fun TransactionsScreenContent(
     currency: Currency,
     onCurrencyClick: () -> Unit,
     onEdit: (Transaction) -> Unit,
-    onDelete: (Int) -> Unit
+    onDelete: (Int) -> Unit,
+    onDailyTotal: (LocalDate) -> Double = { 0.0 }
 ) {
     // Group and sort transactions by date (descending)
     val grouped = transactions.filterNotNull().groupBy { it.date }
@@ -214,15 +217,15 @@ fun TransactionsScreenContent(
                     stickyHeader {
                         Row(
                             modifier = Modifier
-                                //.fillMaxWidth()
-                                .wrapContentWidth()
+                                .fillMaxWidth()
                                 .padding(vertical = 6.dp, horizontal = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
+                            // Day pill on the left
                             Text(
                                 text = date.formatForDisplay(),
                                 modifier = Modifier
-                                    //  .weight(1f)
                                     .background(
                                         color = Color.White.copy(.9f),
                                         shape = RoundedCornerShape(12.dp)
@@ -233,20 +236,24 @@ fun TransactionsScreenContent(
                                 color = Color.DarkGray,
                                 textAlign = TextAlign.Start
                             )
-//                            Text(
-//                                text = date.formatForDisplay(),
-//                                modifier = Modifier
-//                                    .weight(1f)
-//                                    .background(
-//                                        color = Color.White.copy(.9f),
-//                                        shape = RoundedCornerShape(12.dp)
-//                                    )
-//                                    .padding(vertical = 4.dp, horizontal = 12.dp),
-//                                fontWeight = FontWeight.SemiBold,
-//                                fontSize = 14.sp,
-//                                color = Color.DarkGray,
-//                                textAlign = TextAlign.End
-//                            )
+                            
+                            // Daily total pill on the right
+                            val dailyTotal = onDailyTotal(date)
+                            if (dailyTotal > 0) {
+                                Text(
+                                    text = "${dailyTotal.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
+                                    modifier = Modifier
+                                        .background(
+                                            color = Color(0xFFE3F2FD),
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                        .padding(vertical = 4.dp, horizontal = 12.dp),
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF1976D2),
+                                    textAlign = TextAlign.End
+                                )
+                            }
                         }
 
                     }

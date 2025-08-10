@@ -83,12 +83,14 @@ object CategoryDataSource {
         Category("transport", "Local Transport", CategoryType.EXPENSE, parent = travelling),
         Category("flights", "Flights", CategoryType.EXPENSE, parent = travelling),
         Category("food_drinks", "Food & Drinks", CategoryType.EXPENSE, parent = travelling),
-        Category("restaurants", "Restaurants", CategoryType.EXPENSE, parent = travelling),
-        Category("groceries", "Groceries", CategoryType.EXPENSE, parent = travelling),
+        Category("travelling_groceries", "Groceries", CategoryType.EXPENSE, parent = travelling),
         Category("activities", "Activities", CategoryType.EXPENSE, parent = travelling),
         Category("tickets", "Attractions & Tickets", CategoryType.EXPENSE, parent = travelling),
         Category("souvenirs", "Souvenirs", CategoryType.EXPENSE, parent = travelling),
         Category("shopping", "Shopping", CategoryType.EXPENSE, parent = travelling),
+        Category("luggage", "Luggage", CategoryType.EXPENSE, parent = travelling),
+        Category("airbnb_rent", "Accommodation", CategoryType
+            .EXPENSE, parent = travelling),
     )
 
     val barber = Category("barber", "Barber", CategoryType.EXPENSE, emoji = "💈", parent = expense)

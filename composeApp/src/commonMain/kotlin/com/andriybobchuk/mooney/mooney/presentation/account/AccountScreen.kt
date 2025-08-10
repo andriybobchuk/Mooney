@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
@@ -26,6 +27,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -44,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.andriybobchuk.mooney.core.presentation.theme.appColors
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -52,11 +55,14 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.presentation.Toolbars
+import com.andriybobchuk.mooney.core.presentation.theme.ThemeManager
+import com.andriybobchuk.mooney.core.presentation.theme.ThemeMode
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.presentation.formatWithCommas
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +74,9 @@ fun AccountScreen(
     val state by viewModel.state.collectAsState()
     val accounts = state.accounts
     val totalNetWorth = state.totalNetWorth
+    
+    val themeManager: ThemeManager = koinInject()
+    val themeMode by themeManager.themeMode.collectAsState()
 
     // Sheet
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -77,11 +86,18 @@ fun AccountScreen(
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
-        modifier = Modifier.background(Color(0xFF3E4DBA)),
+        modifier = Modifier.background(MaterialTheme.colorScheme.primary),
         topBar = {
             Toolbars.Primary(
                 title = "Accounts",
-                scrollBehavior = scrollBehavior
+                scrollBehavior = scrollBehavior,
+                actions = listOf(
+                    Toolbars.ToolBarAction(
+                        icon = Icons.Default.Settings,
+                        contentDescription = "Toggle Theme",
+                        onClick = { viewModel.toggleTheme() }
+                    )
+                )
             )
         },
         bottomBar = {
@@ -93,8 +109,8 @@ fun AccountScreen(
                 content = {
                     Icon(Icons.Default.Add, contentDescription = "Add")
                 },
-                contentColor = Color.White,
-                containerColor = Color(0xFF3E4DBA)
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                containerColor = MaterialTheme.colorScheme.primary
             )
         },
         content = { paddingValues ->
@@ -118,7 +134,7 @@ fun AccountScreen(
                         editingAccount = null
                     },
                     sheetState = sheetState,
-                    containerColor = Color(0xFFF8F9FF)
+                    containerColor = MaterialTheme.appColors.cardBackground
                 ) {
                     AccountSheet(
                         editingAccount = editingAccount,
@@ -147,7 +163,7 @@ private fun AccountScreenContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF3E4DBA))
+            .background(MaterialTheme.colorScheme.primary)
     ) {
         Header(totalNetWorth, totalNetWorthCurrency, onTotalNetWorthClick)
         AccountsColumn(
@@ -237,7 +253,7 @@ private fun AccountCard(
     ) {
         Row(
             modifier = Modifier
-                .background(Color(0xFFF8F9FF))
+                .background(MaterialTheme.appColors.cardBackground)
                 .padding(18.dp)
         ) {
             Column {

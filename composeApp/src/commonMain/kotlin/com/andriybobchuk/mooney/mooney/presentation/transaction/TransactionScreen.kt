@@ -57,6 +57,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.presentation.Toolbars
+import com.andriybobchuk.mooney.core.presentation.theme.appColors
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.Category
@@ -93,7 +94,7 @@ fun TransactionsScreen(
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
-        modifier = Modifier.background(Color(0xFF3E4DBA)),
+        modifier = Modifier.background(MaterialTheme.colorScheme.primary),
         topBar = {
             Toolbars.Primary(
                 title = "Transactions",
@@ -111,8 +112,8 @@ fun TransactionsScreen(
             FloatingActionButton(
                 onClick = { isBottomSheetOpen = true },
                 content = { Icon(Icons.Default.Add, contentDescription = "Add") },
-                contentColor = Color.White,
-                containerColor = Color(0xFF3E4DBA)
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                containerColor = MaterialTheme.colorScheme.primary
             )
         },
         content = { paddingValues ->
@@ -180,7 +181,7 @@ fun TransactionsScreenContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF3E4DBA))
+            .background(MaterialTheme.colorScheme.primary)
     ) {
         Column(
             modifier = Modifier
@@ -192,7 +193,7 @@ fun TransactionsScreenContent(
                 text = "${total.formatWithCommas()} ${currency.symbol}",
                 modifier = Modifier.clickable { onCurrencyClick() },
                 style = MaterialTheme.typography.headlineLarge.copy(
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 28.sp
                 )
@@ -201,7 +202,7 @@ fun TransactionsScreenContent(
                 "Spent this month",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontSize = 16.sp,
-                    color = Color.White.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
                 )
             )
         }
@@ -210,7 +211,7 @@ fun TransactionsScreenContent(
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                .background(Color.White),
+                .background(MaterialTheme.colorScheme.background),
         ) {
             LazyColumn {
                 sortedGroups.forEach { (date, txList) ->
@@ -227,13 +228,13 @@ fun TransactionsScreenContent(
                                 text = date.formatForDisplay(),
                                 modifier = Modifier
                                     .background(
-                                        color = Color.White.copy(.9f),
+                                        color = MaterialTheme.appColors.pillBackground,
                                         shape = RoundedCornerShape(12.dp)
                                     )
                                     .padding(vertical = 4.dp, horizontal = 12.dp),
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 14.sp,
-                                color = Color.DarkGray,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Start
                             )
                             
@@ -244,13 +245,13 @@ fun TransactionsScreenContent(
                                     text = "${dailyTotal.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
                                     modifier = Modifier
                                         .background(
-                                            color = Color(0xFFE3F2FD),
+                                            color = MaterialTheme.appColors.pillBackgroundSecondary,
                                             shape = RoundedCornerShape(12.dp)
                                         )
                                         .padding(vertical = 4.dp, horizontal = 12.dp),
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 12.sp,
-                                    color = Color(0xFF1976D2),
+                                    color = MaterialTheme.colorScheme.secondary,
                                     textAlign = TextAlign.End
                                 )
                             }
@@ -307,7 +308,7 @@ fun TransactionItem(transaction: Transaction) {
             modifier = Modifier
                 .size(52.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFFF8F9FF)),
+                .background(MaterialTheme.appColors.transactionIcon),
             contentAlignment = Alignment.Center
         ) {
             Text(transaction.subcategory.resolveEmoji(), fontSize = 25.sp)
@@ -323,7 +324,7 @@ fun TransactionItem(transaction: Transaction) {
             if (transaction.subcategory.isSubCategory()) {
                 Text(
                     transaction.subcategory.parent?.title ?: "???",
-                    style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
+                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                 )
             }
         }
@@ -332,11 +333,11 @@ fun TransactionItem(transaction: Transaction) {
             Text(
                 "${transaction.amount.formatWithCommas()} ${transaction.account.currency.symbol}",
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                color = if (transaction.subcategory.type == CategoryType.INCOME) Color(0xFF409261) else Color.DarkGray
+                color = if (transaction.subcategory.type == CategoryType.INCOME) MaterialTheme.appColors.incomeColor else MaterialTheme.appColors.expenseColor
             )
             Text(
                 transaction.account.title,
-                style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
+                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
             )
 //            if (transaction.exchangeRate != null) {
 //                Text(

@@ -2,6 +2,7 @@ package com.andriybobchuk.mooney.app
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemColors
@@ -22,7 +23,7 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
     )
 
     NavigationBar(
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.surface
     ) {
         items.forEachIndexed { index, item ->
             NavigationBarItem(
@@ -46,13 +47,13 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
                     )
                 },
                 colors = NavigationBarItemColors(
-                    selectedIconColor = Color.White,
-                    selectedTextColor = Color(0xFF3E4DBA),
-                    selectedIndicatorColor = Color(0xFF3E4DBA),
-                    unselectedIconColor = Color.Gray,
-                    unselectedTextColor = Color.Gray,
-                    disabledIconColor = Color.Gray,
-                    disabledTextColor = Color.Gray
+                    selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    selectedIndicatorColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                 )
             )
         }

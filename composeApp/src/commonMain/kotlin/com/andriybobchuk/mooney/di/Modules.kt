@@ -18,6 +18,7 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase
+import com.andriybobchuk.mooney.core.presentation.theme.ThemeManager
 
 expect val platformModule: Module
 
@@ -48,7 +49,9 @@ val sharedModule = module {
     singleOf(::GetCategoriesUseCase)
     singleOf(::ConvertAccountsToUiUseCase)
     singleOf(::CurrencyManagerUseCase)
-
+    
+    // Theme
+    singleOf(::ThemeManager)
 
     viewModelOf(::AccountViewModel)
     viewModelOf(::TransactionViewModel)

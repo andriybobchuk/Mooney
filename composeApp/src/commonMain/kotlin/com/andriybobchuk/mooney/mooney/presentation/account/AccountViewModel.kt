@@ -11,6 +11,7 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.*
 import com.andriybobchuk.mooney.mooney.domain.usecase.CalculateNetWorthUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.ConvertAccountsToUiUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase
+import com.andriybobchuk.mooney.core.presentation.theme.ThemeManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
@@ -30,7 +31,8 @@ class AccountViewModel(
     private val deleteAccountUseCase: DeleteAccountUseCase,
     private val calculateNetWorthUseCase: CalculateNetWorthUseCase,
     private val convertAccountsToUiUseCase: ConvertAccountsToUiUseCase,
-    private val currencyManagerUseCase: CurrencyManagerUseCase
+    private val currencyManagerUseCase: CurrencyManagerUseCase,
+    private val themeManager: ThemeManager
 ) : ViewModel() {
 
     private var observeAccountsJob: Job? = null
@@ -126,6 +128,10 @@ class AccountViewModel(
             } catch (e: Exception) {
             }
         }
+    }
+    
+    fun toggleTheme() {
+        themeManager.toggleTheme()
     }
 }
 

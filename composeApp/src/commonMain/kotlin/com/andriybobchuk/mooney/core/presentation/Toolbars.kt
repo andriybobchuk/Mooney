@@ -39,8 +39,8 @@ object Toolbars {
             modifier = modifier,
             scrollBehavior = scrollBehavior,
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                containerColor = Color(0xFF3E4DBA),
-                titleContentColor = Color.White,
+                containerColor = MaterialTheme.colorScheme.primary,
+                titleContentColor = MaterialTheme.colorScheme.onPrimary,
             ),
             navigationIcon = {
                 if (showBackButton) {
@@ -48,7 +48,7 @@ object Toolbars {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "",
-                            tint = MaterialTheme.colorScheme.onBackground
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 }
@@ -63,6 +63,7 @@ object Toolbars {
                         Icon(
                             imageVector = actionIcon.icon,
                             contentDescription = actionIcon.contentDescription,
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 }

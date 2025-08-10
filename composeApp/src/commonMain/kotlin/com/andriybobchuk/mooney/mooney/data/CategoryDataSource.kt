@@ -80,7 +80,7 @@ object CategoryDataSource {
     val travelling = Category("travelling", "Travelling", CategoryType.EXPENSE, emoji = "\uD83C\uDFDD\uFE0F", parent = expense)
     val travellingSub = listOf(
         Category("accommodation", "Accommodation", CategoryType.EXPENSE, parent = transport),
-        Category("transport", "Local Transport", CategoryType.EXPENSE, parent = travelling),
+        Category("travelling_transport", "Local Transport", CategoryType.EXPENSE, parent = travelling),
         Category("flights", "Flights", CategoryType.EXPENSE, parent = travelling),
         Category("food_drinks", "Food & Drinks", CategoryType.EXPENSE, parent = travelling),
         Category("travelling_groceries", "Groceries", CategoryType.EXPENSE, parent = travelling),

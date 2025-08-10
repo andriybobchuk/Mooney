@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.andriybobchuk.mooney.core.presentation.theme.appColors
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,7 +60,7 @@ fun AnalyticsScreen(
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
-        modifier = Modifier.background(Color(0xFF3E4DBA)),
+        modifier = Modifier.background(MaterialTheme.colorScheme.primary),
         topBar = {
             Toolbars.Primary(
                 title = "Analytics",
@@ -74,7 +75,7 @@ fun AnalyticsScreen(
         },
         bottomBar = { bottomNavbar() },
         content = { paddingValues ->
-            Column(modifier = Modifier.padding(paddingValues).background(Color(0xFF3E4DBA))) {
+            Column(modifier = Modifier.padding(paddingValues).background(MaterialTheme.colorScheme.primary)) {
 
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
@@ -92,7 +93,7 @@ fun AnalyticsScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                        .background(Color.White),
+                        .background(MaterialTheme.colorScheme.background),
                 ) {
                     Spacer(modifier = Modifier.height(10.dp))
 
@@ -120,7 +121,7 @@ fun CategoryItem(topCategorySummary: TopCategorySummary) {
             modifier = Modifier
                 .size(52.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFFF8F9FF)),
+                .background(MaterialTheme.appColors.cardBackground),
             contentAlignment = Alignment.Center
         ) {
             Text(topCategorySummary.category.resolveEmoji(), fontSize = 25.sp)
@@ -136,7 +137,7 @@ fun CategoryItem(topCategorySummary: TopCategorySummary) {
             if (topCategorySummary.category.isSubCategory()) {
                 Text(
                     topCategorySummary.category.parent?.title ?: "???",
-                    style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
+                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                 )
             }
         }
@@ -145,16 +146,16 @@ fun CategoryItem(topCategorySummary: TopCategorySummary) {
             Text(
                 "${topCategorySummary.amount.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                color = if (topCategorySummary.category.type == CategoryType.INCOME) Color(0xFF409261) else Color.DarkGray
+                color = if (topCategorySummary.category.type == CategoryType.INCOME) MaterialTheme.appColors.incomeColor else MaterialTheme.appColors.expenseColor
             )
             Text(
                 topCategorySummary.percentOfRevenue + "%",
-                style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
+                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
             )
 //            if (transaction.exchangeRate != null) {
 //                Text(
 //                    "*${transaction.exchangeRate.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
-//                    style = MaterialTheme.typography.bodySmall.copy(color = Color.Gray)
+//                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
 //                )
 //            }
         }

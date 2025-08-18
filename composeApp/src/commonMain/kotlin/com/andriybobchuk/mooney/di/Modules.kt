@@ -46,6 +46,7 @@ val sharedModule = module {
     singleOf(::CalculateTransactionTotalUseCase)
     singleOf(::CalculateDailyTotalUseCase)
     singleOf(::CalculateNetWorthUseCase)
+    singleOf(::CalculateSubcategoriesUseCase)
     singleOf(::GetCategoriesUseCase)
     singleOf(::ConvertAccountsToUiUseCase)
     singleOf(::CurrencyManagerUseCase)

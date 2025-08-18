@@ -186,14 +186,15 @@ fun TransactionsScreenContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(top = 4.dp, bottom = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = "${total.formatWithCommas()} ${currency.symbol}",
                 modifier = Modifier.clickable { onCurrencyClick() },
                 style = MaterialTheme.typography.headlineLarge.copy(
-                    color = MaterialTheme.colorScheme.onPrimary,
+                   // color = MaterialTheme.colorScheme.onPrimary,
+                    color  = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 28.sp
                 )
@@ -202,7 +203,8 @@ fun TransactionsScreenContent(
                 "Spent this month",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                  //  color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                    color = Color.White
                 )
             )
         }
@@ -234,7 +236,7 @@ fun TransactionsScreenContent(
                                     .padding(vertical = 4.dp, horizontal = 12.dp),
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 14.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                //color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Start
                             )
                             
@@ -245,7 +247,7 @@ fun TransactionsScreenContent(
                                     text = "${dailyTotal.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
                                     modifier = Modifier
                                         .background(
-                                            color = MaterialTheme.appColors.pillBackgroundSecondary,
+                                            color = MaterialTheme.appColors.pillBackgroundSecondary.copy(alpha = 0.5f),
                                             shape = RoundedCornerShape(12.dp)
                                         )
                                         .padding(vertical = 4.dp, horizontal = 12.dp),

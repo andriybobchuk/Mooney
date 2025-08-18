@@ -61,7 +61,7 @@ object AppColors {
     // Light Theme
     object Light {
         val cardBackground = LightSurfaceVariant
-        val pillBackground = Color(0xFFF2F2F7)
+        val pillBackground = Color.White.copy(alpha = 0.5f)
         val pillBackgroundSecondary = LightPrimaryContainer
         val incomeColor = Income
         val expenseColor = Color(0xFF495057)

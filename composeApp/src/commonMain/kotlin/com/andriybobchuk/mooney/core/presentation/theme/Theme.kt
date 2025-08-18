@@ -86,11 +86,11 @@ fun MooneyTheme(
     val customColors = if (darkTheme) {
         CustomAppColors(
             cardBackground = AppColors.Dark.cardBackground,
-            pillBackground = AppColors.Dark.pillBackground,
-            pillBackgroundSecondary = AppColors.Dark.pillBackgroundSecondary,
+            pillBackground = AppColors.Dark.pillBackground.copy(alpha = 0.1f),
+            pillBackgroundSecondary = AppColors.Dark.pillBackgroundSecondary.copy(alpha = 0.1f),
             incomeColor = AppColors.Dark.incomeColor,
             expenseColor = AppColors.Dark.expenseColor,
-            transactionIcon = AppColors.Dark.transactionIcon,
+            transactionIcon = AppColors.Dark.transactionIcon.copy(alpha = 0.3f),
             divider = AppColors.Dark.divider,
             success = AppColors.Dark.success,
             warning = AppColors.Dark.warning,

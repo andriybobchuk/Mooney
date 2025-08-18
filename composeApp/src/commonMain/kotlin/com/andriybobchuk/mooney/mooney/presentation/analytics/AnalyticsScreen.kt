@@ -1,6 +1,7 @@
 package com.andriybobchuk.mooney.mooney.presentation.analytics
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,9 +25,11 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -98,9 +101,31 @@ fun AnalyticsScreen(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     LazyColumn {
-                        items(state.topCategories) {
-                            CategoryItem(it)
+                        items(state.topCategories) { category ->
+                            CategoryItem(
+                                topCategorySummary = category,
+                                onClick = { viewModel.onCategoryClicked(category.category) }
+                            )
                         }
+                    }
+                }
+            }
+            
+            // Subcategory Bottom Sheet
+            if (state.isSubcategorySheetOpen) {
+                state.selectedCategory?.let { category ->
+                    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+                    
+                    ModalBottomSheet(
+                        onDismissRequest = { viewModel.onSubcategorySheetDismissed() },
+                        sheetState = bottomSheetState,
+                        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                    ) {
+                        SubcategoryBottomSheet(
+                            parentCategory = category,
+                            subcategories = state.subcategories,
+                            onDismiss = { viewModel.onSubcategorySheetDismissed() }
+                        )
                     }
                 }
             }
@@ -110,10 +135,14 @@ fun AnalyticsScreen(
 
 
 @Composable
-fun CategoryItem(topCategorySummary: TopCategorySummary) {
+fun CategoryItem(
+    topCategorySummary: TopCategorySummary,
+    onClick: () -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .padding(vertical = 6.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -228,6 +257,57 @@ fun MetricCard(metric: AnalyticsMetric) {
     }
 }
 
+
+@Composable
+fun SubcategoryBottomSheet(
+    parentCategory: com.andriybobchuk.mooney.mooney.domain.Category,
+    subcategories: List<TopCategorySummary>,
+    onDismiss: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 32.dp)
+    ) {
+        // Header
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = parentCategory.resolveEmoji(),
+                    fontSize = 24.sp,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text(
+                    text = parentCategory.title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Text(
+                text = "Subcategories breakdown",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+        
+        // Subcategories list
+        LazyColumn {
+            items(subcategories) { subcategory ->
+                CategoryItem(
+                    topCategorySummary = subcategory,
+                    onClick = { /* No action needed for subcategories */ }
+                )
+            }
+        }
+    }
+}
 
 fun generateRecentMonths(count: Int): List<MonthKey> {
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date

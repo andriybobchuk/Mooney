@@ -27,11 +27,15 @@ data class AnalyticsState(
     val transactionsForMonth: List<Transaction?> = emptyList(),
     val metrics: List<AnalyticsMetric> = emptyList(),
     val topCategories: List<TopCategorySummary> = emptyList(),
+    val subcategories: List<TopCategorySummary> = emptyList(),
+    val selectedCategory: Category? = null,
+    val isSubcategorySheetOpen: Boolean = false,
     val isLoading: Boolean = false
 )
 
 class AnalyticsViewModel(
-    private val calculateMonthlyAnalyticsUseCase: CalculateMonthlyAnalyticsUseCase
+    private val calculateMonthlyAnalyticsUseCase: CalculateMonthlyAnalyticsUseCase,
+    private val calculateSubcategoriesUseCase: CalculateSubcategoriesUseCase
 ) : ViewModel() {
     private val baseCurrency: Currency = GlobalConfig.baseCurrency
     private val calculators: List<AnalyticsMetricCalculator> = listOf(
@@ -95,6 +99,29 @@ class AnalyticsViewModel(
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false) }
             }
+        }
+    }
+    
+    fun onCategoryClicked(category: Category) {
+        val transactions = _state.value.transactionsForMonth.filterNotNull()
+        val subcategories = calculateSubcategoriesUseCase(category, transactions, baseCurrency)
+        
+        _state.update {
+            it.copy(
+                selectedCategory = category,
+                subcategories = subcategories,
+                isSubcategorySheetOpen = true
+            )
+        }
+    }
+    
+    fun onSubcategorySheetDismissed() {
+        _state.update {
+            it.copy(
+                isSubcategorySheetOpen = false,
+                selectedCategory = null,
+                subcategories = emptyList()
+            )
         }
     }
 }

@@ -2,6 +2,7 @@ package com.andriybobchuk.mooney.mooney.presentation.analytics
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,7 +19,10 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -67,46 +71,74 @@ fun AnalyticsScreen(
         topBar = {
             Toolbars.Primary(
                 title = "Analytics",
-                scrollBehavior = scrollBehavior,
-                customContent = {
-                    MonthPicker(
-                        selectedMonth = state.selectedMonth,
-                        onMonthSelected = viewModel::onMonthSelected,
-                    )
-                }
+                scrollBehavior = scrollBehavior
             )
         },
         bottomBar = { bottomNavbar() },
         content = { paddingValues ->
-            Column(modifier = Modifier.padding(paddingValues).background(MaterialTheme.colorScheme.primary)) {
+            val scrollState = rememberScrollState()
+            
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .background(MaterialTheme.colorScheme.primary)
+                    .verticalScroll(scrollState)
+                    .fillMaxSize()
+            ) {
+                
+                // Month Selector Card
+                HorizontalMonthSelector(
+                    selectedMonth = state.selectedMonth,
+                    onMonthSelected = viewModel::onMonthSelected,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Trend Chart
+                TrendChart(
+                    historicalData = state.historicalMetrics,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
 
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    modifier = Modifier.fillMaxWidth()
+                // Metric Cards in Single Column
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 ) {
-                    items(state.metrics) { metric ->
-                        MetricCard(metric)
+                    state.metrics.forEach { metric ->
+                        EnhancedMetricCard(
+                            metric = metric,
+                            onClick = { viewModel.onMetricCardClicked(metric.title) }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
 
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                        .background(MaterialTheme.colorScheme.background),
-                ) {
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    LazyColumn {
-                        items(state.topCategories) { category ->
-                            CategoryItem(
-                                topCategorySummary = category,
-                                onClick = { viewModel.onCategoryClicked(category.category) }
-                            )
-                        }
+                // Bottom padding for comfortable scrolling
+                Spacer(modifier = Modifier.height(32.dp))
+            }
+            
+            // Category Bottom Sheet
+            if (state.isCategorySheetOpen) {
+                state.categorySheetType?.let { sheetType ->
+                    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+                    
+                    ModalBottomSheet(
+                        onDismissRequest = { viewModel.onCategorySheetDismissed() },
+                        sheetState = bottomSheetState,
+                        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+                    ) {
+                        CategoryBreakdownSheet(
+                            sheetType = sheetType,
+                            categories = viewModel.getAllCategoriesForSheetType(sheetType),
+                            onCategoryClick = { category ->
+                                viewModel.onCategoryClicked(category)
+                                viewModel.onCategorySheetDismissed()
+                            },
+                            onDismiss = { viewModel.onCategorySheetDismissed() }
+                        )
                     }
                 }
             }
@@ -177,16 +209,7 @@ fun CategoryItem(
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                 color = if (topCategorySummary.category.type == CategoryType.INCOME) MaterialTheme.appColors.incomeColor else MaterialTheme.appColors.expenseColor
             )
-            Text(
-                topCategorySummary.percentOfRevenue + "%",
-                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-            )
-//            if (transaction.exchangeRate != null) {
-//                Text(
-//                    "*${transaction.exchangeRate.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
-//                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-//                )
-//            }
+            // No percentages displayed for any categories
         }
     }
 }
@@ -228,31 +251,74 @@ fun MonthPicker(
 }
 
 @Composable
-fun MetricCard(metric: AnalyticsMetric) {
-    Column(
+fun EnhancedMetricCard(
+    metric: AnalyticsMetric,
+    onClick: () -> Unit = {}
+) {
+    Card(
         modifier = Modifier
-            .padding(horizontal = 2.dp, vertical = 2.dp)
             .fillMaxWidth()
-            .background(MaterialTheme.appColors.cardBackground, RoundedCornerShape(12.dp))
-            .padding(16.dp)
+            .clickable(enabled = metric.isClickable) { onClick() },
+        shape = RoundedCornerShape(16.dp)
     ) {
-        Text(
-            text = metric.title,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = metric.value,
-            style = MaterialTheme.typography.titleMedium
-        )
-        metric.subtitle?.let {
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+        Row(
+            modifier = Modifier
+                .background(MaterialTheme.appColors.cardBackground)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Colored circle indicator
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(metric.color)
             )
+            
+            Spacer(modifier = Modifier.width(12.dp))
+            
+            // Metric info
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = metric.title,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = metric.value,
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+                )
+                metric.subtitle?.let {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            
+            // Trend arrow
+            if (metric.trendPercentage != 0.0) {
+                val isPositive = metric.trendPercentage > 0
+                val trendColor = if (isPositive) Color(0xFF4CAF50) else Color(0xFFF44336)
+                val arrow = if (isPositive) "↗" else "↘"
+                
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(
+                        text = arrow,
+                        fontSize = 20.sp,
+                        color = trendColor
+                    )
+                    Text(
+                        text = "${if (isPositive) "+" else ""}${kotlin.math.round(metric.trendPercentage * 10) / 10}%",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = trendColor
+                    )
+                }
+            }
         }
     }
 }
@@ -309,6 +375,52 @@ fun SubcategoryBottomSheet(
     }
 }
 
+@Composable
+fun HorizontalMonthSelector(
+    selectedMonth: MonthKey,
+    onMonthSelected: (MonthKey) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val monthRange = generateRecentMonths(6).reversed() // Newest on the right
+    
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .background(MaterialTheme.appColors.cardBackground)
+                .padding(8.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            monthRange.forEach { month ->
+                val isSelected = month == selectedMonth
+                
+                Button(
+                    onClick = { onMonthSelected(month) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(vertical = 8.dp, horizontal = 4.dp)
+                ) {
+                    Text(
+                        text = month.toShortDisplayString(),
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+                    )
+                }
+                
+                if (month != monthRange.last()) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                }
+            }
+        }
+    }
+}
+
 fun generateRecentMonths(count: Int): List<MonthKey> {
     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     val months = mutableListOf<MonthKey>()
@@ -325,4 +437,69 @@ fun generateRecentMonths(count: Int): List<MonthKey> {
     }
 
     return months
+}
+
+
+@Composable
+fun CategoryBreakdownSheet(
+    sheetType: CategorySheetType,
+    categories: List<TopCategorySummary>,
+    onCategoryClick: (com.andriybobchuk.mooney.mooney.domain.Category) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val title = when (sheetType) {
+        CategorySheetType.REVENUE -> "Revenue Breakdown"
+        CategorySheetType.OPERATING_COSTS -> "Operating Costs Breakdown"
+        CategorySheetType.TAXES -> "Tax Breakdown"
+    }
+    
+    val emoji = when (sheetType) {
+        CategorySheetType.REVENUE -> "💰"
+        CategorySheetType.OPERATING_COSTS -> "💸"
+        CategorySheetType.TAXES -> "📊"
+    }
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 32.dp)
+    ) {
+        // Header
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = emoji,
+                    fontSize = 24.sp,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Text(
+                text = "Tap a category to see subcategories",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+        
+        // Categories list
+        LazyColumn {
+            items(categories) { category ->
+                CategoryItem(
+                    topCategorySummary = category,
+                    onClick = { onCategoryClick(category.category) }
+                )
+            }
+        }
+    }
 }

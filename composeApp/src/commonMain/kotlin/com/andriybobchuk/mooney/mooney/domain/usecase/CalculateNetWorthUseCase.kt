@@ -5,8 +5,9 @@ import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
 import com.andriybobchuk.mooney.mooney.presentation.account.UiAccount
 
-class CalculateNetWorthUseCase {
-    val exchangeRates = GlobalConfig.testExchangeRates
+class CalculateNetWorthUseCase(
+    private val currencyManagerUseCase: CurrencyManagerUseCase
+) {
 
     data class NetWorthResult(
         val totalNetWorth: Double,
@@ -19,6 +20,7 @@ class CalculateNetWorthUseCase {
         baseCurrency: Currency
     ): NetWorthResult {
         val totalPln = accounts.filterNotNull().sumOf { it.baseCurrencyAmount }
+        val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
 
         val converted = if (selectedCurrency != baseCurrency) {
             exchangeRates.convert(

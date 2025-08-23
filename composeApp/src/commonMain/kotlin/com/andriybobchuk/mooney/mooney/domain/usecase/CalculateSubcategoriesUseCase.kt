@@ -8,8 +8,9 @@ import com.andriybobchuk.mooney.mooney.domain.Transaction
 import com.andriybobchuk.mooney.mooney.presentation.analytics.TopCategorySummary
 import com.andriybobchuk.mooney.mooney.presentation.formatWithCommas
 
-class CalculateSubcategoriesUseCase {
-    private val exchangeRates = GlobalConfig.testExchangeRates
+class CalculateSubcategoriesUseCase(
+    private val currencyManagerUseCase: CurrencyManagerUseCase
+) {
     
     operator fun invoke(
         parentCategory: Category,
@@ -28,6 +29,7 @@ class CalculateSubcategoriesUseCase {
         }
         
         // Calculate total for this category to get percentages
+        val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
         val categoryTotal = categoryTransactions.sumOf { 
             exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
         }

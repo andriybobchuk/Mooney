@@ -6,11 +6,13 @@ import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
 import com.andriybobchuk.mooney.mooney.presentation.account.UiAccount
 
-class ConvertAccountsToUiUseCase {
-    val exchangeRates = GlobalConfig.testExchangeRates
+class ConvertAccountsToUiUseCase(
+    private val currencyManagerUseCase: CurrencyManagerUseCase
+) {
     val baseCurrency = GlobalConfig.baseCurrency
 
     operator fun invoke(accounts: List<Account?>): List<UiAccount?> {
+        val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
         return accounts.map { account ->
             if (account?.currency == baseCurrency) {
                 UiAccount(

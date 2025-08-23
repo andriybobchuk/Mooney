@@ -6,8 +6,9 @@ import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
 import com.andriybobchuk.mooney.mooney.domain.Transaction
 
-class CalculateTransactionTotalUseCase {
-    val exchangeRates = GlobalConfig.testExchangeRates
+class CalculateTransactionTotalUseCase(
+    private val currencyManagerUseCase: CurrencyManagerUseCase
+) {
     data class TotalResult(
         val total: Double,
         val currency: Currency
@@ -23,9 +24,11 @@ class CalculateTransactionTotalUseCase {
             !it.subcategory.title.contains("ZUS") && 
             !it.subcategory.title.contains("PIT")
         }.sumOf {
+            val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
             exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
         }
 
+        val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
         val converted = if (selectedCurrency != baseCurrency) {
             exchangeRates.convert(
                 totalPln,

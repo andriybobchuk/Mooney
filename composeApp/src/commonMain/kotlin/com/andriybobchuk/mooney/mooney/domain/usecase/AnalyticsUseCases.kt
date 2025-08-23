@@ -12,8 +12,8 @@ import kotlinx.datetime.LocalDate
 
 class CalculateMonthlyAnalyticsUseCase(
     private val getTransactionsUseCase: GetTransactionsUseCase,
+    private val currencyManagerUseCase: CurrencyManagerUseCase
 ) {
-    val exchangeRates = GlobalConfig.testExchangeRates
 
     suspend operator fun invoke(
         startDate: LocalDate,
@@ -41,6 +41,7 @@ class CalculateMonthlyAnalyticsUseCase(
         transactions: List<Transaction>,
         baseCurrency: Currency
     ): Double {
+        val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
         return transactions
             .filter { it.subcategory.type == CategoryType.INCOME }
             .sumOf { 
@@ -52,6 +53,7 @@ class CalculateMonthlyAnalyticsUseCase(
         transactions: List<Transaction>,
         baseCurrency: Currency
     ): Double {
+        val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
         return transactions
             .filter { 
                 it.subcategory.type == CategoryType.EXPENSE && 
@@ -78,6 +80,7 @@ class CalculateMonthlyAnalyticsUseCase(
                 }
             }
             .mapValues { (_, transactions) ->
+                val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
                 transactions.sumOf { 
                     exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
                 }

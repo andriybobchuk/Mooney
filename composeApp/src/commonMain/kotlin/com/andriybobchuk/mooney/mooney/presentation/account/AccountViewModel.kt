@@ -4,14 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Account
-
 import com.andriybobchuk.mooney.mooney.domain.Currency
-
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
 import com.andriybobchuk.mooney.mooney.domain.usecase.CalculateNetWorthUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.ConvertAccountsToUiUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase
 import com.andriybobchuk.mooney.core.presentation.theme.ThemeManager
+import com.andriybobchuk.mooney.core.domain.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
@@ -22,8 +21,10 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
 
 class AccountViewModel(
     private val getAccountsUseCase: GetAccountsUseCase,
@@ -43,12 +44,25 @@ class AccountViewModel(
     val state = _uiState
         .onStart {
             observeAccounts()
+            refreshExchangeRatesOnStart()
         }
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000L),
             _uiState.value
         )
+
+    private fun refreshExchangeRatesOnStart() {
+        viewModelScope.launch {
+            // Only refresh if rates are older than 1 hour (3600000 ms)
+            val oneHourAgo = Clock.System.now().toEpochMilliseconds() - 3600000
+            val lastUpdate = _uiState.value.ratesLastUpdated
+            
+            if (lastUpdate == 0L || lastUpdate < oneHourAgo) {
+                refreshExchangeRates()
+            }
+        }
+    }
 
     private fun observeAccounts() {
         observeAccountsJob?.cancel()
@@ -103,6 +117,36 @@ class AccountViewModel(
         updateTotalNetWorth()
     }
 
+    fun refreshExchangeRates() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRefreshingRates = true) }
+            
+            when (val result = currencyManagerUseCase.refreshExchangeRates()) {
+                is Result.Success -> {
+                    // Refresh UI accounts with new rates using current accounts
+                    val currentAccounts = getAccountsUseCase().first()
+                    _uiState.update { 
+                        it.copy(
+                            accounts = convertAccountsToUiUseCase(currentAccounts),
+                            isRefreshingRates = false,
+                            ratesLastUpdated = Clock.System.now().toEpochMilliseconds()
+                        )
+                    }
+                    // Update net worth with fresh rates
+                    updateTotalNetWorth()
+                }
+                is Result.Error -> {
+                    _uiState.update { 
+                        it.copy(
+                            isRefreshingRates = false,
+                            ratesError = "Failed to update exchange rates"
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     fun upsertAccount(
         id: Int,
         title: String,
@@ -151,7 +195,10 @@ data class AccountState(
     val totalNetWorth: Double = 0.0,
     val totalNetWorthCurrency: Currency = GlobalConfig.baseCurrency,
     val isLoading: Boolean = false,
-    val isError: Boolean = false
+    val isError: Boolean = false,
+    val isRefreshingRates: Boolean = false,
+    val ratesLastUpdated: Long = 0L,
+    val ratesError: String? = null
 )
 
 fun List<UiAccount>.toAccounts(): List<Account> {

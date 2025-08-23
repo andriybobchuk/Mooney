@@ -14,6 +14,7 @@ import com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionViewM
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
@@ -34,6 +35,25 @@ val sharedModule = module {
     }
     single { get<AppDatabase>().accountDao }
     single { get<AppDatabase>().transactionDao }
+
+    // Feature flags
+    single<Boolean>(qualifier = named("use_live_exchange_rates")) { true }
+    
+    // API Key
+    single<String>(qualifier = named("exchangerate_api_key")) { "75b9fafdb8e95b3caea57927" }
+    
+    // Exchange Rate Providers
+    single<com.andriybobchuk.mooney.mooney.domain.ExchangeRateProvider> { 
+        val useLiveRates = get<Boolean>(named("use_live_exchange_rates"))
+        if (useLiveRates) {
+            com.andriybobchuk.mooney.mooney.data.LiveExchangeRateProvider(
+                httpClient = get(),
+                apiKey = get(named("exchangerate_api_key"))
+            )
+        } else {
+            com.andriybobchuk.mooney.mooney.data.StaticExchangeRateProvider()
+        }
+    }
 
     // Use Cases
     singleOf(::AddTransactionUseCase)

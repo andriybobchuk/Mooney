@@ -6,8 +6,9 @@ import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.Transaction
 import kotlinx.datetime.LocalDate
 
-class CalculateDailyTotalUseCase {
-    private val exchangeRates = GlobalConfig.testExchangeRates
+class CalculateDailyTotalUseCase(
+    private val currencyManagerUseCase: CurrencyManagerUseCase
+) {
     private val baseCurrency = GlobalConfig.baseCurrency
     
     operator fun invoke(
@@ -21,6 +22,7 @@ class CalculateDailyTotalUseCase {
                 !it.subcategory.title.contains("PIT")
             }
             .sumOf {
+                val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
                 exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
             }
     }

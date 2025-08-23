@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -92,6 +93,11 @@ fun AccountScreen(
                 title = "Accounts",
                 scrollBehavior = scrollBehavior,
                 actions = listOf(
+                    Toolbars.ToolBarAction(
+                        icon = Icons.Default.Refresh,
+                        contentDescription = "Refresh Exchange Rates",
+                        onClick = { viewModel.refreshExchangeRates() }
+                    ),
                     Toolbars.ToolBarAction(
                         icon = Icons.Default.Settings,
                         contentDescription = "Toggle Theme",

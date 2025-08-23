@@ -659,7 +659,7 @@ fun MonthSelector(
     LaunchedEffect(selectedMonth) {
         val targetIndex = selectedMonth - 1
         // Center the selected month by scrolling to position it in the middle
-        val offset = -120 // Adjust to center the item (card width + spacing)
+        val offset = -500 // Adjust to center the item (card width + spacing)
         listState.animateScrollToItem(
             index = maxOf(0, targetIndex),
             scrollOffset = offset
@@ -962,10 +962,8 @@ fun CategorySelectionBottomSheet(
                         category = category,
                         isSelected = category.id == initialSelectedCategory?.id,
                         onClick = {
-                            val hasSubCategories = remember(category.id) {
-                                categories.any { 
-                                    it.isSubCategory() && it.parent?.id == category.id 
-                                }
+                            val hasSubCategories = categories.any { 
+                                it.isSubCategory() && it.parent?.id == category.id 
                             }
                             if (hasSubCategories) {
                                 selectedParentCategory = category

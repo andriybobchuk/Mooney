@@ -65,7 +65,7 @@ fun AnalyticsScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
         modifier = Modifier.background(MaterialTheme.colorScheme.primary),
         topBar = {
@@ -92,32 +92,33 @@ fun AnalyticsScreen(
                     onMonthSelected = viewModel::onMonthSelected,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
-                
-                Spacer(modifier = Modifier.height(2.dp))
-                
-                // Trend Chart
-                TrendChart(
-                    historicalData = state.historicalMetrics,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-                
-               // Spacer(modifier = Modifier.height(2.dp))
 
-                // Metric Cards in Single Column
                 Column(
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                        .background(MaterialTheme.colorScheme.background),
                 ) {
-                    state.metrics.forEach { metric ->
-                        EnhancedMetricCard(
-                            metric = metric,
-                            onClick = { viewModel.onMetricCardClicked(metric.title) }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                }
+                    // Trend Chart
+                    TrendChart(
+                        historicalData = state.historicalMetrics,
+                        modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 8.dp)
+                    )
 
-                // Bottom padding for comfortable scrolling
-                Spacer(modifier = Modifier.height(32.dp))
+                    Column(
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    ) {
+                        state.metrics.forEach { metric ->
+                            EnhancedMetricCard(
+                                metric = metric,
+                                onClick = { viewModel.onMetricCardClicked(metric.title) }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+                }
             }
             
             // Category Bottom Sheet
@@ -264,13 +265,13 @@ fun EnhancedMetricCard(
         Row(
             modifier = Modifier
                 .background(MaterialTheme.appColors.cardBackground)
-                .padding(16.dp),
+                .padding(horizontal = 12.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Colored circle indicator
             Box(
                 modifier = Modifier
-                    .size(12.dp)
+                    .size(10.dp)
                     .clip(androidx.compose.foundation.shape.CircleShape)
                     .background(metric.color)
             )
@@ -281,12 +282,13 @@ fun EnhancedMetricCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = metric.title,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = metric.value,
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                 )
                 metric.subtitle?.let {
                     Spacer(modifier = Modifier.height(2.dp))
@@ -389,7 +391,7 @@ fun HorizontalMonthSelector(
     ) {
         Row(
             modifier = Modifier
-                .background(MaterialTheme.appColors.cardBackground)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(2.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -400,7 +402,7 @@ fun HorizontalMonthSelector(
                 Button(
                     onClick = { onMonthSelected(month) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                        containerColor = if (isSelected) MaterialTheme.appColors.cardBackground else Color.Transparent,
                         contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
                     ),
                     shape = RoundedCornerShape(12.dp),

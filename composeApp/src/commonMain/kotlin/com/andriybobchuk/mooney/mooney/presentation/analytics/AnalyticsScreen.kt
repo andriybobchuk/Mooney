@@ -93,7 +93,7 @@ fun AnalyticsScreen(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
                 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 
                 // Trend Chart
                 TrendChart(
@@ -101,7 +101,7 @@ fun AnalyticsScreen(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
                 
-                Spacer(modifier = Modifier.height(16.dp))
+               // Spacer(modifier = Modifier.height(2.dp))
 
                 // Metric Cards in Single Column
                 Column(
@@ -390,7 +390,7 @@ fun HorizontalMonthSelector(
         Row(
             modifier = Modifier
                 .background(MaterialTheme.appColors.cardBackground)
-                .padding(8.dp)
+                .padding(2.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
@@ -405,7 +405,7 @@ fun HorizontalMonthSelector(
                     ),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(vertical = 8.dp, horizontal = 4.dp)
+                    contentPadding = PaddingValues(vertical = 8.dp, horizontal = 8.dp)
                 ) {
                     Text(
                         text = month.toShortDisplayString(),

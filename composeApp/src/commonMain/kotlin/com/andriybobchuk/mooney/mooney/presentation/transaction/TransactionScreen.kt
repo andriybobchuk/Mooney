@@ -555,12 +555,12 @@ fun DateSelector(
         // Day dropdown
         Box {
             OutlinedButton(onClick = { showDayMenu = true }) {
-                Text(selectedDate.dayOfMonth.padZero())
+                Text(formatDayWithWeekday(selectedDate.dayOfMonth, selectedDate.year, selectedDate.monthNumber))
             }
             DropdownMenu(expanded = showDayMenu, onDismissRequest = { showDayMenu = false }) {
                 days.forEach { day ->
                     DropdownMenuItem(
-                        text = { Text(day.padZero()) },
+                        text = { Text(formatDayWithWeekday(day, selectedDate.year, selectedDate.monthNumber)) },
                         onClick = {
                             onDateChange(LocalDate(selectedDate.year, selectedDate.monthNumber, day))
                             showDayMenu = false
@@ -586,6 +586,16 @@ fun getDaysInMonth(year: Int, month: Int): Int {
 
 fun isLeapYear(year: Int): Boolean {
     return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
+}
+
+fun LocalDate.getDayOfWeekName(): String {
+    return this.dayOfWeek.name.lowercase().replaceFirstChar { it.uppercase() }
+}
+
+fun formatDayWithWeekday(day: Int, year: Int, month: Int): String {
+    val date = LocalDate(year, month, day)
+    val dayName = date.getDayOfWeekName()
+    return "${day.padZero()} ($dayName)"
 }
 
 

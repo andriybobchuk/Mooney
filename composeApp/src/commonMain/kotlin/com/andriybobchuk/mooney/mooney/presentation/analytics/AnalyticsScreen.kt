@@ -233,7 +233,7 @@ fun MetricCard(metric: AnalyticsMetric) {
         modifier = Modifier
             .padding(horizontal = 2.dp, vertical = 2.dp)
             .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(12.dp))
+            .background(MaterialTheme.appColors.cardBackground, RoundedCornerShape(12.dp))
             .padding(16.dp)
     ) {
         Text(

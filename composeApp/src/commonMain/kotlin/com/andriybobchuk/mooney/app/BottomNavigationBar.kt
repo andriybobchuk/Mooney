@@ -18,7 +18,7 @@ import com.andriybobchuk.mooney.core.presentation.Icons
 fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int) {
     val items = listOf(
         BottomNavigationItem("Transactions", Icons.TransactionsIcon()),
-        BottomNavigationItem("Account", Icons.AccountsIcon()),
+        BottomNavigationItem("Accounts", Icons.AccountsIcon()),
         BottomNavigationItem("Analytics", Icons.StatsIcon()),
     )
 

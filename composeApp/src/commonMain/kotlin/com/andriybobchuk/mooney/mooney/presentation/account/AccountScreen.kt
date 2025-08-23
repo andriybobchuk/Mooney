@@ -180,7 +180,7 @@ private fun Header(totalNetWorth: Double, totalNetWorthCurrency: Currency, onCli
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(16.dp),
+            .padding(top= 4.dp, bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
@@ -212,11 +212,11 @@ private fun AccountsColumn(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .clip(RoundedCornerShape(topStart = 34.dp, topEnd = 34.dp))
-            .background(Color.White),
+            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+            .background(MaterialTheme.colorScheme.background),
     ) {
         LazyColumn(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp)
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 16.dp)
         ) {
             items(accounts) { account ->
                 account?.let {
@@ -244,17 +244,17 @@ private fun AccountCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(12.dp))
             .combinedClickable(
                 onClick = { onEdit(account) },
                 onLongClick = { expanded = true }
             ),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(12.dp),
     ) {
         Row(
             modifier = Modifier
                 .background(MaterialTheme.appColors.cardBackground)
-                .padding(18.dp)
+                .padding(16.dp)
         ) {
             Column {
                 Row {

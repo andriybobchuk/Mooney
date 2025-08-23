@@ -170,9 +170,10 @@ fun TransactionsScreen(
 }
 
 fun LocalDate.formatForDisplay(): String {
-    val month = this.month.name.lowercase().replaceFirstChar { it.uppercase() }
+    val dayOfWeek = this.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
+    val month = this.month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
     val day = this.dayOfMonth
-    return "$month $day" // e.g., "May 4"
+    return "$dayOfWeek, $month $day" // e.g., "Sun, Aug 23"
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -187,9 +188,13 @@ fun TransactionsScreenContent(
     onDelete: (Int) -> Unit,
     onDailyTotal: (LocalDate) -> Double = { 0.0 }
 ) {
-    // Group and sort transactions by date (descending)
+    // Group and sort transactions by date (descending), then by ID (most recent first)
     val grouped = transactions.filterNotNull().groupBy { it.date }
-    val sortedGroups = grouped.entries.sortedByDescending { it.key }
+    val sortedGroups = grouped.entries
+        .sortedByDescending { it.key }
+        .map { (date, transactions) ->
+            date to transactions.sortedByDescending { it.id }
+        }
 
     Column(
         modifier = modifier

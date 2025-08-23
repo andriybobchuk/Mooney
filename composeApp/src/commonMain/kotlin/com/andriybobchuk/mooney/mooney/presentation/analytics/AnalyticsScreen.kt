@@ -87,14 +87,6 @@ fun AnalyticsScreen(
                     .verticalScroll(scrollState)
                     .fillMaxSize()
             ) {
-                
-                // Month Selector Card
-                HorizontalMonthSelector(
-                    selectedMonth = state.selectedMonth,
-                    onMonthSelected = viewModel::onMonthSelected,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -104,6 +96,8 @@ fun AnalyticsScreen(
                     // Trend Chart
                     TrendChart(
                         historicalData = state.historicalMetrics,
+                        selectedMonth = state.selectedMonth,
+                        onMonthSelected = viewModel::onMonthSelected,
                         modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 8.dp)
                     )
 

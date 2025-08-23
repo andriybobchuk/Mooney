@@ -68,6 +68,7 @@ import com.andriybobchuk.mooney.mooney.presentation.account.UiAccount
 import com.andriybobchuk.mooney.mooney.presentation.account.toAccounts
 import com.andriybobchuk.mooney.mooney.presentation.analytics.MonthPicker
 import com.andriybobchuk.mooney.mooney.presentation.formatWithCommas
+import com.andriybobchuk.mooney.mooney.presentation.formatToPlainString
 import kotlinx.coroutines.delay
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
@@ -364,7 +365,7 @@ fun TransactionBottomSheet(
 ) {
     val isEditMode = transactionToEdit != null
 
-    var amount by remember { mutableStateOf(transactionToEdit?.amount?.formatWithCommas()) }
+    var amount by remember { mutableStateOf(transactionToEdit?.amount?.formatToPlainString()) }
 
     val defaultAccount = accounts.filterNotNull().toAccounts().find { it.title.contains("Primary") }
     var selectedAccount by remember { mutableStateOf(transactionToEdit?.account ?: defaultAccount) }
@@ -392,7 +393,15 @@ fun TransactionBottomSheet(
 
     var selectedCategory by remember { mutableStateOf(category) }
     var selectedSubCategory by remember { mutableStateOf(if (transactionToEdit?.subcategory?.isSubCategory() == true) transactionToEdit.subcategory else null) }
-    var subCategoryFieldEnabled by remember { mutableStateOf(false) }
+    var subCategoryFieldEnabled by remember { 
+        mutableStateOf(
+            if (isEditMode) {
+                categories.filter { it.isSubCategory() && it.parent == category }.isNotEmpty()
+            } else {
+                false
+            }
+        ) 
+    }
 
 
     var selectedDate by remember {
@@ -468,25 +477,19 @@ fun TransactionBottomSheet(
                 onClick = {
                     val parsedAmount = amount?.toDoubleOrNull()
                     if (parsedAmount != null && selectedAccount != null && selectedCategory != null) {
-                        onAdd(
-                            Transaction(
-                                id = transactionToEdit?.id ?: 0,
-                                amount = parsedAmount,
-                                account = selectedAccount!!,
-                                subcategory = selectedSubCategory ?: selectedCategory!!,
-                                date = selectedDate
-                            )
+                        val transaction = Transaction(
+                            id = transactionToEdit?.id ?: 0,
+                            amount = parsedAmount,
+                            account = selectedAccount!!,
+                            subcategory = selectedSubCategory ?: selectedCategory!!,
+                            date = selectedDate
                         )
-                    } else if (parsedAmount != null && selectedAccount != null && selectedCategory != null) {
-                        onUpdate(
-                            Transaction(
-                                id = 0,
-                                amount = parsedAmount,
-                                account = selectedAccount!!,
-                                subcategory = selectedSubCategory ?: selectedCategory!!,
-                                date = selectedDate
-                            )
-                        )
+                        
+                        if (isEditMode) {
+                            onUpdate(transaction)
+                        } else {
+                            onAdd(transaction)
+                        }
                     }
                 }
             ) {

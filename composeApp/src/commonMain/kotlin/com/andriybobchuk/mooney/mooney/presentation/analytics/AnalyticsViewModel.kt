@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -40,7 +41,8 @@ data class AnalyticsState(
 
 class AnalyticsViewModel(
     private val calculateMonthlyAnalyticsUseCase: CalculateMonthlyAnalyticsUseCase,
-    private val calculateSubcategoriesUseCase: CalculateSubcategoriesUseCase
+    private val calculateSubcategoriesUseCase: CalculateSubcategoriesUseCase,
+    private val getTransactionsUseCase: GetTransactionsUseCase
 ) : ViewModel() {
     private val baseCurrency: Currency = GlobalConfig.baseCurrency
     private val calculators: List<AnalyticsMetricCalculator> = listOf(
@@ -178,7 +180,23 @@ class AnalyticsViewModel(
     
     fun onCategoryClicked(category: Category) {
         val transactions = _state.value.transactionsForMonth.filterNotNull()
-        val subcategories = calculateSubcategoriesUseCase(category, transactions, baseCurrency)
+        
+        // Get previous month transactions for trend calculation
+        val previousMonth = _state.value.selectedMonth.previousMonth()
+        val previousStart = previousMonth.firstDay()
+        val previousEnd = previousMonth.firstDayOfNextMonth()
+        
+        val previousTransactions = runBlocking {
+            try {
+                getTransactionsUseCase().first().filterNotNull().filter { transaction ->
+                    transaction.date >= previousStart && transaction.date < previousEnd
+                }
+            } catch (e: Exception) {
+                emptyList<Transaction>()
+            }
+        }
+        
+        val subcategories = calculateSubcategoriesUseCase(category, transactions, baseCurrency, previousTransactions)
         
         // Only open the subcategory sheet if there are actual subcategories
         // If subcategories list has only 1 item and it's the same as the parent category,
@@ -234,8 +252,23 @@ class AnalyticsViewModel(
     }
     
     fun getAllCategoriesForSheetType(sheetType: CategorySheetType): List<TopCategorySummary> {
-        val transactions = _state.value.transactionsForMonth.filterNotNull()
+        val currentTransactions = _state.value.transactionsForMonth.filterNotNull()
         val exchangeRates = GlobalConfig.testExchangeRates
+        
+        // Get previous month transactions for trend calculation
+        val previousMonth = _state.value.selectedMonth.previousMonth()
+        val previousStart = previousMonth.firstDay()
+        val previousEnd = previousMonth.firstDayOfNextMonth()
+        
+        val previousMonthTransactions = runBlocking {
+            try {
+                getTransactionsUseCase().first().filterNotNull().filter { transaction ->
+                    transaction.date >= previousStart && transaction.date < previousEnd
+                }
+            } catch (e: Exception) {
+                emptyList<Transaction>()
+            }
+        }
         
         val relevantCategories = when (sheetType) {
             CategorySheetType.REVENUE -> listOf(
@@ -257,7 +290,7 @@ class AnalyticsViewModel(
         }
         
         return relevantCategories.mapNotNull { category ->
-            val categoryTransactions = transactions.filter { transaction ->
+            val categoryTransactions = currentTransactions.filter { transaction ->
                 when {
                     // Direct match
                     transaction.subcategory == category -> true
@@ -267,17 +300,39 @@ class AnalyticsViewModel(
                 }
             }
             
-            val amount = categoryTransactions.sumOf { 
+            val currentAmount = categoryTransactions.sumOf { 
                 exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
             }
             
+            // Calculate previous month amount for trend
+            val previousCategoryTransactions = previousMonthTransactions.filter { transaction ->
+                when {
+                    transaction.subcategory == category -> true
+                    transaction.subcategory.parent == category -> true
+                    else -> false
+                }
+            }
+            
+            val previousAmount = previousCategoryTransactions.sumOf { 
+                exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
+            }
+            
+            val trendPercentage = if (previousAmount != 0.0) {
+                ((currentAmount - previousAmount) / previousAmount) * 100
+            } else if (currentAmount > 0) {
+                100.0 // New category this month
+            } else {
+                0.0
+            }
+            
             // Only include categories that have transactions (amount > 0)
-            if (amount > 0) {
+            if (currentAmount > 0) {
                 TopCategorySummary(
                     category = category,
-                    amount = amount,
-                    formatted = "${amount.formatWithCommas()} ${baseCurrency.symbol}",
-                    percentOfRevenue = "" // We'll calculate this if needed
+                    amount = currentAmount,
+                    formatted = "${currentAmount.formatWithCommas()} ${baseCurrency.symbol}",
+                    percentOfRevenue = "",
+                    trendPercentage = trendPercentage
                 )
             } else {
                 null // Filter out zero-amount categories
@@ -328,7 +383,8 @@ data class TopCategorySummary(
     val category: Category,
     val amount: Double,
     val formatted: String,
-    val percentOfRevenue: String
+    val percentOfRevenue: String,
+    val trendPercentage: Double = 0.0
 )
 
 data class MonthKey(val year: Int, val month: Int) {

@@ -118,6 +118,11 @@ object CategoryDataSource {
 
     // Income
     val salary = Category("salary", "Salary", CategoryType.INCOME, emoji = "💸", parent = income)
+    val salarySub = listOf(
+        Category("effectivesoft", "EffectiveSoft", CategoryType.INCOME, parent = salary),
+        Category("unikie", "Unikie", CategoryType.INCOME, parent = salary)
+    )
+    
     val positive_reconciliation =
         Category("positive_reconciliation", "Account Reconciliation", CategoryType.INCOME, emoji = "💸", parent = income)
     val tax_return = Category("tax_return", "Tax Return", CategoryType.INCOME, emoji = "💸", parent = income)
@@ -150,5 +155,6 @@ object CategoryDataSource {
         addAll(subscriptionsSub)
         addAll(beveragesSub)
         addAll(travellingSub)
+        addAll(salarySub)
     }
 }

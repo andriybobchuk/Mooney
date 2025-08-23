@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Button
@@ -82,6 +83,7 @@ fun AnalyticsScreen(
                 modifier = Modifier
                     .padding(paddingValues)
                     .background(MaterialTheme.colorScheme.primary)
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
                     .verticalScroll(scrollState)
                     .fillMaxSize()
             ) {
@@ -136,7 +138,7 @@ fun AnalyticsScreen(
                             categories = viewModel.getAllCategoriesForSheetType(sheetType),
                             onCategoryClick = { category ->
                                 viewModel.onCategoryClicked(category)
-                                viewModel.onCategorySheetDismissed()
+                                // Don't dismiss category sheet - keep it open behind subcategory sheet
                             },
                             onDismiss = { viewModel.onCategorySheetDismissed() }
                         )
@@ -210,7 +212,30 @@ fun CategoryItem(
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                 color = if (topCategorySummary.category.type == CategoryType.INCOME) MaterialTheme.appColors.incomeColor else MaterialTheme.appColors.expenseColor
             )
-            // No percentages displayed for any categories
+            
+            // Trend pill
+            if (topCategorySummary.trendPercentage != 0.0) {
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                val isPositive = topCategorySummary.trendPercentage > 0
+                val trendColor = if (isPositive) Color(0xFF4CAF50) else Color(0xFFF44336)
+                val sign = if (isPositive) "+" else ""
+                
+                Box(
+                    modifier = Modifier
+                        .background(
+                            trendColor.copy(alpha = 0.1f),
+                            RoundedCornerShape(12.dp)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "$sign${kotlin.math.round(topCategorySummary.trendPercentage * 10) / 10}%",
+                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = trendColor
+                    )
+                }
+            }
         }
     }
 }

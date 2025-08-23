@@ -15,7 +15,8 @@ class CalculateSubcategoriesUseCase(
     operator fun invoke(
         parentCategory: Category,
         transactions: List<Transaction>,
-        baseCurrency: Currency
+        baseCurrency: Currency,
+        previousTransactions: List<Transaction> = emptyList()
     ): List<TopCategorySummary> {
         // Filter transactions for this parent category
         val categoryTransactions = transactions.filter { transaction ->
@@ -57,16 +58,56 @@ class CalculateSubcategoriesUseCase(
             allSums[parentCategory] = parentCategorySum
         }
         
+        // Calculate previous month data for trends
+        val previousCategoryTransactions = previousTransactions.filter { transaction ->
+            when {
+                transaction.subcategory == parentCategory -> true
+                transaction.subcategory.parent == parentCategory -> true
+                else -> false
+            }
+        }
+        
+        val previousSubcategorySums = previousCategoryTransactions
+            .filter { it.subcategory.isSubCategory() && it.subcategory.parent == parentCategory }
+            .groupBy { it.subcategory }
+            .mapValues { (_, transactions) ->
+                transactions.sumOf { 
+                    exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
+                }
+            }
+        
+        val previousParentCategorySum = previousCategoryTransactions
+            .filter { it.subcategory == parentCategory }
+            .sumOf { 
+                exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
+            }
+        
+        val allPreviousSums = mutableMapOf<Category, Double>()
+        allPreviousSums.putAll(previousSubcategorySums)
+        if (previousParentCategorySum > 0) {
+            allPreviousSums[parentCategory] = previousParentCategorySum
+        }
+        
         // Convert to TopCategorySummary and sort by amount
         return allSums
             .entries
             .sortedByDescending { it.value }
             .map { (category, amount) ->
+                val previousAmount = allPreviousSums[category] ?: 0.0
+                val trendPercentage = if (previousAmount != 0.0) {
+                    ((amount - previousAmount) / previousAmount) * 100
+                } else if (amount > 0) {
+                    100.0 // New subcategory this month
+                } else {
+                    0.0
+                }
+                
                 TopCategorySummary(
                     category = category,
                     amount = amount,
                     formatted = formatAmount(amount, baseCurrency),
-                    percentOfRevenue = calculatePercentage(amount, categoryTotal)
+                    percentOfRevenue = calculatePercentage(amount, categoryTotal),
+                    trendPercentage = trendPercentage
                 )
             }
     }

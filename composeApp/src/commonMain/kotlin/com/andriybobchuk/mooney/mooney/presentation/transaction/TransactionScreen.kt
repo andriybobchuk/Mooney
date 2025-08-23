@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,7 +18,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -34,12 +41,17 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -376,11 +388,9 @@ fun TransactionBottomSheet(
     } else {
         defaultCategoryType
     }
-    var selectedCategoryType by remember { mutableStateOf<Category?>(categoryType) }
-
-
+    // New category selection state
     val defaultCategory = categories.find { it.title.contains("Groceries") }
-    val category: Category? = if (isEditMode) {
+    val selectedCategory: Category? = if (isEditMode) {
         when {
             transactionToEdit?.subcategory?.isGeneralCategory() == true -> transactionToEdit.subcategory
             transactionToEdit?.subcategory?.isSubCategory() == true -> transactionToEdit.subcategory.parent
@@ -389,24 +399,17 @@ fun TransactionBottomSheet(
     } else {
         defaultCategory
     }
-
-
-    var selectedCategory by remember { mutableStateOf(category) }
-    var selectedSubCategory by remember { mutableStateOf(if (transactionToEdit?.subcategory?.isSubCategory() == true) transactionToEdit.subcategory else null) }
-    var subCategoryFieldEnabled by remember { 
-        mutableStateOf(
-            if (isEditMode) {
-                categories.filter { it.isSubCategory() && it.parent == category }.isNotEmpty()
-            } else {
-                false
-            }
-        ) 
-    }
+    val selectedSubCategory: Category? = if (transactionToEdit?.subcategory?.isSubCategory() == true) transactionToEdit.subcategory else null
+    
+    var currentSelectedCategory by remember { mutableStateOf(selectedCategory) }
+    var currentSelectedSubCategory by remember { mutableStateOf(selectedSubCategory) }
+    var showCategorySheet by remember { mutableStateOf(false) }
 
 
     var selectedDate by remember {
         mutableStateOf(transactionToEdit?.date ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date)
     }
+    var showDateSheet by remember { mutableStateOf(false) }
 
 
     ModalBottomSheet(
@@ -442,31 +445,32 @@ fun TransactionBottomSheet(
             Spacer(Modifier.height(8.dp))
 
             AccountField(selectedAccount, accounts.filterNotNull(), { selectedAccount = it })
-            CategoryTypeField(selectedCategoryType, categories.filter { it.isTypeCategory() }, {
-                selectedCategoryType = it
-                selectedCategory = null
-            })
-            CategoryField(
-                selectedCategory,
-                categories.filter { it.isGeneralCategory() && it.getRoot() == selectedCategoryType?.getRoot() },
-                {
-                    selectedCategory = it
-                    selectedSubCategory = null
-                    subCategoryFieldEnabled = categories.filter { it.isSubCategory() && it.parent == selectedCategory }.isNotEmpty()
-                })
-            SubCategoryField(
-                selectedSubCategory,
-                categories.filter { it.isSubCategory() && it.parent == selectedCategory },
-                subCategoryFieldEnabled,
-                { selectedSubCategory = it })
+            
+            // New single category button
+            OutlinedButton(
+                onClick = { showCategorySheet = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                val displayText = when {
+                    currentSelectedSubCategory != null -> "${currentSelectedSubCategory!!.resolveEmoji()} ${currentSelectedSubCategory!!.title}"
+                    currentSelectedCategory != null -> "${currentSelectedCategory!!.emoji ?: ""} ${currentSelectedCategory!!.title}"
+                    else -> "🛒 Groceries & Household" // Default
+                }
+                Text(displayText)
+            }
 
 
             Spacer(Modifier.height(8.dp))
 
-            DateSelector(
-                selectedDate = selectedDate,
-                onDateChange = { selectedDate = it }
-            )
+            // New single date button
+            OutlinedButton(
+                onClick = { showDateSheet = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                val dayName = selectedDate.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
+                val dayNumber = selectedDate.dayOfMonth
+                Text("$dayName $dayNumber")
+            }
 
 
 
@@ -476,12 +480,13 @@ fun TransactionBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     val parsedAmount = amount?.toDoubleOrNull()
-                    if (parsedAmount != null && selectedAccount != null && selectedCategory != null) {
+                    val finalCategory = currentSelectedCategory ?: defaultCategory
+                    if (parsedAmount != null && selectedAccount != null && finalCategory != null) {
                         val transaction = Transaction(
                             id = transactionToEdit?.id ?: 0,
                             amount = parsedAmount,
                             account = selectedAccount!!,
-                            subcategory = selectedSubCategory ?: selectedCategory!!,
+                            subcategory = currentSelectedSubCategory ?: finalCategory,
                             date = selectedDate
                         )
                         
@@ -497,80 +502,332 @@ fun TransactionBottomSheet(
             }
         }
     }
+
+    if (showCategorySheet) {
+        CategorySelectionBottomSheet(
+            onDismiss = { showCategorySheet = false },
+            sheetState = rememberModalBottomSheetState(
+                skipPartiallyExpanded = true,
+                confirmValueChange = { true }
+            ),
+            categories = categories,
+            initialSelectedCategory = currentSelectedCategory,
+            initialSelectedSubCategory = currentSelectedSubCategory,
+            onCategorySelected = { category, subCategory ->
+                currentSelectedCategory = category
+                currentSelectedSubCategory = subCategory
+                showCategorySheet = false
+            }
+        )
+    }
+
+    if (showDateSheet) {
+        DateSelectionBottomSheet(
+            onDismiss = { showDateSheet = false },
+            sheetState = rememberModalBottomSheetState(
+                skipPartiallyExpanded = true,
+                confirmValueChange = { true }
+            ),
+            selectedDate = selectedDate,
+            onDateSelected = { date ->
+                selectedDate = date
+                showDateSheet = false
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DateSelectionBottomSheet(
+    onDismiss: () -> Unit,
+    sheetState: SheetState,
+    selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit
+) {
+    var currentYear by remember { mutableStateOf(selectedDate.year) }
+    var currentMonth by remember { mutableStateOf(selectedDate.monthNumber) }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(Modifier.padding(20.dp).fillMaxSize()) {
+            Text(
+                text = "Select Date",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            // Year selector (dropdown as requested)
+            YearDropdownSelector(
+                selectedYear = currentYear,
+                onYearSelected = { 
+                    currentYear = it
+                    // Adjust day if it's invalid for the new year/month
+                    val maxDay = getDaysInMonth(currentYear, currentMonth)
+                    if (selectedDate.dayOfMonth > maxDay) {
+                        onDateSelected(LocalDate(currentYear, currentMonth, maxDay))
+                    }
+                }
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // Creative month selector
+            MonthSelector(
+                selectedMonth = currentMonth,
+                onMonthSelected = { 
+                    currentMonth = it
+                    // Adjust day if it's invalid for the new month
+                    val maxDay = getDaysInMonth(currentYear, currentMonth)
+                    if (selectedDate.dayOfMonth > maxDay) {
+                        onDateSelected(LocalDate(currentYear, currentMonth, maxDay))
+                    }
+                }
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            // Visual calendar day selector
+            CalendarDaySelector(
+                year = currentYear,
+                month = currentMonth,
+                selectedDay = if (selectedDate.year == currentYear && selectedDate.monthNumber == currentMonth) 
+                    selectedDate.dayOfMonth else null,
+                onDaySelected = { day ->
+                    onDateSelected(LocalDate(currentYear, currentMonth, day))
+                }
+            )
+        }
+    }
 }
 
 @Composable
-fun DateSelector(
-    selectedDate: LocalDate,
-    onDateChange: (LocalDate) -> Unit
+fun YearDropdownSelector(
+    selectedYear: Int,
+    onYearSelected: (Int) -> Unit
 ) {
-    var showYearMenu by remember { mutableStateOf(false) }
-    var showMonthMenu by remember { mutableStateOf(false) }
-    var showDayMenu by remember { mutableStateOf(false) }
-
+    var expanded by remember { mutableStateOf(false) }
     val currentDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     val years = (2000..currentDate.year).toList().reversed()
-    val months = (1..12).toList()
 
-    // Compute valid day count for the selected year/month
-    val daysInMonth = getDaysInMonth(selectedDate.year, selectedDate.monthNumber)
-    val days = (1..daysInMonth).toList()
-
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        // Year dropdown
-        Box {
-            OutlinedButton(onClick = { showYearMenu = true }) {
-                Text("${selectedDate.year}")
+    Box {
+        OutlinedButton(
+            onClick = { expanded = true },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Year: $selectedYear")
+        }
+        
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            years.forEach { year ->
+                DropdownMenuItem(
+                    text = { Text(year.toString()) },
+                    onClick = {
+                        onYearSelected(year)
+                        expanded = false
+                    }
+                )
             }
-            DropdownMenu(expanded = showYearMenu, onDismissRequest = { showYearMenu = false }) {
-                years.forEach { year ->
-                    DropdownMenuItem(
-                        text = { Text(year.toString()) },
-                        onClick = {
-                            val newDay = selectedDate.dayOfMonth.coerceAtMost(getDaysInMonth(year, selectedDate.monthNumber))
-                            onDateChange(LocalDate(year, selectedDate.monthNumber, newDay))
-                            showYearMenu = false
-                        }
+        }
+    }
+}
+
+@Composable
+fun MonthSelector(
+    selectedMonth: Int,
+    onMonthSelected: (Int) -> Unit
+) {
+    val monthNames = listOf(
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    )
+    val monthAbbreviations = listOf(
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    )
+
+    val listState = rememberLazyListState()
+    
+    // Auto-scroll to center the selected month
+    LaunchedEffect(selectedMonth) {
+        val targetIndex = selectedMonth - 1
+        // Center the selected month by scrolling to position it in the middle
+        val offset = -120 // Adjust to center the item (card width + spacing)
+        listState.animateScrollToItem(
+            index = maxOf(0, targetIndex),
+            scrollOffset = offset
+        )
+    }
+
+    Column {
+        Text(
+            text = "Month:",
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        // Creative horizontal scrollable month selector
+        LazyRow(
+            state = listState,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(12) { index ->
+                val month = index + 1
+                val isSelected = month == selectedMonth
+                
+                Card(
+                    modifier = Modifier
+                        .clickable { onMonthSelected(month) }
+                        .width(60.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isSelected) 
+                            MaterialTheme.colorScheme.primary 
+                        else 
+                            MaterialTheme.colorScheme.surface
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = if (isSelected) 8.dp else 2.dp
                     )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = monthAbbreviations[index],
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (isSelected) 
+                                MaterialTheme.colorScheme.onPrimary 
+                            else 
+                                MaterialTheme.colorScheme.onSurface,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        )
+                        Text(
+                            text = month.toString().padStart(2, '0'),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (isSelected) 
+                                MaterialTheme.colorScheme.onPrimary 
+                            else 
+                                MaterialTheme.colorScheme.onSurface,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
                 }
             }
         }
+    }
+}
 
-        // Month dropdown
-        Box {
-            OutlinedButton(onClick = { showMonthMenu = true }) {
-                Text(selectedDate.monthNumber.padZero())
-            }
-            DropdownMenu(expanded = showMonthMenu, onDismissRequest = { showMonthMenu = false }) {
-                months.forEach { month ->
-                    DropdownMenuItem(
-                        text = { Text(month.padZero()) },
-                        onClick = {
-                            val newDay = selectedDate.dayOfMonth.coerceAtMost(getDaysInMonth(selectedDate.year, month))
-                            onDateChange(LocalDate(selectedDate.year, month, newDay))
-                            showMonthMenu = false
-                        }
-                    )
-                }
+@Composable
+fun CalendarDaySelector(
+    year: Int,
+    month: Int,
+    selectedDay: Int?,
+    onDaySelected: (Int) -> Unit
+) {
+    // Use remember to cache expensive calculations
+    val calendarData = remember(year, month) {
+        val daysInMonth = getDaysInMonth(year, month)
+        val firstDayOfMonth = LocalDate(year, month, 1)
+        val firstDayOfWeek = firstDayOfMonth.dayOfWeek.ordinal
+        val startOffset = firstDayOfWeek
+        val totalCells = startOffset + daysInMonth
+        val rows = (totalCells + 6) / 7
+        
+        CalendarData(daysInMonth, startOffset, rows)
+    }
+    
+    val today = remember {
+        Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+    }
+
+    Column {
+        Text(
+            text = "Day:",
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        // Week day headers
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").forEach { day ->
+                Text(
+                    text = day,
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
-
-        // Day dropdown
-        Box {
-            OutlinedButton(onClick = { showDayMenu = true }) {
-                Text(formatDayWithWeekday(selectedDate.dayOfMonth, selectedDate.year, selectedDate.monthNumber))
-            }
-            DropdownMenu(expanded = showDayMenu, onDismissRequest = { showDayMenu = false }) {
-                days.forEach { day ->
-                    DropdownMenuItem(
-                        text = { Text(formatDayWithWeekday(day, selectedDate.year, selectedDate.monthNumber)) },
-                        onClick = {
-                            onDateChange(LocalDate(selectedDate.year, selectedDate.monthNumber, day))
-                            showDayMenu = false
+        
+        Spacer(Modifier.height(8.dp))
+        
+        // Calendar grid using cached data
+        repeat(calendarData.rows) { row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                repeat(7) { col ->
+                    val cellIndex = row * 7 + col
+                    val day = cellIndex - calendarData.startOffset + 1
+                    
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (day in 1..calendarData.daysInMonth) {
+                            val isSelected = day == selectedDay
+                            val isToday = LocalDate(year, month, day) == today
+                            
+                            Card(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clickable { onDaySelected(day) },
+                                colors = CardDefaults.cardColors(
+                                    containerColor = when {
+                                        isSelected -> MaterialTheme.colorScheme.primary
+                                        isToday -> MaterialTheme.colorScheme.primaryContainer
+                                        else -> MaterialTheme.colorScheme.surface
+                                    }
+                                ),
+                                elevation = CardDefaults.cardElevation(
+                                    defaultElevation = if (isSelected || isToday) 4.dp else 1.dp
+                                )
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = day.toString(),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = when {
+                                            isSelected -> MaterialTheme.colorScheme.onPrimary
+                                            isToday -> MaterialTheme.colorScheme.onPrimaryContainer
+                                            else -> MaterialTheme.colorScheme.onSurface
+                                        },
+                                        fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                }
+                            }
                         }
-                    )
+                    }
                 }
             }
+            Spacer(Modifier.height(4.dp))
         }
     }
 }
@@ -600,6 +857,12 @@ fun formatDayWithWeekday(day: Int, year: Int, month: Int): String {
     val dayName = date.getDayOfWeekName()
     return "${day.padZero()} ($dayName)"
 }
+
+data class CalendarData(
+    val daysInMonth: Int,
+    val startOffset: Int,
+    val rows: Int
+)
 
 
 @Composable
@@ -633,99 +896,248 @@ private fun AccountField(
     }
 }
 
-@Composable
-private fun CategoryTypeField(
-    initialSelectedCategoryType: Category?,
-    types: List<Category>,
-    onTypeSelected: (Category) -> Unit
-) {
-    var optionsExpanded by remember { mutableStateOf(false) }
-    OutlinedButton(
-        onClick = { optionsExpanded = true },
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(initialSelectedCategoryType?.title ?: "")
-    }
 
-    DropdownMenu(
-        expanded = optionsExpanded,
-        onDismissRequest = { optionsExpanded = false }
-    ) {
-        types.forEach { it ->
-            DropdownMenuItem(
-                text = { Text(it.title) },
-                onClick = {
-                    onTypeSelected(it)
-                    optionsExpanded = false
-                }
-            )
-        }
-    }
-}
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CategoryField(
+fun CategorySelectionBottomSheet(
+    onDismiss: () -> Unit,
+    sheetState: SheetState,
+    categories: List<Category>,
     initialSelectedCategory: Category?,
-    types: List<Category>,
-    onSelected: (Category) -> Unit
+    initialSelectedSubCategory: Category?,
+    onCategorySelected: (Category, Category?) -> Unit
 ) {
-    var optionsExpanded by remember { mutableStateOf(false) }
-    OutlinedButton(
-        onClick = { optionsExpanded = true },
-        modifier = Modifier.fillMaxWidth(),
+    var selectedTabIndex by remember { 
+        mutableStateOf(
+            if (initialSelectedCategory?.type == CategoryType.INCOME) 1 else 0
+        ) 
+    }
+    var showSubCategorySheet by remember { mutableStateOf(false) }
+    var selectedParentCategory by remember { mutableStateOf<Category?>(null) }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
-        Text("${initialSelectedCategory?.emoji} ${initialSelectedCategory?.title}")
+        Column(Modifier.padding(20.dp).fillMaxSize()) {
+            Text(
+                text = "Select Category",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            TabRow(selectedTabIndex = selectedTabIndex) {
+                Tab(
+                    selected = selectedTabIndex == 0,
+                    onClick = { selectedTabIndex = 0 },
+                    text = { Text("Expense") }
+                )
+                Tab(
+                    selected = selectedTabIndex == 1,
+                    onClick = { selectedTabIndex = 1 },
+                    text = { Text("Income") }
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            val filteredCategories by remember {
+                derivedStateOf {
+                    val categoryType = if (selectedTabIndex == 0) CategoryType.EXPENSE else CategoryType.INCOME
+                    categories.filter { 
+                        it.isGeneralCategory() && it.type == categoryType 
+                    }
+                }
+            }
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(filteredCategories) { category ->
+                    CategoryCard(
+                        category = category,
+                        isSelected = category.id == initialSelectedCategory?.id,
+                        onClick = {
+                            val hasSubCategories = remember(category.id) {
+                                categories.any { 
+                                    it.isSubCategory() && it.parent?.id == category.id 
+                                }
+                            }
+                            if (hasSubCategories) {
+                                selectedParentCategory = category
+                                showSubCategorySheet = true
+                            } else {
+                                onCategorySelected(category, null)
+                            }
+                        }
+                    )
+                }
+            }
+        }
     }
 
-    DropdownMenu(
-        expanded = optionsExpanded,
-        onDismissRequest = { optionsExpanded = false }
+    if (showSubCategorySheet && selectedParentCategory != null) {
+        SubCategorySelectionBottomSheet(
+            onDismiss = { showSubCategorySheet = false },
+            sheetState = rememberModalBottomSheetState(
+                skipPartiallyExpanded = true,
+                confirmValueChange = { true }
+            ),
+            parentCategory = selectedParentCategory!!,
+            categories = categories,
+            initialSelectedSubCategory = initialSelectedSubCategory,
+            onSubCategorySelected = { subCategory ->
+                onCategorySelected(selectedParentCategory!!, subCategory)
+                showSubCategorySheet = false
+            },
+            onParentSelected = {
+                onCategorySelected(selectedParentCategory!!, null)
+                showSubCategorySheet = false
+            }
+        )
+    }
+}
+
+@Composable
+fun CategoryCard(
+    category: Category,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .aspectRatio(1f)
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) 
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) 
+            else 
+                MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        types.forEach { it ->
-            DropdownMenuItem(
-                text = {
-                    if (it.emoji != null && it.title != null) {
-                        Text("${it.emoji} ${it.title}")
-                    } else {
-                        Text("Category (*)")
-                    }
-                },
-                onClick = {
-                    onSelected(it)
-                    optionsExpanded = false
-                }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = category.emoji ?: "📋",
+                fontSize = 32.sp,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            Text(
+                text = category.title,
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
             )
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SubCategoryField(
+fun SubCategorySelectionBottomSheet(
+    onDismiss: () -> Unit,
+    sheetState: SheetState,
+    parentCategory: Category,
+    categories: List<Category>,
     initialSelectedSubCategory: Category?,
-    types: List<Category>,
-    enabled: Boolean = true,
-    onSelected: (Category) -> Unit
+    onSubCategorySelected: (Category) -> Unit,
+    onParentSelected: () -> Unit
 ) {
-    var optionsExpanded by remember { mutableStateOf(false) }
-    OutlinedButton(
-        onClick = { optionsExpanded = true },
-        modifier = Modifier.fillMaxWidth(),
-        enabled = enabled
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
-        Text("${initialSelectedSubCategory?.resolveEmoji() ?: ""} ${initialSelectedSubCategory?.title ?: "Subcategory (Optional)"}")
-    }
+        Column(Modifier.padding(20.dp).fillMaxSize()) {
+            Text(
+                text = "Select ${parentCategory.title}",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
 
-    DropdownMenu(
-        expanded = optionsExpanded,
-        onDismissRequest = { optionsExpanded = false }
-    ) {
-        types.forEach {
-            DropdownMenuItem(
-                text = { Text("${it.resolveEmoji()} ${it.title}") },
-                onClick = {
-                    onSelected(it)
-                    optionsExpanded = false
+            // Parent category option
+            SubCategoryItem(
+                title = "${parentCategory.emoji} ${parentCategory.title}",
+                subtitle = "General",
+                isSelected = initialSelectedSubCategory == null,
+                onClick = onParentSelected
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            // Subcategories  
+            val subCategories = remember(parentCategory.id) {
+                categories.filter { 
+                    it.isSubCategory() && it.parent?.id == parentCategory.id 
                 }
+            }
+
+            LazyColumn {
+                items(subCategories) { subCategory ->
+                    SubCategoryItem(
+                        title = "${subCategory.resolveEmoji()} ${subCategory.title}",
+                        subtitle = null,
+                        isSelected = subCategory.id == initialSelectedSubCategory?.id,
+                        onClick = { onSubCategorySelected(subCategory) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SubCategoryItem(
+    title: String,
+    subtitle: String?,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .background(
+                if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                else Color.Transparent,
+                RoundedCornerShape(8.dp)
+            )
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        
+        if (isSelected) {
+            Icon(
+                Icons.Default.Add, // You might want to use a checkmark icon
+                contentDescription = "Selected",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
             )
         }
     }

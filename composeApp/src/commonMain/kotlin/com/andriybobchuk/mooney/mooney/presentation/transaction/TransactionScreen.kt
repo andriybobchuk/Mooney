@@ -79,6 +79,7 @@ import com.andriybobchuk.mooney.mooney.domain.Transaction
 import com.andriybobchuk.mooney.mooney.presentation.account.UiAccount
 import com.andriybobchuk.mooney.mooney.presentation.account.toAccounts
 import com.andriybobchuk.mooney.mooney.presentation.analytics.MonthPicker
+import com.andriybobchuk.mooney.mooney.presentation.analytics.MonthKey
 import com.andriybobchuk.mooney.mooney.presentation.formatWithCommas
 import com.andriybobchuk.mooney.mooney.presentation.formatToPlainString
 import kotlinx.coroutines.delay
@@ -135,6 +136,7 @@ fun TransactionsScreen(
                 transactions = transactions,
                 total = total,
                 currency = totalCurrency,
+                selectedMonth = state.selectedMonth,
                 onCurrencyClick = viewModel::onTotalCurrencyClick,
                 onEdit = {
                     transactionToEdit = it
@@ -154,6 +156,7 @@ fun TransactionsScreen(
                     transactionToEdit = transactionToEdit,
                     accounts = state.accounts,
                     categories = state.categories,
+                    selectedMonth = state.selectedMonth,
                     onAdd = {
                         isBottomSheetOpen = false
                         transactionToEdit = null
@@ -183,6 +186,7 @@ fun TransactionsScreenContent(
     transactions: List<Transaction?>,
     total: Double,
     currency: Currency,
+    selectedMonth: MonthKey,
     onCurrencyClick: () -> Unit,
     onEdit: (Transaction) -> Unit,
     onDelete: (Int) -> Unit,
@@ -218,7 +222,7 @@ fun TransactionsScreenContent(
                 )
             )
             Text(
-                "Spent this month",
+                "Spent in ${selectedMonth.toDisplayString()}",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontSize = 16.sp,
                   //  color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
@@ -377,6 +381,7 @@ fun TransactionBottomSheet(
     transactionToEdit: Transaction?,
     accounts: List<UiAccount?>,
     categories: List<Category>,
+    selectedMonth: MonthKey,
     onAdd: (Transaction) -> Unit,
     onUpdate: (Transaction) -> Unit,
 ) {
@@ -412,7 +417,9 @@ fun TransactionBottomSheet(
 
 
     var selectedDate by remember {
-        mutableStateOf(transactionToEdit?.date ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date)
+        mutableStateOf(
+            transactionToEdit?.date ?: LocalDate(selectedMonth.year, selectedMonth.month, 1)
+        )
     }
     var showDateSheet by remember { mutableStateOf(false) }
 
@@ -464,6 +471,13 @@ fun TransactionBottomSheet(
                 Text(displayText)
             }
 
+            // Frequently Used Categories
+            FrequentCategoriesSection(
+                onCategorySelected = { category ->
+                    currentSelectedCategory = category
+                    currentSelectedSubCategory = null
+                }
+            )
 
             Spacer(Modifier.height(8.dp))
 
@@ -1141,6 +1155,131 @@ fun SubCategoryItem(
                 contentDescription = "Selected",
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun FrequentCategoriesSection(
+    onCategorySelected: (Category) -> Unit
+) {
+    var frequentCategories by remember { mutableStateOf<List<Category>>(emptyList()) }
+    val getMostUsedCategoriesUseCase = org.koin.compose.koinInject<com.andriybobchuk.mooney.mooney.domain.usecase.GetMostUsedCategoriesUseCase>()
+    
+    LaunchedEffect(Unit) {
+        try {
+            val categories = getMostUsedCategoriesUseCase(8)
+            frequentCategories = if (categories.isEmpty()) {
+                // Fallback to default categories if no usage data exists
+                com.andriybobchuk.mooney.mooney.data.CategoryDataSource.categories
+                    .filter { !it.isSubCategory() }
+                    .take(8)
+            } else {
+                categories
+            }
+        } catch (e: Exception) {
+            // Fallback in case of error
+            frequentCategories = com.andriybobchuk.mooney.mooney.data.CategoryDataSource.categories
+                .filter { !it.isSubCategory() }
+                .take(8)
+        }
+    }
+    
+    if (frequentCategories.isNotEmpty()) {
+        Column {
+            Text(
+                text = "Frequently Used",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+            
+            // Split into 2 rows of 4 categories each
+            val firstRow = frequentCategories.take(4)
+            val secondRow = frequentCategories.drop(4).take(4)
+            
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // First row
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    firstRow.forEach { category ->
+                        CategoryChip(
+                            category = category,
+                            onClick = { onCategorySelected(category) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    // Fill remaining space if less than 4 items
+                    repeat(4 - firstRow.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+                
+                // Second row
+                if (secondRow.isNotEmpty()) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        secondRow.forEach { category ->
+                            CategoryChip(
+                                category = category,
+                                onClick = { onCategorySelected(category) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        // Fill remaining space if less than 4 items
+                        repeat(4 - secondRow.size) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CategoryChip(
+    category: Category,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .clickable { onClick() }
+            .padding(2.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp, 
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+        )
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 6.dp)
+        ) {
+            Text(
+                text = category.resolveEmoji(),
+                fontSize = 14.sp,
+                modifier = Modifier.padding(bottom = 2.dp)
+            )
+            Text(
+                text = category.title.take(7),
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1,
+                fontSize = 10.sp,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
     }

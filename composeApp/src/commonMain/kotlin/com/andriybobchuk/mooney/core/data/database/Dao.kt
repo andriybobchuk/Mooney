@@ -34,3 +34,19 @@ interface AccountDao {
     @Query("SELECT * FROM AccountEntity WHERE id = :id")
     suspend fun getById(id: Int): AccountEntity?
 }
+
+@Dao
+interface CategoryUsageDao {
+    @Upsert
+    suspend fun upsert(categoryUsage: CategoryUsageEntity)
+
+    @Query("SELECT * FROM category_usage ORDER BY usageCount DESC LIMIT :limit")
+    suspend fun getMostUsedCategories(limit: Int): List<CategoryUsageEntity>
+
+    @Query("SELECT * FROM category_usage WHERE categoryId = :categoryId")
+    suspend fun getCategoryUsage(categoryId: String): CategoryUsageEntity?
+
+    @Query("UPDATE category_usage SET usageCount = usageCount + 1, lastUsedDate = :date WHERE categoryId = :categoryId")
+    suspend fun incrementUsage(categoryId: String, date: String)
+}
+

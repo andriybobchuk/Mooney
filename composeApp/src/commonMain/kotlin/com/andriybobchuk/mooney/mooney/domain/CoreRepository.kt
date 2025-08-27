@@ -21,4 +21,8 @@ interface CoreRepository {
     fun getCategoryById(id: String): Category?
     fun getTopLevelCategories(): List<Category>
     fun getSubcategories(parentId: String): List<Category>
+    
+    // Category Usage
+    suspend fun trackCategoryUsage(categoryId: String)
+    suspend fun getMostUsedCategories(limit: Int): List<Category>
 }

@@ -21,3 +21,10 @@ data class TransactionEntity(
     val date: String
 )
 
+@Entity(tableName = "category_usage")
+data class CategoryUsageEntity(
+    @PrimaryKey val categoryId: String, // The category/subcategory ID
+    val usageCount: Int, // Number of times this category was used
+    val lastUsedDate: String // ISO date string of last usage
+)
+

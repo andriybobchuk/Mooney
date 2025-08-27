@@ -21,3 +21,20 @@ fun Double.formatToPlainString(): String {
     val decimalPart = parts.getOrNull(1)?.padEnd(2, '0')?.take(2) ?: "00"
     return "$integerPart.$decimalPart"
 }
+
+fun Double.formatToShortString(): String {
+    val absValue = kotlin.math.abs(this)
+    val sign = if (this < 0) "-" else ""
+    
+    return when {
+        absValue >= 1_000_000 -> {
+            val value = (absValue / 1_000_000 * 10).toInt() / 10.0
+            "$sign${value}M"
+        }
+        absValue >= 1_000 -> {
+            val value = (absValue / 1_000 * 10).toInt() / 10.0
+            "$sign${value}k"
+        }
+        else -> "$sign${absValue.toInt()}"
+    }
+}

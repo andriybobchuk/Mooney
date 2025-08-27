@@ -1,6 +1,8 @@
 package com.andriybobchuk.mooney.mooney.data
 
 import com.andriybobchuk.mooney.core.data.database.AccountDao
+import com.andriybobchuk.mooney.core.data.database.CategoryUsageDao
+import com.andriybobchuk.mooney.core.data.database.CategoryUsageEntity
 import com.andriybobchuk.mooney.core.data.database.TransactionDao
 import com.andriybobchuk.mooney.core.data.database.toDomain
 import com.andriybobchuk.mooney.mooney.domain.Account
@@ -17,6 +19,7 @@ import kotlinx.coroutines.flow.map
 class DefaultCoreRepositoryImpl(
     private val accountDao: AccountDao,
     private val transactionDao: TransactionDao,
+    private val categoryUsageDao: CategoryUsageDao,
 ) : CoreRepository {
 
     ///////////////////////////// ACCOUNTS //////////////////////////////////////////////////
@@ -48,6 +51,8 @@ class DefaultCoreRepositoryImpl(
     override suspend fun upsertTransaction(transaction: Transaction) {
         // Simple data operation - business logic moved to use cases
         transactionDao.upsert(transaction.toEntity())
+        // Track category usage when creating/updating transactions
+        trackCategoryUsage(transaction.subcategory.id)
     }
 
 
@@ -108,5 +113,34 @@ class DefaultCoreRepositoryImpl(
 
     override fun getSubcategories(parentId: String): List<Category> =
         CategoryDataSource.categories.filter { it.parent?.id == parentId }
+
+    ///////////////////////////// CATEGORY USAGE ///////////////////////////////////////
+    
+    override suspend fun trackCategoryUsage(categoryId: String) {
+        val currentDate = kotlinx.datetime.Clock.System.now().toEpochMilliseconds().toString()
+        val existing = categoryUsageDao.getCategoryUsage(categoryId)
+        
+        if (existing != null) {
+            categoryUsageDao.incrementUsage(categoryId, currentDate)
+        } else {
+            categoryUsageDao.upsert(
+                CategoryUsageEntity(
+                    categoryId = categoryId,
+                    usageCount = 1,
+                    lastUsedDate = currentDate
+                )
+            )
+        }
+    }
+    
+    override suspend fun getMostUsedCategories(limit: Int): List<Category> {
+        val usageEntities = categoryUsageDao.getMostUsedCategories(limit)
+        return usageEntities.mapNotNull { entity ->
+            getCategoryById(entity.categoryId)
+        }.filter { category ->
+            // Filter out top-level categories (Income/Expense) as they're too generic
+            category.parent != null || (category.parent == null && category.type != CategoryType.INCOME && category.type != CategoryType.EXPENSE)
+        }
+    }
 
 }

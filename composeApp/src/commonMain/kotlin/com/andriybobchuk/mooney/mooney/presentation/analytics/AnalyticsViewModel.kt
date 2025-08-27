@@ -36,6 +36,7 @@ data class AnalyticsState(
     val isSubcategorySheetOpen: Boolean = false,
     val isCategorySheetOpen: Boolean = false,
     val categorySheetType: CategorySheetType? = null,
+    val isNetIncomeSheetOpen: Boolean = false,
     val isLoading: Boolean = false
 )
 
@@ -127,7 +128,7 @@ class AnalyticsViewModel(
                     
                     baseMetric.copy(
                         trendPercentage = trendPercentage,
-                        isClickable = index in listOf(0, 1, 2) // Revenue, Taxes, Operating Costs
+                        isClickable = index in listOf(0, 1, 2, 3) // Revenue, Taxes, Operating Costs, Net Income
                     )
                 }
                 _state.update { it.copy(metrics = metrics) }
@@ -166,7 +167,8 @@ class AnalyticsViewModel(
                             revenue = analytics.totalRevenue,
                             taxes = taxes,
                             operatingCosts = analytics.totalExpenses,
-                            netIncome = analytics.totalRevenue - taxes - analytics.totalExpenses
+                            netIncome = analytics.totalRevenue - taxes - analytics.totalExpenses,
+                            transactionCount = analytics.transactions.filterNotNull().size
                         )
                     )
                 } catch (e: Exception) {
@@ -227,18 +229,27 @@ class AnalyticsViewModel(
     }
     
     fun onMetricCardClicked(metricTitle: String) {
-        val sheetType = when (metricTitle) {
-            "Revenue" -> CategorySheetType.REVENUE
-            "Operating Costs" -> CategorySheetType.OPERATING_COSTS
-            "Taxes" -> CategorySheetType.TAXES
-            else -> return
-        }
-        
-        _state.update {
-            it.copy(
-                categorySheetType = sheetType,
-                isCategorySheetOpen = true
-            )
+        when (metricTitle) {
+            "Net Income" -> {
+                _state.update {
+                    it.copy(isNetIncomeSheetOpen = true)
+                }
+            }
+            else -> {
+                val sheetType = when (metricTitle) {
+                    "Revenue" -> CategorySheetType.REVENUE
+                    "Operating Costs" -> CategorySheetType.OPERATING_COSTS
+                    "Taxes" -> CategorySheetType.TAXES
+                    else -> return
+                }
+                
+                _state.update {
+                    it.copy(
+                        categorySheetType = sheetType,
+                        isCategorySheetOpen = true
+                    )
+                }
+            }
         }
     }
     
@@ -248,6 +259,12 @@ class AnalyticsViewModel(
                 isCategorySheetOpen = false,
                 categorySheetType = null
             )
+        }
+    }
+    
+    fun onNetIncomeSheetDismissed() {
+        _state.update {
+            it.copy(isNetIncomeSheetOpen = false)
         }
     }
     
@@ -363,7 +380,8 @@ data class MonthlyMetricSnapshot(
     val revenue: Double,
     val taxes: Double,
     val operatingCosts: Double,
-    val netIncome: Double
+    val netIncome: Double,
+    val transactionCount: Int
 )
 
 enum class CategorySheetType {

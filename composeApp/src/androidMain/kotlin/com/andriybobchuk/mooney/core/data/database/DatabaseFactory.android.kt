@@ -13,9 +13,9 @@ actual class MooneyDatabaseFactory(
         val appContext = context.applicationContext
         val dbFile = appContext.getDatabasePath(AppDatabase.DB_NAME)
 
-        return Room.databaseBuilder(
+        return Room.databaseBuilder<AppDatabase>(
             context = appContext,
             name = dbFile.absolutePath
-        )
+        ).addMigrations(MIGRATION_1_2)
     }
 }

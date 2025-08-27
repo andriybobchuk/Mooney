@@ -36,6 +36,7 @@ val sharedModule = module {
     }
     single { get<AppDatabase>().accountDao }
     single { get<AppDatabase>().transactionDao }
+    single { get<AppDatabase>().categoryUsageDao }
 
     // Feature flags
     single<Boolean>(qualifier = named("use_live_exchange_rates")) { true }
@@ -69,6 +70,7 @@ val sharedModule = module {
     singleOf(::CalculateNetWorthUseCase)
     singleOf(::CalculateSubcategoriesUseCase)
     singleOf(::GetCategoriesUseCase)
+    singleOf(::GetMostUsedCategoriesUseCase)
     singleOf(::ConvertAccountsToUiUseCase)
     singleOf(::CurrencyManagerUseCase)
     

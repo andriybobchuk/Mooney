@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.painter.Painter
 import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.add
+import mooney.composeapp.generated.resources.goals
 import mooney.composeapp.generated.resources.stats
 import mooney.composeapp.generated.resources.transactions
 import mooney.composeapp.generated.resources.wallet
@@ -21,4 +22,7 @@ object Icons {
 
     @Composable
     fun StatsIcon(): Painter = painterResource(Res.drawable.stats)
+
+    @Composable
+    fun GoalsIcon(): Painter = painterResource(Res.drawable.goals)
 }

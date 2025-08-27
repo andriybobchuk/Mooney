@@ -63,3 +63,13 @@ data class ExchangeRates(
         return amount / fromRate * toRate
     }
 }
+
+data class Goal(
+    val id: Int,
+    val emoji: String,
+    val title: String,
+    val description: String,
+    val targetAmount: Double,
+    val currency: Currency,
+    val createdDate: LocalDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+)

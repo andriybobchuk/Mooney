@@ -14,7 +14,7 @@ actual class MooneyDatabaseFactory {
         val dbFile = documentDirectory() + "/${AppDatabase.DB_NAME}"
         return Room.databaseBuilder<AppDatabase>(
             name = dbFile
-        ).addMigrations(MIGRATION_1_2)
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3)
     }
 
     @OptIn(ExperimentalForeignApi::class)

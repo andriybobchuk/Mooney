@@ -10,6 +10,7 @@ import com.andriybobchuk.mooney.mooney.domain.CoreRepository
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
 import com.andriybobchuk.mooney.mooney.presentation.account.AccountViewModel
 import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsViewModel
+import com.andriybobchuk.mooney.mooney.presentation.goals.GoalsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
@@ -37,6 +38,7 @@ val sharedModule = module {
     single { get<AppDatabase>().accountDao }
     single { get<AppDatabase>().transactionDao }
     single { get<AppDatabase>().categoryUsageDao }
+    single { get<AppDatabase>().goalDao }
 
     // Feature flags
     single<Boolean>(qualifier = named("use_live_exchange_rates")) { true }
@@ -73,6 +75,11 @@ val sharedModule = module {
     singleOf(::GetMostUsedCategoriesUseCase)
     singleOf(::ConvertAccountsToUiUseCase)
     singleOf(::CurrencyManagerUseCase)
+    singleOf(::AddGoalUseCase)
+    singleOf(::DeleteGoalUseCase)
+    singleOf(::GetGoalsUseCase)
+    singleOf(::CalculateGoalProgressUseCase)
+    singleOf(::EstimateGoalCompletionUseCase)
     
     // Theme
     singleOf(::ThemeManager)
@@ -80,4 +87,5 @@ val sharedModule = module {
     viewModelOf(::AccountViewModel)
     viewModelOf(::TransactionViewModel)
     viewModelOf(::AnalyticsViewModel)
+    viewModelOf(::GoalsViewModel)
 }

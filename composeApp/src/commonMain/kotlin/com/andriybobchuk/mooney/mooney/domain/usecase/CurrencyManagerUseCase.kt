@@ -5,6 +5,7 @@ import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRateProvider
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
 import com.andriybobchuk.mooney.core.domain.Result
+import kotlinx.coroutines.flow.first
 
 class CurrencyManagerUseCase(
     private val exchangeRateProvider: ExchangeRateProvider
@@ -46,5 +47,18 @@ class CurrencyManagerUseCase(
         val availableCurrencies = getAvailableCurrencies()
         selectedCurrencyIndex = availableCurrencies.indexOf(baseCurrency)
         selectedCurrency = baseCurrency
+    }
+
+    fun convertToBaseCurrency(amount: Double, fromCurrency: Currency): Double {
+        return cachedExchangeRates.convert(amount, fromCurrency, baseCurrency)
+    }
+
+    fun getCurrentBaseCurrency(): Currency = baseCurrency
+
+    suspend fun convertAllAccountsToBaseCurrency(accountsFlow: kotlinx.coroutines.flow.Flow<List<com.andriybobchuk.mooney.mooney.domain.Account?>>): Double {
+        val accounts = accountsFlow.first()
+        return accounts.filterNotNull().sumOf { account ->
+            convertToBaseCurrency(account.amount, account.currency)
+        }
     }
 } 

@@ -50,3 +50,18 @@ interface CategoryUsageDao {
     suspend fun incrementUsage(categoryId: String, date: String)
 }
 
+@Dao
+interface GoalDao {
+    @Upsert
+    suspend fun upsert(goal: GoalEntity)
+
+    @Query("DELETE FROM goals WHERE id = :id")
+    suspend fun delete(id: Int)
+
+    @Query("SELECT * FROM goals ORDER BY createdDate DESC")
+    fun getAll(): Flow<List<GoalEntity>>
+
+    @Query("SELECT * FROM goals WHERE id = :id")
+    suspend fun getById(id: Int): GoalEntity?
+}
+

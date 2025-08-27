@@ -16,6 +16,6 @@ actual class MooneyDatabaseFactory(
         return Room.databaseBuilder<AppDatabase>(
             context = appContext,
             name = dbFile.absolutePath
-        ).addMigrations(MIGRATION_1_2)
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3)
     }
 }

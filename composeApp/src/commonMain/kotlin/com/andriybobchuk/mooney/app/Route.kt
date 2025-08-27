@@ -16,6 +16,9 @@ sealed interface Route {
     @Serializable
     data object Analytics : Route
 
+    @Serializable
+    data object Goals : Route
+
 
     @Serializable
     data object BookGraph : Route

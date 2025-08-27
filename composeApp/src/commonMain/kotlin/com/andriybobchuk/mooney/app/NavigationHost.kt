@@ -14,6 +14,8 @@ import com.andriybobchuk.mooney.mooney.presentation.account.AccountScreen
 import com.andriybobchuk.mooney.mooney.presentation.account.AccountViewModel
 import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsScreen
 import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsViewModel
+import com.andriybobchuk.mooney.mooney.presentation.goals.GoalsScreen
+import com.andriybobchuk.mooney.mooney.presentation.goals.GoalsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionViewModel
 import com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionsScreen
 import org.koin.compose.viewmodel.koinViewModel
@@ -48,6 +50,14 @@ fun NavigationHost() {
                 AnalyticsScreen(
                     viewModel = viewModel,
                     bottomNavbar = { BottomNavigationBar(navController, 2) }
+                )
+            }
+
+            composable<Route.Goals> {
+                val viewModel = koinViewModel<GoalsViewModel>()
+                GoalsScreen(
+                    viewModel = viewModel,
+                    bottomNavbar = { BottomNavigationBar(navController, 3) }
                 )
             }
 //            composable<Route.BookList>(

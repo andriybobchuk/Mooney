@@ -3,12 +3,15 @@ package com.andriybobchuk.mooney.mooney.data
 import com.andriybobchuk.mooney.core.data.database.AccountDao
 import com.andriybobchuk.mooney.core.data.database.CategoryUsageDao
 import com.andriybobchuk.mooney.core.data.database.CategoryUsageEntity
+import com.andriybobchuk.mooney.core.data.database.GoalDao
 import com.andriybobchuk.mooney.core.data.database.TransactionDao
 import com.andriybobchuk.mooney.core.data.database.toDomain
+import com.andriybobchuk.mooney.core.data.database.toEntity
 import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.CoreRepository
+import com.andriybobchuk.mooney.mooney.domain.Goal
 import com.andriybobchuk.mooney.mooney.domain.Transaction
 import com.andriybobchuk.mooney.mooney.domain.toEntity
 import kotlinx.coroutines.flow.Flow
@@ -20,6 +23,7 @@ class DefaultCoreRepositoryImpl(
     private val accountDao: AccountDao,
     private val transactionDao: TransactionDao,
     private val categoryUsageDao: CategoryUsageDao,
+    private val goalDao: GoalDao,
 ) : CoreRepository {
 
     ///////////////////////////// ACCOUNTS //////////////////////////////////////////////////
@@ -141,6 +145,26 @@ class DefaultCoreRepositoryImpl(
             // Filter out top-level categories (Income/Expense) as they're too generic
             category.parent != null || (category.parent == null && category.type != CategoryType.INCOME && category.type != CategoryType.EXPENSE)
         }
+    }
+
+    ///////////////////////////// GOALS /////////////////////////////////////////////////
+    
+    override suspend fun upsertGoal(goal: Goal) {
+        goalDao.upsert(goal.toEntity())
+    }
+
+    override suspend fun deleteGoal(id: Int) {
+        goalDao.delete(id)
+    }
+
+    override fun getAllGoals(): Flow<List<Goal>> {
+        return goalDao.getAll().map { goalEntities ->
+            goalEntities.map { it.toDomain() }
+        }
+    }
+
+    override suspend fun getGoalById(id: Int): Goal? {
+        return goalDao.getById(id)?.toDomain()
     }
 
 }

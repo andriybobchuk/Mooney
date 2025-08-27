@@ -20,6 +20,7 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
         BottomNavigationItem("Transactions", Icons.TransactionsIcon()),
         BottomNavigationItem("Accounts", Icons.AccountsIcon()),
         BottomNavigationItem("Analytics", Icons.StatsIcon()),
+        BottomNavigationItem("Goals", Icons.GoalsIcon()),
     )
 
     NavigationBar(
@@ -34,6 +35,7 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
                             0 -> navController.navigate(Route.Transactions) { popUpTo(Route.MooneyGraph) }
                             1 -> navController.navigate(Route.Accounts) { popUpTo(Route.MooneyGraph) }
                             2 -> navController.navigate(Route.Analytics) { popUpTo(Route.MooneyGraph) }
+                            3 -> navController.navigate(Route.Goals) { popUpTo(Route.MooneyGraph) }
                         }
                     }
                 },

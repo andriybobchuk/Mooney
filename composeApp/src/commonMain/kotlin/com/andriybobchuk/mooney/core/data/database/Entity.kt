@@ -28,3 +28,14 @@ data class CategoryUsageEntity(
     val lastUsedDate: String // ISO date string of last usage
 )
 
+@Entity(tableName = "goals")
+data class GoalEntity(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val emoji: String,
+    val title: String,
+    val description: String,
+    val targetAmount: Double,
+    val currency: String,
+    val createdDate: String // ISO date string
+)
+

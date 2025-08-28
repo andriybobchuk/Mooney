@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
@@ -35,6 +36,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -56,12 +58,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.mutableFloatStateOf
+import kotlin.math.max
+import kotlin.math.min
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -100,11 +107,13 @@ fun TransactionsScreen(
     val transactions = state.transactions
     val total = state.total
     val totalCurrency = state.totalCurrency
+    val frequentCategories by viewModel.frequentCategories.collectAsState()
 
     // Sheet
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isBottomSheetOpen by remember { mutableStateOf(false) }
     var transactionToEdit by remember { mutableStateOf<Transaction?>(null) }
+    var preselectedCategory by remember { mutableStateOf<Category?>(null) }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
@@ -118,25 +127,39 @@ fun TransactionsScreen(
                         selectedMonth = state.selectedMonth,
                         onMonthSelected = viewModel::onMonthSelected,
                     )
-                }
+                },
+                actions = listOf(
+                    Toolbars.ToolBarAction(
+                        icon = Icons.Default.Add,
+                        contentDescription = "Add Transaction",
+                        onClick = {
+                            preselectedCategory = null
+                            isBottomSheetOpen = true
+                        }
+                    )
+                )
             )
         },
         bottomBar = { bottomNavbar() },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { isBottomSheetOpen = true },
-                content = { Icon(Icons.Default.Add, contentDescription = "Add") },
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                containerColor = MaterialTheme.colorScheme.primary
+            FrequentCategoryFABs(
+                categories = frequentCategories.take(8),
+                onCategorySelected = { category ->
+                    preselectedCategory = category
+                    isBottomSheetOpen = true
+                }
             )
         },
         content = { paddingValues ->
             TransactionsScreenContent(
-                modifier = Modifier.padding(paddingValues),
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .nestedScroll(scrollBehavior.nestedScrollConnection),
                 transactions = transactions,
                 total = total,
                 currency = totalCurrency,
                 selectedMonth = state.selectedMonth,
+                dailyTotals = state.dailyTotals,
                 onCurrencyClick = viewModel::onTotalCurrencyClick,
                 onEdit = {
                     transactionToEdit = it
@@ -151,12 +174,14 @@ fun TransactionsScreen(
                     onDismiss = {
                         isBottomSheetOpen = false
                         transactionToEdit = null
+                        preselectedCategory = null
                     },
                     sheetState = bottomSheetState,
                     transactionToEdit = transactionToEdit,
                     accounts = state.accounts,
                     categories = state.categories,
                     selectedMonth = state.selectedMonth,
+                    preselectedCategory = preselectedCategory,
                     onAdd = {
                         isBottomSheetOpen = false
                         transactionToEdit = null
@@ -187,6 +212,7 @@ fun TransactionsScreenContent(
     total: Double,
     currency: Currency,
     selectedMonth: MonthKey,
+    dailyTotals: Map<Int, Double> = emptyMap(),
     onCurrencyClick: () -> Unit,
     onEdit: (Transaction) -> Unit,
     onDelete: (Int) -> Unit,
@@ -215,8 +241,7 @@ fun TransactionsScreenContent(
                 text = "${total.formatWithCommas()} ${currency.symbol}",
                 modifier = Modifier.clickable { onCurrencyClick() },
                 style = MaterialTheme.typography.headlineLarge.copy(
-                   // color = MaterialTheme.colorScheme.onPrimary,
-                    color  = Color.White,
+                    color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 28.sp
                 )
@@ -225,7 +250,6 @@ fun TransactionsScreenContent(
                 "Spent in ${selectedMonth.toDisplayString()}",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontSize = 16.sp,
-                  //  color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
                     color = Color.White
                 )
             )
@@ -238,6 +262,14 @@ fun TransactionsScreenContent(
                 .background(MaterialTheme.colorScheme.background),
         ) {
             LazyColumn {
+                item {
+                    SpendingCalendarView(
+                        selectedMonth = selectedMonth,
+                        dailyTotals = dailyTotals,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                    )
+                }
+                
                 sortedGroups.forEach { (date, txList) ->
                     stickyHeader {
                         Row(
@@ -382,6 +414,7 @@ fun TransactionBottomSheet(
     accounts: List<UiAccount?>,
     categories: List<Category>,
     selectedMonth: MonthKey,
+    preselectedCategory: Category? = null,
     onAdd: (Transaction) -> Unit,
     onUpdate: (Transaction) -> Unit,
 ) {
@@ -396,7 +429,7 @@ fun TransactionBottomSheet(
     val categoryType: Category? = if (isEditMode) {
         transactionToEdit?.subcategory?.getRoot()
     } else {
-        defaultCategoryType
+        preselectedCategory ?: defaultCategoryType
     }
     // New category selection state
     val defaultCategory = categories.find { it.title.contains("Groceries") }
@@ -407,7 +440,7 @@ fun TransactionBottomSheet(
             else -> defaultCategory
         }
     } else {
-        defaultCategory
+        preselectedCategory ?: defaultCategory
     }
     val selectedSubCategory: Category? = if (transactionToEdit?.subcategory?.isSubCategory() == true) transactionToEdit.subcategory else null
     
@@ -470,14 +503,6 @@ fun TransactionBottomSheet(
                 }
                 Text(displayText)
             }
-
-            // Frequently Used Categories
-            FrequentCategoriesSection(
-                onCategorySelected = { category ->
-                    currentSelectedCategory = category
-                    currentSelectedSubCategory = null
-                }
-            )
 
             Spacer(Modifier.height(8.dp))
 
@@ -1239,6 +1264,142 @@ fun FrequentCategoriesSection(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun SpendingCalendarView(
+    selectedMonth: MonthKey,
+    dailyTotals: Map<Int, Double>,
+    modifier: Modifier = Modifier
+) {
+    val year = selectedMonth.year
+    val month = selectedMonth.month
+    
+    val calendarData = remember(year, month) {
+        val daysInMonth = getDaysInMonth(year, month)
+        val firstDayOfMonth = LocalDate(year, month, 1)
+        val firstDayOfWeek = firstDayOfMonth.dayOfWeek.ordinal
+        val startOffset = firstDayOfWeek
+        CalendarData(daysInMonth, startOffset, 0)
+    }
+    
+    // Remove outliers using IQR method for better color distribution
+    val maxAmount = remember(dailyTotals) {
+        val nonZeroAmounts = dailyTotals.values.filter { it > 0 }.sorted()
+        if (nonZeroAmounts.isEmpty()) {
+            0.0
+        } else if (nonZeroAmounts.size < 4) {
+            // Not enough data for IQR, use max
+            nonZeroAmounts.maxOrNull() ?: 0.0
+        } else {
+            val q1Index = (nonZeroAmounts.size * 0.25).toInt()
+            val q3Index = (nonZeroAmounts.size * 0.75).toInt()
+            val q1 = nonZeroAmounts[q1Index]
+            val q3 = nonZeroAmounts[q3Index]
+            val iqr = q3 - q1
+            val upperBound = q3 + (1.5 * iqr)
+            
+            // Use the upper bound as max, but ensure it's at least the 90th percentile
+            val p90Index = (nonZeroAmounts.size * 0.9).toInt().coerceAtMost(nonZeroAmounts.size - 1)
+            val p90 = nonZeroAmounts[p90Index]
+            maxOf(upperBound, p90).coerceAtLeast(q3)
+        }
+    }
+    
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            listOf("M", "T", "W", "T", "F", "S", "S").forEach { day ->
+                Text(
+                    text = day,
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 10.sp
+                )
+            }
+        }
+        
+        Spacer(Modifier.height(4.dp))
+        
+        val weeks = (calendarData.daysInMonth + calendarData.startOffset + 6) / 7
+        repeat(weeks) { week ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                repeat(7) { col ->
+                    val cellIndex = week * 7 + col
+                    val day = cellIndex - calendarData.startOffset + 1
+                    
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (day in 1..calendarData.daysInMonth) {
+                            val amount = dailyTotals[day] ?: 0.0
+                            val intensity = if (maxAmount > 0) (amount / maxAmount).coerceAtMost(1.0) else 0.0
+                            
+                            Card(
+                                modifier = Modifier
+                                    .aspectRatio(1.4f)
+                                    .fillMaxSize(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surface.copy(
+                                        alpha = 0.3f + (intensity.toFloat() * 0.7f)
+                                    ).let { baseColor ->
+                                        if (intensity > 0) {
+                                            lerp(
+                                                baseColor,
+                                                MaterialTheme.colorScheme.primary,
+                                                intensity.toFloat()
+                                            )
+                                        } else baseColor
+                                    }
+                                ),
+                                shape = RoundedCornerShape(6.dp),
+                                elevation = CardDefaults.cardElevation(0.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.fillMaxSize().padding(2.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Text(
+                                        text = day.toString(),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontSize = 8.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = if (intensity > 0.5) 
+                                            MaterialTheme.colorScheme.onPrimary 
+                                        else 
+                                            MaterialTheme.colorScheme.onSurface
+                                    )
+                                    if (amount > 0) {
+                                        Text(
+                                            text = "${amount.toInt()}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontSize = 6.sp,
+                                            color = if (intensity > 0.5) 
+                                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                                            else 
+                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (week < weeks - 1) {
+                Spacer(Modifier.height(2.dp))
             }
         }
     }

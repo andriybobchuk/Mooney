@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.flow
 
 
 data class TransactionState(
@@ -37,6 +38,7 @@ data class TransactionState(
     val categories: List<Category> = emptyList(),
     val total: Double = 0.0,
     val totalCurrency: Currency = GlobalConfig.baseCurrency,
+    val dailyTotals: Map<Int, Double> = emptyMap(),
     val isLoading: Boolean = false,
     val isError: Boolean = false
 )
@@ -50,7 +52,8 @@ class TransactionViewModel(
     private val calculateTransactionTotalUseCase: CalculateTransactionTotalUseCase,
     private val calculateDailyTotalUseCase: CalculateDailyTotalUseCase,
     private val convertAccountsToUiUseCase: ConvertAccountsToUiUseCase,
-    private val currencyManagerUseCase: CurrencyManagerUseCase
+    private val currencyManagerUseCase: CurrencyManagerUseCase,
+    private val getMostUsedCategoriesUseCase: GetMostUsedCategoriesUseCase
 ) : ViewModel() {
 
     private var observeTransactionsJob: Job? = null
@@ -65,6 +68,14 @@ class TransactionViewModel(
             SharingStarted.WhileSubscribed(5000L),
             _uiState.value
         )
+
+    val frequentCategories = flow {
+        emit(getMostUsedCategoriesUseCase())
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000L),
+        emptyList()
+    )
 
     fun onMonthSelected(month: MonthKey) {
         _uiState.update { it.copy(selectedMonth = month) }
@@ -88,6 +99,7 @@ class TransactionViewModel(
                 val sorted = filteredTransactions.sortedByDescending { it.date }
                 _uiState.update { it.copy(transactions = sorted) }
                 loadTotal()
+                loadDailyTotals(filteredTransactions, month)
             }
             .launchIn(viewModelScope)
     }
@@ -109,6 +121,19 @@ class TransactionViewModel(
                 total = result.total,
                 totalCurrency = result.currency
             )
+        }
+    }
+
+    private fun loadDailyTotals(transactions: List<Transaction>, month: MonthKey) {
+        val dailyTotalsMap = transactions
+            .filterNotNull()
+            .groupBy { it.date.dayOfMonth }
+            .mapValues { (_, dayTransactions) ->
+                calculateDailyTotalUseCase(dayTransactions, dayTransactions.firstOrNull()?.date ?: kotlinx.datetime.LocalDate(month.year, month.month, 1))
+            }
+
+        _uiState.update {
+            it.copy(dailyTotals = dailyTotalsMap)
         }
     }
 

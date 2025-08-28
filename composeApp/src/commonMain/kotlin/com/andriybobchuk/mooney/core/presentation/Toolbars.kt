@@ -40,6 +40,7 @@ object Toolbars {
             scrollBehavior = scrollBehavior,
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                 containerColor = MaterialTheme.colorScheme.primary,
+                scrolledContainerColor = MaterialTheme.colorScheme.primary,
                 //titleContentColor = MaterialTheme.colorScheme.onPrimary,
                 titleContentColor = Color.White,
             ),

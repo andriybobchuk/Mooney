@@ -71,24 +71,13 @@ class CalculateGoalProgressUseCase(
     
     private suspend fun calculateMonthlyProgress(currentTotalSaved: Double, goal: Goal): Double {
         try {
-            val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-            val lastMonth = now.minus(1, DateTimeUnit.MONTH)
-            
-            // Get accounts from last month (simplified - in real app you'd store historical data)
-            val accounts = repository.getAllAccounts().first()
-            val baseCurrency = currencyManagerUseCase.getCurrentBaseCurrency()
-            
-            // Calculate net worth from last month 
-            val lastMonthSaved = accounts.filterNotNull().sumOf { account ->
-                currencyManagerUseCase.convertToBaseCurrency(account.amount, account.currency)
-            } * 0.95 // Simplified approximation - in real app store historical snapshots
-            
-            val monthlyGain = currentTotalSaved - lastMonthSaved
+            // Calculate current month's net income (savings after taxes and expenses)
+            val monthlyNetSavings = calculateCurrentMonthNetIncome()
             val goalAmountInBaseCurrency = currencyManagerUseCase.convertToBaseCurrency(goal.targetAmount, goal.currency)
             
-            // Calculate percentage of goal achieved this month
+            // Calculate what percentage of the goal was achieved this month
             if (goalAmountInBaseCurrency > 0) {
-                return (monthlyGain / goalAmountInBaseCurrency * 100)
+                return (monthlyNetSavings / goalAmountInBaseCurrency * 100)
             }
             
             return 0.0
@@ -96,39 +85,8 @@ class CalculateGoalProgressUseCase(
             return 0.0
         }
     }
-}
-
-class EstimateGoalCompletionUseCase(
-    private val calculateGoalProgressUseCase: CalculateGoalProgressUseCase,
-    private val repository: CoreRepository,
-    private val currencyManagerUseCase: CurrencyManagerUseCase
-) {
-    suspend operator fun invoke(goal: Goal): GoalCompletionEstimate {
-        val progress = calculateGoalProgressUseCase(goal)
-        
-        if (progress.progressPercentage >= 100.0) {
-            return GoalCompletionEstimate.AlreadyCompleted
-        }
-        
-        // Calculate net income from current month transactions
-        val monthlyNetIncome = calculateCurrentMonthNetIncome()
-        
-        if (monthlyNetIncome <= 0) {
-            return GoalCompletionEstimate.CannotEstimate
-        }
-        
-        val monthsToCompletion = (progress.remainingAmount / monthlyNetIncome).toInt().coerceAtLeast(1)
-        val targetDate = calculateTargetDate(monthsToCompletion)
-        
-        return GoalCompletionEstimate.EstimatedCompletion(
-            months = monthsToCompletion,
-            targetDate = targetDate,
-            monthlySavingsRate = monthlyNetIncome,
-            baseCurrency = progress.baseCurrency
-        )
-    }
     
-    private suspend fun calculateCurrentMonthNetIncome(): Double {
+    suspend fun calculateCurrentMonthNetIncome(): Double {
         try {
             val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
             val startOfMonth = LocalDate(now.year, now.month, 1)
@@ -174,6 +132,38 @@ class EstimateGoalCompletionUseCase(
         } catch (e: Exception) {
             return 0.0
         }
+    }
+}
+
+class EstimateGoalCompletionUseCase(
+    private val calculateGoalProgressUseCase: CalculateGoalProgressUseCase,
+    private val repository: CoreRepository,
+    private val currencyManagerUseCase: CurrencyManagerUseCase
+) {
+    suspend operator fun invoke(goal: Goal): GoalCompletionEstimate {
+        val progress = calculateGoalProgressUseCase(goal)
+        
+        if (progress.progressPercentage >= 100.0) {
+            return GoalCompletionEstimate.AlreadyCompleted
+        }
+        
+        // Use the same calculation as in CalculateGoalProgressUseCase for consistency
+        val progressCalculator = CalculateGoalProgressUseCase(repository, currencyManagerUseCase)
+        val monthlyNetIncome = progressCalculator.calculateCurrentMonthNetIncome()
+        
+        if (monthlyNetIncome <= 0) {
+            return GoalCompletionEstimate.CannotEstimate
+        }
+        
+        val monthsToCompletion = (progress.remainingAmount / monthlyNetIncome).toInt().coerceAtLeast(1)
+        val targetDate = calculateTargetDate(monthsToCompletion)
+        
+        return GoalCompletionEstimate.EstimatedCompletion(
+            months = monthsToCompletion,
+            targetDate = targetDate,
+            monthlySavingsRate = monthlyNetIncome,
+            baseCurrency = progress.baseCurrency
+        )
     }
     
     private fun calculateTargetDate(monthsToCompletion: Int): LocalDate {

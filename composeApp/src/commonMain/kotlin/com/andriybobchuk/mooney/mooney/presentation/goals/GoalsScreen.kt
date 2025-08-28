@@ -353,7 +353,7 @@ private fun GoalCard(
                     Text(
                         text = "${goal.targetAmount.toInt().toDouble().formatWithCommas().replace(".0", "")} ${goal.currency.symbol}",
                         style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -370,11 +370,32 @@ private fun GoalCard(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "Progress",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Medium
-                            )
+                            Column(horizontalAlignment = Alignment.Start) {
+                                Text(
+                                    text = "Progress",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                
+                                // Monthly Progress under Progress text, aligned left
+                                val monthlyProgressText = if (progress.monthlyProgressPercentage >= 0) {
+                                    "+${progress.monthlyProgressPercentage.toString().take(4)}% this month"
+                                } else {
+                                    "${progress.monthlyProgressPercentage.toString().take(5)}% this month"
+                                }
+                                
+                                Text(
+                                    text = monthlyProgressText,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = if (progress.monthlyProgressPercentage >= 0) {
+                                        Color(0xFF4CAF50)
+                                    } else {
+                                        Color(0xFFEF5350)
+                                    },
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
                             
                             Card(
                                 colors = CardDefaults.cardColors(
@@ -413,27 +434,6 @@ private fun GoalCard(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Monthly Progress
-                        val monthlyProgressText = if (progress.monthlyProgressPercentage >= 0) {
-                            "+${progress.monthlyProgressPercentage.toString().take(4)}% this month"
-                        } else {
-                            "${progress.monthlyProgressPercentage.toString().take(5)}% this month"
-                        }
-                        
-                        Text(
-                            text = monthlyProgressText,
-                            style = MaterialTheme.typography.labelMedium,
-                            textAlign = TextAlign.Center,
-                            color = if (progress.monthlyProgressPercentage >= 0) {
-                                Color(0xFF4CAF50)
-                            } else {
-                                Color(0xFFEF5350)
-                            },
-                            fontWeight = FontWeight.Medium
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
                         // Progress Text
                         Text(
                             text = "${progress.savedAmount.toInt().toDouble().formatWithCommas().replace(".0", "")} ${progress.baseCurrency.symbol} saved • " +
@@ -463,21 +463,13 @@ private fun GoalCard(
                             modifier = Modifier.padding(17.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Text(
-                                    text = goal.emoji,
-                                    fontSize = 24.sp,
-                                    modifier = Modifier.padding(end = 8.dp)
-                                )
-                                Text(
-                                    text = "Estimated completion",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                                )
-                            }
+                            Text(
+                                text = "Estimated completion",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
                             
                             Spacer(modifier = Modifier.height(8.dp))
                             

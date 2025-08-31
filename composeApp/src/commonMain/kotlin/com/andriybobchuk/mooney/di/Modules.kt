@@ -8,10 +8,15 @@ import com.andriybobchuk.mooney.mooney.data.DefaultCoreRepositoryImpl
 import com.andriybobchuk.mooney.mooney.domain.CoreRepository
 
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
+import com.andriybobchuk.mooney.mooney.domain.usecase.settings.*
+import com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository
+import com.andriybobchuk.mooney.mooney.data.settings.DataStorePreferencesRepository
+import com.andriybobchuk.mooney.core.data.preferences.PreferencesDataStoreFactory
 import com.andriybobchuk.mooney.mooney.presentation.account.AccountViewModel
 import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.goals.GoalsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionViewModel
+import com.andriybobchuk.mooney.mooney.presentation.settings.SettingsViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -39,6 +44,10 @@ val sharedModule = module {
     single { get<AppDatabase>().transactionDao }
     single { get<AppDatabase>().categoryUsageDao }
     single { get<AppDatabase>().goalDao }
+    
+    // DataStore and Preferences
+    single { get<PreferencesDataStoreFactory>().create() }
+    singleOf(::DataStorePreferencesRepository).bind<PreferencesRepository>()
 
     // Feature flags
     single<Boolean>(qualifier = named("use_live_exchange_rates")) { true }
@@ -81,6 +90,11 @@ val sharedModule = module {
     singleOf(::CalculateGoalProgressUseCase)
     singleOf(::EstimateGoalCompletionUseCase)
     
+    // Settings Use Cases
+    singleOf(::GetUserPreferencesUseCase)
+    singleOf(::UpdatePinnedCategoriesUseCase)
+    singleOf(::GetPinnedCategoriesUseCase)
+    
     // Theme
     singleOf(::ThemeManager)
 
@@ -88,4 +102,5 @@ val sharedModule = module {
     viewModelOf(::TransactionViewModel)
     viewModelOf(::AnalyticsViewModel)
     viewModelOf(::GoalsViewModel)
+    viewModelOf(::SettingsViewModel)
 }

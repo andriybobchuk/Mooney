@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -80,7 +81,8 @@ import com.andriybobchuk.mooney.mooney.presentation.formatWithCommas
 @Composable
 fun GoalsScreen(
     viewModel: GoalsViewModel,
-    bottomNavbar: @Composable () -> Unit
+    bottomNavbar: @Composable () -> Unit,
+    onSettingsClick: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -92,7 +94,14 @@ fun GoalsScreen(
         topBar = {
             Toolbars.Primary(
                 title = "Goals",
-                scrollBehavior = scrollBehavior
+                scrollBehavior = scrollBehavior,
+                actions = listOf(
+                    Toolbars.ToolBarAction(
+                        icon = Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        onClick = onSettingsClick
+                    )
+                )
             )
         },
         bottomBar = bottomNavbar,

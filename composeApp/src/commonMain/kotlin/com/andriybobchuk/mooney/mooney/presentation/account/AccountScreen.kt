@@ -70,6 +70,7 @@ import org.koin.compose.koinInject
 fun AccountScreen(
     viewModel: AccountViewModel = koinViewModel(),
     bottomNavbar: @Composable () -> Unit,
+    onSettingsClick: () -> Unit = {},
 ) {
     // General
     val state by viewModel.state.collectAsState()
@@ -100,8 +101,8 @@ fun AccountScreen(
                     ),
                     Toolbars.ToolBarAction(
                         icon = Icons.Default.Settings,
-                        contentDescription = "Toggle Theme",
-                        onClick = { viewModel.toggleTheme() }
+                        contentDescription = "Settings",
+                        onClick = onSettingsClick
                     )
                 )
             )

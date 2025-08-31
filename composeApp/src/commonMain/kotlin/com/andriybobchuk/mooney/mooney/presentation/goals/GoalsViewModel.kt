@@ -124,7 +124,7 @@ class GoalsViewModel(
                         }
                         
                         GoalWithProgress(goal, progress, estimate)
-                    }
+                    }.sortedBy { it.goal.targetAmount }
                     
                     _uiState.update { 
                         it.copy(

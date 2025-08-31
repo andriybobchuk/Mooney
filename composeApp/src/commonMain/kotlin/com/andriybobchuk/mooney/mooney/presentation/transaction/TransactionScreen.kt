@@ -4,6 +4,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,10 +29,12 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -69,6 +74,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -102,6 +111,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun TransactionsScreen(
     viewModel: TransactionViewModel = koinViewModel(),
     bottomNavbar: @Composable () -> Unit,
+    onSettingsClick: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val transactions = state.transactions
@@ -129,6 +139,11 @@ fun TransactionsScreen(
                     )
                 },
                 actions = listOf(
+                    Toolbars.ToolBarAction(
+                        icon = Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        onClick = onSettingsClick
+                    ),
                     Toolbars.ToolBarAction(
                         icon = Icons.Default.Add,
                         contentDescription = "Add Transaction",
@@ -263,7 +278,7 @@ fun TransactionsScreenContent(
         ) {
             LazyColumn {
                 item {
-                    SpendingCalendarView(
+                    TransactionPagerView(
                         selectedMonth = selectedMonth,
                         dailyTotals = dailyTotals,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
@@ -275,7 +290,7 @@ fun TransactionsScreenContent(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 6.dp, horizontal = 16.dp),
+                                .padding(vertical = 6.dp, horizontal = 14.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -287,9 +302,9 @@ fun TransactionsScreenContent(
                                         color = MaterialTheme.appColors.pillBackground,
                                         shape = RoundedCornerShape(12.dp)
                                     )
-                                    .padding(vertical = 4.dp, horizontal = 12.dp),
+                                    .padding(vertical = 3.dp, horizontal = 10.dp),
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 14.sp,
+                                fontSize = 13.sp,
                                 //color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Start
                             )
@@ -304,9 +319,9 @@ fun TransactionsScreenContent(
                                             color = MaterialTheme.appColors.pillBackgroundSecondary.copy(alpha = 0.5f),
                                             shape = RoundedCornerShape(12.dp)
                                         )
-                                        .padding(vertical = 4.dp, horizontal = 12.dp),
+                                        .padding(vertical = 3.dp, horizontal = 10.dp),
                                     fontWeight = FontWeight.Medium,
-                                    fontSize = 12.sp,
+                                    fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.secondary,
                                     textAlign = TextAlign.End
                                 )
@@ -357,12 +372,12 @@ fun TransactionItem(transaction: Transaction) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp, horizontal = 16.dp),
+            .padding(vertical = 5.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(52.dp)
+                .size(48.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .background(MaterialTheme.appColors.transactionIcon),
             contentAlignment = Alignment.Center
@@ -370,12 +385,12 @@ fun TransactionItem(transaction: Transaction) {
             Text(transaction.subcategory.resolveEmoji(), fontSize = 25.sp)
         }
 
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(11.dp))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 transaction.subcategory.title,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
             )
             if (transaction.subcategory.isSubCategory()) {
                 Text(
@@ -388,7 +403,7 @@ fun TransactionItem(transaction: Transaction) {
         Column(horizontalAlignment = Alignment.End) {
             Text(
                 "${transaction.amount.formatWithCommas()} ${transaction.account.currency.symbol}",
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold, fontSize = 14.5.sp),
                 color = if (transaction.subcategory.type == CategoryType.INCOME) MaterialTheme.appColors.incomeColor else MaterialTheme.appColors.expenseColor
             )
             Text(
@@ -1270,6 +1285,230 @@ fun FrequentCategoriesSection(
 }
 
 @Composable
+fun TransactionPagerView(
+    selectedMonth: MonthKey,
+    dailyTotals: Map<Int, Double>,
+    modifier: Modifier = Modifier
+) {
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    
+    Column(modifier = modifier) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth().height(200.dp)
+        ) { page ->
+            when (page) {
+                0 -> SpendingCalendarView(
+                    selectedMonth = selectedMonth,
+                    dailyTotals = dailyTotals,
+                    modifier = Modifier.fillMaxSize()
+                )
+                1 -> SpendingLineChart(
+                    selectedMonth = selectedMonth,
+                    dailyTotals = dailyTotals,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+        
+        //Spacer(modifier = Modifier.height(8.dp))
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            repeat(2) { index ->
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .padding(horizontal = 2.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (index == pagerState.currentPage) 
+                                MaterialTheme.colorScheme.primary 
+                            else 
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SpendingLineChart(
+    selectedMonth: MonthKey,
+    dailyTotals: Map<Int, Double>,
+    modifier: Modifier = Modifier
+) {
+    val year = selectedMonth.year
+    val month = selectedMonth.month
+    
+    val daysInMonth = remember(year, month) {
+        getDaysInMonth(year, month)
+    }
+    
+    val previousMonth = remember(selectedMonth) {
+        if (month == 1) {
+            MonthKey(year - 1, 12)
+        } else {
+            MonthKey(year, month - 1)
+        }
+    }
+    
+    val viewModel: TransactionViewModel = koinViewModel()
+    val previousMonthTotals = remember { mutableStateOf(emptyMap<Int, Double>()) }
+    
+    LaunchedEffect(previousMonth) {
+        try {
+            val totals = mutableMapOf<Int, Double>()
+            val prevDaysInMonth = getDaysInMonth(previousMonth.year, previousMonth.month)
+            for (day in 1..prevDaysInMonth) {
+                val date = LocalDate(previousMonth.year, previousMonth.month, day)
+                val dayTotal = viewModel.getDailyTotalForMonth(date)
+                totals[day] = dayTotal
+            }
+            previousMonthTotals.value = totals
+        } catch (e: Exception) {
+            previousMonthTotals.value = emptyMap()
+        }
+    }
+    
+    Column(modifier = modifier.padding(16.dp)) {
+        Text(
+            text = "Spending Comparison",
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "Current",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Canvas(modifier = Modifier.size(12.dp, 2.dp)) {
+                    drawLine(
+                        color = Color.Gray,
+                        start = androidx.compose.ui.geometry.Offset(0f, center.y),
+                        end = androidx.compose.ui.geometry.Offset(size.width, center.y),
+                        strokeWidth = 2.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 5f))
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "Previous",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+        }
+        
+       // Spacer(modifier = Modifier.height(16.dp))
+        
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+                .background(
+                    MaterialTheme.colorScheme.surface,
+                    RoundedCornerShape(12.dp)
+                )
+                .padding(16.dp)
+        ) {
+            val currentTotal = dailyTotals.values.sum()
+            val previousTotal = previousMonthTotals.value.values.sum()
+            
+            if (currentTotal == 0.0 && previousTotal == 0.0) {
+                Text(
+                    text = "No spending data available",
+                    modifier = Modifier.align(Alignment.Center),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+            } else {
+                val primaryColor = MaterialTheme.colorScheme.primary
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val maxTotal = maxOf(currentTotal, previousTotal)
+                    
+                    if (maxTotal <= 0) return@Canvas
+                    
+                    val width = size.width
+                    val height = size.height
+                    val dayWidth = width / maxOf(daysInMonth, getDaysInMonth(previousMonth.year, previousMonth.month))
+                    
+                    val currentPath = Path()
+                    val previousPath = Path()
+                    
+                    var currentCumulative = 0.0
+                    var previousCumulative = 0.0
+                    var currentStarted = false
+                    var previousStarted = false
+                    
+                    for (day in 1..daysInMonth) {
+                        val x = (day - 1) * dayWidth + dayWidth / 2
+                        
+                        currentCumulative += dailyTotals[day] ?: 0.0
+                        val currentY = height - (currentCumulative / maxTotal) * height * 0.8f
+                        
+                        if (!currentStarted) {
+                            currentPath.moveTo(x, currentY.toFloat())
+                            currentStarted = true
+                        } else {
+                            currentPath.lineTo(x, currentY.toFloat())
+                        }
+                    }
+                    
+                    val prevDaysInMonth = getDaysInMonth(previousMonth.year, previousMonth.month)
+                    for (day in 1..minOf(daysInMonth, prevDaysInMonth)) {
+                        val x = (day - 1) * dayWidth + dayWidth / 2
+                        
+                        previousCumulative += previousMonthTotals.value[day] ?: 0.0
+                        val previousY = height - (previousCumulative / maxTotal) * height * 0.8f
+                        
+                        if (!previousStarted) {
+                            previousPath.moveTo(x, previousY.toFloat())
+                            previousStarted = true
+                        } else {
+                            previousPath.lineTo(x, previousY.toFloat())
+                        }
+                    }
+                    
+                    drawPath(
+                        path = currentPath,
+                        color = primaryColor,
+                        style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
+                    )
+                    
+                    drawPath(
+                        path = previousPath,
+                        color = Color.Gray,
+                        style = Stroke(
+                            width = 3.dp.toPx(), 
+                            cap = StrokeCap.Round,
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f))
+                        )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun SpendingCalendarView(
     selectedMonth: MonthKey,
     dailyTotals: Map<Int, Double>,
@@ -1348,7 +1587,7 @@ fun SpendingCalendarView(
                             
                             Card(
                                 modifier = Modifier
-                                    .aspectRatio(1.4f)
+                                    .aspectRatio(1.5f)
                                     .fillMaxSize(),
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surface.copy(
@@ -1374,7 +1613,7 @@ fun SpendingCalendarView(
                                     Text(
                                         text = day.toString(),
                                         style = MaterialTheme.typography.bodySmall,
-                                        fontSize = 8.sp,
+                                        fontSize = 10.sp,
                                         fontWeight = FontWeight.Medium,
                                         color = if (intensity > 0.5) 
                                             MaterialTheme.colorScheme.onPrimary 
@@ -1385,7 +1624,7 @@ fun SpendingCalendarView(
                                         Text(
                                             text = "${amount.toInt()}",
                                             style = MaterialTheme.typography.bodySmall,
-                                            fontSize = 6.sp,
+                                            fontSize = 9.sp,
                                             color = if (intensity > 0.5) 
                                                 MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                                             else 

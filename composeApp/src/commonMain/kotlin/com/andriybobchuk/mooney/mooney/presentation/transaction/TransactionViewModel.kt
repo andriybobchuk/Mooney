@@ -10,6 +10,7 @@ import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.Transaction
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
+import com.andriybobchuk.mooney.mooney.domain.usecase.settings.GetPinnedCategoriesUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.CalculateTransactionTotalUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.ConvertAccountsToUiUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.first
 
 
 data class TransactionState(
@@ -53,7 +55,7 @@ class TransactionViewModel(
     private val calculateDailyTotalUseCase: CalculateDailyTotalUseCase,
     private val convertAccountsToUiUseCase: ConvertAccountsToUiUseCase,
     private val currencyManagerUseCase: CurrencyManagerUseCase,
-    private val getMostUsedCategoriesUseCase: GetMostUsedCategoriesUseCase
+    private val getPinnedCategoriesUseCase: GetPinnedCategoriesUseCase
 ) : ViewModel() {
 
     private var observeTransactionsJob: Job? = null
@@ -69,13 +71,12 @@ class TransactionViewModel(
             _uiState.value
         )
 
-    val frequentCategories = flow {
-        emit(getMostUsedCategoriesUseCase())
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000L),
-        emptyList()
-    )
+    val frequentCategories = getPinnedCategoriesUseCase()
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000L),
+            emptyList()
+        )
 
     fun onMonthSelected(month: MonthKey) {
         _uiState.update { it.copy(selectedMonth = month) }
@@ -180,6 +181,11 @@ class TransactionViewModel(
 
     fun getDailyTotal(date: kotlinx.datetime.LocalDate): Double {
         val allTransactions = _uiState.value.transactions.filterNotNull()
+        return calculateDailyTotalUseCase(allTransactions, date)
+    }
+
+    suspend fun getDailyTotalForMonth(date: kotlinx.datetime.LocalDate): Double {
+        val allTransactions = getTransactionsUseCase().first().filterNotNull()
         return calculateDailyTotalUseCase(allTransactions, date)
     }
 }

@@ -1,6 +1,7 @@
 package com.andriybobchuk.mooney.app
 
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -24,7 +25,8 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
     )
 
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.height(95.dp)
     ) {
         items.forEachIndexed { index, item ->
             NavigationBarItem(
@@ -45,7 +47,7 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
                     Icon(
                         painter = item.icon,
                         contentDescription = item.title,
-                        modifier = Modifier.size(21.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 },
                 colors = NavigationBarItemColors(

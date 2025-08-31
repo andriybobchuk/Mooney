@@ -68,6 +68,7 @@ kotlin {
 
             implementation(libs.bundles.ktor)
             implementation(libs.bundles.coil)
+            implementation("androidx.datastore:datastore-preferences-core:1.1.1")
 
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
         }

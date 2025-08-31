@@ -98,7 +98,7 @@ class CalculateGoalProgressUseCase(
             }
             
             val baseCurrency = currencyManagerUseCase.getCurrentBaseCurrency()
-            val exchangeRates = GlobalConfig.testExchangeRates
+            val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
             
             // Calculate revenue (income)
             val revenue = currentMonthTransactions

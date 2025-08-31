@@ -23,7 +23,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -64,6 +68,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun AnalyticsScreen(
     viewModel: AnalyticsViewModel = koinViewModel(),
     bottomNavbar: @Composable () -> Unit,
+    onSettingsClick: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -73,7 +78,14 @@ fun AnalyticsScreen(
         topBar = {
             Toolbars.Primary(
                 title = "Analytics",
-                scrollBehavior = scrollBehavior
+                scrollBehavior = scrollBehavior,
+                actions = listOf(
+                    Toolbars.ToolBarAction(
+                        icon = Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        onClick = onSettingsClick
+                    )
+                )
             )
         },
         bottomBar = { bottomNavbar() },
@@ -272,7 +284,11 @@ fun MonthPicker(
         contentPadding = PaddingValues(0.dp),
         elevation = null
     ) {
-        Text(text = "📅", fontSize = 20.sp)
+        Icon(
+            Icons.Default.DateRange,
+            contentDescription = "Select Month",
+            modifier = Modifier.size(20.dp)
+        )
     }
 
     DropdownMenu(

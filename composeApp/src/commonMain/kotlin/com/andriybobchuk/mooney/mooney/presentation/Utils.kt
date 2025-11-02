@@ -14,6 +14,14 @@ fun Double.formatWithCommas(): String {
     return "$withCommas.$decimalPart"
 }
 
+fun Int.formatWithCommas(): String {
+    return this.toString()
+        .reversed()
+        .chunked(3)
+        .joinToString(",")
+        .reversed()
+}
+
 fun Double.formatToPlainString(): String {
     val rounded = kotlin.math.round(this * 100) / 100
     val parts = rounded.toString().split(".")

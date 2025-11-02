@@ -175,7 +175,9 @@ class AccountViewModel(
     }
     
     fun toggleTheme() {
-        themeManager.toggleTheme()
+        viewModelScope.launch {
+            themeManager.toggleTheme()
+        }
     }
 }
 

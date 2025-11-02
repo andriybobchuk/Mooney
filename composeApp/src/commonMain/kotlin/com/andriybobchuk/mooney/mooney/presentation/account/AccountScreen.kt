@@ -47,7 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import com.andriybobchuk.mooney.core.presentation.theme.appColors
+import com.andriybobchuk.mooney.app.appColors
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -57,7 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.core.presentation.theme.ThemeManager
-import com.andriybobchuk.mooney.core.presentation.theme.ThemeMode
+import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.presentation.formatWithCommas
@@ -78,7 +78,7 @@ fun AccountScreen(
     val totalNetWorth = state.totalNetWorth
     
     val themeManager: ThemeManager = koinInject()
-    val themeMode by themeManager.themeMode.collectAsState()
+    val themeMode by themeManager.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
 
     // Sheet
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)

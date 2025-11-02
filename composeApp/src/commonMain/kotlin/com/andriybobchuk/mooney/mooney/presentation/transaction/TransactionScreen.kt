@@ -85,7 +85,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.presentation.Toolbars
-import com.andriybobchuk.mooney.core.presentation.theme.appColors
+import com.andriybobchuk.mooney.app.appColors
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.Category
@@ -97,6 +97,7 @@ import com.andriybobchuk.mooney.mooney.presentation.account.toAccounts
 import com.andriybobchuk.mooney.mooney.presentation.analytics.MonthPicker
 import com.andriybobchuk.mooney.mooney.presentation.analytics.MonthKey
 import com.andriybobchuk.mooney.mooney.presentation.formatWithCommas
+import com.andriybobchuk.mooney.mooney.presentation.formatToShortString
 import com.andriybobchuk.mooney.mooney.presentation.formatToPlainString
 import kotlinx.coroutines.delay
 import kotlinx.datetime.Clock
@@ -143,27 +144,20 @@ fun TransactionsScreen(
                         icon = Icons.Default.Settings,
                         contentDescription = "Settings",
                         onClick = onSettingsClick
-                    ),
-                    Toolbars.ToolBarAction(
-                        icon = Icons.Default.Add,
-                        contentDescription = "Add Transaction",
-                        onClick = {
-                            preselectedCategory = null
-                            isBottomSheetOpen = true
-                        }
                     )
                 )
             )
         },
         bottomBar = { bottomNavbar() },
         floatingActionButton = {
-            FrequentCategoryFABs(
-                categories = frequentCategories.take(8),
-                onCategorySelected = { category ->
-                    preselectedCategory = category
+            FloatingActionButton(
+                onClick = {
+                    preselectedCategory = null
                     isBottomSheetOpen = true
                 }
-            )
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Transaction")
+            }
         },
         content = { paddingValues ->
             TransactionsScreenContent(
@@ -466,7 +460,14 @@ fun TransactionBottomSheet(
 
     var selectedDate by remember {
         mutableStateOf(
-            transactionToEdit?.date ?: LocalDate(selectedMonth.year, selectedMonth.month, 1)
+            transactionToEdit?.date ?: run {
+                val currentDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+                if (currentDate.year == selectedMonth.year && currentDate.monthNumber == selectedMonth.month) {
+                    currentDate
+                } else {
+                    LocalDate(selectedMonth.year, selectedMonth.month, 1)
+                }
+            }
         )
     }
     var showDateSheet by remember { mutableStateOf(false) }
@@ -1525,6 +1526,22 @@ fun SpendingCalendarView(
         CalendarData(daysInMonth, startOffset, 0)
     }
     
+    // Calculate weekly totals
+    val weeklyTotals = remember(dailyTotals, calendarData) {
+        val weeks = (calendarData.daysInMonth + calendarData.startOffset + 6) / 7
+        (0 until weeks).map { weekIndex ->
+            var weekTotal = 0.0
+            repeat(7) { dayInWeek ->
+                val cellIndex = weekIndex * 7 + dayInWeek
+                val day = cellIndex - calendarData.startOffset + 1
+                if (day in 1..calendarData.daysInMonth) {
+                    weekTotal += dailyTotals[day] ?: 0.0
+                }
+            }
+            weekTotal
+        }
+    }
+    
     // Remove outliers using IQR method for better color distribution
     val maxAmount = remember(dailyTotals) {
         val nonZeroAmounts = dailyTotals.values.filter { it > 0 }.sorted()
@@ -1549,9 +1566,11 @@ fun SpendingCalendarView(
     }
     
     Column(modifier = modifier) {
+        // Header row with day labels and weekly total header
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             listOf("M", "T", "W", "T", "F", "S", "S").forEach { day ->
                 Text(
@@ -1563,6 +1582,17 @@ fun SpendingCalendarView(
                     fontSize = 10.sp
                 )
             }
+            
+            // Weekly total header
+            Text(
+                text = "Week",
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.width(44.dp),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.primary,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.SemiBold
+            )
         }
         
         Spacer(Modifier.height(4.dp))
@@ -1571,8 +1601,10 @@ fun SpendingCalendarView(
         repeat(weeks) { week ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(2.dp)
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                // Calendar days
                 repeat(7) { col ->
                     val cellIndex = week * 7 + col
                     val day = cellIndex - calendarData.startOffset + 1
@@ -1605,34 +1637,77 @@ fun SpendingCalendarView(
                                 shape = RoundedCornerShape(6.dp),
                                 elevation = CardDefaults.cardElevation(0.dp)
                             ) {
-                                Column(
-                                    modifier = Modifier.fillMaxSize().padding(2.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        text = day.toString(),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = if (intensity > 0.5) 
-                                            MaterialTheme.colorScheme.onPrimary 
-                                        else 
-                                            MaterialTheme.colorScheme.onSurface
-                                    )
-                                    if (amount > 0) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
                                         Text(
-                                            text = "${amount.toInt()}",
+                                            text = day.toString(),
                                             style = MaterialTheme.typography.bodySmall,
                                             fontSize = 9.sp,
+                                            fontWeight = FontWeight.Medium,
                                             color = if (intensity > 0.5) 
-                                                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                                                MaterialTheme.colorScheme.onPrimary 
                                             else 
-                                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                                MaterialTheme.colorScheme.onSurface,
+                                            lineHeight = 9.sp
                                         )
+                                        if (amount > 0) {
+                                            Text(
+                                                text = "${amount.toInt()}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                fontSize = 7.sp,
+                                                lineHeight = 7.sp,
+                                                color = if (intensity > 0.5) 
+                                                    MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                                                else 
+                                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                            )
+                                        }
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+                
+                // Weekly total column
+                val weekTotal = weeklyTotals[week]
+                Card(
+                    modifier = Modifier
+                        .width(44.dp)
+                        .height(28.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (weekTotal > 0) {
+                            Text(
+                                text = weekTotal.formatToShortString(),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        } else {
+                            Text(
+                                text = "-",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                textAlign = TextAlign.Center
+                            )
                         }
                     }
                 }

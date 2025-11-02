@@ -49,7 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import com.andriybobchuk.mooney.core.presentation.theme.appColors
+import com.andriybobchuk.mooney.app.appColors
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -71,6 +71,7 @@ fun AnalyticsScreen(
     onSettingsClick: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
+    var selectedTimePeriod by remember { mutableStateOf(TimePeriod.SIX_MONTHS) }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
@@ -111,6 +112,8 @@ fun AnalyticsScreen(
                         historicalData = state.historicalMetrics,
                         selectedMonth = state.selectedMonth,
                         onMonthSelected = viewModel::onMonthSelected,
+                        selectedPeriod = selectedTimePeriod,
+                        onPeriodSelected = { selectedTimePeriod = it },
                         modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 8.dp)
                     )
 
@@ -599,12 +602,12 @@ fun NetIncomeChartBottomSheet(
             Card(
                 modifier = Modifier.weight(1f),
                 colors = androidx.compose.material3.CardDefaults.cardColors(
-                    containerColor = Color(0xFFF1F8E9) // Light green background
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
                 ),
                 shape = RoundedCornerShape(16.dp),
                 border = androidx.compose.foundation.BorderStroke(
                     width = 1.dp, 
-                    color = Color(0xFF8BC34A) // Lighter green border
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
                 ),
                 elevation = androidx.compose.material3.CardDefaults.cardElevation(
                     defaultElevation = 0.dp
@@ -617,7 +620,7 @@ fun NetIncomeChartBottomSheet(
                     Text(
                         text = "Last 6 months",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     
@@ -625,7 +628,7 @@ fun NetIncomeChartBottomSheet(
                         text = "${totalProfit.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
@@ -634,12 +637,12 @@ fun NetIncomeChartBottomSheet(
             Card(
                 modifier = Modifier.weight(1f),
                 colors = androidx.compose.material3.CardDefaults.cardColors(
-                    containerColor = Color(0xFFF1F8E9) // Light green background
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
                 ),
                 shape = RoundedCornerShape(16.dp),
                 border = androidx.compose.foundation.BorderStroke(
                     width = 1.dp,
-                    color = Color(0xFF8BC34A) // Lighter green border
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
                 ),
                 elevation = androidx.compose.material3.CardDefaults.cardElevation(
                     defaultElevation = 0.dp
@@ -652,7 +655,7 @@ fun NetIncomeChartBottomSheet(
                     Text(
                         text = "Next 6 months",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     
@@ -660,13 +663,13 @@ fun NetIncomeChartBottomSheet(
                         text = "${projectedProfit.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
 
                     Text(
                         text = "Based on selected month",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }

@@ -4,6 +4,7 @@ import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.Goal
+import com.andriybobchuk.mooney.mooney.domain.GoalGroup
 import com.andriybobchuk.mooney.mooney.domain.Transaction
 import kotlinx.datetime.LocalDate
 
@@ -33,7 +34,9 @@ fun GoalEntity.toDomain(): Goal = Goal(
     description = description,
     targetAmount = targetAmount,
     currency = Currency.valueOf(currency),
-    createdDate = LocalDate.parse(createdDate)
+    createdDate = LocalDate.parse(createdDate),
+    groupName = groupName,
+    imagePath = imagePath
 )
 
 fun Goal.toEntity(): GoalEntity = GoalEntity(
@@ -43,5 +46,23 @@ fun Goal.toEntity(): GoalEntity = GoalEntity(
     description = description,
     targetAmount = targetAmount,
     currency = currency.name,
+    createdDate = createdDate.toString(),
+    groupName = groupName,
+    imagePath = imagePath
+)
+
+fun GoalGroupEntity.toDomain(): GoalGroup = GoalGroup(
+    id = id,
+    name = name,
+    emoji = emoji,
+    color = color,
+    createdDate = LocalDate.parse(createdDate)
+)
+
+fun GoalGroup.toEntity(): GoalGroupEntity = GoalGroupEntity(
+    id = id,
+    name = name,
+    emoji = emoji,
+    color = color,
     createdDate = createdDate.toString()
 )

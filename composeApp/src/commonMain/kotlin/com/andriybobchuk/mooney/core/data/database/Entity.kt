@@ -36,6 +36,17 @@ data class GoalEntity(
     val description: String,
     val targetAmount: Double,
     val currency: String,
+    val createdDate: String, // ISO date string
+    val groupName: String = "General",
+    val imagePath: String? = null
+)
+
+@Entity(tableName = "goal_groups")
+data class GoalGroupEntity(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val name: String,
+    val emoji: String,
+    val color: String,
     val createdDate: String // ISO date string
 )
 

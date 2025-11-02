@@ -65,3 +65,18 @@ interface GoalDao {
     suspend fun getById(id: Int): GoalEntity?
 }
 
+@Dao
+interface GoalGroupDao {
+    @Upsert
+    suspend fun upsert(goalGroup: GoalGroupEntity)
+
+    @Query("DELETE FROM goal_groups WHERE id = :id")
+    suspend fun delete(id: Int)
+
+    @Query("SELECT * FROM goal_groups ORDER BY createdDate DESC")
+    fun getAll(): Flow<List<GoalGroupEntity>>
+
+    @Query("SELECT * FROM goal_groups WHERE id = :id")
+    suspend fun getById(id: Int): GoalGroupEntity?
+}
+

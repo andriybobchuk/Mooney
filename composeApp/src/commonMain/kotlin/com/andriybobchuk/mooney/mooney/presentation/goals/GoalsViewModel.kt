@@ -155,7 +155,8 @@ class GoalsViewModel(
                     title = title,
                     description = description,
                     targetAmount = targetAmount,
-                    currency = currency
+                    currency = currency,
+                    groupName = "General" // Default group name
                 )
                 
                 addGoalUseCase(goal)

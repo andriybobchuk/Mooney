@@ -14,7 +14,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,19 +29,31 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.max
 import kotlin.math.min
+
+enum class TimePeriod(val displayName: String, val months: Int) {
+    SIX_MONTHS("6mo", 6),
+    ONE_YEAR("1y", 12)
+}
 
 @Composable
 fun TrendChart(
     historicalData: List<MonthlyMetricSnapshot>,
     selectedMonth: MonthKey,
     onMonthSelected: (MonthKey) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    selectedPeriod: TimePeriod = TimePeriod.SIX_MONTHS,
+    onPeriodSelected: (TimePeriod) -> Unit = {}
 ) {
-    if (historicalData.isEmpty()) {
+    
+    // Filter data based on selected period
+    val filteredData = historicalData.takeLast(selectedPeriod.months)
+    
+    if (filteredData.isEmpty()) {
         Box(
             modifier = modifier
                 .fillMaxWidth()
@@ -49,19 +67,55 @@ fun TrendChart(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(240.dp) // Increased height for labels
+            .height(260.dp) // Increased height for selector
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
             .padding(16.dp)
     ) {
+        // Time Period Selector - Minimalistic centered design
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .background(
+                    MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                    RoundedCornerShape(20.dp)
+                )
+                .padding(2.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            TimePeriod.entries.forEach { period ->
+                val isSelected = period == selectedPeriod
+                Box(
+                    modifier = Modifier
+                        .clickable { onPeriodSelected(period) }
+                        .background(
+                            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent,
+                            RoundedCornerShape(18.dp)
+                        )
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = period.displayName,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            fontSize = 11.sp,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    )
+                }
+            }
+        }
+        
         // Chart Canvas
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(180.dp)
                 .align(Alignment.TopCenter)
+                .padding(top = 32.dp)
         ) {
-            drawTrendChart(historicalData, size.width, size.height)
+            drawTrendChart(filteredData, size.width, size.height)
         }
         
         // Month Labels (Clickable)
@@ -71,7 +125,7 @@ fun TrendChart(
                 .align(Alignment.BottomCenter),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            historicalData.forEach { snapshot ->
+            filteredData.forEach { snapshot ->
                 val isSelected = snapshot.month == selectedMonth
                 Box(
                     modifier = Modifier

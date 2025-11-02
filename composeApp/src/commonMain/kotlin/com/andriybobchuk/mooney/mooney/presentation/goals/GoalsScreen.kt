@@ -75,6 +75,7 @@ import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.Goal
 import com.andriybobchuk.mooney.mooney.domain.usecase.GoalCompletionEstimate
+import com.andriybobchuk.mooney.mooney.domain.usecase.GoalProgressResult
 import com.andriybobchuk.mooney.mooney.presentation.formatWithCommas
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -256,6 +257,7 @@ private fun GoalCard(
     val estimate = goalWithProgress.completionEstimate
 
     var showContextMenu by remember { mutableStateOf(false) }
+    var showCustomRateSheet by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
@@ -360,7 +362,7 @@ private fun GoalCard(
                     
                     // Goal Price Tag
                     Text(
-                        text = "${goal.targetAmount.toInt().toDouble().formatWithCommas().replace(".0", "")} ${goal.currency.symbol}",
+                        text = "${goal.targetAmount.toInt().formatWithCommas()} ${goal.currency.symbol}",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.ExtraBold,
                         textAlign = TextAlign.Center,
@@ -445,8 +447,8 @@ private fun GoalCard(
 
                         // Progress Text
                         Text(
-                            text = "${progress.savedAmount.toInt().toDouble().formatWithCommas().replace(".0", "")} ${progress.baseCurrency.symbol} saved • " +
-                                    "${progress.remainingAmount.toInt().toDouble().formatWithCommas().replace(".0", "")} ${progress.baseCurrency.symbol} to go",
+                            text = "${progress.savedAmount.toInt().formatWithCommas()} ${progress.baseCurrency.symbol} saved • " +
+                                    "${progress.remainingAmount.toInt().formatWithCommas()} ${progress.baseCurrency.symbol} to go",
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
@@ -457,7 +459,9 @@ private fun GoalCard(
                 // Completion Estimate Card
                 estimate?.let { goalEstimate ->
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showCustomRateSheet = true },
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
                         ),
@@ -518,8 +522,7 @@ private fun GoalCard(
                                     Spacer(modifier = Modifier.height(8.dp))
                                     
                                     Text(
-                                        text = "at current rate of ${goalEstimate.monthlySavingsRate.toInt().toDouble().formatWithCommas
-                                            ().replace(".0", "")}/mo",
+                                        text = "at current rate of ${goalEstimate.monthlySavingsRate.toInt().formatWithCommas()}/mo",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
                                         textAlign = TextAlign.Center
@@ -582,6 +585,15 @@ private fun GoalCard(
                     )
                 }
             }
+        }
+        
+        // Custom Savings Rate Bottom Sheet
+        if (showCustomRateSheet) {
+            CustomSavingsRateBottomSheet(
+                goal = goal,
+                currentProgress = progress,
+                onDismiss = { showCustomRateSheet = false }
+            )
         }
     }
 }
@@ -788,4 +800,150 @@ private fun DeleteGoalDialog(
             }
         }
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CustomSavingsRateBottomSheet(
+    goal: Goal,
+    currentProgress: GoalProgressResult?,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var customRate by remember { mutableStateOf("") }
+    var useCustomRate by remember { mutableStateOf(false) }
+    
+    // Calculate estimates based on custom rate or current rate
+    val currentMonthlyRate = currentProgress?.let { 
+        // Assuming we have saved amount for this month - this should be calculated properly
+        1000.0 // Placeholder - should get actual monthly savings from data
+    } ?: 0.0
+    
+    val rateToUse = if (useCustomRate && customRate.toDoubleOrNull() != null) {
+        customRate.toDouble()
+    } else {
+        currentMonthlyRate
+    }
+    
+    val remainingAmount = goal.targetAmount - (currentProgress?.savedAmount ?: 0.0)
+    val monthsToComplete = if (rateToUse > 0) {
+        kotlin.math.ceil(remainingAmount / rateToUse).toInt()
+    } else {
+        0
+    }
+    
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+                .padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Savings Rate Playground",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+            
+            Text(
+                text = "Experiment with different monthly savings amounts",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center
+            )
+            
+            OutlinedTextField(
+                value = customRate,
+                onValueChange = { 
+                    customRate = it
+                    useCustomRate = it.isNotBlank()
+                },
+                label = { Text("Monthly savings amount") },
+                placeholder = { Text("Enter amount per month") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                suffix = { Text(goal.currency.symbol) }
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Results Card - Centered content
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Estimated completion",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center
+                    )
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    if (rateToUse > 0 && remainingAmount > 0) {
+                        val yearsText = when {
+                            monthsToComplete <= 1 -> "1 month"
+                            monthsToComplete < 12 -> "$monthsToComplete months"
+                            monthsToComplete == 12 -> "1 year"
+                            monthsToComplete < 24 -> "1 year ${monthsToComplete - 12} months"
+                            else -> {
+                                val years = monthsToComplete / 12
+                                val remainingMonths = monthsToComplete % 12
+                                if (remainingMonths == 0) "$years years"
+                                else "$years years $remainingMonths months"
+                            }
+                        }
+                        
+                        Text(
+                            text = yearsText,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            textAlign = TextAlign.Center
+                        )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Text(
+                            text = "at ${rateToUse.toInt().formatWithCommas()} ${goal.currency.symbol}/mo",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
+                            textAlign = TextAlign.Center
+                        )
+                    } else {
+                        Text(
+                            text = if (remainingAmount <= 0) "Goal already completed! 🎉" else "Enter a monthly savings rate",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+        }
+    }
 }

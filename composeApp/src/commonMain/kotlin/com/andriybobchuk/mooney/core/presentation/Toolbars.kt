@@ -41,8 +41,9 @@ object Toolbars {
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                 containerColor = MaterialTheme.colorScheme.primary,
                 scrolledContainerColor = MaterialTheme.colorScheme.primary,
-                //titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                titleContentColor = Color.White,
+                titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
             ),
             navigationIcon = {
                 if (showBackButton) {

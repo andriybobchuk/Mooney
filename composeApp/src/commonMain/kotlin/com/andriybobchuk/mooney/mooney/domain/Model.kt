@@ -71,5 +71,15 @@ data class Goal(
     val description: String,
     val targetAmount: Double,
     val currency: Currency,
+    val createdDate: LocalDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
+    val groupName: String = "General",
+    val imagePath: String? = null
+)
+
+data class GoalGroup(
+    val id: Int,
+    val name: String,
+    val emoji: String,
+    val color: String,
     val createdDate: LocalDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
 )

@@ -28,7 +28,8 @@ data class Category(
 
 enum class CategoryType {
     EXPENSE,
-    INCOME
+    INCOME,
+    TRANSFER
 }
 
 data class Transaction(
@@ -44,7 +45,8 @@ data class Account(
     val title: String,
     val amount: Double,
     val currency: Currency,
-    val emoji: String
+    val emoji: String,
+    val assetCategory: AssetCategory = AssetCategory.BANK_ACCOUNT
 )
 
 enum class Currency(val symbol: String) {

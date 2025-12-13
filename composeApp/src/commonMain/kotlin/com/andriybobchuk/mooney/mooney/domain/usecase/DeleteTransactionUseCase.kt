@@ -1,24 +1,23 @@
 package com.andriybobchuk.mooney.mooney.domain.usecase
 
 import com.andriybobchuk.mooney.mooney.domain.CoreRepository
+import com.andriybobchuk.mooney.mooney.domain.CategoryType
 
 class DeleteTransactionUseCase(
     private val repository: CoreRepository
 ) {
+    private val transferHandler = TransferHandler(repository)
+
     suspend operator fun invoke(id: Int) {
-        // Extract the business logic from DefaultCoreRepositoryImpl.deleteTransaction
         val transaction = repository.getTransactionById(id)
 
         if (transaction != null) {
-            val account = repository.getAccountById(transaction.account.id)
-            val categoryType = repository.getAllCategories().find { it.id == transaction.subcategory.id }?.getRoot()?.type
+            val categoryType = transferHandler.getCategoryType(transaction)
 
-            if (account != null && categoryType != null) {
-                val adjustedAmount = when (categoryType) {
-                    com.andriybobchuk.mooney.mooney.domain.CategoryType.EXPENSE -> account.amount + transaction.amount
-                    com.andriybobchuk.mooney.mooney.domain.CategoryType.INCOME -> account.amount - transaction.amount
-                }
-                repository.upsertAccount(account.copy(amount = adjustedAmount))
+            if (categoryType == CategoryType.TRANSFER) {
+                transferHandler.reverseTransferEffect(transaction)
+            } else if (categoryType != null) {
+                transferHandler.reverseRegularTransactionEffect(transaction, categoryType)
             }
 
             repository.deleteTransaction(id)

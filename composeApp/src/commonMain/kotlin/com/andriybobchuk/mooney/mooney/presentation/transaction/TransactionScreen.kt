@@ -34,6 +34,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -101,8 +103,11 @@ import com.andriybobchuk.mooney.mooney.presentation.formatToShortString
 import com.andriybobchuk.mooney.mooney.presentation.formatToPlainString
 import kotlinx.coroutines.delay
 import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -128,10 +133,30 @@ fun TransactionsScreen(
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
-        modifier = Modifier.background(MaterialTheme.colorScheme.primary),
+        modifier = Modifier.background(MaterialTheme.colorScheme.background),
         topBar = {
             Toolbars.Primary(
-                title = "Transactions",
+                titleContent = {
+                    Column(
+                        modifier = Modifier.clickable { viewModel.onTotalCurrencyClick() }
+                    ) {
+                        Text(
+                            text = "${total.formatWithCommas()} ${totalCurrency.symbol}",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            )
+                        )
+                        Text(
+                            text = "Spent in ${state.selectedMonth.toDisplayString().substringBeforeLast(' ')}",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
+                            )
+                        )
+                    }
+                },
                 scrollBehavior = scrollBehavior,
                 customContent = {
                     MonthPicker(
@@ -165,6 +190,7 @@ fun TransactionsScreen(
                     .padding(paddingValues)
                     .nestedScroll(scrollBehavior.nestedScrollConnection),
                 transactions = transactions,
+                accounts = state.accounts,
                 total = total,
                 currency = totalCurrency,
                 selectedMonth = state.selectedMonth,
@@ -218,6 +244,7 @@ fun LocalDate.formatForDisplay(): String {
 fun TransactionsScreenContent(
     modifier: Modifier,
     transactions: List<Transaction?>,
+    accounts: List<UiAccount?>,
     total: Double,
     currency: Currency,
     selectedMonth: MonthKey,
@@ -235,124 +262,79 @@ fun TransactionsScreenContent(
             date to transactions.sortedByDescending { it.id }
         }
 
-    Column(
+    LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary)
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 4.dp, bottom = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "${total.formatWithCommas()} ${currency.symbol}",
-                modifier = Modifier.clickable { onCurrencyClick() },
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp
-                )
-            )
-            Text(
-                "Spent in ${selectedMonth.toDisplayString()}",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 16.sp,
-                    color = Color.White
-                )
+        item {
+            TransactionPagerView(
+                selectedMonth = selectedMonth,
+                dailyTotals = dailyTotals,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             )
         }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                .background(MaterialTheme.colorScheme.background),
-        ) {
-            LazyColumn {
-                item {
-                    TransactionPagerView(
-                        selectedMonth = selectedMonth,
-                        dailyTotals = dailyTotals,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+        
+        sortedGroups.forEach { (date, txList) ->
+            stickyHeader {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp, horizontal = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // Date on the left
+                    Text(
+                        text = date.formatForDisplay(),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Start
                     )
-                }
-                
-                sortedGroups.forEach { (date, txList) ->
-                    stickyHeader {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 6.dp, horizontal = 14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            // Day pill on the left
-                            Text(
-                                text = date.formatForDisplay(),
-                                modifier = Modifier
-                                    .background(
-                                        color = MaterialTheme.appColors.pillBackground,
-                                        shape = RoundedCornerShape(12.dp)
-                                    )
-                                    .padding(vertical = 3.dp, horizontal = 10.dp),
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp,
-                                //color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Start
-                            )
-                            
-                            // Daily total pill on the right
-                            val dailyTotal = onDailyTotal(date)
-                            if (dailyTotal > 0) {
-                                Text(
-                                    text = "${dailyTotal.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
-                                    modifier = Modifier
-                                        .background(
-                                            color = MaterialTheme.appColors.pillBackgroundSecondary.copy(alpha = 0.5f),
-                                            shape = RoundedCornerShape(12.dp)
-                                        )
-                                        .padding(vertical = 3.dp, horizontal = 10.dp),
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.secondary,
-                                    textAlign = TextAlign.End
-                                )
-                            }
-                        }
-
+                    
+                    // Daily total on the right
+                    val dailyTotal = onDailyTotal(date)
+                    if (dailyTotal > 0) {
+                        Text(
+                            text = "${dailyTotal.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                            textAlign = TextAlign.End
+                        )
                     }
+                }
 
-                    items(txList) { tx ->
-                        var expanded by remember { mutableStateOf(false) }
+            }
 
-                        Box(
-                            modifier = Modifier.combinedClickable(
-                                onClick = { onEdit(tx) },
-                                onLongClick = { expanded = true }
-                            )) {
-                            TransactionItem(tx)
-                            DropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("Edit") },
-                                    onClick = {
-                                        expanded = false
-                                        onEdit(tx)
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Delete") },
-                                    onClick = {
-                                        expanded = false
-                                        onDelete(tx.id)
-                                    }
-                                )
+            items(txList) { tx ->
+                var expanded by remember { mutableStateOf(false) }
+
+                Box(
+                    modifier = Modifier.combinedClickable(
+                        onClick = { onEdit(tx) },
+                        onLongClick = { expanded = true }
+                    )) {
+                    TransactionItem(tx, accounts)
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Edit") },
+                            onClick = {
+                                expanded = false
+                                onEdit(tx)
                             }
-                        }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Delete") },
+                            onClick = {
+                                expanded = false
+                                onDelete(tx.id)
+                            }
+                        )
                     }
                 }
             }
@@ -362,7 +344,7 @@ fun TransactionsScreenContent(
 
 
 @Composable
-fun TransactionItem(transaction: Transaction) {
+fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -382,15 +364,32 @@ fun TransactionItem(transaction: Transaction) {
         Spacer(Modifier.width(11.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                transaction.subcategory.title,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-            )
-            if (transaction.subcategory.isSubCategory()) {
+            if (transaction.subcategory.type == CategoryType.TRANSFER) {
+                // For transfers: show "Internal Transfer" as title
                 Text(
-                    transaction.subcategory.parent?.title ?: "???",
+                    "Internal Transfer",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                )
+                // Extract destination account from category ID and show "[Account1] to [Account2]"
+                val destinationAccountId = transaction.subcategory.id.removePrefix("transfer_to_").toIntOrNull()
+                val destinationAccount = accounts.find { it?.id == destinationAccountId }
+                val destinationAccountTitle = destinationAccount?.title ?: "Unknown"
+                Text(
+                    "${transaction.account.title} to $destinationAccountTitle",
                     style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                 )
+            } else {
+                // For regular transactions: show category title
+                Text(
+                    transaction.subcategory.title,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                )
+                if (transaction.subcategory.isSubCategory()) {
+                    Text(
+                        transaction.subcategory.parent?.title ?: "???",
+                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    )
+                }
             }
         }
 
@@ -398,7 +397,11 @@ fun TransactionItem(transaction: Transaction) {
             Text(
                 "${transaction.amount.formatWithCommas()} ${transaction.account.currency.symbol}",
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold, fontSize = 14.5.sp),
-                color = if (transaction.subcategory.type == CategoryType.INCOME) MaterialTheme.appColors.incomeColor else MaterialTheme.appColors.expenseColor
+                color = when (transaction.subcategory.type) {
+                    CategoryType.INCOME -> MaterialTheme.appColors.incomeColor
+                    CategoryType.EXPENSE -> MaterialTheme.appColors.expenseColor
+                    CategoryType.TRANSFER -> MaterialTheme.colorScheme.onSurface // White in dark mode, black in light mode
+                }
             )
             Text(
                 transaction.account.title,
@@ -433,23 +436,46 @@ fun TransactionBottomSheet(
 
     val defaultAccount = accounts.filterNotNull().toAccounts().find { it.title.contains("Primary") }
     var selectedAccount by remember { mutableStateOf(transactionToEdit?.account ?: defaultAccount) }
-
-    val defaultCategoryType: Category? = categories.find { it.isTypeCategory() && it.type == CategoryType.EXPENSE }
-    val categoryType: Category? = if (isEditMode) {
-        transactionToEdit?.subcategory?.getRoot()
-    } else {
-        preselectedCategory ?: defaultCategoryType
+    
+    // For edit mode transfers, extract destination account from category ID
+    val initialDestinationAccount = if (isEditMode && transactionToEdit?.subcategory?.type == CategoryType.TRANSFER) {
+        val destinationAccountId = transactionToEdit.subcategory.id.removePrefix("transfer_to_").toIntOrNull()
+        destinationAccountId?.let { id ->
+            accounts.filterNotNull().toAccounts().find { it.id == id }
+        }
+    } else null
+    
+    var destinationAccount by remember { mutableStateOf(initialDestinationAccount) }
+    
+    // Transaction type state (Expense, Income, or Transfer)
+    var selectedTransactionType by remember { 
+        mutableStateOf(
+            if (isEditMode) {
+                transactionToEdit?.subcategory?.type ?: CategoryType.EXPENSE
+            } else {
+                preselectedCategory?.type ?: CategoryType.EXPENSE
+            }
+        )
     }
-    // New category selection state
-    val defaultCategory = categories.find { it.title.contains("Groceries") }
+    
+    // Auto-select default categories based on transaction type
+    val getDefaultCategoryForType: (CategoryType) -> Category? = { type ->
+        when (type) {
+            CategoryType.EXPENSE -> categories.find { it.title.contains("Groceries") }
+            CategoryType.INCOME -> categories.find { it.id == "salary" }
+            CategoryType.TRANSFER -> categories.find { it.id == "internal_transfer" }
+        }
+    }
+    
+    // Category state management
     val selectedCategory: Category? = if (isEditMode) {
         when {
             transactionToEdit?.subcategory?.isGeneralCategory() == true -> transactionToEdit.subcategory
             transactionToEdit?.subcategory?.isSubCategory() == true -> transactionToEdit.subcategory.parent
-            else -> defaultCategory
+            else -> getDefaultCategoryForType(selectedTransactionType)
         }
     } else {
-        preselectedCategory ?: defaultCategory
+        preselectedCategory ?: getDefaultCategoryForType(selectedTransactionType)
     }
     val selectedSubCategory: Category? = if (transactionToEdit?.subcategory?.isSubCategory() == true) transactionToEdit.subcategory else null
     
@@ -494,6 +520,18 @@ fun TransactionBottomSheet(
                 fontSize = 20.sp,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
+            
+            // Triple switch for transaction type
+            TransactionTypeSwitch(
+                selectedType = selectedTransactionType,
+                onTypeSelected = { type ->
+                    selectedTransactionType = type
+                    // Auto-select appropriate category when type changes
+                    currentSelectedCategory = getDefaultCategoryForType(type)
+                    currentSelectedSubCategory = null
+                },
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+            )
 
             OutlinedTextField(
                 value = amount ?: "",
@@ -505,31 +543,99 @@ fun TransactionBottomSheet(
 
             Spacer(Modifier.height(8.dp))
 
-            AccountField(selectedAccount, accounts.filterNotNull(), { selectedAccount = it })
+            // For transfers, show both source and destination accounts
+            if (selectedTransactionType == CategoryType.TRANSFER) {
+                Text(
+                    text = "From Account",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                AccountField(selectedAccount, accounts.filterNotNull(), { selectedAccount = it })
+                
+                Spacer(Modifier.height(8.dp))
+                
+                Text(
+                    text = "To Account",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                AccountField(
+                    destinationAccount, 
+                    accounts.filterNotNull().filter { 
+                        accounts.filterNotNull().toAccounts().find { acc -> acc.id == it.id }?.id != selectedAccount?.id 
+                    },
+                    { destinationAccount = it }
+                )
+            } else {
+                // For expense/income, show single account
+                AccountField(selectedAccount, accounts.filterNotNull(), { selectedAccount = it })
+            }
             
-            // New single category button
-            OutlinedButton(
-                onClick = { showCategorySheet = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                val displayText = when {
-                    currentSelectedSubCategory != null -> "${currentSelectedSubCategory!!.resolveEmoji()} ${currentSelectedSubCategory!!.title}"
-                    currentSelectedCategory != null -> "${currentSelectedCategory!!.emoji ?: ""} ${currentSelectedCategory!!.title}"
-                    else -> "🛒 Groceries & Household" // Default
+            // Category display - only show for expense/income
+            if (selectedTransactionType != CategoryType.TRANSFER) {
+                // For expense/income, allow category selection
+                OutlinedButton(
+                    onClick = { showCategorySheet = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    val displayText = when {
+                        currentSelectedSubCategory != null -> "${currentSelectedSubCategory!!.resolveEmoji()} ${currentSelectedSubCategory!!.title}"
+                        currentSelectedCategory != null -> "${currentSelectedCategory!!.emoji ?: ""} ${currentSelectedCategory!!.title}"
+                        else -> when (selectedTransactionType) {
+                            CategoryType.EXPENSE -> "🛒 Groceries & Household"
+                            CategoryType.INCOME -> "💸 Salary"
+                            else -> "Select Category"
+                        }
+                    }
+                    Text(displayText)
                 }
-                Text(displayText)
             }
 
             Spacer(Modifier.height(8.dp))
 
-            // New single date button
-            OutlinedButton(
-                onClick = { showDateSheet = true },
-                modifier = Modifier.fillMaxWidth()
+            // Date selector with navigation arrows
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                val dayName = selectedDate.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
-                val dayNumber = selectedDate.dayOfMonth
-                Text("$dayName $dayNumber")
+                // Previous day button
+                IconButton(
+                    onClick = { 
+                        selectedDate = selectedDate.minus(1, DateTimeUnit.DAY)
+                    },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                        contentDescription = "Previous day"
+                    )
+                }
+                
+                // Date button (expanded to fill remaining space)
+                OutlinedButton(
+                    onClick = { showDateSheet = true },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    val dayName = selectedDate.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
+                    val dayNumber = selectedDate.dayOfMonth
+                    Text("$dayName $dayNumber")
+                }
+                
+                // Next day button
+                IconButton(
+                    onClick = { 
+                        selectedDate = selectedDate.plus(1, DateTimeUnit.DAY)
+                    },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = "Next day"
+                    )
+                }
             }
 
 
@@ -540,13 +646,34 @@ fun TransactionBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     val parsedAmount = amount?.toDoubleOrNull()
-                    val finalCategory = currentSelectedCategory ?: defaultCategory
-                    if (parsedAmount != null && selectedAccount != null && finalCategory != null) {
+                    val finalCategory = if (selectedTransactionType == CategoryType.TRANSFER) {
+                        categories.find { it.id == "internal_transfer" }
+                    } else {
+                        currentSelectedCategory ?: getDefaultCategoryForType(selectedTransactionType)
+                    }
+                    
+                    // For transfers, validate both accounts are selected
+                    val isValid = if (selectedTransactionType == CategoryType.TRANSFER) {
+                        parsedAmount != null && selectedAccount != null && destinationAccount != null && 
+                        finalCategory != null && selectedAccount!!.id != destinationAccount!!.id
+                    } else {
+                        parsedAmount != null && selectedAccount != null && finalCategory != null
+                    }
+                    
+                    if (isValid) {
                         val transaction = Transaction(
                             id = transactionToEdit?.id ?: 0,
-                            amount = parsedAmount,
+                            amount = parsedAmount!!,
                             account = selectedAccount!!,
-                            subcategory = currentSelectedSubCategory ?: finalCategory,
+                            subcategory = if (selectedTransactionType == CategoryType.TRANSFER) {
+                                // Create a dynamic category that stores the destination account ID
+                                finalCategory!!.copy(
+                                    id = "transfer_to_${destinationAccount!!.id}",
+                                    title = "Transfer to ${destinationAccount!!.title}"
+                                )
+                            } else {
+                                currentSelectedSubCategory ?: finalCategory!!
+                            },
                             date = selectedDate
                         )
                         
@@ -1755,6 +1882,114 @@ fun CategoryChip(
                 maxLines = 1,
                 fontSize = 10.sp,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+fun TransactionTypeSwitch(
+    selectedType: CategoryType,
+    onTypeSelected: (CategoryType) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(10.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.appColors.cardBackground
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(3.dp),
+            horizontalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            // Expense option
+            TransactionTypeOption(
+                type = CategoryType.EXPENSE,
+                label = "Expense",
+                emoji = "💸",
+                isSelected = selectedType == CategoryType.EXPENSE,
+                onClick = { onTypeSelected(CategoryType.EXPENSE) },
+                modifier = Modifier.weight(1f)
+            )
+            
+            // Income option
+            TransactionTypeOption(
+                type = CategoryType.INCOME,
+                label = "Income",
+                emoji = "💰",
+                isSelected = selectedType == CategoryType.INCOME,
+                onClick = { onTypeSelected(CategoryType.INCOME) },
+                modifier = Modifier.weight(1f)
+            )
+            
+            // Transfer option
+            TransactionTypeOption(
+                type = CategoryType.TRANSFER,
+                label = "Transfer",
+                emoji = "↔️",
+                isSelected = selectedType == CategoryType.TRANSFER,
+                onClick = { onTypeSelected(CategoryType.TRANSFER) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun TransactionTypeOption(
+    type: CategoryType,
+    label: String,
+    emoji: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor = if (isSelected) {
+        when (type) {
+            CategoryType.EXPENSE -> MaterialTheme.appColors.expenseColor.copy(alpha = 0.2f)
+            CategoryType.INCOME -> MaterialTheme.appColors.incomeColor.copy(alpha = 0.2f)
+            CategoryType.TRANSFER -> MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+        }
+    } else {
+        Color.Transparent
+    }
+    
+    val textColor = if (isSelected) {
+        when (type) {
+            CategoryType.EXPENSE -> MaterialTheme.appColors.expenseColor
+            CategoryType.INCOME -> MaterialTheme.appColors.incomeColor
+            CategoryType.TRANSFER -> MaterialTheme.colorScheme.primary
+        }
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(7.dp))
+            .background(backgroundColor)
+            .clickable { onClick() }
+            .padding(vertical = 8.dp, horizontal = 4.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = emoji,
+                fontSize = 16.sp
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = textColor,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
             )
         }
     }

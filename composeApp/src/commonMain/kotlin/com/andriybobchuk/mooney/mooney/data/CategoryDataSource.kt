@@ -8,9 +8,13 @@ object CategoryDataSource {
     // Top-level
     val expense = Category("expense", "Expense", CategoryType.EXPENSE, emoji = "☺\uFE0F")
     val income = Category("income", "Income", CategoryType.INCOME, emoji = "\uD83E\uDD72")
+    val transfer = Category("transfer", "Transfer", CategoryType.TRANSFER, emoji = "↔️")
 
     // Level 2 & 3
     val groceries = Category("groceries", "Groceries & Household", CategoryType.EXPENSE, emoji = "🛒", parent = expense)
+    
+    // Transfer category (only one - no sub-categories)
+    val internalTransfer = Category("internal_transfer", "Internal Transfer", CategoryType.TRANSFER, emoji = "🔄", parent = transfer)
 
     val joy = Category("joy", "Joy", CategoryType.EXPENSE, emoji = "🎮", parent = expense)
     val joySub = listOf(
@@ -28,6 +32,9 @@ object CategoryDataSource {
         Category("business_communities", "Paid Communities", CategoryType.EXPENSE, parent = business),
         Category("business_linkedin", "LinkedIn", CategoryType.EXPENSE, parent = business),
         Category("software", "Software Tools", CategoryType.EXPENSE, parent = business),
+        Category("employees", "Employees", CategoryType.EXPENSE, parent = business),
+        Category("ai_assistants", "AI Assistants", CategoryType.EXPENSE, parent = business),
+        Category("books", "Books", CategoryType.EXPENSE, parent = business),
     )
 
     val health = Category("health", "Health", CategoryType.EXPENSE, emoji = "❤️", parent = expense)
@@ -120,7 +127,8 @@ object CategoryDataSource {
     val salary = Category("salary", "Salary", CategoryType.INCOME, emoji = "💸", parent = income)
     val salarySub = listOf(
         Category("effectivesoft", "EffectiveSoft", CategoryType.INCOME, parent = salary),
-        Category("unikie", "Unikie", CategoryType.INCOME, parent = salary)
+        Category("unikie", "Unikie", CategoryType.INCOME, parent = salary),
+        Category("squareone", "SquareOne", CategoryType.INCOME, parent = salary)
     )
     
     val positive_reconciliation =
@@ -134,8 +142,8 @@ object CategoryDataSource {
     val categories: List<Category> = buildList {
         addAll(
             listOf(
-                expense, income,
-                groceries,
+                expense, income, transfer,
+                groceries, internalTransfer,
                 joy, business, health, sport, gifts,
                 housing, tax, transport,
                 barber, clothing, reconciliation,

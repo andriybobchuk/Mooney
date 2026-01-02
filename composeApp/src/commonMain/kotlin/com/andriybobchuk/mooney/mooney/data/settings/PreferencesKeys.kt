@@ -1,0 +1,15 @@
+package com.andriybobchuk.mooney.mooney.data.settings
+
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
+
+object PreferencesKeys {
+    val PINNED_CATEGORIES = stringSetPreferencesKey("pinned_categories")
+    val DEFAULT_CURRENCY = stringPreferencesKey("default_currency")
+    val THEME_MODE = stringPreferencesKey("theme_mode")
+    val APP_THEME = stringPreferencesKey("app_theme")
+    val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
+    val PREFERENCES_VERSION = intPreferencesKey("preferences_version")
+}

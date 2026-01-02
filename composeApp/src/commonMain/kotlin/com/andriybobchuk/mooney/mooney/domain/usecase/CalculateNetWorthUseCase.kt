@@ -3,7 +3,7 @@ package com.andriybobchuk.mooney.mooney.domain.usecase
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
-import com.andriybobchuk.mooney.mooney.presentation.account.UiAccount
+import com.andriybobchuk.mooney.mooney.domain.Account
 
 class CalculateNetWorthUseCase(
     private val currencyManagerUseCase: CurrencyManagerUseCase
@@ -15,21 +15,27 @@ class CalculateNetWorthUseCase(
     )
     
     operator fun invoke(
-        accounts: List<UiAccount?>,
+        accounts: List<Account>,
         selectedCurrency: Currency,
         baseCurrency: Currency
     ): NetWorthResult {
-        val totalPln = accounts.filterNotNull().sumOf { it.baseCurrencyAmount }
         val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
+        val totalBaseCurrency = accounts.sumOf { account ->
+            if (account.currency != baseCurrency) {
+                exchangeRates.convert(account.amount, account.currency, baseCurrency)
+            } else {
+                account.amount
+            }
+        }
 
         val converted = if (selectedCurrency != baseCurrency) {
             exchangeRates.convert(
-                amount = totalPln,
+                amount = totalBaseCurrency,
                 from = baseCurrency,
                 to = selectedCurrency
             )
         } else {
-            totalPln
+            totalBaseCurrency
         }
 
         return NetWorthResult(

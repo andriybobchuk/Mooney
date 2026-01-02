@@ -1,6 +1,7 @@
 package com.andriybobchuk.mooney.core.data.database
 
 import com.andriybobchuk.mooney.mooney.domain.Account
+import com.andriybobchuk.mooney.mooney.domain.AssetCategory
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.Goal
@@ -13,7 +14,8 @@ fun AccountEntity.toDomain(): Account = Account(
     title = title,
     amount = amount,
     currency = Currency.valueOf(currency),
-    emoji = emoji
+    emoji = emoji,
+    assetCategory = AssetCategory.fromString(assetCategory)
 )
 
 fun TransactionEntity.toDomain(

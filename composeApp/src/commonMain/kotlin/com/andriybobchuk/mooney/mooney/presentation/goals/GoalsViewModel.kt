@@ -11,6 +11,7 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.EstimateGoalCompletionUseC
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetGoalsUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.GoalProgressResult
 import com.andriybobchuk.mooney.mooney.domain.usecase.GoalCompletionEstimate
+import com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -38,6 +39,7 @@ data class GoalWithProgress(
 
 sealed interface GoalsAction {
     object LoadGoals : GoalsAction
+    object RefreshExchangeRates : GoalsAction
     data class SwipeToGoal(val index: Int) : GoalsAction
     object ShowAddGoalSheet : GoalsAction
     object HideAddGoalSheet : GoalsAction
@@ -60,7 +62,8 @@ class GoalsViewModel(
     private val addGoalUseCase: AddGoalUseCase,
     private val deleteGoalUseCase: DeleteGoalUseCase,
     private val calculateGoalProgressUseCase: CalculateGoalProgressUseCase,
-    private val estimateGoalCompletionUseCase: EstimateGoalCompletionUseCase
+    private val estimateGoalCompletionUseCase: EstimateGoalCompletionUseCase,
+    private val currencyManagerUseCase: CurrencyManagerUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(GoalsState())
@@ -75,6 +78,7 @@ class GoalsViewModel(
     fun onAction(action: GoalsAction) {
         when (action) {
             is GoalsAction.LoadGoals -> loadGoals()
+            is GoalsAction.RefreshExchangeRates -> refreshExchangeRates()
             is GoalsAction.SwipeToGoal -> {
                 _uiState.update { it.copy(currentGoalIndex = action.index) }
             }
@@ -174,6 +178,18 @@ class GoalsViewModel(
                 _uiState.update { it.copy(showDeleteDialog = false, goalToDelete = null) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isError = true, showDeleteDialog = false, goalToDelete = null) }
+            }
+        }
+    }
+    
+    private fun refreshExchangeRates() {
+        viewModelScope.launch {
+            try {
+                currencyManagerUseCase.refreshExchangeRates()
+                // Reload goals to recalculate with new exchange rates
+                loadGoals()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isError = true) }
             }
         }
     }

@@ -119,3 +119,17 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
         )
     }
 }
+
+/**
+ * Migration from version 6 to 7
+ * Adds assetCategory column to AccountEntity table for asset diversification tracking
+ */
+val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            """
+            ALTER TABLE AccountEntity ADD COLUMN assetCategory TEXT NOT NULL DEFAULT 'BANK_ACCOUNT'
+            """
+        )
+    }
+}

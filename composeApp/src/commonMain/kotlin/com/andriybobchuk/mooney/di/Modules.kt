@@ -9,11 +9,14 @@ import com.andriybobchuk.mooney.mooney.domain.CoreRepository
 
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
 import com.andriybobchuk.mooney.mooney.domain.usecase.settings.*
+import com.andriybobchuk.mooney.mooney.domain.usecase.assets.*
 import com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository
 import com.andriybobchuk.mooney.mooney.data.settings.DataStorePreferencesRepository
 import com.andriybobchuk.mooney.core.data.preferences.PreferencesDataStoreFactory
 import com.andriybobchuk.mooney.mooney.presentation.account.AccountViewModel
+import com.andriybobchuk.mooney.mooney.presentation.assets.AssetsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsViewModel
+import com.andriybobchuk.mooney.mooney.presentation.exchange.ExchangeViewModel
 import com.andriybobchuk.mooney.mooney.presentation.goals.GoalsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionViewModel
 import com.andriybobchuk.mooney.mooney.presentation.settings.SettingsViewModel
@@ -84,11 +87,17 @@ val sharedModule = module {
     singleOf(::GetMostUsedCategoriesUseCase)
     singleOf(::ConvertAccountsToUiUseCase)
     singleOf(::CurrencyManagerUseCase)
+    singleOf(::CreateReconciliationUseCase)
     singleOf(::AddGoalUseCase)
     singleOf(::DeleteGoalUseCase)
     singleOf(::GetGoalsUseCase)
     singleOf(::CalculateGoalProgressUseCase)
     singleOf(::EstimateGoalCompletionUseCase)
+    
+    // Asset Use Cases
+    singleOf(::CalculateAssetDiversificationUseCase)
+    singleOf(::ManageAssetCategoryOrderUseCase)
+    singleOf(::ManageCategoryExpansionUseCase)
     
     // Settings Use Cases
     singleOf(::GetUserPreferencesUseCase)
@@ -99,8 +108,10 @@ val sharedModule = module {
     singleOf(::ThemeManager)
 
     viewModelOf(::AccountViewModel)
+    viewModelOf(::AssetsViewModel)
     viewModelOf(::TransactionViewModel)
     viewModelOf(::AnalyticsViewModel)
+    viewModelOf(::ExchangeViewModel)
     viewModelOf(::GoalsViewModel)
     viewModelOf(::SettingsViewModel)
 }

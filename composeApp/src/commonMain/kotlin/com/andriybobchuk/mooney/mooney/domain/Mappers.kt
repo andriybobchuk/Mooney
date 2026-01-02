@@ -9,7 +9,8 @@ fun Account.toEntity(): AccountEntity = AccountEntity(
     title = title,
     amount = amount,
     currency = currency.name,
-    emoji = emoji
+    emoji = emoji,
+    assetCategory = assetCategory.name
 )
 
 fun Transaction.toEntity(): TransactionEntity = TransactionEntity(

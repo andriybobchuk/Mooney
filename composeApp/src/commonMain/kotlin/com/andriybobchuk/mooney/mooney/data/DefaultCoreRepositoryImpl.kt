@@ -74,6 +74,23 @@ class DefaultCoreRepositoryImpl(
             transactionEntities.map { transactionEntity ->
                 val subcategory = categories.find {
                     it.id == transactionEntity.subcategoryId
+                } ?: run {
+                    // Handle dynamic transfer categories
+                    if (transactionEntity.subcategoryId.startsWith("transfer_to_")) {
+                        val destinationAccountId = transactionEntity.subcategoryId.removePrefix("transfer_to_").toIntOrNull()
+                        val destinationAccount = accounts.find { it?.id == destinationAccountId }
+                        if (destinationAccount != null) {
+                            // Create dynamic transfer category
+                            val transferParent = categories.find { it.id == "internal_transfer" }
+                            Category(
+                                id = transactionEntity.subcategoryId,
+                                title = "Transfer to ${destinationAccount.title}",
+                                type = CategoryType.TRANSFER,
+                                emoji = "↔️",
+                                parent = transferParent
+                            )
+                        } else null
+                    } else null
                 }
 
                 val account = accounts.find {
@@ -92,8 +109,26 @@ class DefaultCoreRepositoryImpl(
     override suspend fun getTransactionById(id: Int): Transaction? {
         val entity = transactionDao.getById(id) ?: return null
 
-        val subcategory = getAllCategories().find {
+        val categories = getAllCategories()
+        val subcategory = categories.find {
             it.id == entity.subcategoryId
+        } ?: run {
+            // Handle dynamic transfer categories
+            if (entity.subcategoryId.startsWith("transfer_to_")) {
+                val destinationAccountId = entity.subcategoryId.removePrefix("transfer_to_").toIntOrNull()
+                val accounts = getAllAccounts().first()
+                val destinationAccount = accounts.find { it?.id == destinationAccountId }
+                if (destinationAccount != null) {
+                    val transferParent = categories.find { it.id == "internal_transfer" }
+                    Category(
+                        id = entity.subcategoryId,
+                        title = "Transfer to ${destinationAccount.title}",
+                        type = CategoryType.TRANSFER,
+                        emoji = "↔️",
+                        parent = transferParent
+                    )
+                } else null
+            } else null
         }
 
         val accounts = getAllAccounts().first()
@@ -101,7 +136,9 @@ class DefaultCoreRepositoryImpl(
             it?.id == entity.accountId
         }
 
-        return entity.toDomain(subcategory!!, account!!)
+        return if (subcategory != null && account != null) {
+            entity.toDomain(subcategory, account)
+        } else null
     }
 
 

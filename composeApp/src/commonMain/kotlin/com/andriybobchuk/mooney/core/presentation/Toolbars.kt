@@ -1,13 +1,14 @@
 package com.andriybobchuk.mooney.core.presentation
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
 object Toolbars {
 
@@ -23,27 +25,46 @@ object Toolbars {
     fun Primary(
         modifier: Modifier = Modifier,
         showBackButton: Boolean = false,
-        title: String,
+        title: String = "",
+        subtitle: String = "",
+        titleContent: @Composable (() -> Unit)? = null,
         onBackClick: () -> Unit = {},
         scrollBehavior: TopAppBarScrollBehavior,
         actions: List<ToolBarAction> = emptyList(),
         customContent: @Composable (() -> Unit)? = null
     ) {
-        CenterAlignedTopAppBar(
+        TopAppBar(
             title = {
-                Text(
-                    text = title,
-                    fontWeight = FontWeight.Bold
-                )
+                if (titleContent != null) {
+                    titleContent()
+                } else if (title.isNotEmpty() || subtitle.isNotEmpty()) {
+                    Column {
+                        if (title.isNotEmpty()) {
+                            Text(
+                                text = title,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            )
+                        }
+                        if (subtitle.isNotEmpty()) {
+                            Text(
+                                text = subtitle,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
             },
             modifier = modifier,
             scrollBehavior = scrollBehavior,
-            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                scrolledContainerColor = MaterialTheme.colorScheme.primary,
-                titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background,
+                scrolledContainerColor = MaterialTheme.colorScheme.background,
+                titleContentColor = MaterialTheme.colorScheme.onBackground,
+                actionIconContentColor = MaterialTheme.colorScheme.onBackground,
+                navigationIconContentColor = MaterialTheme.colorScheme.onBackground
             ),
             navigationIcon = {
                 if (showBackButton) {
@@ -51,7 +72,7 @@ object Toolbars {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "",
-                            tint = MaterialTheme.colorScheme.onPrimary
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 }
@@ -66,7 +87,7 @@ object Toolbars {
                         Icon(
                             imageVector = actionIcon.icon,
                             contentDescription = actionIcon.contentDescription,
-                            tint = MaterialTheme.colorScheme.onPrimary
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 }

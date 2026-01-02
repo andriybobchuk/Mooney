@@ -155,7 +155,7 @@ class EstimateGoalCompletionUseCase(
             return GoalCompletionEstimate.CannotEstimate
         }
         
-        val monthsToCompletion = (progress.remainingAmount / monthlyNetIncome).toInt().coerceAtLeast(1)
+        val monthsToCompletion = kotlin.math.ceil(progress.remainingAmount / monthlyNetIncome).toInt().coerceAtLeast(1)
         val targetDate = calculateTargetDate(monthsToCompletion)
         
         return GoalCompletionEstimate.EstimatedCompletion(

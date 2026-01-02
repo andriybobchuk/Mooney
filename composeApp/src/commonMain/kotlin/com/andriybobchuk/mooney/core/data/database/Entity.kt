@@ -9,7 +9,8 @@ data class AccountEntity(
     val title: String,
     val amount: Double,
     val currency: String,
-    val emoji: String
+    val emoji: String,
+    val assetCategory: String = "BANK_ACCOUNT"
 )
 
 @Entity

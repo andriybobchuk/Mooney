@@ -25,4 +25,7 @@ object Icons {
 
     @Composable
     fun GoalsIcon(): Painter = painterResource(Res.drawable.goals)
+
+    @Composable
+    fun ExchangeIcon(): Painter = painterResource(Res.drawable.stats) // Temporarily use stats icon
 }

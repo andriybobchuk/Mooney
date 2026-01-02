@@ -32,11 +32,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -60,10 +63,20 @@ import com.andriybobchuk.mooney.core.presentation.theme.ThemeManager
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Currency
+import com.andriybobchuk.mooney.mooney.domain.usecase.ReconciliationDifference
+import com.andriybobchuk.mooney.mooney.domain.usecase.CreateReconciliationUseCase
 import com.andriybobchuk.mooney.mooney.presentation.formatWithCommas
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.compose.koinInject
+
+data class ReconciliationData(
+    val accountId: Int,
+    val accountTitle: String,
+    val oldAmount: Double,
+    val newAmount: Double,
+    val difference: Double
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,13 +98,38 @@ fun AccountScreen(
     val scope = rememberCoroutineScope()
     var showSheet by remember { mutableStateOf(false) }
     var editingAccount by remember { mutableStateOf<UiAccount?>(null) }
+    
+    // Reconciliation dialog state
+    var showReconciliationDialog by remember { mutableStateOf(false) }
+    var reconciliationData by remember { mutableStateOf<ReconciliationData?>(null) }
+    
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
-        modifier = Modifier.background(MaterialTheme.colorScheme.primary),
+        modifier = Modifier.background(MaterialTheme.colorScheme.background),
         topBar = {
             Toolbars.Primary(
-                title = "Accounts",
+                titleContent = {
+                    Column(
+                        modifier = Modifier.clickable { viewModel.onNetWorthLabelClick() }
+                    ) {
+                        Text(
+                            text = "${totalNetWorth.formatWithCommas()} ${state.totalNetWorthCurrency.symbol}",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            )
+                        )
+                        Text(
+                            text = "Total Net Worth",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
+                            )
+                        )
+                    }
+                },
                 scrollBehavior = scrollBehavior,
                 actions = listOf(
                     Toolbars.ToolBarAction(
@@ -146,15 +184,108 @@ fun AccountScreen(
                     AccountSheet(
                         editingAccount = editingAccount,
                         onAdd = { title, emoji, amount, currency ->
+                            println("DEBUG: Update clicked - editingAccount: ${editingAccount?.id}")
+                            
+                            // Check if this is an edit and if amount changed
+                            editingAccount?.let { account ->
+                                val difference = amount - account.originalAmount
+                                println("DEBUG: Amount difference: $difference (old: ${account.originalAmount}, new: $amount)")
+                                
+                                if (kotlin.math.abs(difference) >= 0.01) {
+                                    println("DEBUG: Difference significant, setting reconciliation data")
+                                    // Store reconciliation data for dialog
+                                    reconciliationData = ReconciliationData(
+                                        accountId = account.id,
+                                        accountTitle = title,
+                                        oldAmount = account.originalAmount,
+                                        newAmount = amount,
+                                        difference = difference
+                                    )
+                                } else {
+                                    println("DEBUG: Difference too small or zero")
+                                }
+                            } ?: run {
+                                println("DEBUG: editingAccount is null - this is a new account")
+                            }
+                            
+                            // Always update the account first
                             viewModel.upsertAccount(editingAccount?.id ?: 0, title, emoji, amount, currency)
-                            scope.launch { sheetState.hide(); showSheet = false }
+                            
+                            // Close sheet
+                            showSheet = false
+                            
+                            // Show reconciliation dialog if amount changed
+                            if (reconciliationData != null) {
+                                println("DEBUG: Showing reconciliation dialog")
+                                showReconciliationDialog = true
+                            } else {
+                                println("DEBUG: No reconciliation data, not showing dialog")
+                            }
+                            
+                            editingAccount = null
                         }
                     )
                 }
             }
+            
+            // Reconciliation dialog
+            if (showReconciliationDialog && reconciliationData != null) {
+                ReconciliationDialog(
+                    data = reconciliationData!!,
+                    onConfirm = {
+                        showReconciliationDialog = false
+                        reconciliationData = null
+                        // TODO: Create reconciliation transaction using CreateReconciliationUseCase
+                        // For now, just dismiss the dialog
+                    },
+                    onDismiss = {
+                        showReconciliationDialog = false
+                        reconciliationData = null
+                    }
+                )
+            }
         }
     )
 }
+
+@Composable
+private fun ReconciliationDialog(
+    data: ReconciliationData,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text("Account Balance Changed", fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column {
+                Text("The balance for '${data.accountTitle}' has changed:")
+                Spacer(Modifier.height(8.dp))
+                Text("Previous: ${data.oldAmount.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}")
+                Text("New: ${data.newAmount.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}")
+                Text("Difference: ${data.difference.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}")
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "Would you like to automatically create a reconciliation transaction to explain this change?",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Yes")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("No")
+            }
+        }
+    )
+}
+
 
 
 @Composable
@@ -167,64 +298,26 @@ private fun AccountScreenContent(
     onEdit: (UiAccount) -> Unit,
     onDelete: (UiAccount) -> Unit
 ) {
-    Column(
+    AccountsColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary)
-    ) {
-        Header(totalNetWorth, totalNetWorthCurrency, onTotalNetWorthClick)
-        AccountsColumn(
-            accounts = accounts,
-            onEdit = onEdit,
-            onDelete = onDelete
-        )
-    }
-}
-
-@Composable
-private fun Header(totalNetWorth: Double, totalNetWorthCurrency: Currency, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(top= 4.dp, bottom = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = buildAnnotatedString {
-                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append("${totalNetWorth.formatWithCommas()}")
-                }
-                withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                    append(" ${totalNetWorthCurrency.symbol}")
-                }
-            },
-            fontSize = 28.sp,
-            color = Color.White
-        )
-        Text(
-            text = "Total net worth",
-            fontSize = 18.sp,
-            color = Color.White.copy(alpha = 0.7f)
-        )
-    }
+            .background(MaterialTheme.colorScheme.background),
+        accounts = accounts,
+        onEdit = onEdit,
+        onDelete = onDelete
+    )
 }
 
 @Composable
 private fun AccountsColumn(
+    modifier: Modifier = Modifier,
     accounts: List<UiAccount?>,
     onEdit: (UiAccount) -> Unit,
     onDelete: (UiAccount) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-            .background(MaterialTheme.colorScheme.background),
+    LazyColumn(
+        modifier = modifier.padding(horizontal = 10.dp, vertical = 16.dp)
     ) {
-        LazyColumn(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 16.dp)
-        ) {
             items(accounts) { account ->
                 account?.let {
                     AccountCard(
@@ -234,7 +327,6 @@ private fun AccountsColumn(
                     )
                 }
                 Spacer(Modifier.height(8.dp))
-            }
         }
     }
 }
@@ -326,6 +418,7 @@ private fun AccountCard(
     }
 }
 
+
 @Composable
 private fun AccountSheet(
     editingAccount: UiAccount? = null,
@@ -335,7 +428,6 @@ private fun AccountSheet(
     var emoji by remember { mutableStateOf(editingAccount?.emoji ?: "💰") }
     var amount by remember { mutableStateOf(editingAccount?.originalAmount?.formatWithCommas() ?: "") }
     var selectedCurrency by remember { mutableStateOf(editingAccount?.originalCurrency ?: GlobalConfig.baseCurrency) }
-
     val currencies = Currency.entries.toList()
 
     Column(modifier = Modifier.padding(20.dp)) {
@@ -404,7 +496,7 @@ private fun AccountSheet(
         Button(
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-                val amt = amount.toDoubleOrNull() ?: 0.0
+                val amt = amount.replace(",", "").toDoubleOrNull() ?: 0.0
                 onAdd(title, emoji, amt, selectedCurrency)
             }
         ) {
@@ -412,6 +504,7 @@ private fun AccountSheet(
         }
     }
 }
+
 
 
 

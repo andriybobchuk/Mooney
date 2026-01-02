@@ -19,14 +19,15 @@ import com.andriybobchuk.mooney.core.presentation.Icons
 fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int) {
     val items = listOf(
         BottomNavigationItem("Transactions", Icons.TransactionsIcon()),
-        BottomNavigationItem("Account", Icons.AccountsIcon()),
+        BottomNavigationItem("Assets", Icons.AccountsIcon()),
+        BottomNavigationItem("Exchange", Icons.ExchangeIcon()),
         BottomNavigationItem("Analytics", Icons.StatsIcon()),
         BottomNavigationItem("Goals", Icons.GoalsIcon()),
     )
 
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
-        modifier = Modifier.height(95.dp)
+        modifier = Modifier.height(80.dp)
     ) {
         items.forEachIndexed { index, item ->
             NavigationBarItem(
@@ -36,18 +37,24 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
                         when (index) {
                             0 -> navController.navigate(Route.Transactions) { popUpTo(Route.MooneyGraph) }
                             1 -> navController.navigate(Route.Accounts) { popUpTo(Route.MooneyGraph) }
-                            2 -> navController.navigate(Route.Analytics) { popUpTo(Route.MooneyGraph) }
-                            3 -> navController.navigate(Route.Goals) { popUpTo(Route.MooneyGraph) }
+                            2 -> navController.navigate(Route.Exchange) { popUpTo(Route.MooneyGraph) }
+                            3 -> navController.navigate(Route.Analytics) { popUpTo(Route.MooneyGraph) }
+                            4 -> navController.navigate(Route.Goals) { popUpTo(Route.MooneyGraph) }
                         }
                     }
                 },
-                label = { Text(text = item.title) },
+                label = { 
+                    Text(
+                        text = item.title,
+                        style = MaterialTheme.typography.labelSmall
+                    ) 
+                },
                 alwaysShowLabel = true,
                 icon = {
                     Icon(
                         painter = item.icon,
                         contentDescription = item.title,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 },
                 colors = NavigationBarItemColors(

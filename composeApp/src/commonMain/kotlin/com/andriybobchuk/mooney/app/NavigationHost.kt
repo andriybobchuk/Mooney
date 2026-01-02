@@ -10,10 +10,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
-import com.andriybobchuk.mooney.mooney.presentation.account.AccountScreen
-import com.andriybobchuk.mooney.mooney.presentation.account.AccountViewModel
+import com.andriybobchuk.mooney.mooney.presentation.assets.AssetsScreen
+import com.andriybobchuk.mooney.mooney.presentation.assets.AssetsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsScreen
 import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsViewModel
+import com.andriybobchuk.mooney.mooney.presentation.exchange.ExchangeScreen
+import com.andriybobchuk.mooney.mooney.presentation.exchange.ExchangeViewModel
 import com.andriybobchuk.mooney.mooney.presentation.goals.GoalsScreen
 import com.andriybobchuk.mooney.mooney.presentation.goals.GoalsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionViewModel
@@ -41,10 +43,19 @@ fun NavigationHost() {
                 )
             }
             composable<Route.Accounts> {
-                val viewModel = koinViewModel<AccountViewModel>()
-                AccountScreen(
+                val viewModel = koinViewModel<AssetsViewModel>()
+                AssetsScreen(
                     viewModel = viewModel,
                     bottomNavbar = { BottomNavigationBar(navController, 1) },
+                    onSettingsClick = { navController.navigate(Route.Settings) }
+                )
+            }
+
+            composable<Route.Exchange> {
+                val viewModel = koinViewModel<ExchangeViewModel>()
+                ExchangeScreen(
+                    viewModel = viewModel,
+                    bottomNavbar = { BottomNavigationBar(navController, 2) },
                     onSettingsClick = { navController.navigate(Route.Settings) }
                 )
             }
@@ -53,7 +64,7 @@ fun NavigationHost() {
                 val viewModel = koinViewModel<AnalyticsViewModel>()
                 AnalyticsScreen(
                     viewModel = viewModel,
-                    bottomNavbar = { BottomNavigationBar(navController, 2) },
+                    bottomNavbar = { BottomNavigationBar(navController, 3) },
                     onSettingsClick = { navController.navigate(Route.Settings) }
                 )
             }
@@ -62,7 +73,7 @@ fun NavigationHost() {
                 val viewModel = koinViewModel<GoalsViewModel>()
                 GoalsScreen(
                     viewModel = viewModel,
-                    bottomNavbar = { BottomNavigationBar(navController, 3) },
+                    bottomNavbar = { BottomNavigationBar(navController, 4) },
                     onSettingsClick = { navController.navigate(Route.Settings) }
                 )
             }

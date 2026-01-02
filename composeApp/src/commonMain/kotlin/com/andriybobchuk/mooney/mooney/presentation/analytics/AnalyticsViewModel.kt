@@ -151,8 +151,8 @@ class AnalyticsViewModel(
             val historicalData = mutableListOf<MonthlyMetricSnapshot>()
             val currentMonth = _state.value.selectedMonth
             
-            // Load 6 months of historical data
-            repeat(6) { offset ->
+            // Load 12 months of historical data to support 1-year view
+            repeat(12) { offset ->
                 val month = currentMonth.monthsAgo(offset)
                 val start = month.firstDay()
                 val end = month.firstDayOfNextMonth()

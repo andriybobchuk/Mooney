@@ -433,6 +433,7 @@ fun TransactionBottomSheet(
     val isEditMode = transactionToEdit != null
 
     var amount by remember { mutableStateOf(transactionToEdit?.amount?.formatToPlainString()) }
+    var newAccountValue by remember { mutableStateOf("") }
 
     val defaultAccount = accounts.filterNotNull().toAccounts().find { it.title.contains("Primary") }
     var selectedAccount by remember { mutableStateOf(transactionToEdit?.account ?: defaultAccount) }
@@ -533,13 +534,49 @@ fun TransactionBottomSheet(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
             )
 
-            OutlinedTextField(
-                value = amount ?: "",
-                onValueChange = { amount = it },
-                label = { Text("Amount") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
-            )
+            // Detect if reconciliation category is selected
+            val isReconciliation = currentSelectedSubCategory?.id?.contains("reconciliation") == true ||
+                                   currentSelectedCategory?.id?.contains("reconciliation") == true
+            
+            if (isReconciliation && selectedAccount != null) {
+                // For reconciliation: show new account value field instead of amount
+                OutlinedTextField(
+                    value = newAccountValue,
+                    onValueChange = { newAccountValue = it },
+                    label = { Text("New Account Value") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
+                )
+                
+                // Show current account value and calculated difference
+                val currentValue = selectedAccount!!.amount
+                val newValue = newAccountValue.replace(",", "").toDoubleOrNull() ?: currentValue
+                val difference = newValue - currentValue
+                
+                if (difference != 0.0) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "Current value: ${currentValue.formatWithCommas()} ${selectedAccount!!.currency.symbol}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Difference: ${if (difference > 0) "+" else ""}${difference.formatWithCommas()} ${selectedAccount!!.currency.symbol}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (difference > 0) MaterialTheme.appColors.incomeColor else MaterialTheme.appColors.expenseColor,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            } else {
+                // Normal amount field for regular transactions
+                OutlinedTextField(
+                    value = amount ?: "",
+                    onValueChange = { amount = it },
+                    label = { Text("Amount") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
+                )
+            }
 
             Spacer(Modifier.height(8.dp))
 
@@ -645,26 +682,54 @@ fun TransactionBottomSheet(
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
-                    val parsedAmount = amount?.toDoubleOrNull()
+                    // Detect if this is a reconciliation transaction
+                    val isReconciliation = currentSelectedSubCategory?.id?.contains("reconciliation") == true ||
+                                           currentSelectedCategory?.id?.contains("reconciliation") == true
+                    
+                    val parsedAmount: Double?
+                    val finalAmount: Double?
+                    
+                    if (isReconciliation && selectedAccount != null) {
+                        // For reconciliation: use the difference between old and new account values
+                        val currentValue = selectedAccount!!.amount
+                        val newValue = newAccountValue.replace(",", "").toDoubleOrNull()
+                        parsedAmount = newValue
+                        finalAmount = if (newValue != null) kotlin.math.abs(newValue - currentValue) else null
+                    } else {
+                        // For regular transactions: use the amount field
+                        parsedAmount = amount?.toDoubleOrNull()
+                        finalAmount = parsedAmount
+                    }
+                    
                     val finalCategory = if (selectedTransactionType == CategoryType.TRANSFER) {
                         categories.find { it.id == "internal_transfer" }
                     } else {
                         currentSelectedCategory ?: getDefaultCategoryForType(selectedTransactionType)
                     }
                     
-                    // For transfers, validate both accounts are selected
+                    // Validation logic
                     val isValid = if (selectedTransactionType == CategoryType.TRANSFER) {
                         parsedAmount != null && selectedAccount != null && destinationAccount != null && 
                         finalCategory != null && selectedAccount!!.id != destinationAccount!!.id
+                    } else if (isReconciliation) {
+                        // For reconciliation: validate new account value is provided and different from current
+                        parsedAmount != null && selectedAccount != null && finalCategory != null &&
+                        finalAmount != null && finalAmount > 0.01 // Ensure meaningful difference
                     } else {
+                        // For regular transactions
                         parsedAmount != null && selectedAccount != null && finalCategory != null
                     }
                     
                     if (isValid) {
                         val transaction = Transaction(
                             id = transactionToEdit?.id ?: 0,
-                            amount = parsedAmount!!,
-                            account = selectedAccount!!,
+                            amount = finalAmount!!,
+                            account = if (isReconciliation) {
+                                // For reconciliation: update account to new value
+                                selectedAccount!!.copy(amount = parsedAmount!!)
+                            } else {
+                                selectedAccount!!
+                            },
                             subcategory = if (selectedTransactionType == CategoryType.TRANSFER) {
                                 // Create a dynamic category that stores the destination account ID
                                 finalCategory!!.copy(

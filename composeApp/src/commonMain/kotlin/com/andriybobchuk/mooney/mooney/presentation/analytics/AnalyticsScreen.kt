@@ -75,7 +75,7 @@ fun AnalyticsScreen(
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
-        modifier = Modifier.background(MaterialTheme.colorScheme.primary),
+        modifier = Modifier.background(MaterialTheme.colorScheme.background),
         topBar = {
             Toolbars.Primary(
                 title = "Analytics",
@@ -96,17 +96,11 @@ fun AnalyticsScreen(
             Column(
                 modifier = Modifier
                     .padding(paddingValues)
-                    .background(MaterialTheme.colorScheme.primary)
+                    .background(MaterialTheme.colorScheme.background)
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
                     .verticalScroll(scrollState)
                     .fillMaxSize()
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                        .background(MaterialTheme.colorScheme.background),
-                ) {
                     // Trend Chart
                     TrendChart(
                         historicalData = state.historicalMetrics,
@@ -129,8 +123,7 @@ fun AnalyticsScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(32.dp))
-                }
+                Spacer(modifier = Modifier.height(32.dp))
             }
             
             // Category Bottom Sheet

@@ -86,6 +86,7 @@ class AssetsViewModel(
                 )
             }
             updateDiversificationAnalytics(accounts.filterNotNull())
+            updateAssetsAnalytics(accounts.filterNotNull())
             updateTotalNetWorth()
         }.launchIn(viewModelScope)
     }
@@ -104,6 +105,72 @@ class AssetsViewModel(
                     diversification = diversification
                 )
             }
+        }
+    }
+    
+    private fun updateAssetsAnalytics(accounts: List<Account>) {
+        val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
+        val baseCurrency = GlobalConfig.baseCurrency
+        
+        // Calculate bank account vs cash totals
+        val bankAccounts = accounts.filter { it.assetCategory == AssetCategory.BANK_ACCOUNT }
+        val cashAccounts = accounts.filter { it.assetCategory == AssetCategory.CASH }
+        
+        val bankAccountTotal = bankAccounts.sumOf { account ->
+            if (account.currency != baseCurrency) {
+                exchangeRates.convert(account.amount, account.currency, baseCurrency)
+            } else {
+                account.amount
+            }
+        }
+        
+        val cashTotal = cashAccounts.sumOf { account ->
+            if (account.currency != baseCurrency) {
+                exchangeRates.convert(account.amount, account.currency, baseCurrency)
+            } else {
+                account.amount
+            }
+        }
+        
+        val totalNetWorth = accounts.sumOf { account ->
+            if (account.currency != baseCurrency) {
+                exchangeRates.convert(account.amount, account.currency, baseCurrency)
+            } else {
+                account.amount
+            }
+        }
+        
+        val bankAccountPercentage = if (totalNetWorth > 0) (bankAccountTotal / totalNetWorth) * 100 else 0.0
+        val cashPercentage = if (totalNetWorth > 0) (cashTotal / totalNetWorth) * 100 else 0.0
+        
+        // Calculate currency breakdown
+        val currencyGroups = accounts.groupBy { it.currency }
+        val currencyBreakdown = currencyGroups.mapValues { (currency, accountsInCurrency) ->
+            val totalInCurrency = accountsInCurrency.sumOf { it.amount }
+            val totalInBaseCurrency = if (currency != baseCurrency) {
+                exchangeRates.convert(totalInCurrency, currency, baseCurrency)
+            } else {
+                totalInCurrency
+            }
+            val percentage = if (totalNetWorth > 0) (totalInBaseCurrency / totalNetWorth) * 100 else 0.0
+            
+            CurrencyBreakdown(
+                percentage = percentage,
+                totalInCurrency = totalInCurrency,
+                totalInBaseCurrency = totalInBaseCurrency
+            )
+        }
+        
+        _uiState.update {
+            it.copy(
+                assetsAnalytics = AssetsAnalytics(
+                    bankAccountPercentage = bankAccountPercentage,
+                    cashPercentage = cashPercentage,
+                    bankAccountTotal = bankAccountTotal,
+                    cashTotal = cashTotal,
+                    currencyBreakdown = currencyBreakdown
+                )
+            )
         }
     }
 
@@ -155,10 +222,11 @@ class AssetsViewModel(
     fun onNetWorthLabelClick() {
         currencyManagerUseCase.cycleToNextCurrency()
         updateTotalNetWorth()
-        // Recalculate diversification with new currency
+        // Recalculate analytics with new currency
         viewModelScope.launch {
             val accounts = getAccountsUseCase().first()
             updateDiversificationAnalytics(accounts.filterNotNull())
+            updateAssetsAnalytics(accounts.filterNotNull())
         }
     }
 
@@ -179,6 +247,7 @@ class AssetsViewModel(
                     }
                     // Update analytics with fresh rates
                     updateDiversificationAnalytics(currentAccounts.filterNotNull())
+                    updateAssetsAnalytics(currentAccounts.filterNotNull())
                     updateTotalNetWorth()
                 }
                 is Result.Error -> {
@@ -276,5 +345,20 @@ data class AssetsState(
     val isError: Boolean = false,
     val isRefreshingRates: Boolean = false,
     val ratesLastUpdated: Long = 0L,
-    val ratesError: String? = null
+    val ratesError: String? = null,
+    val assetsAnalytics: AssetsAnalytics? = null
+)
+
+data class AssetsAnalytics(
+    val bankAccountPercentage: Double,
+    val cashPercentage: Double,
+    val bankAccountTotal: Double,
+    val cashTotal: Double,
+    val currencyBreakdown: Map<Currency, CurrencyBreakdown>
+)
+
+data class CurrencyBreakdown(
+    val percentage: Double,
+    val totalInCurrency: Double,
+    val totalInBaseCurrency: Double
 )

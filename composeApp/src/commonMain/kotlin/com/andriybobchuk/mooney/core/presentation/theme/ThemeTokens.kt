@@ -12,18 +12,18 @@ import kotlinx.datetime.toLocalDateTime
 
 // Color Tokens
 object ColorTokens {
-    // Purple Theme Colors
-    object Purple {
-        val primary50 = Color(0xFFF3E5F5)
-        val primary100 = Color(0xFFE1BEE7)
-        val primary200 = Color(0xFFCE93D8)
-        val primary300 = Color(0xFFBA68C8)
-        val primary400 = Color(0xFFAB47BC)
-        val primary500 = Color(0xFF9C27B0)
-        val primary600 = Color(0xFF8E24AA)
-        val primary700 = Color(0xFF7B1FA2)
-        val primary800 = Color(0xFF6A1B9A)
-        val primary900 = Color(0xFF4A148C)
+    // Modern Blue Theme Colors (like Revolut/Figma)
+    object Blue {
+        val primary50 = Color(0xFFE6F0FF)
+        val primary100 = Color(0xFFB3D4FF)
+        val primary200 = Color(0xFF80B8FF)
+        val primary300 = Color(0xFF4D9CFF)
+        val primary400 = Color(0xFF1A80FF)
+        val primary500 = Color(0xFF0066FF)  // Main brand blue
+        val primary600 = Color(0xFF0052CC)
+        val primary700 = Color(0xFF003D99)
+        val primary800 = Color(0xFF002966)
+        val primary900 = Color(0xFF001433)
     }
     
     
@@ -35,11 +35,55 @@ object ColorTokens {
 
 // Theme Variants
 enum class AppTheme {
-    PURPLE,
+    BLUE,      // New modern blue theme
+    PURPLE,    // Legacy purple theme
     MINIMAL
 }
 
-// Original Purple Theme (exact restoration)
+// Modern Blue Theme (Revolut/Figma inspired)
+val BlueLightColorScheme = lightColorScheme(
+    primary = Color(0xFF0066FF),  // Vibrant blue
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFE6F0FF),  // Light blue container
+    onPrimaryContainer = Color(0xFF001433),
+    secondary = Color(0xFF00D4FF),  // Cyan accent
+    onSecondary = Color.Black,
+    secondaryContainer = Color(0xFFE0F7FF),
+    onSecondaryContainer = Color(0xFF001F2A),
+    surface = Color.White,
+    onSurface = Color(0xFF1A1A1A),
+    surfaceVariant = Color(0xFFF8FAFB),  // Very light gray for cards
+    onSurfaceVariant = Color(0xFF606060),
+    background = Color(0xFFFAFBFC),
+    onBackground = Color(0xFF1A1A1A),
+    outline = Color(0xFFE1E4E8),
+    outlineVariant = Color(0xFFF0F2F5),
+    error = Color(0xFFFF3B30),  // iOS red
+    onError = Color.White
+)
+
+val BlueDarkColorScheme = darkColorScheme(
+    primary = Color(0xFF4D9CFF),  // Brighter blue for dark mode
+    onPrimary = Color(0xFF000000),
+    primaryContainer = Color(0xFF0052CC),
+    onPrimaryContainer = Color(0xFFE6F0FF),
+    secondary = Color(0xFF00D4FF),
+    onSecondary = Color(0xFF000000),
+    secondaryContainer = Color(0xFF00A8CC),
+    onSecondaryContainer = Color(0xFFE0F7FF),
+    surface = Color(0xFF0A0A0A),  // Near black surface
+    onSurface = Color(0xFFF0F0F0),
+    surfaceVariant = Color(0xFF1A1A1A),  // Dark gray for panels
+    onSurfaceVariant = Color(0xFFB0B0B0),
+    background = Color(0xFF000000),  // Pure black for OLED
+    onBackground = Color(0xFFF0F0F0),
+    outline = Color(0xFF2A2A2A),
+    outlineVariant = Color(0xFF1A1A1A),
+    error = Color(0xFFFF453A),  // iOS red dark
+    onError = Color.Black
+)
+
+// Original Purple Theme (legacy)
 val PurpleLightColorScheme = lightColorScheme(
     primary = Color(0xFF512DA8),  // Deep purple for light mode
     onPrimary = Color.White,
@@ -51,7 +95,7 @@ val PurpleLightColorScheme = lightColorScheme(
     onSecondaryContainer = Color(0xFF311B92),
     surface = Color.White,
     onSurface = Color(0xFF212121),
-    surfaceVariant = Color(0xFFF8F8F8),  // Very light gray for cards
+    surfaceVariant = Color(0xFFF8F8F8),
     onSurfaceVariant = Color(0xFF616161),
     background = Color.White,
     onBackground = Color(0xFF212121),
@@ -138,6 +182,7 @@ fun isNightTime(): Boolean {
 @Composable
 fun getColorSchemeForTheme(theme: AppTheme, isSystemDarkMode: Boolean): ColorScheme {
     return when (theme) {
+        AppTheme.BLUE -> if (isSystemDarkMode) BlueDarkColorScheme else BlueLightColorScheme
         AppTheme.PURPLE -> if (isSystemDarkMode) PurpleDarkColorScheme else PurpleLightColorScheme
         AppTheme.MINIMAL -> if (isSystemDarkMode) MinimalDarkColorScheme else MinimalLightColorScheme
     }
@@ -152,6 +197,25 @@ data class AppColorsExtended(
     val pillBackground: Color,
     val pillBackgroundSecondary: Color,
     val transactionIcon: Color
+)
+
+// Modern Blue Theme App Colors
+val BlueLightAppColors = AppColorsExtended(
+    incomeColor = Color(0xFF00C853),  // Vibrant green for income
+    expenseColor = Color(0xFF424242),  // Dark gray for expenses
+    cardBackground = Color(0xFFF8FAFB),  // Light gray for cards
+    pillBackground = Color(0xFFE1E4E8).copy(alpha = 0.6f),
+    pillBackgroundSecondary = Color(0xFF0066FF).copy(alpha = 0.1f),  // Light blue pill
+    transactionIcon = Color(0xFFF8FAFB)  // Match card background
+)
+
+val BlueDarkAppColors = AppColorsExtended(
+    incomeColor = Color(0xFF00E676),  // Bright green for income
+    expenseColor = Color(0xFFE0E0E0),  // Light gray for expense text
+    cardBackground = Color(0xFF1A1A1A),  // Dark gray for cards
+    pillBackground = Color(0xFF2A2A2A).copy(alpha = 0.8f),
+    pillBackgroundSecondary = Color(0xFF4D9CFF).copy(alpha = 0.15f),  // Subtle blue pill
+    transactionIcon = Color(0xFF1A1A1A)  // Match card background
 )
 
 // Original Purple Theme App Colors
@@ -195,6 +259,7 @@ val MinimalDarkAppColors = AppColorsExtended(
 @Composable
 fun getAppColorsForTheme(theme: AppTheme, isSystemDarkMode: Boolean): AppColorsExtended {
     return when (theme) {
+        AppTheme.BLUE -> if (isSystemDarkMode) BlueDarkAppColors else BlueLightAppColors
         AppTheme.PURPLE -> if (isSystemDarkMode) PurpleDarkAppColors else PurpleLightAppColors
         AppTheme.MINIMAL -> if (isSystemDarkMode) MinimalDarkAppColors else MinimalLightAppColors
     }

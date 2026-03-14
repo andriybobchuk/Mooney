@@ -7,7 +7,7 @@ data class UserPreferences(
     val pinnedCategories: List<String> = emptyList(),
     val defaultCurrency: String = "PLN",
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val appTheme: AppTheme = AppTheme.PURPLE,
+    val appTheme: AppTheme = AppTheme.BLUE,
     val notificationsEnabled: Boolean = true,
     val version: Int = 1
 )

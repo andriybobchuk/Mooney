@@ -25,10 +25,10 @@ class DataStorePreferencesRepository(
                 ),
                 appTheme = try {
                     AppTheme.valueOf(
-                        preferences[PreferencesKeys.APP_THEME] ?: AppTheme.PURPLE.name
+                        preferences[PreferencesKeys.APP_THEME] ?: AppTheme.BLUE.name
                     )
                 } catch (e: IllegalArgumentException) {
-                    AppTheme.PURPLE
+                    AppTheme.BLUE
                 },
                 notificationsEnabled = preferences[PreferencesKeys.NOTIFICATIONS_ENABLED] ?: true,
                 version = preferences[PreferencesKeys.PREFERENCES_VERSION] ?: 1

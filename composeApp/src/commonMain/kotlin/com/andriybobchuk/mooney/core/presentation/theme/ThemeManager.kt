@@ -47,6 +47,7 @@ class ThemeManager(
     companion object {
         fun getThemeDisplayName(theme: AppTheme): String {
             return when (theme) {
+                AppTheme.BLUE -> "Modern Blue"
                 AppTheme.PURPLE -> "Purple"
                 AppTheme.MINIMAL -> "Minimal"
             }
@@ -54,6 +55,7 @@ class ThemeManager(
         
         fun getThemeDescription(theme: AppTheme): String {
             return when (theme) {
+                AppTheme.BLUE -> "Modern fintech-inspired blue theme with bold typography"
                 AppTheme.PURPLE -> "Classic purple theme with light and dark variants"
                 AppTheme.MINIMAL -> "Clean minimal theme with gray topbars and subtle accents"
             }
@@ -69,7 +71,7 @@ fun rememberThemeManager(): ThemeManager {
 @Composable
 fun rememberCurrentAppTheme(): AppTheme {
     val themeManager = rememberThemeManager()
-    val theme by themeManager.currentAppTheme.collectAsState(initial = AppTheme.PURPLE)
+    val theme by themeManager.currentAppTheme.collectAsState(initial = AppTheme.BLUE)
     return theme
 }
 

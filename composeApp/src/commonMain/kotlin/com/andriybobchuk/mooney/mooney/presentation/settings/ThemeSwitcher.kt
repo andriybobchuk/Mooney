@@ -166,6 +166,11 @@ private fun ThemeOption(
             ) {
                 repeat(3) { index ->
                     val color = when (theme) {
+                        AppTheme.BLUE -> when (index) {
+                            0 -> Color(0xFF0066FF)
+                            1 -> Color(0xFF00D4FF)
+                            else -> Color(0xFF0052CC)
+                        }
                         AppTheme.PURPLE -> when (index) {
                             0 -> Color(0xFF3E4DBA)
                             1 -> Color(0xFF5A68D4)
@@ -273,6 +278,11 @@ fun ThemeSwitcherCard(
             ) {
                 repeat(3) { index ->
                     val color = when (currentTheme) {
+                        AppTheme.BLUE -> when (index) {
+                            0 -> Color(0xFF0066FF)
+                            1 -> Color(0xFF00D4FF)
+                            else -> Color(0xFF0052CC)
+                        }
                         AppTheme.PURPLE -> when (index) {
                             0 -> Color(0xFF3E4DBA)
                             1 -> Color(0xFF5A68D4)

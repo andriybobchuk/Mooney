@@ -37,7 +37,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,8 +45,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Tab
@@ -90,6 +87,7 @@ import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.app.appColors
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Account
+import com.andriybobchuk.mooney.mooney.domain.AssetCategory
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.Currency
@@ -97,6 +95,9 @@ import com.andriybobchuk.mooney.mooney.domain.Transaction
 import com.andriybobchuk.mooney.mooney.presentation.account.UiAccount
 import com.andriybobchuk.mooney.mooney.presentation.account.toAccounts
 import com.andriybobchuk.mooney.mooney.presentation.analytics.MonthPicker
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyTextField
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
 import com.andriybobchuk.mooney.mooney.presentation.analytics.MonthKey
 import com.andriybobchuk.mooney.mooney.presentation.formatWithCommas
 import com.andriybobchuk.mooney.mooney.presentation.formatToShortString
@@ -124,6 +125,14 @@ fun TransactionsScreen(
     val total = state.total
     val totalCurrency = state.totalCurrency
     val frequentCategories by viewModel.frequentCategories.collectAsState()
+    val pendingCount by viewModel.pendingTransactionCount.collectAsState()
+
+    // Tab state
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    val tabTitles = listOf(
+        "Transactions" + if (pendingCount > 0) " ($pendingCount)" else "",
+        "Recurring"
+    )
 
     // Sheet
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -177,34 +186,96 @@ fun TransactionsScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    preselectedCategory = null
-                    isBottomSheetOpen = true
+                    if (selectedTabIndex == 0) {
+                        preselectedCategory = null
+                        isBottomSheetOpen = true
+                    } else {
+                        // Handle recurring transaction creation
+                        viewModel.onCreateRecurringTransaction()
+                    }
                 }
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Transaction")
+                Icon(Icons.Default.Add, contentDescription = if (selectedTabIndex == 0) "Add Transaction" else "Add Recurring Transaction")
             }
         },
         content = { paddingValues ->
-            TransactionsScreenContent(
+            Column(
                 modifier = Modifier
                     .padding(paddingValues)
-                    .nestedScroll(scrollBehavior.nestedScrollConnection),
-                transactions = transactions,
-                accounts = state.accounts,
-                total = total,
-                currency = totalCurrency,
-                selectedMonth = state.selectedMonth,
-                dailyTotals = state.dailyTotals,
-                onCurrencyClick = viewModel::onTotalCurrencyClick,
-                onEdit = {
-                    transactionToEdit = it
-                    isBottomSheetOpen = true
-                },
-                onDelete = viewModel::deleteTransaction,
-                onDailyTotal = viewModel::getDailyTotal
-            )
+                    .fillMaxSize()
+            ) {
+                // Tab Row
+                TabRow(
+                    selectedTabIndex = selectedTabIndex,
+                    containerColor = MaterialTheme.colorScheme.background,
+                ) {
+                    tabTitles.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTabIndex == index,
+                            onClick = { selectedTabIndex = index },
+                            text = {
+                                Text(
+                                    text = title,
+                                    fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        )
+                    }
+                }
 
-            if (isBottomSheetOpen) {
+                // Tab Content
+                when (selectedTabIndex) {
+                    0 -> {
+                        // Transactions Tab with Pending Section
+                        TransactionsScreenContent(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .nestedScroll(scrollBehavior.nestedScrollConnection),
+                            transactions = transactions,
+                            accounts = state.accounts,
+                            pendingTransactions = state.pendingTransactions,
+                            total = total,
+                            currency = totalCurrency,
+                            selectedMonth = state.selectedMonth,
+                            dailyTotals = state.dailyTotals,
+                            onCurrencyClick = viewModel::onTotalCurrencyClick,
+                            onEdit = {
+                                transactionToEdit = it
+                                isBottomSheetOpen = true
+                            },
+                            onDelete = viewModel::deleteTransaction,
+                            onDailyTotal = viewModel::getDailyTotal,
+                            onAcceptPending = viewModel::acceptPendingTransaction,
+                            onRejectPending = viewModel::rejectPendingTransaction,
+                            onEditPending = { pendingId ->
+                                // Find the pending transaction and show it in the dialog
+                                val pending = state.pendingTransactions.find { it.id == pendingId }
+                                if (pending != null) {
+                                    viewModel.editPendingTransaction(pending)
+                                }
+                            }
+                        )
+                    }
+                    1 -> {
+                        // Recurring Transactions Tab
+                        RecurringTransactionsTab(
+                            modifier = Modifier.fillMaxSize(),
+                            recurringTransactions = state.recurringTransactions,
+                            suggestions = state.recurringSuggestions,
+                            accounts = state.accounts,
+                            categories = state.categories,
+                            onEdit = viewModel::editRecurringTransaction,
+                            onDelete = viewModel::deleteRecurringTransaction,
+                            onToggleActive = viewModel::toggleRecurringTransactionActive,
+                            onAdd = viewModel::createRecurringTransaction,
+                            onAcceptSuggestion = viewModel::acceptSuggestion,
+                            onDismissSuggestion = viewModel::dismissSuggestion
+                        )
+                    }
+                }
+            }
+
+            if (isBottomSheetOpen && selectedTabIndex == 0) {
                 TransactionBottomSheet(
                     onDismiss = {
                         isBottomSheetOpen = false
@@ -228,6 +299,66 @@ fun TransactionsScreen(
                     }
                 )
             }
+
+            // Show transaction dialog for pending transaction editing
+            if (state.showAddTransactionDialog && state.editingPendingTransaction != null) {
+                val pending = state.editingPendingTransaction!!
+                // Create a fake transaction object with pending transaction data for pre-filling
+                val pendingAccount = state.accounts.filterNotNull().find { it.id == pending.accountId }
+                val pendingCategory = state.categories.find { it.id == pending.subcategoryId }
+                
+                val fakeTransactionForEdit = if (pendingAccount != null && pendingCategory != null) {
+                    Transaction(
+                        id = 0, // Temporary ID
+                        amount = pending.amount,
+                        account = Account(
+                            id = pendingAccount.id,
+                            title = pendingAccount.title,
+                            amount = pendingAccount.originalAmount,
+                            currency = pendingAccount.originalCurrency,
+                            emoji = pendingAccount.emoji,
+                            assetCategory = AssetCategory.BANK_ACCOUNT // Default since UiAccount doesn't have this
+                        ),
+                        subcategory = pendingCategory,
+                        date = pending.scheduledDate
+                    )
+                } else null
+                
+                TransactionBottomSheet(
+                    onDismiss = {
+                        // Clear the pending transaction edit state
+                        viewModel.hideAddTransactionDialog()
+                    },
+                    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                    transactionToEdit = fakeTransactionForEdit,
+                    accounts = state.accounts,
+                    categories = state.categories,
+                    selectedMonth = state.selectedMonth,
+                    preselectedCategory = null, // Let the transaction data pre-fill everything
+                    onAdd = { transaction ->
+                        // Reject the original pending transaction and add the new modified one
+                        viewModel.rejectPendingTransaction(pending.id)
+                        viewModel.upsertTransaction(transaction)
+                        viewModel.hideAddTransactionDialog()
+                    },
+                    onUpdate = { transaction ->
+                        // Treat update same as add for pending transactions
+                        viewModel.rejectPendingTransaction(pending.id)
+                        viewModel.upsertTransaction(transaction)
+                        viewModel.hideAddTransactionDialog()
+                    }
+                )
+            }
+
+            if (state.showRecurringDialog) {
+                RecurringTransactionDialog(
+                    onDismiss = viewModel::hideRecurringDialog,
+                    onSave = viewModel::createRecurringTransaction,
+                    accounts = state.accounts.filterNotNull(),
+                    categories = state.categories,
+                    editTransaction = state.recurringTransactionToEdit
+                )
+            }
         }
     )
 }
@@ -245,6 +376,7 @@ fun TransactionsScreenContent(
     modifier: Modifier,
     transactions: List<Transaction?>,
     accounts: List<UiAccount?>,
+    pendingTransactions: List<com.andriybobchuk.mooney.mooney.domain.PendingTransaction> = emptyList(),
     total: Double,
     currency: Currency,
     selectedMonth: MonthKey,
@@ -252,7 +384,10 @@ fun TransactionsScreenContent(
     onCurrencyClick: () -> Unit,
     onEdit: (Transaction) -> Unit,
     onDelete: (Int) -> Unit,
-    onDailyTotal: (LocalDate) -> Double = { 0.0 }
+    onDailyTotal: (LocalDate) -> Double = { 0.0 },
+    onAcceptPending: (Int) -> Unit = {},
+    onRejectPending: (Int) -> Unit = {},
+    onEditPending: (Int) -> Unit = {}
 ) {
     // Group and sort transactions by date (descending), then by ID (most recent first)
     val grouped = transactions.filterNotNull().groupBy { it.date }
@@ -267,6 +402,42 @@ fun TransactionsScreenContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        // Pending Transactions Section
+        if (pendingTransactions.isNotEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp)
+                    ) {
+                        Text(
+                            text = "Pending Recurring Transactions",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        pendingTransactions.forEach { pending ->
+                            PendingTransactionItem(
+                                pending = pending,
+                                categories = emptyList(), // Will need to pass actual categories
+                                recurringReason = "Monthly recurring pattern", // Will need to make this dynamic
+                                onAccept = { onAcceptPending(pending.id) },
+                                onReject = { onRejectPending(pending.id) },
+                                onEdit = { onEditPending(pending.id) }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         item {
             TransactionPagerView(
                 selectedMonth = selectedMonth,
@@ -540,10 +711,10 @@ fun TransactionBottomSheet(
             
             if (isReconciliation && selectedAccount != null) {
                 // For reconciliation: show new account value field instead of amount
-                OutlinedTextField(
+                MooneyTextField(
                     value = newAccountValue,
                     onValueChange = { newAccountValue = it },
-                    label = { Text("New Account Value") },
+                    label = "New Account Value",
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
                 )
@@ -569,10 +740,10 @@ fun TransactionBottomSheet(
                 }
             } else {
                 // Normal amount field for regular transactions
-                OutlinedTextField(
+                MooneyTextField(
                     value = amount ?: "",
                     onValueChange = { amount = it },
-                    label = { Text("Amount") },
+                    label = "Amount",
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
                 )
@@ -613,21 +784,21 @@ fun TransactionBottomSheet(
             // Category display - only show for expense/income
             if (selectedTransactionType != CategoryType.TRANSFER) {
                 // For expense/income, allow category selection
-                OutlinedButton(
-                    onClick = { showCategorySheet = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    val displayText = when {
-                        currentSelectedSubCategory != null -> "${currentSelectedSubCategory!!.resolveEmoji()} ${currentSelectedSubCategory!!.title}"
-                        currentSelectedCategory != null -> "${currentSelectedCategory!!.emoji ?: ""} ${currentSelectedCategory!!.title}"
-                        else -> when (selectedTransactionType) {
-                            CategoryType.EXPENSE -> "🛒 Groceries & Household"
-                            CategoryType.INCOME -> "💸 Salary"
-                            else -> "Select Category"
-                        }
+                val categoryText = when {
+                    currentSelectedSubCategory != null -> "${currentSelectedSubCategory!!.resolveEmoji()} ${currentSelectedSubCategory!!.title}"
+                    currentSelectedCategory != null -> "${currentSelectedCategory!!.emoji ?: ""} ${currentSelectedCategory!!.title}"
+                    else -> when (selectedTransactionType) {
+                        CategoryType.EXPENSE -> "🛒 Groceries & Household"
+                        CategoryType.INCOME -> "💸 Salary"
+                        else -> "Select Category"
                     }
-                    Text(displayText)
                 }
+                MooneyButton(
+                    text = categoryText,
+                    onClick = { showCategorySheet = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    variant = ButtonVariant.SECONDARY
+                )
             }
 
             Spacer(Modifier.height(8.dp))
@@ -652,14 +823,14 @@ fun TransactionBottomSheet(
                 }
                 
                 // Date button (expanded to fill remaining space)
-                OutlinedButton(
+                val dayName = selectedDate.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
+                val dayNumber = selectedDate.dayOfMonth
+                MooneyButton(
+                    text = "$dayName $dayNumber",
                     onClick = { showDateSheet = true },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    val dayName = selectedDate.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
-                    val dayNumber = selectedDate.dayOfMonth
-                    Text("$dayName $dayNumber")
-                }
+                    modifier = Modifier.weight(1f),
+                    variant = ButtonVariant.SECONDARY
+                )
                 
                 // Next day button
                 IconButton(
@@ -679,8 +850,10 @@ fun TransactionBottomSheet(
 
             Spacer(Modifier.height(16.dp))
 
-            Button(
+            MooneyButton(
+                text = if (transactionToEdit != null) "Update Transaction" else "Add Transaction",
                 modifier = Modifier.fillMaxWidth(),
+                variant = ButtonVariant.PRIMARY,
                 onClick = {
                     // Detect if this is a reconciliation transaction
                     val isReconciliation = currentSelectedSubCategory?.id?.contains("reconciliation") == true ||
@@ -749,9 +922,7 @@ fun TransactionBottomSheet(
                         }
                     }
                 }
-            ) {
-                Text(if (isEditMode) "Update" else "Add")
-            }
+            )
         }
     }
 
@@ -867,12 +1038,12 @@ fun YearDropdownSelector(
     val years = (2000..currentDate.year).toList().reversed()
 
     Box {
-        OutlinedButton(
+        MooneyButton(
+            text = "Year: $selectedYear",
             onClick = { expanded = true },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Year: $selectedYear")
-        }
+            modifier = Modifier.fillMaxWidth(),
+            variant = ButtonVariant.SECONDARY
+        )
         
         DropdownMenu(
             expanded = expanded,
@@ -1124,13 +1295,13 @@ private fun AccountField(
     onAccountSelected: (Account) -> Unit
 ) {
     var optionsExpanded by remember { mutableStateOf(false) }
-    OutlinedButton(
+    MooneyButton(
+        text = initialSelectedAccount?.let { "${it.emoji} ${it.title} (${it.amount.formatWithCommas()} ${it.currency.symbol})" }
+            ?: "Select Account",
         onClick = { optionsExpanded = true },
         modifier = Modifier.fillMaxWidth(),
-    ) {
-        Text(initialSelectedAccount?.let { "${it.emoji} ${it.title} (${it.amount.formatWithCommas()} ${it.currency.symbol})" }
-            ?: "Select Account")
-    }
+        variant = ButtonVariant.SECONDARY
+    )
 
     DropdownMenu(
         expanded = optionsExpanded,

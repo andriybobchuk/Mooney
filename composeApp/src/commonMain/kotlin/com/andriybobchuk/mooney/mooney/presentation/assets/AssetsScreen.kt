@@ -17,6 +17,10 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyTextField
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyCard
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -427,23 +431,23 @@ private fun AssetSheet(
         Spacer(Modifier.height(16.dp))
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
+            MooneyTextField(
                 modifier = Modifier.width(80.dp),
                 value = emoji,
                 onValueChange = {
                     if (it.length <= 2) emoji = it
                 },
-                label = { Text("Icon") },
+                label = "Icon",
                 singleLine = true
             )
 
-            OutlinedTextField(
+            MooneyTextField(
                 modifier = Modifier.weight(1f),
                 value = title,
                 onValueChange = {
                     if (it.length <= 24) title = it
                 },
-                label = { Text("Title") },
+                label = "Title",
                 singleLine = true
             )
         }
@@ -483,11 +487,11 @@ private fun AssetSheet(
 
         Spacer(Modifier.height(8.dp))
 
-        OutlinedTextField(
+        MooneyTextField(
             modifier = Modifier.fillMaxWidth(),
             value = amount,
             onValueChange = { amount = it },
-            label = { Text("Amount") },
+            label = "Amount",
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal),
             singleLine = true
         )
@@ -497,12 +501,12 @@ private fun AssetSheet(
         // Currency dropdown
         var currencyExpanded by remember { mutableStateOf(false) }
         Box {
-            OutlinedButton(
+            MooneyButton(
+                text = "Currency: ${selectedCurrency.name}",
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { currencyExpanded = true }
-            ) {
-                Text("Currency: ${selectedCurrency.name}")
-            }
+                onClick = { currencyExpanded = true },
+                variant = ButtonVariant.SECONDARY
+            )
 
             DropdownMenu(expanded = currencyExpanded, onDismissRequest = { currencyExpanded = false }) {
                 currencies.forEach { currency ->
@@ -519,8 +523,10 @@ private fun AssetSheet(
 
         Spacer(Modifier.height(16.dp))
 
-        Button(
+        MooneyButton(
+            text = if (isEditMode) "Update" else "Add Asset",
             modifier = Modifier.fillMaxWidth(),
+            variant = ButtonVariant.PRIMARY,
             onClick = {
                 val amt = amount.replace(",", "").toDoubleOrNull() ?: 0.0
                 onAdd(title, emoji, amt, selectedCurrency, selectedCategory)

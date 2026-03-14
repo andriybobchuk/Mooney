@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,8 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.app.appColors
 import com.andriybobchuk.mooney.core.presentation.Toolbars
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.ui.draw.alpha
 import com.andriybobchuk.mooney.core.presentation.theme.ThemeManager
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.AssetCategory
@@ -542,208 +539,122 @@ private fun AnalyticsCard(
     analytics: AssetsAnalytics,
     baseCurrency: Currency
 ) {
+    if (analytics.currencyBreakdown.size <= 1) {
+        // Don't show the card if there's only one currency
+        return
+    }
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.appColors.cardBackground
-        )
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "Analytics",
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Asset Analytics",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            
-            HorizontalDivider(
-                modifier = Modifier.alpha(0.2f),
-                thickness = 1.dp
+            // Simple header
+            Text(
+                text = "Currency Distribution",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
             
-            // Bank vs Cash Section
+            // Modern minimalistic currency bars
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = "Liquidity Distribution",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-                )
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    // Bank Account
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = "🏦",
-                                fontSize = 24.sp
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "${analytics.bankAccountPercentage.toInt()}%",
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF4285F4)
-                            )
-                        }
-                        Text(
-                            text = "Bank Account",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                        Text(
-                            text = "${analytics.bankAccountTotal.formatWithCommas()} ${baseCurrency.symbol}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
+                analytics.currencyBreakdown
+                    .entries
+                    .sortedByDescending { it.value.percentage }
+                    .take(5) // Show top 5 currencies
+                    .forEach { (currency, breakdown) ->
+                        CurrencyBar(
+                            currency = currency,
+                            breakdown = breakdown,
+                            baseCurrency = baseCurrency
                         )
                     }
-                    
-                    // Divider
-                    Box(
-                        modifier = Modifier
-                            .width(1.dp)
-                            .height(60.dp)
-                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                    )
-                    
-                    // Cash
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = "💵",
-                                fontSize = 24.sp
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "${analytics.cashPercentage.toInt()}%",
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF34A853)
-                            )
-                        }
-                        Text(
-                            text = "Cash",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                        Text(
-                            text = "${analytics.cashTotal.formatWithCommas()} ${baseCurrency.symbol}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
-            
-            if (analytics.currencyBreakdown.isNotEmpty()) {
-                HorizontalDivider(
-                    modifier = Modifier.alpha(0.2f),
-                    thickness = 1.dp
-                )
-                
-                // Currency Breakdown Section
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "Currency Distribution",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-                    )
-                    
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        items(analytics.currencyBreakdown.entries.sortedByDescending { it.value.percentage }.toList()) { (currency, breakdown) ->
-                            CurrencyBreakdownItem(
-                                currency = currency,
-                                breakdown = breakdown,
-                                baseCurrency = baseCurrency
-                            )
-                        }
-                    }
-                }
             }
         }
     }
 }
 
 @Composable
-private fun CurrencyBreakdownItem(
+private fun CurrencyBar(
     currency: Currency,
     breakdown: CurrencyBreakdown,
     baseCurrency: Currency
 ) {
-    Card(
-        modifier = Modifier.width(140.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        // Currency symbol
+        Text(
+            text = currency.symbol,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.width(40.dp)
+        )
+        
+        // Progress bar and amount
         Column(
-            modifier = Modifier.padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            // Amount and percentage row
             Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = currency.symbol,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    text = "${breakdown.totalInCurrency.formatWithCommas()} ${currency.name}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = "${breakdown.percentage.toInt()}%",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "${breakdown.totalInCurrency.formatWithCommas()} ${currency.symbol}",
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Medium
-            )
-            if (currency != baseCurrency) {
-                Text(
-                    text = "${breakdown.totalInBaseCurrency.formatWithCommas()} ${baseCurrency.symbol}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            }
+            
+            // Progress bar
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(fraction = (breakdown.percentage / 100f).toFloat())
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(
+                            when(currency) {
+                                Currency.USD -> Color(0xFF4CAF50)
+                                Currency.EUR -> Color(0xFF2196F3)
+                                Currency.UAH -> Color(0xFFFFC107)
+                                Currency.PLN -> Color(0xFFFF5722)
+                            }
+                        )
+                )
+            }
+            
+            // Base currency conversion (if different)
+            if (currency != baseCurrency) {
+                Text(
+                    text = "≈ ${breakdown.totalInBaseCurrency.formatWithCommas()} ${baseCurrency.symbol}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 )
             }
         }

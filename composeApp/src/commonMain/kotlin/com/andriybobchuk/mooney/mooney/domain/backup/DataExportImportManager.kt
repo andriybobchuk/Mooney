@@ -44,51 +44,42 @@ class DataExportImportManager(
     @Serializable
     data class TransactionExport(
         val id: Int = 0,
-        val title: String,
+        val subcategoryId: String,
         val amount: Double,
-        val currency: String,
-        val categoryId: Int,
-        val accountId: Int? = null,
-        val date: Long,
-        val note: String? = null,
-        val createdAt: Long,
-        val updatedAt: Long
+        val accountId: Int,
+        val date: String
     )
     
     @Serializable
     data class AccountExport(
         val id: Int = 0,
-        val name: String,
-        val balance: Double,
+        val title: String,
+        val amount: Double,
         val currency: String,
         val emoji: String,
-        val assetCategory: String,
-        val createdAt: Long,
-        val updatedAt: Long
+        val assetCategory: String
     )
     
     @Serializable
     data class GoalExport(
         val id: Int = 0,
-        val name: String,
+        val emoji: String,
+        val title: String,
+        val description: String,
         val targetAmount: Double,
-        val currentAmount: Double,
         val currency: String,
-        val targetDate: Long? = null,
-        val groupId: Int? = null,
-        val emoji: String? = null,
-        val description: String? = null,
-        val createdDate: Long,
-        val updatedDate: Long
+        val createdDate: String,
+        val groupName: String,
+        val imagePath: String? = null
     )
     
     @Serializable
     data class GoalGroupExport(
         val id: Int = 0,
         val name: String,
-        val emoji: String? = null,
-        val createdDate: Long,
-        val updatedDate: Long
+        val emoji: String,
+        val color: String,
+        val createdDate: String
     )
     
     @Serializable
@@ -119,44 +110,35 @@ class DataExportImportManager(
         val transactions = transactionDao.getAll().first().map { entity ->
             TransactionExport(
                 id = entity.id,
-                title = entity.title,
+                subcategoryId = entity.subcategoryId,
                 amount = entity.amount,
-                currency = entity.currency,
-                categoryId = entity.categoryId,
                 accountId = entity.accountId,
-                date = entity.date,
-                note = entity.note,
-                createdAt = entity.createdAt,
-                updatedAt = entity.updatedAt
+                date = entity.date
             )
         }
         
         val accounts = accountDao.getAll().first().map { entity ->
             AccountExport(
                 id = entity.id,
-                name = entity.name,
-                balance = entity.balance,
+                title = entity.title,
+                amount = entity.amount,
                 currency = entity.currency,
                 emoji = entity.emoji,
-                assetCategory = entity.assetCategory,
-                createdAt = entity.createdAt,
-                updatedAt = entity.updatedAt
+                assetCategory = entity.assetCategory
             )
         }
         
         val goals = goalDao.getAll().first().map { entity ->
             GoalExport(
                 id = entity.id,
-                name = entity.name,
-                targetAmount = entity.targetAmount,
-                currentAmount = entity.currentAmount,
-                currency = entity.currency,
-                targetDate = entity.targetDate,
-                groupId = entity.groupId,
                 emoji = entity.emoji,
+                title = entity.title,
                 description = entity.description,
+                targetAmount = entity.targetAmount,
+                currency = entity.currency,
                 createdDate = entity.createdDate,
-                updatedDate = entity.updatedDate
+                groupName = entity.groupName,
+                imagePath = entity.imagePath
             )
         }
         
@@ -165,8 +147,8 @@ class DataExportImportManager(
                 id = entity.id,
                 name = entity.name,
                 emoji = entity.emoji,
-                createdDate = entity.createdDate,
-                updatedDate = entity.updatedDate
+                color = entity.color,
+                createdDate = entity.createdDate
             )
         }
         
@@ -248,8 +230,8 @@ class DataExportImportManager(
                     id = 0, // Let Room auto-generate new IDs
                     name = goalGroup.name,
                     emoji = goalGroup.emoji,
-                    createdDate = goalGroup.createdDate,
-                    updatedDate = goalGroup.updatedDate
+                    color = goalGroup.color,
+                    createdDate = goalGroup.createdDate
                 )
                 goalGroupDao.upsert(entity)
                 importedGoalGroups++
@@ -259,13 +241,11 @@ class DataExportImportManager(
             export.accounts.forEach { account ->
                 val entity = AccountEntity(
                     id = 0, // Let Room auto-generate new IDs
-                    name = account.name,
-                    balance = account.balance,
+                    title = account.title,
+                    amount = account.amount,
                     currency = account.currency,
                     emoji = account.emoji,
-                    assetCategory = account.assetCategory,
-                    createdAt = account.createdAt,
-                    updatedAt = account.updatedAt
+                    assetCategory = account.assetCategory
                 )
                 accountDao.upsert(entity)
                 importedAccounts++
@@ -275,15 +255,10 @@ class DataExportImportManager(
             export.transactions.forEach { transaction ->
                 val entity = TransactionEntity(
                     id = 0, // Let Room auto-generate new IDs
-                    title = transaction.title,
+                    subcategoryId = transaction.subcategoryId,
                     amount = transaction.amount,
-                    currency = transaction.currency,
-                    categoryId = transaction.categoryId,
                     accountId = transaction.accountId,
-                    date = transaction.date,
-                    note = transaction.note,
-                    createdAt = transaction.createdAt,
-                    updatedAt = transaction.updatedAt
+                    date = transaction.date
                 )
                 transactionDao.upsert(entity)
                 importedTransactions++
@@ -293,16 +268,14 @@ class DataExportImportManager(
             export.goals.forEach { goal ->
                 val entity = GoalEntity(
                     id = 0, // Let Room auto-generate new IDs
-                    name = goal.name,
-                    targetAmount = goal.targetAmount,
-                    currentAmount = goal.currentAmount,
-                    currency = goal.currency,
-                    targetDate = goal.targetDate,
-                    groupId = goal.groupId,
                     emoji = goal.emoji,
+                    title = goal.title,
                     description = goal.description,
+                    targetAmount = goal.targetAmount,
+                    currency = goal.currency,
                     createdDate = goal.createdDate,
-                    updatedDate = goal.updatedDate
+                    groupName = goal.groupName,
+                    imagePath = goal.imagePath
                 )
                 goalDao.upsert(entity)
                 importedGoals++

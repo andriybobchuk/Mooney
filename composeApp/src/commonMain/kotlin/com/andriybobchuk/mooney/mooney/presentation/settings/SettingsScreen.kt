@@ -20,6 +20,10 @@ import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 import com.andriybobchuk.mooney.mooney.presentation.settings.components.*
+import com.andriybobchuk.mooney.core.platform.FileHandler
+import kotlinx.coroutines.flow.collectLatest
+import org.koin.compose.koinInject
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,11 +33,92 @@ fun SettingsScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val fileHandler = koinInject<FileHandler>()
+    val coroutineScope = rememberCoroutineScope()
+    
+    var showImportConfirmDialog by remember { mutableStateOf(false) }
+    var importJsonData by remember { mutableStateOf<String?>(null) }
+    var importPreview by remember { mutableStateOf<Triple<Int, Int, Int>?>(null) }
+    
+    // Handle events from ViewModel
+    LaunchedEffect(Unit) {
+        viewModel.events.collectLatest { event ->
+            when (event) {
+                is SettingsEvent.ExportReady -> {
+                    coroutineScope.launch {
+                        fileHandler.saveTextFile(event.jsonData, "mooney_backup.json")
+                            .onSuccess {
+                                // Could show success toast
+                            }
+                            .onFailure { error ->
+                                // Could show error
+                            }
+                    }
+                }
+                is SettingsEvent.ShowImportConfirmation -> {
+                    importPreview = Triple(event.transactions, event.accounts, event.goals)
+                    showImportConfirmDialog = true
+                }
+                is SettingsEvent.ImportSuccess -> {
+                    // Could show success message
+                    showImportConfirmDialog = false
+                    importJsonData = null
+                    importPreview = null
+                }
+                is SettingsEvent.ShowError -> {
+                    // Handle error display
+                }
+            }
+        }
+    }
 
     LaunchedEffect(state.error) {
         state.error?.let {
             // Show error - could be replaced with SnackbarHost
         }
+    }
+    
+    // Import confirmation dialog
+    if (showImportConfirmDialog && importPreview != null && importJsonData != null) {
+        AlertDialog(
+            onDismissRequest = { 
+                showImportConfirmDialog = false
+                importJsonData = null
+                importPreview = null
+            },
+            title = { Text("Confirm Import") },
+            text = {
+                Column {
+                    Text("The following data will be imported:")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("• ${importPreview!!.first} transactions")
+                    Text("• ${importPreview!!.second} accounts")
+                    Text("• ${importPreview!!.third} goals")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("This will add to your existing data.", style = MaterialTheme.typography.bodySmall)
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { 
+                        viewModel.confirmImport(importJsonData!!)
+                    }
+                ) {
+                    Text("Import")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { 
+                        showImportConfirmDialog = false
+                        importJsonData = null
+                        importPreview = null
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -76,6 +161,30 @@ fun SettingsScreen(
                     GeneralSettingsSection(
                         state = state,
                         onAction = viewModel::onAction
+                    )
+                }
+                
+                item {
+                    DataExportImportSection(
+                        isExporting = state.isExporting,
+                        isImporting = state.isImporting,
+                        onExportClick = {
+                            viewModel.onAction(SettingsAction.OnExportData)
+                        },
+                        onImportClick = {
+                            coroutineScope.launch {
+                                fileHandler.pickAndReadTextFile()
+                                    .onSuccess { content ->
+                                        content?.let {
+                                            importJsonData = it
+                                            viewModel.onAction(SettingsAction.OnImportData(it))
+                                        }
+                                    }
+                                    .onFailure { error ->
+                                        // Handle error
+                                    }
+                            }
+                        }
                     )
                 }
                 

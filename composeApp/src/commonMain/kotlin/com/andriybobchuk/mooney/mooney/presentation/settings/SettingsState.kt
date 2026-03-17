@@ -13,7 +13,9 @@ data class SettingsState(
     val notificationsEnabled: Boolean = true,
     val defaultCurrency: Currency = Currency.PLN,
     val availableCurrencies: List<Currency> = Currency.entries,
-    val error: String? = null
+    val error: String? = null,
+    val isExporting: Boolean = false,
+    val isImporting: Boolean = false
 ) {
     val maxPinnedCategories: Int = 5
     val canAddMorePinned: Boolean = pinnedCategoryIds.size < maxPinnedCategories

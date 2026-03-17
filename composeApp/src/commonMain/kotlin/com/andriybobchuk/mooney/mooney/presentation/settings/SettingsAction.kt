@@ -15,4 +15,8 @@ sealed interface SettingsAction {
     data class OnNotificationsToggle(val enabled: Boolean) : SettingsAction
     
     data class OnDefaultCurrencyChange(val currency: String) : SettingsAction
+    
+    data object OnExportData : SettingsAction
+    
+    data class OnImportData(val jsonData: String) : SettingsAction
 }

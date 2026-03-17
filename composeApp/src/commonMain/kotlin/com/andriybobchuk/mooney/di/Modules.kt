@@ -47,6 +47,18 @@ val sharedModule = module {
     single { get<AppDatabase>().transactionDao }
     single { get<AppDatabase>().categoryUsageDao }
     single { get<AppDatabase>().goalDao }
+    single { get<AppDatabase>().goalGroupDao }
+    
+    // Data Export/Import Manager
+    single { 
+        com.andriybobchuk.mooney.mooney.domain.backup.DataExportImportManager(
+            transactionDao = get(),
+            accountDao = get(),
+            goalDao = get(),
+            goalGroupDao = get(),
+            categoryUsageDao = get()
+        )
+    }
     
     // DataStore and Preferences
     single { get<PreferencesDataStoreFactory>().create() }

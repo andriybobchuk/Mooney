@@ -11,6 +11,10 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.settings.UpdatePinnedCateg
 import com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 import com.andriybobchuk.mooney.mooney.domain.settings.UserPreferences
+import com.andriybobchuk.mooney.mooney.domain.backup.DataExportImportManager
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,11 +30,15 @@ class SettingsViewModel(
     private val updatePinnedCategoriesUseCase: UpdatePinnedCategoriesUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val getPinnedCategoriesUseCase: GetPinnedCategoriesUseCase,
-    private val preferencesRepository: PreferencesRepository
+    private val preferencesRepository: PreferencesRepository,
+    private val dataExportImportManager: DataExportImportManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsState())
     val state: StateFlow<SettingsState> = _state.asStateFlow()
+    
+    private val _events = MutableSharedFlow<SettingsEvent>()
+    val events: SharedFlow<SettingsEvent> = _events.asSharedFlow()
 
     init {
         observeData()
@@ -69,8 +77,87 @@ class SettingsViewModel(
             is SettingsAction.OnThemeModeChange -> handleThemeModeChange(action.themeMode)
             is SettingsAction.OnNotificationsToggle -> handleNotificationsToggle(action.enabled)
             is SettingsAction.OnDefaultCurrencyChange -> handleDefaultCurrencyChange(action.currency)
+            is SettingsAction.OnExportData -> handleExportData()
+            is SettingsAction.OnImportData -> handleImportData(action.jsonData)
             is SettingsAction.OnBackClick -> {
                 // Handle navigation back - this will be handled by the UI
+            }
+        }
+    }
+    
+    private fun handleExportData() {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(isExporting = true, error = null)
+                val exportData = dataExportImportManager.exportAllData()
+                _events.emit(SettingsEvent.ExportReady(exportData))
+                _state.value = _state.value.copy(isExporting = false)
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isExporting = false,
+                    error = "Export failed: ${e.message}"
+                )
+            }
+        }
+    }
+    
+    private fun handleImportData(jsonData: String) {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(isImporting = true, error = null)
+                
+                // First validate the data
+                when (val validation = dataExportImportManager.validateExportData(jsonData)) {
+                    is DataExportImportManager.ValidationResult.Valid -> {
+                        // Show confirmation dialog
+                        _events.emit(SettingsEvent.ShowImportConfirmation(
+                            transactions = validation.transactions,
+                            accounts = validation.accounts,
+                            goals = validation.goals
+                        ))
+                    }
+                    is DataExportImportManager.ValidationResult.Invalid -> {
+                        _state.value = _state.value.copy(
+                            isImporting = false,
+                            error = "Invalid import file: ${validation.reason}"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isImporting = false,
+                    error = "Import validation failed: ${e.message}"
+                )
+            }
+        }
+    }
+    
+    fun confirmImport(jsonData: String) {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(isImporting = true)
+                
+                when (val result = dataExportImportManager.importData(jsonData, clearExisting = false)) {
+                    is DataExportImportManager.ImportResult.Success -> {
+                        _events.emit(SettingsEvent.ImportSuccess(
+                            importedTransactions = result.importedTransactions,
+                            importedAccounts = result.importedAccounts,
+                            importedGoals = result.importedGoals
+                        ))
+                        _state.value = _state.value.copy(isImporting = false)
+                    }
+                    is DataExportImportManager.ImportResult.Error -> {
+                        _state.value = _state.value.copy(
+                            isImporting = false,
+                            error = "Import failed: ${result.message}"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isImporting = false,
+                    error = "Import failed: ${e.message}"
+                )
             }
         }
     }

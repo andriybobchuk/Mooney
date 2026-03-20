@@ -8,6 +8,7 @@ import platform.UniformTypeIdentifiers.UTTypePlainText
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
+@OptIn(ExperimentalForeignApi::class)
 actual class FileHandler {
     
     actual suspend fun saveTextFile(content: String, fileName: String): Result<Unit> = 
@@ -34,7 +35,7 @@ actual class FileHandler {
             
             try {
                 val data = content.encodeToByteArray().toNSData()
-                val success = data.writeToURL(fileURL, true, null)
+                val success = data.writeToURL(fileURL, atomically = true, error = null)
                 
                 if (success) {
                     // Present share sheet
@@ -101,6 +102,7 @@ actual class FileHandler {
         }
 }
 
+@OptIn(ExperimentalForeignApi::class)
 private class DocumentPickerDelegate(
     private val onPickedUrls: (List<NSURL>) -> Unit
 ) : NSObject(), UIDocumentPickerDelegateProtocol {
@@ -118,6 +120,7 @@ private class DocumentPickerDelegate(
     }
 }
 
+@OptIn(ExperimentalForeignApi::class)
 private fun ByteArray.toNSData(): NSData = NSMutableData().apply {
     if (this@toNSData.isNotEmpty()) {
         this@toNSData.usePinned { pinned ->

@@ -125,14 +125,7 @@ fun TransactionsScreen(
     val total = state.total
     val totalCurrency = state.totalCurrency
     val frequentCategories by viewModel.frequentCategories.collectAsState()
-    val pendingCount by viewModel.pendingTransactionCount.collectAsState()
-
-    // Tab state
-    var selectedTabIndex by remember { mutableStateOf(0) }
-    val tabTitles = listOf(
-        "Transactions" + if (pendingCount > 0) " ($pendingCount)" else "",
-        "Recurring"
-    )
+    // Recurring transactions not implemented yet
 
     // Sheet
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -186,16 +179,11 @@ fun TransactionsScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    if (selectedTabIndex == 0) {
-                        preselectedCategory = null
-                        isBottomSheetOpen = true
-                    } else {
-                        // Handle recurring transaction creation
-                        viewModel.onCreateRecurringTransaction()
-                    }
+                    preselectedCategory = null
+                    isBottomSheetOpen = true
                 }
             ) {
-                Icon(Icons.Default.Add, contentDescription = if (selectedTabIndex == 0) "Add Transaction" else "Add Recurring Transaction")
+                Icon(Icons.Default.Add, contentDescription = "Add Transaction")
             }
         },
         content = { paddingValues ->
@@ -204,28 +192,9 @@ fun TransactionsScreen(
                     .padding(paddingValues)
                     .fillMaxSize()
             ) {
-                // Tab Row
-                TabRow(
-                    selectedTabIndex = selectedTabIndex,
-                    containerColor = MaterialTheme.colorScheme.background,
-                ) {
-                    tabTitles.forEachIndexed { index, title ->
-                        Tab(
-                            selected = selectedTabIndex == index,
-                            onClick = { selectedTabIndex = index },
-                            text = {
-                                Text(
-                                    text = title,
-                                    fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal
-                                )
-                            }
-                        )
-                    }
-                }
+                // Tab row removed - recurring transactions not implemented
 
-                // Tab Content
-                when (selectedTabIndex) {
-                    0 -> {
+                // Main content
                         // Transactions Tab with Pending Section
                         TransactionsScreenContent(
                             modifier = Modifier
@@ -233,7 +202,7 @@ fun TransactionsScreen(
                                 .nestedScroll(scrollBehavior.nestedScrollConnection),
                             transactions = transactions,
                             accounts = state.accounts,
-                            pendingTransactions = state.pendingTransactions,
+                            pendingTransactions = emptyList(), // Not implemented
                             total = total,
                             currency = totalCurrency,
                             selectedMonth = state.selectedMonth,
@@ -249,7 +218,7 @@ fun TransactionsScreen(
                             onRejectPending = viewModel::rejectPendingTransaction,
                             onEditPending = { pendingId ->
                                 // Find the pending transaction and show it in the dialog
-                                val pending = state.pendingTransactions.find { it.id == pendingId }
+                                val pending = null // state.pendingTransactions.find { it.id == pendingId }
                                 if (pending != null) {
                                     viewModel.editPendingTransaction(pending)
                                 }
@@ -275,7 +244,7 @@ fun TransactionsScreen(
                 }
             }
 
-            if (isBottomSheetOpen && selectedTabIndex == 0) {
+            if (isBottomSheetOpen) {
                 TransactionBottomSheet(
                     onDismiss = {
                         isBottomSheetOpen = false
@@ -300,8 +269,8 @@ fun TransactionsScreen(
                 )
             }
 
-            // Show transaction dialog for pending transaction editing
-            if (state.showAddTransactionDialog && state.editingPendingTransaction != null) {
+            /* Pending transactions not implemented yet
+            if (false && state.showAddTransactionDialog && state.editingPendingTransaction != null) {
                 val pending = state.editingPendingTransaction!!
                 // Create a fake transaction object with pending transaction data for pre-filling
                 val pendingAccount = state.accounts.filterNotNull().find { it.id == pending.accountId }
@@ -327,7 +296,7 @@ fun TransactionsScreen(
                 TransactionBottomSheet(
                     onDismiss = {
                         // Clear the pending transaction edit state
-                        viewModel.hideAddTransactionDialog()
+                        // viewModel.hideAddTransactionDialog() // Not implemented
                     },
                     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
                     transactionToEdit = fakeTransactionForEdit,
@@ -337,19 +306,21 @@ fun TransactionsScreen(
                     preselectedCategory = null, // Let the transaction data pre-fill everything
                     onAdd = { transaction ->
                         // Reject the original pending transaction and add the new modified one
-                        viewModel.rejectPendingTransaction(pending.id)
+                        // viewModel.rejectPendingTransaction(pending.id) // Not implemented
                         viewModel.upsertTransaction(transaction)
-                        viewModel.hideAddTransactionDialog()
+                        // viewModel.hideAddTransactionDialog() // Not implemented
                     },
                     onUpdate = { transaction ->
                         // Treat update same as add for pending transactions
-                        viewModel.rejectPendingTransaction(pending.id)
+                        // viewModel.rejectPendingTransaction(pending.id) // Not implemented
                         viewModel.upsertTransaction(transaction)
-                        viewModel.hideAddTransactionDialog()
+                        // viewModel.hideAddTransactionDialog() // Not implemented
                     }
                 )
             }
+            */
 
+            /* Recurring dialog not implemented yet
             if (state.showRecurringDialog) {
                 RecurringTransactionDialog(
                     onDismiss = viewModel::hideRecurringDialog,
@@ -359,6 +330,7 @@ fun TransactionsScreen(
                     editTransaction = state.recurringTransactionToEdit
                 )
             }
+            */
         }
     )
 }
@@ -376,7 +348,7 @@ fun TransactionsScreenContent(
     modifier: Modifier,
     transactions: List<Transaction?>,
     accounts: List<UiAccount?>,
-    pendingTransactions: List<com.andriybobchuk.mooney.mooney.domain.PendingTransaction> = emptyList(),
+    // pendingTransactions: List<com.andriybobchuk.mooney.mooney.domain.PendingTransaction> = emptyList(), // Not implemented
     total: Double,
     currency: Currency,
     selectedMonth: MonthKey,
@@ -403,7 +375,7 @@ fun TransactionsScreenContent(
             .background(MaterialTheme.colorScheme.background)
     ) {
         // Pending Transactions Section
-        if (pendingTransactions.isNotEmpty()) {
+        if (false) { // pendingTransactions.isNotEmpty() - not implemented
             item {
                 Card(
                     modifier = Modifier
@@ -423,7 +395,8 @@ fun TransactionsScreenContent(
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        pendingTransactions.forEach { pending ->
+                        // pendingTransactions.forEach { pending -> // Not implemented
+                        /*
                             PendingTransactionItem(
                                 pending = pending,
                                 categories = emptyList(), // Will need to pass actual categories
@@ -433,6 +406,7 @@ fun TransactionsScreenContent(
                                 onEdit = { onEditPending(pending.id) }
                             )
                         }
+                        */
                     }
                 }
             }

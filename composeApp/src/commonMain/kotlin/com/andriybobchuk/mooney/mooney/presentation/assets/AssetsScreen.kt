@@ -524,7 +524,7 @@ private fun AssetSheet(
         Spacer(Modifier.height(16.dp))
 
         MooneyButton(
-            text = if (isEditMode) "Update" else "Add Asset",
+            text = if (editingAsset != null) "Update Asset" else "Add Asset",
             modifier = Modifier.fillMaxWidth(),
             variant = ButtonVariant.PRIMARY,
             onClick = {
@@ -532,9 +532,7 @@ private fun AssetSheet(
                 onAdd(title, emoji, amt, selectedCurrency, selectedCategory)
             },
             enabled = title.isNotBlank() && amount.isNotBlank()
-        ) {
-            Text(if (editingAsset != null) "Update Asset" else "Create Asset")
-        }
+        )
         
         Spacer(Modifier.height(20.dp))
     }

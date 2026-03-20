@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "219547416631",
+    "project_id": "mooney-39533",
+    "storage_bucket": "mooney-39533.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:219547416631:android:289c6b95cfd0a6b4cfa7b2",
+        "android_client_info": {
+          "package_name": "com.andriybobchuk.mooney"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCTD7O6i75G_1pV62taWgrlt2BYVThUYZ4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -46,7 +46,7 @@ fun DataExportImportSection(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
-                    imageVector = Icons.Default.CloudSync,
+                    imageVector = Icons.Default.CloudUpload,
                     contentDescription = "Data Backup",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
@@ -71,7 +71,7 @@ fun DataExportImportSection(
             
             // Export Button
             ExportImportButton(
-                icon = Icons.Default.FileUpload,
+                icon = Icons.Default.Upload,
                 title = "Export Data",
                 subtitle = "Save all your data to a file",
                 onClick = onExportClick,
@@ -85,7 +85,7 @@ fun DataExportImportSection(
             
             // Import Button
             ExportImportButton(
-                icon = Icons.Default.FileDownload,
+                icon = Icons.Default.Download,
                 title = "Import Data",
                 subtitle = "Restore data from a backup file",
                 onClick = onImportClick,
@@ -194,7 +194,7 @@ private fun ExportImportButton(
             }
             
             Icon(
-                imageVector = Icons.Default.ChevronRight,
+                imageVector = Icons.Default.KeyboardArrowRight,
                 contentDescription = null,
                 tint = contentColor.copy(alpha = 0.5f)
             )

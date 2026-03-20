@@ -102,10 +102,10 @@ actual class FileHandler {
         }
 }
 
-@OptIn(ExperimentalForeignApi::class)
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 private class DocumentPickerDelegate(
     private val onPickedUrls: (List<NSURL>) -> Unit
-) : NSObject(), UIDocumentPickerDelegateProtocol {
+) : UIDocumentPickerDelegateProtocol {
     
     override fun documentPicker(
         controller: UIDocumentPickerViewController,

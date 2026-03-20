@@ -5,6 +5,7 @@ import platform.Foundation.*
 import platform.UIKit.*
 import platform.UniformTypeIdentifiers.UTTypeJSON
 import platform.UniformTypeIdentifiers.UTTypePlainText
+import platform.darwin.NSObject
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 

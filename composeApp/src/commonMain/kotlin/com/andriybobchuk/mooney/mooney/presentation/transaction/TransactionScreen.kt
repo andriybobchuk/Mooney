@@ -214,19 +214,16 @@ fun TransactionsScreen(
                             },
                             onDelete = viewModel::deleteTransaction,
                             onDailyTotal = viewModel::getDailyTotal,
-                            onAcceptPending = viewModel::acceptPendingTransaction,
-                            onRejectPending = viewModel::rejectPendingTransaction,
+                            onAcceptPending = { },
+                            onRejectPending = { },
                             onEditPending = { pendingId ->
                                 // Find the pending transaction and show it in the dialog
                                 val pending = null // state.pendingTransactions.find { it.id == pendingId }
                                 if (pending != null) {
-                                    viewModel.editPendingTransaction(pending)
+                                    // Not implemented
                                 }
                             }
                         )
-                    }
-                }
-            }
 
             if (isBottomSheetOpen) {
                 TransactionBottomSheet(
@@ -308,7 +305,7 @@ fun TransactionsScreen(
             if (state.showRecurringDialog) {
                 RecurringTransactionDialog(
                     onDismiss = viewModel::hideRecurringDialog,
-                    onSave = viewModel::createRecurringTransaction,
+                    onSave = { /* Not implemented */ },
                     accounts = state.accounts.filterNotNull(),
                     categories = state.categories,
                     editTransaction = state.recurringTransactionToEdit

@@ -7,7 +7,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp  
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -46,7 +50,7 @@ fun DataExportImportSection(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(
-                    imageVector = Icons.Default.CloudUpload,
+                    imageVector = Icons.Default.ArrowDropUp,
                     contentDescription = "Data Backup",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
@@ -71,7 +75,7 @@ fun DataExportImportSection(
             
             // Export Button
             ExportImportButton(
-                icon = Icons.Default.Upload,
+                icon = Icons.Default.ArrowDropUp,
                 title = "Export Data",
                 subtitle = "Save all your data to a file",
                 onClick = onExportClick,
@@ -85,7 +89,7 @@ fun DataExportImportSection(
             
             // Import Button
             ExportImportButton(
-                icon = Icons.Default.Download,
+                icon = Icons.Default.ArrowDropDown,
                 title = "Import Data",
                 subtitle = "Restore data from a backup file",
                 onClick = onImportClick,

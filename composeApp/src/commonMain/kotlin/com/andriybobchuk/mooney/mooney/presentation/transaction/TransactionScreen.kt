@@ -202,7 +202,6 @@ fun TransactionsScreen(
                                 .nestedScroll(scrollBehavior.nestedScrollConnection),
                             transactions = transactions,
                             accounts = state.accounts,
-                            pendingTransactions = emptyList(), // Not implemented
                             total = total,
                             currency = totalCurrency,
                             selectedMonth = state.selectedMonth,

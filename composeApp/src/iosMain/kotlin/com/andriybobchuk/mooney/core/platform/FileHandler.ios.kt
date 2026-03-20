@@ -35,7 +35,7 @@ actual class FileHandler {
             
             try {
                 val data = content.encodeToByteArray().toNSData()
-                val success = data.writeToURL(fileURL, atomically = true, error = null)
+                val success = data.writeToURL(fileURL, atomically = true)
                 
                 if (success) {
                     // Present share sheet

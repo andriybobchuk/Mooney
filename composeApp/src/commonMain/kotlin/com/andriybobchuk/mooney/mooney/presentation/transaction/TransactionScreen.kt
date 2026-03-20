@@ -224,8 +224,11 @@ fun TransactionsScreen(
                                 }
                             }
                         )
+            }
+        }
+    )
 
-            if (isBottomSheetOpen) {
+    if (isBottomSheetOpen) {
                 TransactionBottomSheet(
                     onDismiss = {
                         isBottomSheetOpen = false
@@ -312,8 +315,6 @@ fun TransactionsScreen(
                 )
             }
             */
-        }
-    )
 }
 
 fun LocalDate.formatForDisplay(): String {

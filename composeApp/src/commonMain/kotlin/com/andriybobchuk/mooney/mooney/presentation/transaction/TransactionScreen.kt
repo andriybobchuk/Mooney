@@ -225,22 +225,6 @@ fun TransactionsScreen(
                             }
                         )
                     }
-                    1 -> {
-                        // Recurring Transactions Tab
-                        RecurringTransactionsTab(
-                            modifier = Modifier.fillMaxSize(),
-                            recurringTransactions = state.recurringTransactions,
-                            suggestions = state.recurringSuggestions,
-                            accounts = state.accounts,
-                            categories = state.categories,
-                            onEdit = viewModel::editRecurringTransaction,
-                            onDelete = viewModel::deleteRecurringTransaction,
-                            onToggleActive = viewModel::toggleRecurringTransactionActive,
-                            onAdd = viewModel::createRecurringTransaction,
-                            onAcceptSuggestion = viewModel::acceptSuggestion,
-                            onDismissSuggestion = viewModel::dismissSuggestion
-                        )
-                    }
                 }
             }
 

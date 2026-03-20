@@ -305,7 +305,7 @@ fun TransactionsScreen(
             if (state.showRecurringDialog) {
                 RecurringTransactionDialog(
                     onDismiss = viewModel::hideRecurringDialog,
-                    onSave = { /* Not implemented */ },
+                    onSave = { },
                     accounts = state.accounts.filterNotNull(),
                     categories = state.categories,
                     editTransaction = state.recurringTransactionToEdit

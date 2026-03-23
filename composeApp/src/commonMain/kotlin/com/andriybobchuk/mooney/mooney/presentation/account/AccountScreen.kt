@@ -59,8 +59,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.presentation.Toolbars
-import com.andriybobchuk.mooney.core.presentation.theme.ThemeManager
-import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.usecase.ReconciliationDifference
@@ -68,7 +66,6 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.CreateReconciliationUseCas
 import com.andriybobchuk.mooney.mooney.presentation.formatWithCommas
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
-import org.koin.compose.koinInject
 
 data class ReconciliationData(
     val accountId: Int,
@@ -90,9 +87,6 @@ fun AccountScreen(
     val accounts = state.accounts
     val totalNetWorth = state.totalNetWorth
     
-    val themeManager: ThemeManager = koinInject()
-    val themeMode by themeManager.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
-
     // Sheet
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()

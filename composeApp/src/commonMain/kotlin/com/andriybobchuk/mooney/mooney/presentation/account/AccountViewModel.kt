@@ -13,7 +13,6 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.ConvertAccountsToUiUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.CreateReconciliationUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.ReconciliationDifference
-import com.andriybobchuk.mooney.core.presentation.theme.ThemeManager
 import com.andriybobchuk.mooney.core.domain.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -38,8 +37,7 @@ class AccountViewModel(
     private val convertAccountsToUiUseCase: ConvertAccountsToUiUseCase,
     private val currencyManagerUseCase: CurrencyManagerUseCase,
     private val createReconciliationUseCase: CreateReconciliationUseCase,
-    private val repository: CoreRepository,
-    private val themeManager: ThemeManager
+    private val repository: CoreRepository
 ) : ViewModel() {
 
     private var observeAccountsJob: Job? = null
@@ -181,37 +179,6 @@ class AccountViewModel(
         }
     }
     
-    // TEMPORARY TEST FUNCTION - REMOVE AFTER TESTING
-    fun testReconciliationDialog() {
-        println("TEST: testReconciliationDialog called!")
-        
-        // Test simple state update first
-        _uiState.update { 
-            it.copy(isLoading = !it.isLoading) // Simple toggle to see if ANY state updates work
-        }
-        
-        println("TEST: isLoading toggled to ${_uiState.value.isLoading}")
-        
-        // Create a fake reconciliation difference to test the dialog
-        val testAccount = Account(1, "Test Account", 1000.0, Currency.USD, "💰", AssetCategory.BANK_ACCOUNT)
-        val testDifference = ReconciliationDifference(
-            account = testAccount,
-            oldAmount = 1000.0,
-            newAmount = 1500.0,
-            difference = 500.0,
-            isGain = true
-        )
-        
-        println("TEST: Setting reconciliation difference...")
-        _uiState.update { 
-            it.copy(
-                reconciliationDifference = testDifference,
-                pendingAccountUpdate = PendingAccountUpdate(1, "Test Account", "💰", 1500.0, Currency.USD)
-            )
-        }
-        println("TEST: State updated! reconciliationDifference = ${_uiState.value.reconciliationDifference}")
-    }
-    
     /**
      * Confirms reconciliation and creates both the reconciliation transaction and account update
      */
@@ -343,11 +310,6 @@ class AccountViewModel(
         }
     }
     
-    fun toggleTheme() {
-        viewModelScope.launch {
-            themeManager.toggleTheme()
-        }
-    }
 }
 
 data class UiAccount(

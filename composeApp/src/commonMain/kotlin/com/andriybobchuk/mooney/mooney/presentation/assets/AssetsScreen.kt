@@ -36,15 +36,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.app.appColors
 import com.andriybobchuk.mooney.core.presentation.Toolbars
-import com.andriybobchuk.mooney.core.presentation.theme.ThemeManager
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.AssetCategory
 import com.andriybobchuk.mooney.mooney.domain.Currency
-import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
-import com.andriybobchuk.mooney.mooney.domain.usecase.assets.CategoryInfo
 import com.andriybobchuk.mooney.mooney.presentation.formatWithCommas
 import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,10 +53,6 @@ fun AssetsScreen(
     val state by viewModel.state.collectAsState()
     val assets = state.assets
     val totalNetWorth = state.totalNetWorth
-    val diversification = state.diversification
-    
-    val themeManager: ThemeManager = koinInject()
-    val themeMode by themeManager.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
 
     // Sheet
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -127,8 +119,6 @@ fun AssetsScreen(
             AssetsScreenContent(
                 modifier = Modifier.padding(paddingValues),
                 assets = assets,
-                diversification = diversification,
-                assetsAnalytics = state.assetsAnalytics,
                 categoryOrder = state.categoryOrder,
                 expandedCategories = state.expandedCategories,
                 baseCurrency = state.totalNetWorthCurrency,
@@ -176,8 +166,6 @@ fun AssetsScreen(
 private fun AssetsScreenContent(
     modifier: Modifier,
     assets: List<UiAsset>,
-    diversification: com.andriybobchuk.mooney.mooney.domain.usecase.assets.AssetDiversification?,
-    assetsAnalytics: AssetsAnalytics?,
     categoryOrder: List<AssetCategory>,
     expandedCategories: Set<AssetCategory>,
     baseCurrency: Currency,
@@ -195,17 +183,6 @@ private fun AssetsScreenContent(
             Spacer(modifier = Modifier.height(16.dp))
         }
         
-        // Analytics Card
-        if (assetsAnalytics != null && assets.isNotEmpty()) {
-            item {
-                AnalyticsCard(
-                    analytics = assetsAnalytics,
-                    baseCurrency = baseCurrency
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-        }
-
         // Assets grouped by category
         val groupedAssets = assets.groupBy { it.assetCategory }
         categoryOrder.forEach { category ->
@@ -216,7 +193,7 @@ private fun AssetsScreenContent(
                 item {
                     CollapsibleCategoryHeader(
                         category = category,
-                        categoryInfo = diversification?.categoryBreakdown?.get(category),
+                        assetCount = categoryAssets.size,
                         totalAmount = categoryAssets.sumOf { it.baseCurrencyAmount },
                         currency = baseCurrency,
                         isExpanded = isExpanded,
@@ -250,7 +227,7 @@ private fun AssetsScreenContent(
 @Composable
 private fun CollapsibleCategoryHeader(
     category: AssetCategory,
-    categoryInfo: CategoryInfo?,
+    assetCount: Int,
     totalAmount: Double,
     currency: Currency,
     isExpanded: Boolean,
@@ -294,9 +271,9 @@ private fun CollapsibleCategoryHeader(
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )
-                if (categoryInfo != null) {
+                if (assetCount > 0) {
                     Text(
-                        text = "${categoryInfo.assetCount} asset${if (categoryInfo.assetCount != 1) "s" else ""} • ${categoryInfo.percentage.toInt()}%",
+                        text = "$assetCount asset${if (assetCount != 1) "s" else ""}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
@@ -538,129 +515,3 @@ private fun AssetSheet(
     }
 }
 
-@Composable
-private fun AnalyticsCard(
-    analytics: AssetsAnalytics,
-    baseCurrency: Currency
-) {
-    if (analytics.currencyBreakdown.size <= 1) {
-        // Don't show the card if there's only one currency
-        return
-    }
-    
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Simple header
-            Text(
-                text = "Currency Distribution",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-            )
-            
-            // Modern minimalistic currency bars
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                analytics.currencyBreakdown
-                    .entries
-                    .sortedByDescending { it.value.percentage }
-                    .take(5) // Show top 5 currencies
-                    .forEach { (currency, breakdown) ->
-                        CurrencyBar(
-                            currency = currency,
-                            breakdown = breakdown,
-                            baseCurrency = baseCurrency
-                        )
-                    }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CurrencyBar(
-    currency: Currency,
-    breakdown: CurrencyBreakdown,
-    baseCurrency: Currency
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // Currency symbol
-        Text(
-            text = currency.symbol,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.width(40.dp)
-        )
-        
-        // Progress bar and amount
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            // Amount and percentage row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "${breakdown.totalInCurrency.formatWithCommas()} ${currency.name}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "${breakdown.percentage.toInt()}%",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-            }
-            
-            // Progress bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(fraction = (breakdown.percentage / 100f).toFloat())
-                        .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(
-                            when(currency) {
-                                Currency.USD -> Color(0xFF4CAF50)
-                                Currency.EUR -> Color(0xFF2196F3)
-                                Currency.UAH -> Color(0xFFFFC107)
-                                Currency.PLN -> Color(0xFFFF5722)
-                            }
-                        )
-                )
-            }
-            
-            // Base currency conversion (if different)
-            if (currency != baseCurrency) {
-                Text(
-                    text = "≈ ${breakdown.totalInBaseCurrency.formatWithCommas()} ${baseCurrency.symbol}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                )
-            }
-        }
-    }
-}

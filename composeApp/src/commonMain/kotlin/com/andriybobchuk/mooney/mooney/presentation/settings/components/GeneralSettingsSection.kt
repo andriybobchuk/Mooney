@@ -10,16 +10,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.andriybobchuk.mooney.core.presentation.theme.AppTheme
-import com.andriybobchuk.mooney.core.presentation.theme.rememberCurrentAppTheme
-import com.andriybobchuk.mooney.core.presentation.theme.rememberThemeManager
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 import com.andriybobchuk.mooney.mooney.presentation.settings.SettingsAction
 import com.andriybobchuk.mooney.mooney.presentation.settings.SettingsState
-import com.andriybobchuk.mooney.mooney.presentation.settings.ThemeSwitcherBottomSheet
-import com.andriybobchuk.mooney.mooney.presentation.settings.ThemeSwitcherCard
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,10 +21,6 @@ fun GeneralSettingsSection(
     state: SettingsState,
     onAction: (SettingsAction) -> Unit
 ) {
-    val themeManager = rememberThemeManager()
-    val currentAppTheme = rememberCurrentAppTheme()
-    val scope = rememberCoroutineScope()
-    var showThemeSwitcher by remember { mutableStateOf(false) }
     Column {
         Text(
             text = "General Settings",
@@ -83,15 +73,7 @@ fun GeneralSettingsSection(
         }
         
         Spacer(modifier = Modifier.height(12.dp))
-        
-        // App Theme Switcher
-        ThemeSwitcherCard(
-            currentTheme = currentAppTheme,
-            onClick = { showThemeSwitcher = true }
-        )
-        
-        Spacer(modifier = Modifier.height(12.dp))
-        
+
         // Default Currency Setting
         SettingsCard {
             var showCurrencyDialog by remember { mutableStateOf(false) }
@@ -173,18 +155,6 @@ fun GeneralSettingsSection(
         }
     }
     
-    // Theme Switcher Bottom Sheet
-    if (showThemeSwitcher) {
-        ThemeSwitcherBottomSheet(
-            currentTheme = currentAppTheme,
-            onThemeSelected = { newTheme ->
-                scope.launch {
-                    themeManager.setAppTheme(newTheme)
-                }
-            },
-            onDismiss = { showThemeSwitcher = false }
-        )
-    }
 }
 
 @Composable

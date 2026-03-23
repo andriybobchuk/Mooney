@@ -7,18 +7,18 @@ Living document. Updated each tech debt resolution session. Read the actual code
 ## Phase 0: Remove Unused Code & Features (Do First)
 
 ### Dead Code
-- [ ] **Book routes in Route.kt** — `BookGraph`, `BookList`, `BookDetail` tutorial leftovers. Delete.
-- [ ] **Commented-out recurring transaction UI in TransactionScreen.kt** — ~60 lines for composables that don't exist. DB entities stay, dead UI goes.
-- [ ] **Unused params in TransactionsScreenContent** — `onAcceptPending`, `onRejectPending`, `onEditPending` never wired.
-- [ ] **Test function in AccountViewModel** — `testReconciliationDialog()` with `println` statements. Delete.
+- [x] **Book routes in Route.kt** — `BookGraph`, `BookList`, `BookDetail` tutorial leftovers. Deleted.
+- [x] **Commented-out recurring transaction UI in TransactionScreen.kt** — ~60 lines removed. DB entities stay.
+- [x] **Unused params in TransactionsScreenContent** — `onAcceptPending`, `onRejectPending`, `onEditPending` removed.
+- [x] **Test function in AccountViewModel** — `testReconciliationDialog()` with `println` statements. Deleted.
 
 ### Features to Remove Entirely
-- [ ] **Asset analytics / diversification** — Remove `CalculateAssetDiversificationUseCase`, the `updateAssetsAnalytics()` method in AssetsViewModel, all pie chart / percentage breakdown UI. Simplify to account list by category.
-- [ ] **Dynamic theme switching** — Remove `ThemeSwitcher.kt` and theme selection UI. Pick one theme, hardcode it.
-- [ ] **Smart suggestions for recurring transactions** — Remove auto-pattern detection logic. Keep only user-created recurring transactions. DB tables must remain for schema integrity.
+- [x] **Asset analytics / diversification** — Removed `CalculateAssetDiversificationUseCase`, `updateAssetsAnalytics()`, `AnalyticsCard`, `CurrencyBar`. Simplified to account list by category.
+- [x] **Dynamic theme switching** — Removed `ThemeSwitcher.kt`, theme selection UI, `toggleTheme()` from ViewModels. ThemeManager kept for light/dark mode.
+- [x] **Smart suggestions for recurring transactions** — No code existed to remove. DB tables remain for schema integrity.
 
 ### Features to Reassess
-- [ ] **Export/Import** — `DataExportImportManager`, `FileHandler`, `DataExportImportSection`. Caused DB issues before. Keep or remove until Firebase is done?
+- [x] **Export/Import** — Keeping. Useful feature, merged from `safe-export-import` branch.
 
 ---
 

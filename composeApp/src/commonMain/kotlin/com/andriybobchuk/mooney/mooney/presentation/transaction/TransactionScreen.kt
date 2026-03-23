@@ -125,8 +125,6 @@ fun TransactionsScreen(
     val total = state.total
     val totalCurrency = state.totalCurrency
     val frequentCategories by viewModel.frequentCategories.collectAsState()
-    // Recurring transactions not implemented yet
-
     // Sheet
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isBottomSheetOpen by remember { mutableStateOf(false) }
@@ -192,11 +190,7 @@ fun TransactionsScreen(
                     .padding(paddingValues)
                     .fillMaxSize()
             ) {
-                // Tab row removed - recurring transactions not implemented
-
-                // Main content
-                        // Transactions Tab with Pending Section
-                        TransactionsScreenContent(
+                TransactionsScreenContent(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -213,15 +207,6 @@ fun TransactionsScreen(
                             },
                             onDelete = viewModel::deleteTransaction,
                             onDailyTotal = viewModel::getDailyTotal,
-                            onAcceptPending = { },
-                            onRejectPending = { },
-                            onEditPending = { pendingId ->
-                                // Find the pending transaction and show it in the dialog
-                                val pending = null // state.pendingTransactions.find { it.id == pendingId }
-                                if (pending != null) {
-                                    // Not implemented
-                                }
-                            }
                         )
             }
         }
@@ -329,7 +314,6 @@ fun TransactionsScreenContent(
     modifier: Modifier,
     transactions: List<Transaction?>,
     accounts: List<UiAccount?>,
-    // pendingTransactions: List<com.andriybobchuk.mooney.mooney.domain.PendingTransaction> = emptyList(), // Not implemented
     total: Double,
     currency: Currency,
     selectedMonth: MonthKey,
@@ -337,10 +321,7 @@ fun TransactionsScreenContent(
     onCurrencyClick: () -> Unit,
     onEdit: (Transaction) -> Unit,
     onDelete: (Int) -> Unit,
-    onDailyTotal: (LocalDate) -> Double = { 0.0 },
-    onAcceptPending: (Int) -> Unit = {},
-    onRejectPending: (Int) -> Unit = {},
-    onEditPending: (Int) -> Unit = {}
+    onDailyTotal: (LocalDate) -> Double = { 0.0 }
 ) {
     // Group and sort transactions by date (descending), then by ID (most recent first)
     val grouped = transactions.filterNotNull().groupBy { it.date }
@@ -355,44 +336,6 @@ fun TransactionsScreenContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Pending Transactions Section
-        if (false) { // pendingTransactions.isNotEmpty() - not implemented
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(12.dp)
-                    ) {
-                        Text(
-                            text = "Pending Recurring Transactions",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        // pendingTransactions.forEach { pending -> // Not implemented
-                        /*
-                            PendingTransactionItem(
-                                pending = pending,
-                                categories = emptyList(), // Will need to pass actual categories
-                                recurringReason = "Monthly recurring pattern", // Will need to make this dynamic
-                                onAccept = { onAcceptPending(pending.id) },
-                                onReject = { onRejectPending(pending.id) },
-                                onEdit = { onEditPending(pending.id) }
-                            )
-                        }
-                        */
-                    }
-                }
-            }
-        }
-
         item {
             TransactionPagerView(
                 selectedMonth = selectedMonth,

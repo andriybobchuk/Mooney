@@ -7,11 +7,8 @@ import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.AssetCategory
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
-import com.andriybobchuk.mooney.mooney.domain.usecase.assets.CalculateAssetDiversificationUseCase
-import com.andriybobchuk.mooney.mooney.domain.usecase.assets.AssetDiversification
 import com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageAssetCategoryOrderUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageCategoryExpansionUseCase
-import com.andriybobchuk.mooney.core.presentation.theme.ThemeManager
 import com.andriybobchuk.mooney.core.domain.Result
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -26,7 +23,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 
 class AssetsViewModel(
@@ -36,10 +32,8 @@ class AssetsViewModel(
     private val calculateNetWorthUseCase: CalculateNetWorthUseCase,
     private val convertAccountsToUiUseCase: ConvertAccountsToUiUseCase,
     private val currencyManagerUseCase: CurrencyManagerUseCase,
-    private val calculateAssetDiversificationUseCase: CalculateAssetDiversificationUseCase,
     private val manageAssetCategoryOrderUseCase: ManageAssetCategoryOrderUseCase,
-    private val manageCategoryExpansionUseCase: ManageCategoryExpansionUseCase,
-    private val themeManager: ThemeManager
+    private val manageCategoryExpansionUseCase: ManageCategoryExpansionUseCase
 ) : ViewModel() {
 
     private var observeAccountsJob: Job? = null
@@ -85,95 +79,9 @@ class AssetsViewModel(
                     expandedCategories = expandedCategories
                 )
             }
-            updateDiversificationAnalytics(accounts.filterNotNull())
-            updateAssetsAnalytics(accounts.filterNotNull())
             updateTotalNetWorth()
         }.launchIn(viewModelScope)
     }
-
-    private fun updateDiversificationAnalytics(accounts: List<Account>) {
-        viewModelScope.launch {
-            val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
-            val diversification = calculateAssetDiversificationUseCase(
-                accounts = accounts,
-                exchangeRates = exchangeRates,
-                targetCurrency = currencyManagerUseCase.getCurrentCurrency()
-            )
-            
-            _uiState.update {
-                it.copy(
-                    diversification = diversification
-                )
-            }
-        }
-    }
-    
-    private fun updateAssetsAnalytics(accounts: List<Account>) {
-        val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
-        val baseCurrency = GlobalConfig.baseCurrency
-        
-        // Calculate bank account vs cash totals
-        val bankAccounts = accounts.filter { it.assetCategory == AssetCategory.BANK_ACCOUNT }
-        val cashAccounts = accounts.filter { it.assetCategory == AssetCategory.CASH }
-        
-        val bankAccountTotal = bankAccounts.sumOf { account ->
-            if (account.currency != baseCurrency) {
-                exchangeRates.convert(account.amount, account.currency, baseCurrency)
-            } else {
-                account.amount
-            }
-        }
-        
-        val cashTotal = cashAccounts.sumOf { account ->
-            if (account.currency != baseCurrency) {
-                exchangeRates.convert(account.amount, account.currency, baseCurrency)
-            } else {
-                account.amount
-            }
-        }
-        
-        val totalNetWorth = accounts.sumOf { account ->
-            if (account.currency != baseCurrency) {
-                exchangeRates.convert(account.amount, account.currency, baseCurrency)
-            } else {
-                account.amount
-            }
-        }
-        
-        val bankAccountPercentage = if (totalNetWorth > 0) (bankAccountTotal / totalNetWorth) * 100 else 0.0
-        val cashPercentage = if (totalNetWorth > 0) (cashTotal / totalNetWorth) * 100 else 0.0
-        
-        // Calculate currency breakdown
-        val currencyGroups = accounts.groupBy { it.currency }
-        val currencyBreakdown = currencyGroups.mapValues { (currency, accountsInCurrency) ->
-            val totalInCurrency = accountsInCurrency.sumOf { it.amount }
-            val totalInBaseCurrency = if (currency != baseCurrency) {
-                exchangeRates.convert(totalInCurrency, currency, baseCurrency)
-            } else {
-                totalInCurrency
-            }
-            val percentage = if (totalNetWorth > 0) (totalInBaseCurrency / totalNetWorth) * 100 else 0.0
-            
-            CurrencyBreakdown(
-                percentage = percentage,
-                totalInCurrency = totalInCurrency,
-                totalInBaseCurrency = totalInBaseCurrency
-            )
-        }
-        
-        _uiState.update {
-            it.copy(
-                assetsAnalytics = AssetsAnalytics(
-                    bankAccountPercentage = bankAccountPercentage,
-                    cashPercentage = cashPercentage,
-                    bankAccountTotal = bankAccountTotal,
-                    cashTotal = cashTotal,
-                    currencyBreakdown = currencyBreakdown
-                )
-            )
-        }
-    }
-
 
     private fun convertToUiAssets(accounts: List<Account?>): List<UiAsset> {
         return accounts.filterNotNull().map { account ->
@@ -222,11 +130,10 @@ class AssetsViewModel(
     fun onNetWorthLabelClick() {
         currencyManagerUseCase.cycleToNextCurrency()
         updateTotalNetWorth()
-        // Recalculate analytics with new currency
+        // Recalculate with new currency
         viewModelScope.launch {
             val accounts = getAccountsUseCase().first()
-            updateDiversificationAnalytics(accounts.filterNotNull())
-            updateAssetsAnalytics(accounts.filterNotNull())
+            _uiState.update { it.copy(assets = convertToUiAssets(accounts)) }
         }
     }
 
@@ -245,9 +152,6 @@ class AssetsViewModel(
                             ratesLastUpdated = Clock.System.now().toEpochMilliseconds()
                         )
                     }
-                    // Update analytics with fresh rates
-                    updateDiversificationAnalytics(currentAccounts.filterNotNull())
-                    updateAssetsAnalytics(currentAccounts.filterNotNull())
                     updateTotalNetWorth()
                 }
                 is Result.Error -> {
@@ -307,11 +211,6 @@ class AssetsViewModel(
         }
     }
     
-    fun toggleTheme() {
-        viewModelScope.launch {
-            themeManager.toggleTheme()
-        }
-    }
 }
 
 data class UiAsset(
@@ -338,27 +237,11 @@ data class AssetsState(
     val assets: List<UiAsset> = emptyList(),
     val totalNetWorth: Double = 0.0,
     val totalNetWorthCurrency: Currency = GlobalConfig.baseCurrency,
-    val diversification: AssetDiversification? = null,
     val categoryOrder: List<AssetCategory> = AssetCategory.entries,
     val expandedCategories: Set<AssetCategory> = AssetCategory.entries.toSet(),
     val isLoading: Boolean = false,
     val isError: Boolean = false,
     val isRefreshingRates: Boolean = false,
     val ratesLastUpdated: Long = 0L,
-    val ratesError: String? = null,
-    val assetsAnalytics: AssetsAnalytics? = null
-)
-
-data class AssetsAnalytics(
-    val bankAccountPercentage: Double,
-    val cashPercentage: Double,
-    val bankAccountTotal: Double,
-    val cashTotal: Double,
-    val currencyBreakdown: Map<Currency, CurrencyBreakdown>
-)
-
-data class CurrencyBreakdown(
-    val percentage: Double,
-    val totalInCurrency: Double,
-    val totalInBaseCurrency: Double
+    val ratesError: String? = null
 )

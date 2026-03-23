@@ -109,7 +109,6 @@ val sharedModule = module {
     singleOf(::EstimateGoalCompletionUseCase)
     
     // Asset Use Cases
-    singleOf(::CalculateAssetDiversificationUseCase)
     singleOf(::ManageAssetCategoryOrderUseCase)
     singleOf(::ManageCategoryExpansionUseCase)
     
@@ -117,7 +116,7 @@ val sharedModule = module {
     singleOf(::GetUserPreferencesUseCase)
     singleOf(::UpdatePinnedCategoriesUseCase)
     singleOf(::GetPinnedCategoriesUseCase)
-    
+
     // Theme
     singleOf(::ThemeManager)
 

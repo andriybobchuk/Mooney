@@ -13,7 +13,7 @@ import kotlinx.serialization.json.Json
 class ManageCategoryExpansionUseCase(
     private val dataStore: DataStore<Preferences>
 ) {
-    private val EXPANDED_CATEGORIES_KEY = stringPreferencesKey("expanded_asset_categories")
+    private val expandedCategoriesKey = stringPreferencesKey("expanded_asset_categories")
     
     private val json = Json { 
         ignoreUnknownKeys = true
@@ -22,7 +22,7 @@ class ManageCategoryExpansionUseCase(
 
     fun getExpandedCategories(): Flow<Set<AssetCategory>> {
         return dataStore.data.map { preferences ->
-            val expandedString = preferences[EXPANDED_CATEGORIES_KEY]
+            val expandedString = preferences[expandedCategoriesKey]
             if (expandedString != null) {
                 try {
                     val categoryNames = json.decodeFromString<List<String>>(expandedString)
@@ -47,7 +47,7 @@ class ManageCategoryExpansionUseCase(
     suspend fun saveExpandedCategories(expandedCategories: Set<AssetCategory>) {
         dataStore.edit { preferences ->
             val categoryNames = expandedCategories.map { it.name }
-            preferences[EXPANDED_CATEGORIES_KEY] = json.encodeToString(categoryNames)
+            preferences[expandedCategoriesKey] = json.encodeToString(categoryNames)
         }
     }
 

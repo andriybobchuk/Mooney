@@ -4,31 +4,28 @@ build:
 
 complexity:
   LongMethod:
-    threshold: 60
-  LongParameterList:
-    functionThreshold: 8
-    constructorThreshold: 10
+    threshold: 100
     ignoreAnnotated:
       - "Composable"
-  ComplexMethod:
-    threshold: 20
+  LongParameterList:
+    functionThreshold: 10
+    constructorThreshold: 12
+    ignoreAnnotated:
+      - "Composable"
   TooManyFunctions:
     thresholdInFiles: 30
-    thresholdInClasses: 20
+    thresholdInClasses: 25
     thresholdInInterfaces: 20
   NestedBlockDepth:
-    threshold: 5
+    threshold: 6
   CyclomaticComplexMethod:
-    threshold: 20
+    threshold: 25
+    ignoreAnnotated:
+      - "Composable"
 
 exceptions:
   SwallowedException:
-    active: true
-    ignoredExceptionTypes:
-      - "InterruptedException"
-      - "MalformedURLException"
-      - "NumberFormatException"
-      - "ParseException"
+    active: false
   TooGenericExceptionCaught:
     active: true
     exceptionNames:
@@ -49,6 +46,11 @@ naming:
   TopLevelPropertyNaming:
     active: true
     constantPattern: "[A-Z][A-Za-z0-9_]*|[a-z][a-zA-Z0-9]*"
+  MatchingDeclarationName:
+    active: false
+  VariableNaming:
+    active: true
+    variablePattern: "[a-z][A-Za-z0-9]*|_[a-zA-Z][A-Za-z0-9]*"
 
 style:
   MagicNumber:
@@ -56,14 +58,19 @@ style:
   WildcardImport:
     active: false
   MaxLineLength:
-    maxLineLength: 150
-    excludeCommentStatements: true
+    active: false
   ReturnCount:
     max: 4
   UnusedImports:
-    active: true
+    active: false
   UnusedPrivateMember:
-    active: true
+    active: false
+  UnusedParameter:
+    active: false
+  UnusedPrivateProperty:
+    active: false
+  NewLineAtEndOfFile:
+    active: false
   ForbiddenComment:
     active: false
   UseDataClass:

@@ -338,7 +338,7 @@ class AccountViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 deleteAccountUseCase(id)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
             }
         }
     }

@@ -13,7 +13,7 @@ import kotlinx.serialization.json.Json
 class ManageAssetCategoryOrderUseCase(
     private val dataStore: DataStore<Preferences>
 ) {
-    private val ASSET_CATEGORY_ORDER_KEY = stringPreferencesKey("asset_category_order")
+    private val assetCategoryOrderKey = stringPreferencesKey("asset_category_order")
     
     private val json = Json { 
         ignoreUnknownKeys = true
@@ -22,7 +22,7 @@ class ManageAssetCategoryOrderUseCase(
 
     fun getCategoryOrder(): Flow<List<AssetCategory>> {
         return dataStore.data.map { preferences ->
-            val orderString = preferences[ASSET_CATEGORY_ORDER_KEY]
+            val orderString = preferences[assetCategoryOrderKey]
             if (orderString != null) {
                 try {
                     val categoryNames = json.decodeFromString<List<String>>(orderString)
@@ -58,13 +58,13 @@ class ManageAssetCategoryOrderUseCase(
     suspend fun saveCategoryOrder(categories: List<AssetCategory>) {
         dataStore.edit { preferences ->
             val categoryNames = categories.map { it.name }
-            preferences[ASSET_CATEGORY_ORDER_KEY] = json.encodeToString(categoryNames)
+            preferences[assetCategoryOrderKey] = json.encodeToString(categoryNames)
         }
     }
 
     suspend fun resetToDefault() {
         dataStore.edit { preferences ->
-            preferences.remove(ASSET_CATEGORY_ORDER_KEY)
+            preferences.remove(assetCategoryOrderKey)
         }
     }
 }

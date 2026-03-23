@@ -1,97 +1,60 @@
 # Tech Debt & Refactoring Roadmap
 
-Living document. Updated each tech debt resolution session.
+Living document. Updated each tech debt resolution session. Read the actual code before acting on any item — references may shift as we refactor.
 
 ---
 
 ## Phase 0: Remove Unused Code & Features (Do First)
 
 ### Dead Code
-- [ ] **Book routes in Route.kt** — `BookGraph`, `BookList`, `BookDetail` are tutorial leftovers. All NavigationHost references commented out. Delete them.
-- [ ] **Commented-out recurring transaction UI in TransactionScreen.kt** — ~60 lines of dead code for `RecurringTransactionDialog`, `PendingTransactionItem`. DB entities must stay, but UI code goes.
-- [ ] **Unused params in TransactionsScreenContent** — `onAcceptPending`, `onRejectPending`, `onEditPending` defined but never wired.
-- [ ] **Test function in production** — `AccountViewModel.testReconciliationDialog()` (lines 184-213) with `println` statements. Delete entirely.
-- [ ] **`sharedKoinViewModel` in NavigationHost** — already removed but verify no remnants.
+- [ ] **Book routes in Route.kt** — `BookGraph`, `BookList`, `BookDetail` tutorial leftovers. Delete.
+- [ ] **Commented-out recurring transaction UI in TransactionScreen.kt** — ~60 lines for composables that don't exist. DB entities stay, dead UI goes.
+- [ ] **Unused params in TransactionsScreenContent** — `onAcceptPending`, `onRejectPending`, `onEditPending` never wired.
+- [ ] **Test function in AccountViewModel** — `testReconciliationDialog()` with `println` statements. Delete.
 
 ### Features to Remove Entirely
-- [ ] **Asset analytics / diversification** — Remove `CalculateAssetDiversificationUseCase`, the `updateAssetsAnalytics()` method in AssetsViewModel (65 lines), and all related pie chart / percentage breakdown UI. Simplify AssetsScreen to just list accounts by category.
-- [ ] **Dynamic theme switching** — Remove `ThemeSwitcher.kt` and theme selection UI from Settings. Pick one theme and hardcode it.
-- [ ] **Smart suggestions for recurring transactions** — Remove `PendingTransactionEntity` logic that auto-detects patterns. Keep only user-created recurring transactions (manual setup). The `PendingTransactionEntity` and `RecurringTransactionEntity` tables must remain in schema for DB integrity, but remove all smart-suggestion logic.
+- [ ] **Asset analytics / diversification** — Remove `CalculateAssetDiversificationUseCase`, the `updateAssetsAnalytics()` method in AssetsViewModel, all pie chart / percentage breakdown UI. Simplify to account list by category.
+- [ ] **Dynamic theme switching** — Remove `ThemeSwitcher.kt` and theme selection UI. Pick one theme, hardcode it.
+- [ ] **Smart suggestions for recurring transactions** — Remove auto-pattern detection logic. Keep only user-created recurring transactions. DB tables must remain for schema integrity.
 
 ### Features to Reassess
-- [ ] **Export/Import feature** — `DataExportImportManager`, `FileHandler`, `DataExportImportSection` in Settings. Originally caused DB issues. Decide: keep and fix, or remove until Firebase migration is done.
+- [ ] **Export/Import** — `DataExportImportManager`, `FileHandler`, `DataExportImportSection`. Caused DB issues before. Keep or remove until Firebase is done?
 
 ---
 
 ## Phase 1: Critical Architecture Fixes
 
-### runBlocking on Main Thread (ANR risk)
-- [ ] **AnalyticsViewModel lines 191-199** — `runBlocking { getTransactionsUseCase().first() }` blocks UI thread. Convert to `suspend` function inside `viewModelScope.launch`.
-- [ ] **AnalyticsViewModel lines 280-288** — Second `runBlocking` call, same issue.
-
-### Layer Boundary Violations
-- [ ] **AnalyticsUseCases.kt lines 8-9** — Domain layer imports presentation (`TopCategorySummary`, `formatWithCommas`). Move `TopCategorySummary` to domain, move `formatWithCommas` to a shared util or keep in presentation and do the mapping in ViewModel.
-
-### Direct Data Layer Access from Presentation
-- [ ] **AccountViewModel line 330** — `repository.upsertAccount()` bypasses use case layer in `performAccountMetadataUpdate()`. Route through `AddAccountUseCase`.
-
-### Test Data in Production Code
-- [ ] **AnalyticsViewModel line 50** — `GlobalConfig.testExchangeRates` passed to calculator constructors. Should use injected exchange rates via `CurrencyManagerUseCase`.
-- [ ] **ExchangeViewModel lines 143-148** — Hardcoded base rates (3.67, 4.35, 0.1, 1.0) and `Random.nextDouble()` for test data. Replace with actual API data or remove sample generation.
+- [ ] **runBlocking on main thread** — AnalyticsViewModel calls `runBlocking { getTransactionsUseCase().first() }` in two places. ANR risk. Convert to `suspend` + `viewModelScope.launch`.
+- [ ] **Domain imports presentation** — `AnalyticsUseCases.kt` imports `TopCategorySummary` and `formatWithCommas` from presentation layer. Move model to domain, formatting to presentation.
+- [ ] **Direct repository access** — AccountViewModel calls `repository.upsertAccount()` bypassing use case layer. Route through use case.
+- [ ] **Test data in production** — AnalyticsViewModel uses `GlobalConfig.testExchangeRates` in calculator constructors. ExchangeViewModel has hardcoded rates and `Random.nextDouble()`. Use injected real rates.
 
 ---
 
 ## Phase 2: Extract Use Cases from ViewModels
 
-### AnalyticsViewModel (572 lines — biggest offender)
-- [ ] **Extract `CategoryAnalysisUseCase`** — from `getAllCategoriesForSheetType()` (lines 290-358, 69 lines). Groups transactions by category, calculates totals, trends, percentages.
-- [ ] **Extract `HistoricalAnalyticsUseCase`** — from historical data aggregation (lines 149-181, 33 lines). Generates month-over-month summaries.
-- [ ] **Extract `TaxCalculationUseCase`** — from `calculateTaxes()` (lines 142-147). Filters for "ZUS" and "PIT" transaction categories.
-- [ ] **Extract metric calculation logic** — from lines 109-133. Complex conditional metric computation (25 lines).
+Everything is a use case. ViewModels are orchestrators only.
 
-### AssetsViewModel
-- [ ] **Extract asset-to-UI conversion** — `convertToUiAssets()` (lines 178-204) performs exchange rate calculations. Should be a use case.
-- [ ] **Clean up `onNetWorthLabelClick()`** — lines 222-231 mix currency cycling + total update + analytics recalculation.
-
-### TransactionViewModel
-- [ ] **Extract daily total aggregation** — lines 129-134 do `.groupBy { it.date.dayOfMonth }.mapValues { ... }` inline. Should use `CalculateDailyTotalUseCase` (which exists but isn't used here).
-- [ ] **Extract date range filtering** — lines 89-97 filter transactions by month boundaries. Should be in use case.
-
-### GoalsViewModel
-- [ ] **Extract goal construction** — lines 147-164 build `Goal` objects with defaults. Should be `CreateGoalUseCase`.
-
-### SettingsViewModel
-- [ ] **Extract pinned category validation** — lines 166-178 do max limit checking. Should be `ValidatePinnedCategoriesUseCase`.
-- [ ] **Fix state update inconsistency** — lines 53, 65 use `.value = ...copy()` instead of `.update {}`.
+- [ ] **AssetsViewModel** — `updateAssetsAnalytics()` has 65 lines of portfolio calculations. `convertToUiAssets()` does exchange rate math. `onNetWorthLabelClick()` mixes 3 concerns. Extract to use cases.
+- [ ] **AnalyticsViewModel (572 lines)** — `getAllCategoriesForSheetType()` is 69 lines of category grouping/trending. Historical data aggregation is 33 lines. Tax calculation duplicates filtering. Extract all to use cases.
+- [ ] **TransactionViewModel** — Daily total aggregation (groupBy + mapValues) inline instead of using existing `CalculateDailyTotalUseCase`. Date range filtering inline.
+- [ ] **GoalsViewModel** — Goal construction with defaults belongs in `CreateGoalUseCase`.
+- [ ] **SettingsViewModel** — Pinned category validation (max limit checking) belongs in use case. Fix inconsistent `.value =` vs `.update {}`.
 
 ---
 
 ## Phase 3: Repository Refactoring
 
-### DefaultCoreRepositoryImpl (207 lines, too fat)
-- [ ] **Extract transfer category construction** — lines 69-107 contain 38 lines of dynamic category creation logic (checking `transfer_to_` prefix, looking up destination accounts). Should be a `TransferCategoryService` or use case.
-- [ ] **Remove duplicated logic** — `getTransactionById()` (lines 109-142) repeats the same transfer category construction.
-- [ ] **Separate category usage tracking** — lines 160-175 conflate tracking (business rule) with persistence (data concern).
+- [ ] **DefaultCoreRepositoryImpl (207 lines)** — `getAllTransactions()` has 38 lines of dynamic transfer category construction. `getTransactionById()` duplicates it. Extract to service/use case.
+- [ ] **Category usage tracking** — conflates business rules with persistence. Separate concerns.
 
 ---
 
 ## Phase 4: Architecture Improvements
 
-### Remove GlobalConfig Anti-Pattern
-- [ ] **`GlobalConfig.testExchangeRates`** — used in AnalyticsViewModel, AssetsViewModel, ExchangeViewModel. Replace with injected rates via `CurrencyManagerUseCase` everywhere.
-- [ ] **`GlobalConfig.baseCurrency`** — should be a user preference, not a hardcoded global.
-
-### State Management Consistency
-- [ ] All ViewModels must use `_uiState.update { it.copy(...) }` — never `_uiState.value = ...`
-- [ ] Audit all 7 ViewModels for consistent pattern.
-
-### Missing Use Cases to Create
-- [ ] `CategoryAnalysisUseCase` — category grouping/trending for analytics
-- [ ] `HistoricalAnalyticsUseCase` — month-over-month aggregation
-- [ ] `TaxCalculationUseCase` — ZUS/PIT filtering
-- [ ] `CurrencyConversionUseCase` — exchange rate display
-- [ ] `ValidatePinnedCategoriesUseCase` — pinned category max limit
-- [ ] `CreateGoalUseCase` — goal object construction with defaults
+- [ ] **Remove GlobalConfig** — `testExchangeRates` and `baseCurrency` should be injected via DI, not global singleton.
+- [ ] **State management consistency** — All ViewModels must use `_uiState.update {}`, never `_uiState.value = ...`
+- [ ] **Create missing use cases** — CategoryAnalysis, HistoricalAnalytics, TaxCalculation, CurrencyConversion, ValidatePinnedCategories, CreateGoal
 
 ---
 

@@ -4,12 +4,25 @@ Reference document for store listing optimization. Review before every store lis
 
 ---
 
+## Decisions Made
+
+| Element | Decision |
+|---------|----------|
+| **App name** | `Mooney: Money Tracker` (22 chars) |
+| **iOS subtitle** | `Multicurrency Budget Planner` (29 chars) |
+| **Google Play short desc** | `Track expenses & budgets across multiple currencies. Manage accounts, goals & more.` |
+| **Icon** | "Mo" in SF Pro Display on solid black background, white text |
+| **Category** | Primary: Finance. Secondary: Productivity |
+
+---
+
 ## App Name & Title (#1 ranking factor)
 
 Keywords in the title carry ~10% more weight than anywhere else.
 
-- **Format:** `Mooney — [Primary Keyword]`
-- **Example:** `Mooney — Budget & Expense Tracker`
+- **Decided:** `Mooney: Money Tracker` (22 chars)
+- "Money tracker" is high volume, less competitive than "budget tracker" or "expense tracker"
+- "Mooney" + "Money" creates natural phonetic repetition — memorable, brandable
 - Keep under 30 characters (both stores truncate in search results)
 - Don't change title frequently — each change resets keyword indexing for ~7 days
 
@@ -17,13 +30,15 @@ Keywords in the title carry ~10% more weight than anywhere else.
 
 Second strongest keyword signal. Use keywords that DON'T repeat the title.
 
-- **Example:** `Multicurrency Money Manager`
+- **Decided:** `Multicurrency Budget Planner` (29 chars)
+- Captures "multicurrency" (differentiator) + "budget" (high volume) + "planner" (variant)
+- Combined with title, ranks for: "money tracker", "multicurrency budget", "budget planner"
 
 ## Short Description (Google Play only, 80 chars)
 
 Equivalent of iOS subtitle. Indexed for keywords.
 
-- **Example:** `Track expenses, manage budgets & accounts in multiple currencies. Free.`
+- **Decided:** `Track expenses & budgets across multiple currencies. Manage accounts, goals & more.`
 
 ## Keywords Field (iOS only, 100 chars)
 
@@ -67,11 +82,19 @@ Hidden field — users never see it, heavily indexed. Comma-separated, no spaces
 
 ## Icon
 
-- Simple, bold, one symbol (coin, "M" monogram, or minimal wallet)
-- Must be readable at 16x16px
-- Don't put text in icon, don't copy competitors
-- Green icons dominate finance — stand out with purple/dark blue/black (premium feel)
-- Test 3-4 variations before launch
+### Decision: "Mo" on black
+
+- **Text:** "Mo" in SF Pro Display font (thin or light weight)
+- **Background:** Solid black — premium feel (Uber, Nothing approach)
+- **Text color:** White — maximum contrast, readable at any size
+- Why "Mo": distinctive, sounds like "money", no major app uses it, more personality than a single "M"
+
+### Rules:
+- Must be readable at 16x16px — test by shrinking the icon before finalizing
+- No accent colors that are green (screams generic finance)
+- No gradients, no shadows, no extra elements — just "Mo" on black
+- Consider testing thin vs medium font weight via Google Play Store Listing Experiments
+- A/B test against a single "M" variant to see which converts better
 
 ---
 

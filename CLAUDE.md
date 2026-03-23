@@ -13,6 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./gradlew :composeApp:assembleDebug                # Android
 ./gradlew clean                                    # Clean build
 ./gradlew :composeApp:kspCommonMainKotlinMetadata  # Generate Room schemas
+./gradlew detekt                                   # Lint (static analysis)
 ```
 
 ## Architecture

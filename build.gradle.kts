@@ -8,4 +8,17 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.room) apply false
+    alias(libs.plugins.detekt)
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(files("$rootDir/detekt.yml"))
+    source.setFrom(
+        files(
+            "composeApp/src/commonMain/kotlin",
+            "composeApp/src/androidMain/kotlin",
+            "composeApp/src/iosMain/kotlin"
+        )
+    )
 }

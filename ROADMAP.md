@@ -14,8 +14,15 @@ Priority order: ship first, enhance after. Each section is a milestone.
 
 ---
 
-## Milestone 2: UI/UX Polish for MVP
+## Milestone 2: UI/UX Polish + Pre-Launch Analytics
 
+### Analytics (must ship with v1.0 — you need to know if people use it)
+- [ ] Firebase Analytics SDK — automatic screen views, session duration, retention
+- [ ] Crashlytics — crash reports before users uninstall silently
+- [ ] ~10 custom events: `onboarding_completed`, `transaction_added`, `account_created`, `category_selected`, `recurring_transaction_created`, `goal_created`, `exchange_rate_viewed`, `settings_opened`, `tab_switched`, `app_opened`
+- [ ] Simple feature flags in code (`object FeatureFlags { val goalsEnabled = false }`)
+
+### UI/UX
 - [ ] Empty state placeholders with CTAs (no data → guide user to add first transaction/account)
 - [ ] Frictionless onboarding flow:
   - [ ] Base currency pre-populated from locale
@@ -42,8 +49,6 @@ Priority order: ship first, enhance after. Each section is a milestone.
 
 ## Milestone 4: Post-Launch Foundation (v1.1)
 
-- [ ] Crashlytics integration — see real crash reports from users
-- [ ] Simple feature flags in code (`object FeatureFlags { val goalsEnabled = false }`) — no Remote Config yet
 - [ ] Firebase Auth (Google, Apple, Email sign-in)
 - [ ] Firebase Firestore as cloud database
 - [ ] Local-to-cloud migration tool (mooney.db → Firestore)

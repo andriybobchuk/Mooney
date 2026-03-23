@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -76,6 +77,11 @@ fun ExchangeScreen(
                         icon = Icons.Default.Refresh,
                         contentDescription = "Refresh Rates",
                         onClick = { viewModel.onAction(ExchangeAction.RefreshRates) }
+                    ),
+                    Toolbars.ToolBarAction(
+                        icon = Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        onClick = onSettingsClick
                     )
                 )
             )

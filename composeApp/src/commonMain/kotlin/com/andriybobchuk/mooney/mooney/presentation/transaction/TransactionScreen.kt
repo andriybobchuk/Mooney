@@ -288,17 +288,6 @@ fun TransactionsScreen(
             }
             */
 
-            /* Recurring dialog not implemented yet
-            if (state.showRecurringDialog) {
-                RecurringTransactionDialog(
-                    onDismiss = viewModel::hideRecurringDialog,
-                    onSave = { },
-                    accounts = state.accounts.filterNotNull(),
-                    categories = state.categories,
-                    editTransaction = state.recurringTransactionToEdit
-                )
-            }
-            */
 }
 
 fun LocalDate.formatForDisplay(): String {
@@ -343,7 +332,33 @@ fun TransactionsScreenContent(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             )
         }
-        
+
+        if (sortedGroups.isEmpty()) {
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 64.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = "📝", fontSize = 56.sp, modifier = Modifier.padding(bottom = 12.dp))
+                    Text(
+                        text = "No transactions this month",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "Tap + to add your first transaction",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
+        }
+
         sortedGroups.forEach { (date, txList) ->
             stickyHeader {
                 Row(

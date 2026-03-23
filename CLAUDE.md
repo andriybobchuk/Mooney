@@ -116,7 +116,7 @@ Database `mooney.db` is at **version 8** with **7 entities**. User has real fina
 - **Big picture:** Read `ROADMAP.md` when working on features, planning, or the user references the roadmap
 - **Refactoring details:** Read `TECH_DEBT.md` when doing architecture cleanup or refactoring
 - When you encounter tech debt, add it to `TECH_DEBT.md`. When completing roadmap items, check them off in `ROADMAP.md`.
-- Current phase: **Pre-release cleanup** — removing unused features, extracting use cases, adding tests
+- Current milestone: **Milestone 1 — Clean Codebase** (remove unused, extract use cases, fix criticals)
 
 ---
 

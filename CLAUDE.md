@@ -111,9 +111,11 @@ Database `mooney.db` is at **version 8** with **7 entities**. User has real fina
 
 ---
 
-## Tech Debt Tracking
+## Project Planning
 
-Log tech debt in `TECH_DEBT.md` in project root. Check before starting cleanup tasks.
+- **Big picture:** @ROADMAP.md — pre-release roadmap, killer features, launch checklist
+- **Granular refactoring:** @TECH_DEBT.md — phased architecture cleanup with checkboxes
+- When you encounter tech debt, add it to `TECH_DEBT.md`. When completing roadmap items, check them off in `ROADMAP.md`.
 
 ---
 

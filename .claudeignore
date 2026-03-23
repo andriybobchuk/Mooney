@@ -1,0 +1,49 @@
+.gradle/
+build/
+**/build/
+**/.build/
+.idea/
+.kotlin/
+
+# iOS build artifacts
+iosApp/DerivedData/
+*.framework/
+*.xcframework/
+
+# Binaries
+*.apk
+*.aab
+*.dex
+*.ipa
+*.zip
+*.tar.gz
+
+# Secrets and credentials
+**/.env
+**/.env.*
+**/GoogleService-Info.plist
+**/google-services.json
+**/local.properties
+**/*.p12
+**/*.pem
+**/*.key
+**/*.keystore
+**/*.jks
+**/*.mobileprovision
+**/*.provisionprofile
+
+# Generated build artifacts
+**/build/generated/
+
+# IDE and OS artifacts
+.DS_Store
+**/.DS_Store
+**/*.xcuserdata/
+**/.swiftpm/
+
+# Coverage reports
+*.profdata
+*.coverage
+*.gcda
+*.gcno
+**/xcresult/

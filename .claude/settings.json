@@ -1,23 +1,22 @@
 {
-  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "$schema": "https://json-schema.org/claude-code-settings.json",
   "permissions": {
     "allow": [
       "mcp__figma-remote-mcp__*",
       "mcp__ide__*",
-      
+
       "Bash(./gradlew:*)",
       "Bash(make:*)",
       "Bash(xcodebuild:*)",
       "Bash(/bin/bash:*)",
       "Bash(bash:*)",
       "Bash(swift:*)",
-      "Bash(swiftc:*)",
       "Bash(xcrun:*)",
       "Bash(xcode-select:*)",
-      
+
       "Bash(git:*)",
       "Bash(gh:*)",
-      
+
       "Bash(ls:*)",
       "Bash(find:*)",
       "Bash(grep:*)",
@@ -29,9 +28,10 @@
       "Bash(du:*)",
       "Bash(test:*)",
       "Bash(basename:*)",
+      "Bash(comm:*)",
       "Bash(xargs:*)",
-      "Bash(awk:*)",
-      
+      "Bash(diff:*)",
+
       "Bash(mkdir:*)",
       "Bash(cp:*)",
       "Bash(rm:*)",
@@ -40,9 +40,9 @@
       "Bash(sed:*)",
       "Bash(tee:*)",
       "Bash(touch:*)",
-      
+
       "Bash(./scripts/*)",
-      
+
       "WebSearch",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:stackoverflow.com)",
@@ -53,8 +53,7 @@
       "WebFetch(domain:jetbrains.com)",
       "WebFetch(domain:firebase.google.com)",
       "WebFetch(domain:material.io)",
-      "WebFetch(domain:square.github.io)",
-      "WebFetch(domain:coil-kt.github.io)"
+      "WebFetch(domain:ktor.io)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -80,10 +79,7 @@
     ],
     "ask": [
       "Bash(git push:*)",
-      "Bash(gh pr merge:*)",
-      "Bash(git reset --hard:*)",
-      "Bash(git clean -f:*)",
-      "Bash(rm -rf:*)"
+      "Bash(gh pr merge:*)"
     ]
   },
   "hooks": {
@@ -101,6 +97,16 @@
             "timeout": 5000
           }
         ]
+      },
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"⚠️ CRITICAL REMINDERS AFTER CONTEXT COMPACT:\n- Database is version 8 with 7 entities. NEVER downgrade version or remove entities.\n- NEVER use git add . — always add files explicitly.\n- NEVER swallow CancellationException in coroutines.\n- Both DatabaseFactory files (Android + iOS) must register ALL migrations.\n- Run /review before declaring work complete.\"",
+            "timeout": 5000
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -109,7 +115,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "CMD=\"$CLAUDE_TOOL_INPUT\"; if echo \"$CMD\" | grep -qE '(push\\s+--force|push\\s+-f\\b|reset\\s+--hard|clean\\s+-f|checkout\\s+\\.|restore\\s+\\.|branch\\s+-D|rm\\s+-rf\\s+[^/])'; then echo '🛑 BLOCKED: Destructive command detected. Ask the user for confirmation first.' >&2; exit 2; fi; exit 0",
+            "command": "CMD=\"$CLAUDE_TOOL_INPUT\"; if echo \"$CMD\" | grep -qE '(push\\s+--force|push\\s+-f\\b|reset\\s+--hard|clean\\s+-f|checkout\\s+\\.|restore\\s+\\.|branch\\s+-D)'; then echo '🛑 BLOCKED: Destructive git command detected. Ask the user for confirmation first.' >&2; exit 2; fi; exit 0",
             "timeout": 5000
           }
         ]
@@ -126,22 +132,17 @@
           },
           {
             "type": "command",
-            "command": "if echo \"$CLAUDE_FILE_PATHS\" | grep -q '\\.kt$'; then KT_FILE=$(echo \"$CLAUDE_FILE_PATHS\" | tr ':' '\\n' | grep '\\.kt$' | head -1); if grep -nE 'collectAsState\\(\\)' \"$KT_FILE\" 2>/dev/null | grep -v 'collectAsStateWithLifecycle'; then echo '⚠️  collectAsState() detected. Use collectAsStateWithLifecycle() instead for lifecycle awareness.'; fi; fi",
+            "command": "if echo \"$CLAUDE_FILE_PATHS\" | grep -q '\\.kt$'; then KT_FILE=$(echo \"$CLAUDE_FILE_PATHS\" | tr ':' '\\n' | grep '\\.kt$' | head -1); if grep -nE 'collectAsState\\(\\)' \"$KT_FILE\" 2>/dev/null | grep -v 'collectAsStateWithLifecycle'; then echo '⚠️  collectAsState() detected. Use collectAsStateWithLifecycle() instead.'; fi; fi",
             "timeout": 5000
           },
           {
             "type": "command",
-            "command": "if echo \"$CLAUDE_FILE_PATHS\" | grep -q 'ViewModel.*\\.kt$'; then echo '⚙️  ViewModel modified - Remember to:'; echo '  1. Update unit tests in commonTest/'; echo '  2. Register in Modules.kt if new'; echo '  3. Handle all state transitions'; fi",
+            "command": "if echo \"$CLAUDE_FILE_PATHS\" | grep -q '\\.kt$'; then KT_FILE=$(echo \"$CLAUDE_FILE_PATHS\" | tr ':' '\\n' | grep '\\.kt$' | head -1); if grep -nE 'catch.*Exception.*\\{' \"$KT_FILE\" 2>/dev/null | grep -v 'CancellationException' | grep -v '//' | head -3; then echo '⚠️  Generic exception catch without CancellationException rethrow. Check coroutine safety.'; fi; fi",
             "timeout": 5000
           },
           {
             "type": "command",
-            "command": "if echo \"$CLAUDE_FILE_PATHS\" | grep -q 'Screen\\.kt$'; then echo '🎨 Screen modified - Ensure:'; echo '  1. @Preview composable exists'; echo '  2. Dark mode supported'; echo '  3. Accessibility labels added'; fi",
-            "timeout": 5000
-          },
-          {
-            "type": "command",
-            "command": "if echo \"$CLAUDE_FILE_PATHS\" | grep -q '\\.kt$'; then KT_FILE=$(echo \"$CLAUDE_FILE_PATHS\" | tr ':' '\\n' | grep '\\.kt$' | head -1); if grep -E 'catch.*Exception.*\\{' \"$KT_FILE\" | grep -v 'CancellationException' 2>/dev/null; then echo '⚠️  Generic exception catch detected. Always rethrow CancellationException in coroutines!'; fi; fi",
+            "command": "if echo \"$CLAUDE_FILE_PATHS\" | grep -q 'Entity\\.kt$\\|AppDatabase\\.kt$\\|Migrations\\.kt$'; then echo '🗄️  DATABASE FILE MODIFIED — Verify: version number correct, all entities listed, migration registered in both DatabaseFactory files.'; fi",
             "timeout": 5000
           }
         ]
@@ -151,57 +152,21 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if echo \"$CLAUDE_FILE_PATHS\" | grep -q 'ViewModel.*\\.kt$'; then echo '✨ New ViewModel created! Next steps:'; echo '  1. Register in Modules.kt (sharedModule)'; echo '  2. Create unit tests in commonTest/'; echo '  3. Add to NavigationHost'; fi",
+            "command": "if echo \"$CLAUDE_FILE_PATHS\" | grep -q '\\.kt$'; then KT_FILE=$(echo \"$CLAUDE_FILE_PATHS\" | tr ':' '\\n' | grep '\\.kt$' | head -1); if grep -nE '\\b(print\\(|println\\()' \"$KT_FILE\" 2>/dev/null; then echo '⚠️  Direct print/println detected. Use proper logging instead.'; fi; fi",
             "timeout": 5000
           },
           {
             "type": "command",
-            "command": "if echo \"$CLAUDE_FILE_PATHS\" | grep -q 'UseCase.*\\.kt$'; then echo '✨ New UseCase created! Next steps:'; echo '  1. Register in Modules.kt'; echo '  2. Add unit tests'; echo '  3. Inject into ViewModel'; fi",
+            "command": "if echo \"$CLAUDE_FILE_PATHS\" | grep -q '\\.kt$'; then KT_FILE=$(echo \"$CLAUDE_FILE_PATHS\" | tr ':' '\\n' | grep '\\.kt$' | head -1); if grep -nE 'collectAsState\\(\\)' \"$KT_FILE\" 2>/dev/null | grep -v 'collectAsStateWithLifecycle'; then echo '⚠️  collectAsState() detected. Use collectAsStateWithLifecycle() instead.'; fi; fi",
             "timeout": 5000
           },
           {
             "type": "command",
-            "command": "if echo \"$CLAUDE_FILE_PATHS\" | grep -q 'Screen\\.kt$'; then echo '✨ New Screen created! Checklist:'; echo '  1. Add @Preview composable'; echo '  2. Wire up in NavigationHost'; echo '  3. Test dark mode'; echo '  4. Add content descriptions'; fi",
+            "command": "if echo \"$CLAUDE_FILE_PATHS\" | grep -q 'Entity\\.kt$\\|AppDatabase\\.kt$\\|Migrations\\.kt$'; then echo '🗄️  DATABASE FILE MODIFIED — Verify: version number correct, all entities listed, migration registered in both DatabaseFactory files.'; fi",
             "timeout": 5000
-          }
-        ]
-      },
-      {
-        "matcher": "MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "if echo \"$CLAUDE_FILE_PATHS\" | grep -q 'Entity\\.kt$'; then echo '🗄️  Database entity modified - Remember to:'; echo '  1. Update Room migration if schema changed'; echo '  2. Increment database version'; echo '  3. Test migration on existing data'; fi",
-            "timeout": 5000
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "if echo \"$CLAUDE_TOOL_INPUT\" | grep -q '^\\./gradlew.*test'; then echo '🧪 Running tests... Good practice! Consider also:'; echo '  ./gradlew koverHtmlReport - for coverage report'; fi",
-            "timeout": 5000
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo \"🏁 Subagent completed. Consider running: ./gradlew test\"",
-            "timeout": 3000
           }
         ]
       }
     ]
-  },
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
-    "MAX_THINKING_TOKENS": "15000",
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "80"
   }
 }

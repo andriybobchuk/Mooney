@@ -32,6 +32,10 @@ The app uses **MVVM** pattern with **Jetpack Compose** for UI:
 ./gradlew :composeApp:kspCommonMainKotlinMetadata
 ```
 
+## Tech Debt Tracking
+
+When you encounter tech debt while working (dead code, unused params, TODO patterns, etc.), add it to `TECH_DEBT.md` in the project root. Check this file before starting cleanup tasks.
+
 ## Git Workflow
 
 ### Commit Guidelines

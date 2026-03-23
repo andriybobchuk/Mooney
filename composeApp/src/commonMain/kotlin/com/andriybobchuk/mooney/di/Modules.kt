@@ -48,6 +48,8 @@ val sharedModule = module {
     single { get<AppDatabase>().categoryUsageDao }
     single { get<AppDatabase>().goalDao }
     single { get<AppDatabase>().goalGroupDao }
+    single { get<AppDatabase>().recurringTransactionDao }
+    single { get<AppDatabase>().pendingTransactionDao }
     
     // Data Export/Import Manager
     single { 

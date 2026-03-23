@@ -128,7 +128,8 @@ object CategoryDataSource {
     val salarySub = listOf(
         Category("effectivesoft", "EffectiveSoft", CategoryType.INCOME, parent = salary),
         Category("unikie", "Unikie", CategoryType.INCOME, parent = salary),
-        Category("squareone", "SquareOne", CategoryType.INCOME, parent = salary)
+        Category("squareone", "SquareOne", CategoryType.INCOME, parent = salary),
+        Category("usoftware", "USoftware", CategoryType.INCOME, parent = salary)
     )
     
     val positive_reconciliation =

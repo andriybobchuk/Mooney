@@ -133,3 +133,48 @@ val MIGRATION_6_7 = object : Migration(6, 7) {
         )
     }
 }
+
+/**
+ * Migration from version 7 to 8
+ * Adds recurring_transactions and pending_transactions tables for recurring transaction feature
+ */
+val MIGRATION_7_8 = object : Migration(7, 8) {
+    override fun migrate(connection: SQLiteConnection) {
+        // Create recurring_transactions table
+        connection.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `recurring_transactions` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `title` TEXT NOT NULL,
+                `subcategoryId` TEXT NOT NULL,
+                `amount` REAL NOT NULL,
+                `accountId` INTEGER NOT NULL,
+                `dayOfMonth` INTEGER NOT NULL,
+                `frequency` TEXT NOT NULL,
+                `weekDay` INTEGER,
+                `monthOfYear` INTEGER,
+                `isActive` INTEGER NOT NULL,
+                `createdDate` TEXT NOT NULL,
+                `lastProcessedDate` TEXT
+            )
+            """
+        )
+
+        // Create pending_transactions table
+        connection.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `pending_transactions` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `recurringTransactionId` INTEGER NOT NULL,
+                `subcategoryId` TEXT NOT NULL,
+                `amount` REAL NOT NULL,
+                `accountId` INTEGER NOT NULL,
+                `scheduledDate` TEXT NOT NULL,
+                `status` TEXT NOT NULL,
+                `createdDate` TEXT NOT NULL
+            )
+            """
+        )
+    }
+}
+

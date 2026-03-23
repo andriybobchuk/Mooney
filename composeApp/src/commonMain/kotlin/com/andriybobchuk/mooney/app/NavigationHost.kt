@@ -77,7 +77,7 @@ fun NavigationHost() {
                     onSettingsClick = { navController.navigate(Route.Settings) }
                 )
             }
-            
+
             composable<Route.Settings> {
                 val viewModel = koinViewModel<SettingsViewModel>()
                 SettingsScreen(
@@ -85,54 +85,6 @@ fun NavigationHost() {
                     onBackClick = { navController.navigateUp() }
                 )
             }
-//            composable<Route.BookList>(
-//                exitTransition = { slideOutHorizontally() },
-//                popEnterTransition = { slideInHorizontally() }
-//            ) {
-//                val viewModel = koinViewModel<BookListViewModel>()
-//                val selectedBookViewModel =
-//                    it.sharedKoinViewModel<SelectedBookViewModel>(navController)
-//
-//                LaunchedEffect(true) {
-//                    selectedBookViewModel.onSelectBook(null)
-//                }
-//
-//                BookListScreenRoot(
-//                    viewModel = viewModel,
-//                    onBookClick = { book ->
-//                        selectedBookViewModel.onSelectBook(book)
-//                        navController.navigate(
-//                            Route.BookDetail(book.id)
-//                        )
-//                    }
-//                )
-//            }
-//            composable<Route.BookDetail>(
-//                enterTransition = { slideInHorizontally { initialOffset ->
-//                    initialOffset
-//                } },
-//                exitTransition = { slideOutHorizontally { initialOffset ->
-//                    initialOffset
-//                } }
-//            ) {
-//                val selectedBookViewModel =
-//                    it.sharedKoinViewModel<SelectedBookViewModel>(navController)
-//                val viewModel = koinViewModel<BookDetailViewModel>()
-//                val selectedBook by selectedBookViewModel.selectedBook.collectAsStateWithLifecycle()
-//
-//                LaunchedEffect(selectedBook) {
-//                    selectedBook?.let {
-//                        viewModel.onAction(BookDetailAction.OnSelectedBookChange(it))
-//                    }
-//                }
-//
-//                BookDetailScreenRoot(
-//                    viewModel = viewModel,
-//                    onBackClick = {
-//                        navController.navigateUp()
-//                    }
-//                )
-//            }
         }
     }
 

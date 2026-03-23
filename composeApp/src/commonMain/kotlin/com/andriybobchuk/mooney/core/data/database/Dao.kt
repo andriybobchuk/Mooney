@@ -80,3 +80,53 @@ interface GoalGroupDao {
     suspend fun getById(id: Int): GoalGroupEntity?
 }
 
+@Dao
+interface RecurringTransactionDao {
+    @Upsert
+    suspend fun upsert(recurringTransaction: RecurringTransactionEntity)
+
+    @Query("DELETE FROM recurring_transactions WHERE id = :id")
+    suspend fun delete(id: Int)
+
+    @Query("SELECT * FROM recurring_transactions WHERE isActive = 1 ORDER BY dayOfMonth")
+    fun getAllActive(): Flow<List<RecurringTransactionEntity>>
+
+    @Query("SELECT * FROM recurring_transactions ORDER BY dayOfMonth")
+    fun getAll(): Flow<List<RecurringTransactionEntity>>
+
+    @Query("SELECT * FROM recurring_transactions WHERE id = :id")
+    suspend fun getById(id: Int): RecurringTransactionEntity?
+
+    @Query("UPDATE recurring_transactions SET isActive = :isActive WHERE id = :id")
+    suspend fun setActive(id: Int, isActive: Boolean)
+
+    @Query("UPDATE recurring_transactions SET lastProcessedDate = :date WHERE id = :id")
+    suspend fun updateLastProcessedDate(id: Int, date: String)
+}
+
+@Dao
+interface PendingTransactionDao {
+    @Upsert
+    suspend fun upsert(pendingTransaction: PendingTransactionEntity)
+
+    @Query("DELETE FROM pending_transactions WHERE id = :id")
+    suspend fun delete(id: Int)
+
+    @Query("SELECT * FROM pending_transactions WHERE status = 'PENDING' ORDER BY scheduledDate")
+    fun getAllPending(): Flow<List<PendingTransactionEntity>>
+
+    @Query("SELECT * FROM pending_transactions ORDER BY scheduledDate DESC")
+    fun getAll(): Flow<List<PendingTransactionEntity>>
+
+    @Query("SELECT * FROM pending_transactions WHERE id = :id")
+    suspend fun getById(id: Int): PendingTransactionEntity?
+
+    @Query("UPDATE pending_transactions SET status = :status WHERE id = :id")
+    suspend fun updateStatus(id: Int, status: String)
+
+    @Query("SELECT COUNT(*) FROM pending_transactions WHERE status = 'PENDING'")
+    fun getPendingCount(): Flow<Int>
+
+    @Query("DELETE FROM pending_transactions WHERE status != 'PENDING' AND scheduledDate < :cutoffDate")
+    suspend fun cleanupOldProcessed(cutoffDate: String)
+}

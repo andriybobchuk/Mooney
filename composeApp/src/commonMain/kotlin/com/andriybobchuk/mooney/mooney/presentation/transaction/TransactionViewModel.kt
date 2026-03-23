@@ -107,7 +107,6 @@ class TransactionViewModel(
 
     init {
         loadDataForBottomSheet()
-        //loadTotal()
     }
 
     private fun loadTotal() {
@@ -127,7 +126,6 @@ class TransactionViewModel(
 
     private fun loadDailyTotals(transactions: List<Transaction>, month: MonthKey) {
         val dailyTotalsMap = transactions
-            .filterNotNull()
             .groupBy { it.date.dayOfMonth }
             .mapValues { (_, dayTransactions) ->
                 calculateDailyTotalUseCase(dayTransactions, dayTransactions.firstOrNull()?.date ?: kotlinx.datetime.LocalDate(month.year, month.month, 1))

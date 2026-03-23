@@ -10,7 +10,6 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.settings.GetUserPreference
 import com.andriybobchuk.mooney.mooney.domain.usecase.settings.UpdatePinnedCategoriesUseCase
 import com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
-import com.andriybobchuk.mooney.mooney.domain.settings.UserPreferences
 import com.andriybobchuk.mooney.mooney.domain.backup.DataExportImportManager
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -18,11 +17,10 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
@@ -36,7 +34,7 @@ class SettingsViewModel(
 
     private val _state = MutableStateFlow(SettingsState())
     val state: StateFlow<SettingsState> = _state.asStateFlow()
-    
+
     private val _events = MutableSharedFlow<SettingsEvent>()
     val events: SharedFlow<SettingsEvent> = _events.asSharedFlow()
 
@@ -49,23 +47,22 @@ class SettingsViewModel(
             try {
                 val allCategories = getCategoriesUseCase()
                 val pinnedCategories = getPinnedCategoriesUseCase().first()
-                
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    allCategories = allCategories,
-                    pinnedCategoryIds = preferences.pinnedCategories.toSet(),
-                    pinnedCategories = pinnedCategories,
-                    currentThemeMode = preferences.themeMode,
-                    notificationsEnabled = preferences.notificationsEnabled,
-                    defaultCurrency = Currency.entries.firstOrNull { it.name == preferences.defaultCurrency } 
-                        ?: Currency.PLN,
-                    error = null
-                )
+
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        allCategories = allCategories,
+                        pinnedCategoryIds = preferences.pinnedCategories.toSet(),
+                        pinnedCategories = pinnedCategories,
+                        currentThemeMode = preferences.themeMode,
+                        notificationsEnabled = preferences.notificationsEnabled,
+                        defaultCurrency = Currency.entries.firstOrNull { c -> c.name == preferences.defaultCurrency }
+                            ?: Currency.PLN,
+                        error = null
+                    )
+                }
             } catch (error: Throwable) {
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = error.message
-                )
+                _state.update { it.copy(isLoading = false, error = error.message) }
             }
         }.launchIn(viewModelScope)
     }
@@ -79,37 +76,30 @@ class SettingsViewModel(
             is SettingsAction.OnDefaultCurrencyChange -> handleDefaultCurrencyChange(action.currency)
             is SettingsAction.OnExportData -> handleExportData()
             is SettingsAction.OnImportData -> handleImportData(action.jsonData)
-            is SettingsAction.OnBackClick -> {
-                // Handle navigation back - this will be handled by the UI
-            }
+            is SettingsAction.OnBackClick -> {}
         }
     }
-    
+
     private fun handleExportData() {
         viewModelScope.launch {
             try {
-                _state.value = _state.value.copy(isExporting = true, error = null)
+                _state.update { it.copy(isExporting = true, error = null) }
                 val exportData = dataExportImportManager.exportAllData()
                 _events.emit(SettingsEvent.ExportReady(exportData))
-                _state.value = _state.value.copy(isExporting = false)
+                _state.update { it.copy(isExporting = false) }
             } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isExporting = false,
-                    error = "Export failed: ${e.message}"
-                )
+                _state.update { it.copy(isExporting = false, error = "Export failed: ${e.message}") }
             }
         }
     }
-    
+
     private fun handleImportData(jsonData: String) {
         viewModelScope.launch {
             try {
-                _state.value = _state.value.copy(isImporting = true, error = null)
-                
-                // First validate the data
+                _state.update { it.copy(isImporting = true, error = null) }
+
                 when (val validation = dataExportImportManager.validateExportData(jsonData)) {
                     is DataExportImportManager.ValidationResult.Valid -> {
-                        // Show confirmation dialog
                         _events.emit(SettingsEvent.ShowImportConfirmation(
                             transactions = validation.transactions,
                             accounts = validation.accounts,
@@ -117,26 +107,24 @@ class SettingsViewModel(
                         ))
                     }
                     is DataExportImportManager.ValidationResult.Invalid -> {
-                        _state.value = _state.value.copy(
-                            isImporting = false,
-                            error = "Invalid import file: ${validation.reason}"
-                        )
+                        _state.update {
+                            it.copy(isImporting = false, error = "Invalid import file: ${validation.reason}")
+                        }
                     }
                 }
             } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isImporting = false,
-                    error = "Import validation failed: ${e.message}"
-                )
+                _state.update {
+                    it.copy(isImporting = false, error = "Import validation failed: ${e.message}")
+                }
             }
         }
     }
-    
+
     fun confirmImport(jsonData: String) {
         viewModelScope.launch {
             try {
-                _state.value = _state.value.copy(isImporting = true)
-                
+                _state.update { it.copy(isImporting = true) }
+
                 when (val result = dataExportImportManager.importData(jsonData, clearExisting = false)) {
                     is DataExportImportManager.ImportResult.Success -> {
                         _events.emit(SettingsEvent.ImportSuccess(
@@ -144,39 +132,36 @@ class SettingsViewModel(
                             importedAccounts = result.importedAccounts,
                             importedGoals = result.importedGoals
                         ))
-                        _state.value = _state.value.copy(isImporting = false)
+                        _state.update { it.copy(isImporting = false) }
                     }
                     is DataExportImportManager.ImportResult.Error -> {
-                        _state.value = _state.value.copy(
-                            isImporting = false,
-                            error = "Import failed: ${result.message}"
-                        )
+                        _state.update {
+                            it.copy(isImporting = false, error = "Import failed: ${result.message}")
+                        }
                     }
                 }
             } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isImporting = false,
-                    error = "Import failed: ${e.message}"
-                )
+                _state.update {
+                    it.copy(isImporting = false, error = "Import failed: ${e.message}")
+                }
             }
         }
     }
 
     private fun handleCategoryToggle(category: Category) {
         val currentPinnedIds = _state.value.pinnedCategoryIds.toMutableSet()
-        
+
         if (currentPinnedIds.contains(category.id)) {
             currentPinnedIds.remove(category.id)
         } else if (currentPinnedIds.size < _state.value.maxPinnedCategories) {
             currentPinnedIds.add(category.id)
         } else {
-            // Cannot add more than max categories
-            _state.value = _state.value.copy(
-                error = "Cannot pin more than ${_state.value.maxPinnedCategories} categories"
-            )
+            _state.update {
+                it.copy(error = "Cannot pin more than ${it.maxPinnedCategories} categories")
+            }
             return
         }
-        
+
         updatePinnedCategories(currentPinnedIds.toList())
     }
 
@@ -185,7 +170,6 @@ class SettingsViewModel(
         if (fromIndex in currentList.indices && toIndex in currentList.indices) {
             val item = currentList.removeAt(fromIndex)
             currentList.add(toIndex, item)
-            
             updatePinnedCategories(currentList.map { it.id })
         }
     }
@@ -195,7 +179,7 @@ class SettingsViewModel(
             try {
                 preferencesRepository.updateThemeMode(themeMode)
             } catch (e: Exception) {
-                _state.value = _state.value.copy(error = e.message)
+                _state.update { it.copy(error = e.message) }
             }
         }
     }
@@ -205,7 +189,7 @@ class SettingsViewModel(
             try {
                 preferencesRepository.updateNotificationsEnabled(enabled)
             } catch (e: Exception) {
-                _state.value = _state.value.copy(error = e.message)
+                _state.update { it.copy(error = e.message) }
             }
         }
     }
@@ -215,7 +199,7 @@ class SettingsViewModel(
             try {
                 preferencesRepository.updateDefaultCurrency(currency)
             } catch (e: Exception) {
-                _state.value = _state.value.copy(error = e.message)
+                _state.update { it.copy(error = e.message) }
             }
         }
     }
@@ -226,12 +210,12 @@ class SettingsViewModel(
                 updatePinnedCategoriesUseCase(categoryIds)
                 clearError()
             } catch (e: Exception) {
-                _state.value = _state.value.copy(error = e.message)
+                _state.update { it.copy(error = e.message) }
             }
         }
     }
 
     fun clearError() {
-        _state.value = _state.value.copy(error = null)
+        _state.update { it.copy(error = null) }
     }
 }

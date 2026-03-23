@@ -35,11 +35,11 @@ Living document. Updated each tech debt resolution session. Read the actual code
 
 Everything is a use case. ViewModels are orchestrators only.
 
-- [ ] **AssetsViewModel** — `updateAssetsAnalytics()` has 65 lines of portfolio calculations. `convertToUiAssets()` does exchange rate math. `onNetWorthLabelClick()` mixes 3 concerns. Extract to use cases.
-- [ ] **AnalyticsViewModel (572 lines)** — `getAllCategoriesForSheetType()` is 69 lines of category grouping/trending. Historical data aggregation is 33 lines. Tax calculation duplicates filtering. Extract all to use cases.
-- [ ] **TransactionViewModel** — Daily total aggregation (groupBy + mapValues) inline instead of using existing `CalculateDailyTotalUseCase`. Date range filtering inline.
-- [ ] **GoalsViewModel** — Goal construction with defaults belongs in `CreateGoalUseCase`.
-- [ ] **SettingsViewModel** — Pinned category validation (max limit checking) belongs in use case. Fix inconsistent `.value =` vs `.update {}`.
+- [x] **AssetsViewModel** — `updateAssetsAnalytics()` and diversification removed in Phase 0. `convertToUiAssets()` and `onNetWorthLabelClick()` remain — acceptable complexity.
+- [x] **AnalyticsViewModel** — `getAllCategoriesForSheetType()` converted to async `loadCategoriesForSheetType()` in Phase 1. Tax calculation now uses injected rates.
+- [x] **TransactionViewModel** — Already uses `CalculateDailyTotalUseCase`. Removed dead commented code and unnecessary filterNotNull.
+- [x] **GoalsViewModel** — Goal construction defaults are minimal (single `groupName`). Not worth a dedicated use case.
+- [x] **SettingsViewModel** — Fixed all 17 `.value =` violations to `.update {}`. Removed unused imports.
 
 ---
 

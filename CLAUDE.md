@@ -14,6 +14,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ./gradlew clean                                    # Clean build
 ./gradlew :composeApp:kspCommonMainKotlinMetadata  # Generate Room schemas
 ./gradlew detekt                                   # Lint (static analysis)
+./gradlew :composeApp:testDebugUnitTest            # Unit tests (fast, Android)
+./gradlew koverHtmlReport                          # Test coverage report
 ```
 
 ## Architecture

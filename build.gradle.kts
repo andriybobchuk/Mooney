@@ -9,6 +9,11 @@ plugins {
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.room) apply false
     alias(libs.plugins.detekt)
+    alias(libs.plugins.kover) apply false
+}
+
+subprojects {
+    apply(plugin = "org.jetbrains.kotlinx.kover")
 }
 
 detekt {

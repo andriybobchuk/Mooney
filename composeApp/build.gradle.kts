@@ -72,6 +72,12 @@ kotlin {
 
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
         }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.turbine)
+            implementation(libs.koin.test)
+        }
         nativeMain.dependencies {
             implementation(libs.ktor.client.darwin)
         }

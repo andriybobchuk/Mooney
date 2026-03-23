@@ -39,7 +39,7 @@ import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.AssetCategory
 import com.andriybobchuk.mooney.mooney.domain.Currency
-import com.andriybobchuk.mooney.mooney.presentation.formatWithCommas
+import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 

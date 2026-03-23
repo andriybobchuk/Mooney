@@ -1,4 +1,4 @@
-package com.andriybobchuk.mooney.mooney.presentation
+package com.andriybobchuk.mooney.mooney.domain
 
 fun Double.formatWithCommas(): String {
     val rounded = (this * 100).toLong()
@@ -33,7 +33,7 @@ fun Double.formatToPlainString(): String {
 fun Double.formatToShortString(): String {
     val absValue = kotlin.math.abs(this)
     val sign = if (this < 0) "-" else ""
-    
+
     return when {
         absValue >= 1_000_000 -> {
             val value = (absValue / 1_000_000 * 10).toInt() / 10.0

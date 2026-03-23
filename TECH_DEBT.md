@@ -24,10 +24,10 @@ Living document. Updated each tech debt resolution session. Read the actual code
 
 ## Phase 1: Critical Architecture Fixes
 
-- [ ] **runBlocking on main thread** — AnalyticsViewModel calls `runBlocking { getTransactionsUseCase().first() }` in two places. ANR risk. Convert to `suspend` + `viewModelScope.launch`.
-- [ ] **Domain imports presentation** — `AnalyticsUseCases.kt` imports `TopCategorySummary` and `formatWithCommas` from presentation layer. Move model to domain, formatting to presentation.
-- [ ] **Direct repository access** — AccountViewModel calls `repository.upsertAccount()` bypassing use case layer. Route through use case.
-- [ ] **Test data in production** — AnalyticsViewModel uses `GlobalConfig.testExchangeRates` in calculator constructors. ExchangeViewModel has hardcoded rates and `Random.nextDouble()`. Use injected real rates.
+- [x] **runBlocking on main thread** — Converted to `viewModelScope.launch` with suspend calls. `getAllCategoriesForSheetType` now loads into state asynchronously.
+- [x] **Domain imports presentation** — Moved `TopCategorySummary` to domain. Moved `formatWithCommas` to domain `Formatting.kt`. Fixed 3 use cases (AnalyticsUseCases, CalculateSubcategoriesUseCase, ConvertAccountsToUiUseCase still returns UiAccount — Phase 2).
+- [x] **Direct repository access** — AccountViewModel now routes through `AddAccountUseCase`. Removed unused `repository` dependency. Also removed unused `repository` from ExchangeViewModel.
+- [x] **Test data in production** — All calculators now receive exchange rates via `CurrencyManagerUseCase`. Removed `Random.nextDouble()` fake historical data from ExchangeViewModel.
 
 ---
 

@@ -5,19 +5,18 @@ import androidx.lifecycle.viewModelScope
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
-import com.andriybobchuk.mooney.mooney.domain.CoreRepository
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
+import com.andriybobchuk.mooney.mooney.domain.TopCategorySummary
 import com.andriybobchuk.mooney.mooney.domain.Transaction
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
-import com.andriybobchuk.mooney.mooney.presentation.formatWithCommas
+import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import com.andriybobchuk.mooney.mooney.data.CategoryDataSource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -37,21 +36,30 @@ data class AnalyticsState(
     val isCategorySheetOpen: Boolean = false,
     val categorySheetType: CategorySheetType? = null,
     val isNetIncomeSheetOpen: Boolean = false,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val sheetCategories: List<TopCategorySummary> = emptyList()
 )
 
 class AnalyticsViewModel(
     private val calculateMonthlyAnalyticsUseCase: CalculateMonthlyAnalyticsUseCase,
     private val calculateSubcategoriesUseCase: CalculateSubcategoriesUseCase,
-    private val getTransactionsUseCase: GetTransactionsUseCase
+    private val getTransactionsUseCase: GetTransactionsUseCase,
+    private val currencyManagerUseCase: CurrencyManagerUseCase
 ) : ViewModel() {
     private val baseCurrency: Currency = GlobalConfig.baseCurrency
-    private val calculators: List<AnalyticsMetricCalculator> = listOf(
-        RevenueCalculator(GlobalConfig.testExchangeRates),
-        TaxesCalculator(),
-        OperatingCostsCalculator(),
-        NetIncomeCalculator(),
-    )
+
+    private fun getExchangeRates(): ExchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
+
+    private val calculators: List<AnalyticsMetricCalculator>
+        get() {
+            val rates = getExchangeRates()
+            return listOf(
+                RevenueCalculator(rates),
+                TaxesCalculator(rates),
+                OperatingCostsCalculator(rates),
+                NetIncomeCalculator(rates),
+            )
+        }
 
     private val _state = MutableStateFlow(AnalyticsState())
     val state: StateFlow<AnalyticsState> = _state
@@ -61,23 +69,8 @@ class AnalyticsViewModel(
         loadHistoricalData()
     }
 
-    // todo do not delete
-//    private fun calculateTotalRevenuePlnForMonth(month: MonthKey) {
-//
-//        val totalRevenuePln = _state.value.transactionsForMonth.filterNotNull().filter {
-//            it.subcategory.type == CategoryType.INCOME
-//        }.sumOf {
-//            GlobalConfig.testExchangeRates.convert(it.amount, it.account.currency, baseCurrency)
-//        }
-//
-//        _state.update {
-//            it.copy(totalRevenuePlnForMonth = totalRevenuePln)
-//        }
-//    }
-
     fun onMonthSelected(month: MonthKey) {
         _state.update { it.copy(selectedMonth = month) }
-        // calculateTotalRevenuePlnForMonth(_state.value.selectedMonth)
         loadMetricsForMonth(month)
     }
 
@@ -140,7 +133,7 @@ class AnalyticsViewModel(
     }
     
     private fun calculateTaxes(transactions: List<Transaction>): Double {
-        return transactions.sumConverted(baseCurrency, GlobalConfig.testExchangeRates) {
+        return transactions.sumConverted(baseCurrency, getExchangeRates()) {
             it.subcategory.title.contains("ZUS", ignoreCase = true) ||
             it.subcategory.title.contains("PIT", ignoreCase = true)
         }
@@ -181,41 +174,36 @@ class AnalyticsViewModel(
     }
     
     fun onCategoryClicked(category: Category) {
-        val transactions = _state.value.transactionsForMonth.filterNotNull()
-        
-        // Get previous month transactions for trend calculation
-        val previousMonth = _state.value.selectedMonth.previousMonth()
-        val previousStart = previousMonth.firstDay()
-        val previousEnd = previousMonth.firstDayOfNextMonth()
-        
-        val previousTransactions = runBlocking {
-            try {
+        viewModelScope.launch {
+            val transactions = _state.value.transactionsForMonth.filterNotNull()
+
+            val previousMonth = _state.value.selectedMonth.previousMonth()
+            val previousStart = previousMonth.firstDay()
+            val previousEnd = previousMonth.firstDayOfNextMonth()
+
+            val previousTransactions = try {
                 getTransactionsUseCase().first().filterNotNull().filter { transaction ->
                     transaction.date >= previousStart && transaction.date < previousEnd
                 }
             } catch (e: Exception) {
                 emptyList<Transaction>()
             }
-        }
-        
-        val subcategories = calculateSubcategoriesUseCase(category, transactions, baseCurrency, previousTransactions)
-        
-        // Only open the subcategory sheet if there are actual subcategories
-        // If subcategories list has only 1 item and it's the same as the parent category,
-        // it means there are no real subcategories
-        val hasRealSubcategories = subcategories.size > 1 || 
-            (subcategories.size == 1 && subcategories.first().category != category)
-        
-        if (hasRealSubcategories) {
-            _state.update {
-                it.copy(
-                    selectedCategory = category,
-                    subcategories = subcategories,
-                    isSubcategorySheetOpen = true
-                )
+
+            val subcategories = calculateSubcategoriesUseCase(category, transactions, baseCurrency, previousTransactions)
+
+            val hasRealSubcategories = subcategories.size > 1 ||
+                (subcategories.size == 1 && subcategories.first().category != category)
+
+            if (hasRealSubcategories) {
+                _state.update {
+                    it.copy(
+                        selectedCategory = category,
+                        subcategories = subcategories,
+                        isSubcategorySheetOpen = true
+                    )
+                }
             }
         }
-        // If no subcategories, do nothing (don't open the sheet)
     }
     
     fun onSubcategorySheetDismissed() {
@@ -242,13 +230,14 @@ class AnalyticsViewModel(
                     "Taxes" -> CategorySheetType.TAXES
                     else -> return
                 }
-                
+
                 _state.update {
                     it.copy(
                         categorySheetType = sheetType,
                         isCategorySheetOpen = true
                     )
                 }
+                loadCategoriesForSheetType(sheetType)
             }
         }
     }
@@ -268,93 +257,81 @@ class AnalyticsViewModel(
         }
     }
     
-    fun getAllCategoriesForSheetType(sheetType: CategorySheetType): List<TopCategorySummary> {
-        val currentTransactions = _state.value.transactionsForMonth.filterNotNull()
-        val exchangeRates = GlobalConfig.testExchangeRates
-        
-        // Get previous month transactions for trend calculation
-        val previousMonth = _state.value.selectedMonth.previousMonth()
-        val previousStart = previousMonth.firstDay()
-        val previousEnd = previousMonth.firstDayOfNextMonth()
-        
-        val previousMonthTransactions = runBlocking {
-            try {
+    fun loadCategoriesForSheetType(sheetType: CategorySheetType) {
+        viewModelScope.launch {
+            val currentTransactions = _state.value.transactionsForMonth.filterNotNull()
+            val exchangeRates = getExchangeRates()
+
+            val previousMonth = _state.value.selectedMonth.previousMonth()
+            val previousStart = previousMonth.firstDay()
+            val previousEnd = previousMonth.firstDayOfNextMonth()
+
+            val previousMonthTransactions = try {
                 getTransactionsUseCase().first().filterNotNull().filter { transaction ->
                     transaction.date >= previousStart && transaction.date < previousEnd
                 }
             } catch (e: Exception) {
                 emptyList<Transaction>()
             }
-        }
-        
-        val relevantCategories = when (sheetType) {
-            CategorySheetType.REVENUE -> listOf(
-                CategoryDataSource.salary,
-                CategoryDataSource.tax_return,
-                CategoryDataSource.refund,
-                CategoryDataSource.repayment,
-                CategoryDataSource.positive_reconciliation
-            )
-            CategorySheetType.TAXES -> CategoryDataSource.taxSub
-            CategorySheetType.OPERATING_COSTS -> {
-                // All level-2 expense categories except tax
-                CategoryDataSource.categories.filter { category ->
-                    category.type == CategoryType.EXPENSE &&
-                    category.parent == CategoryDataSource.expense &&
-                    category != CategoryDataSource.tax
-                }
-            }
-        }
-        
-        return relevantCategories.mapNotNull { category ->
-            val categoryTransactions = currentTransactions.filter { transaction ->
-                when {
-                    // Direct match
-                    transaction.subcategory == category -> true
-                    // If it's a subcategory of this category
-                    transaction.subcategory.parent == category -> true
-                    else -> false
-                }
-            }
-            
-            val currentAmount = categoryTransactions.sumOf { 
-                exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
-            }
-            
-            // Calculate previous month amount for trend
-            val previousCategoryTransactions = previousMonthTransactions.filter { transaction ->
-                when {
-                    transaction.subcategory == category -> true
-                    transaction.subcategory.parent == category -> true
-                    else -> false
-                }
-            }
-            
-            val previousAmount = previousCategoryTransactions.sumOf { 
-                exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
-            }
-            
-            val trendPercentage = if (previousAmount != 0.0) {
-                ((currentAmount - previousAmount) / previousAmount) * 100
-            } else if (currentAmount > 0) {
-                100.0 // New category this month
-            } else {
-                0.0
-            }
-            
-            // Only include categories that have transactions (amount > 0)
-            if (currentAmount > 0) {
-                TopCategorySummary(
-                    category = category,
-                    amount = currentAmount,
-                    formatted = "${currentAmount.formatWithCommas()} ${baseCurrency.symbol}",
-                    percentOfRevenue = "",
-                    trendPercentage = trendPercentage
+
+            val relevantCategories = when (sheetType) {
+                CategorySheetType.REVENUE -> listOf(
+                    CategoryDataSource.salary,
+                    CategoryDataSource.tax_return,
+                    CategoryDataSource.refund,
+                    CategoryDataSource.repayment,
+                    CategoryDataSource.positive_reconciliation
                 )
-            } else {
-                null // Filter out zero-amount categories
+                CategorySheetType.TAXES -> CategoryDataSource.taxSub
+                CategorySheetType.OPERATING_COSTS -> {
+                    CategoryDataSource.categories.filter { category ->
+                        category.type == CategoryType.EXPENSE &&
+                        category.parent == CategoryDataSource.expense &&
+                        category != CategoryDataSource.tax
+                    }
+                }
             }
-        }.sortedByDescending { it.amount }
+
+            val categories = relevantCategories.mapNotNull { category ->
+                val categoryTransactions = currentTransactions.filter { transaction ->
+                    transaction.subcategory == category || transaction.subcategory.parent == category
+                }
+
+                val currentAmount = categoryTransactions.sumOf {
+                    exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
+                }
+
+                val previousCategoryTransactions = previousMonthTransactions.filter { transaction ->
+                    transaction.subcategory == category || transaction.subcategory.parent == category
+                }
+
+                val previousAmount = previousCategoryTransactions.sumOf {
+                    exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
+                }
+
+                val trendPercentage = if (previousAmount != 0.0) {
+                    ((currentAmount - previousAmount) / previousAmount) * 100
+                } else if (currentAmount > 0) {
+                    100.0
+                } else {
+                    0.0
+                }
+
+                if (currentAmount > 0) {
+                    TopCategorySummary(
+                        category = category,
+                        amount = currentAmount,
+                        formatted = "${currentAmount.formatWithCommas()} ${baseCurrency.symbol}",
+                        percentOfRevenue = "",
+                        trendPercentage = trendPercentage
+                    )
+                } else {
+                    null
+                }
+            }.sortedByDescending { it.amount }
+
+            _state.update { it.copy(sheetCategories = categories) }
+        }
     }
 }
 
@@ -396,14 +373,6 @@ interface AnalyticsMetricCalculator {
         baseCurrency: Currency
     ): AnalyticsMetric
 }
-
-data class TopCategorySummary(
-    val category: Category,
-    val amount: Double,
-    val formatted: String,
-    val percentOfRevenue: String,
-    val trendPercentage: Double = 0.0
-)
 
 data class MonthKey(val year: Int, val month: Int) {
     fun toDisplayString(): String = "${monthName(month)} $year"
@@ -500,14 +469,16 @@ fun List<Transaction>.sumConverted(
         .sumOf { exchangeRates.convert(it.amount, it.account.currency, baseCurrency) }
 }
 
-class TaxesCalculator : AnalyticsMetricCalculator {
+class TaxesCalculator(
+    private val exchangeRates: ExchangeRates
+) : AnalyticsMetricCalculator {
     override suspend fun calculate(
         revenue: Double,
         transactions: List<Transaction>,
         month: MonthKey,
         baseCurrency: Currency
     ): AnalyticsMetric {
-        val taxes = transactions.sumConverted(baseCurrency, GlobalConfig.testExchangeRates) {
+        val taxes = transactions.sumConverted(baseCurrency, exchangeRates) {
             it.subcategory.title.contains("ZUS", ignoreCase = true) ||
                     it.subcategory.title.contains("PIT", ignoreCase = true)
         }
@@ -522,14 +493,16 @@ class TaxesCalculator : AnalyticsMetricCalculator {
     }
 }
 
-class OperatingCostsCalculator : AnalyticsMetricCalculator {
+class OperatingCostsCalculator(
+    private val exchangeRates: ExchangeRates
+) : AnalyticsMetricCalculator {
     override suspend fun calculate(
         revenue: Double,
         transactions: List<Transaction>,
         month: MonthKey,
         baseCurrency: Currency
     ): AnalyticsMetric {
-        val expenses = transactions.sumConverted(baseCurrency, GlobalConfig.testExchangeRates) {
+        val expenses = transactions.sumConverted(baseCurrency, exchangeRates) {
             it.subcategory.type == CategoryType.EXPENSE &&
                     !it.subcategory.title.contains("ZUS") &&
                     !it.subcategory.title.contains("PIT")
@@ -545,15 +518,17 @@ class OperatingCostsCalculator : AnalyticsMetricCalculator {
     }
 }
 
-class NetIncomeCalculator : AnalyticsMetricCalculator {
+class NetIncomeCalculator(
+    private val exchangeRates: ExchangeRates
+) : AnalyticsMetricCalculator {
     override suspend fun calculate(
         revenue: Double,
         transactions: List<Transaction>, month: MonthKey, baseCurrency: Currency
     ): AnalyticsMetric {
-        val taxes = transactions.sumConverted(baseCurrency, GlobalConfig.testExchangeRates) {
+        val taxes = transactions.sumConverted(baseCurrency, exchangeRates) {
             it.subcategory.title.contains("ZUS") || it.subcategory.title.contains("PIT")
         }
-        val expenses = transactions.sumConverted(baseCurrency, GlobalConfig.testExchangeRates) {
+        val expenses = transactions.sumConverted(baseCurrency, exchangeRates) {
             it.subcategory.type == CategoryType.EXPENSE &&
                     !it.subcategory.title.contains("ZUS") &&
                     !it.subcategory.title.contains("PIT")

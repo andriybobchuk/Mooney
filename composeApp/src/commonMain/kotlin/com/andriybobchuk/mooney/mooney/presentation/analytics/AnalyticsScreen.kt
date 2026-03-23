@@ -56,8 +56,9 @@ import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
-import com.andriybobchuk.mooney.mooney.presentation.formatWithCommas
-import com.andriybobchuk.mooney.mooney.presentation.formatToShortString
+import com.andriybobchuk.mooney.mooney.domain.TopCategorySummary
+import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
+import com.andriybobchuk.mooney.mooney.domain.formatToShortString
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -139,7 +140,7 @@ fun AnalyticsScreen(
                     ) {
                         CategoryBreakdownSheet(
                             sheetType = sheetType,
-                            categories = viewModel.getAllCategoriesForSheetType(sheetType),
+                            categories = state.sheetCategories,
                             onCategoryClick = { category ->
                                 viewModel.onCategoryClicked(category)
                                 // Don't dismiss category sheet - keep it open behind subcategory sheet

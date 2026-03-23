@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
-import com.andriybobchuk.mooney.mooney.domain.CoreRepository
 import com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase
 import com.andriybobchuk.mooney.core.domain.Result
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,8 +14,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.*
 
 class ExchangeViewModel(
-    private val currencyManagerUseCase: CurrencyManagerUseCase,
-    private val repository: CoreRepository
+    private val currencyManagerUseCase: CurrencyManagerUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ExchangeState())
@@ -134,32 +132,8 @@ class ExchangeViewModel(
     }
 
     private fun generateSampleHistoricalData(): Map<Currency, List<HistoricalRate>> {
-        val historicalData = mutableMapOf<Currency, List<HistoricalRate>>()
-        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-        
-        Currency.entries.forEach { currency ->
-            if (currency != GlobalConfig.baseCurrency) {
-                val rates = mutableListOf<HistoricalRate>()
-                val baseRate = when (currency) {
-                    Currency.USD -> 3.67
-                    Currency.EUR -> 4.35
-                    Currency.UAH -> 0.1
-                    Currency.PLN -> 1.0
-                }
-                
-                // Generate weekly data for 12 months back
-                for (weeksAgo in 0..52) {
-                    val date = today.minus(weeksAgo * 7, DateTimeUnit.DAY)
-                    val variation = (kotlin.random.Random.nextDouble() - 0.5) * 0.2 // ±10% variation
-                    val rate = baseRate * (1 + variation)
-                    rates.add(HistoricalRate(date, rate))
-                }
-                
-                historicalData[currency] = rates.reversed()
-            }
-        }
-        
-        return historicalData
+        // Historical rates API not yet available — return empty until implemented
+        return emptyMap()
     }
 }
 

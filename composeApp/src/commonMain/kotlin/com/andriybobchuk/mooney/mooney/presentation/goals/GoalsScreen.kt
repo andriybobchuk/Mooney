@@ -78,7 +78,7 @@ import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.Goal
 import com.andriybobchuk.mooney.mooney.domain.usecase.GoalCompletionEstimate
 import com.andriybobchuk.mooney.mooney.domain.usecase.GoalProgressResult
-import com.andriybobchuk.mooney.mooney.presentation.formatWithCommas
+import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import com.andriybobchuk.mooney.mooney.presentation.goals.components.SimpleGamefiedTimeline
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)

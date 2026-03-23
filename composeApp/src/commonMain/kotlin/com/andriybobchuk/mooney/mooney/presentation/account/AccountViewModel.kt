@@ -6,7 +6,6 @@ import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.AssetCategory
 import com.andriybobchuk.mooney.mooney.domain.Currency
-import com.andriybobchuk.mooney.mooney.domain.CoreRepository
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
 import com.andriybobchuk.mooney.mooney.domain.usecase.CalculateNetWorthUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.ConvertAccountsToUiUseCase
@@ -36,8 +35,7 @@ class AccountViewModel(
     private val calculateNetWorthUseCase: CalculateNetWorthUseCase,
     private val convertAccountsToUiUseCase: ConvertAccountsToUiUseCase,
     private val currencyManagerUseCase: CurrencyManagerUseCase,
-    private val createReconciliationUseCase: CreateReconciliationUseCase,
-    private val repository: CoreRepository
+    private val createReconciliationUseCase: CreateReconciliationUseCase
 ) : ViewModel() {
 
     private var observeAccountsJob: Job? = null
@@ -292,9 +290,7 @@ class AccountViewModel(
         val account = Account(id, title, targetAmount, currency, emoji, AssetCategory.BANK_ACCOUNT)
         
         try {
-            // Directly update account metadata via repository (bypassing use cases)
-            // This sets the exact target amount without any balance calculations
-            repository.upsertAccount(account)
+            addAccountUseCase(account)
             observeAccounts()
         } catch (e: Exception) {
             // Handle error

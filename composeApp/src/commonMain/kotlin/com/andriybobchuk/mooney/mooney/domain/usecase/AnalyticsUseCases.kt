@@ -5,8 +5,8 @@ import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
 import com.andriybobchuk.mooney.mooney.domain.Transaction
-import com.andriybobchuk.mooney.mooney.presentation.analytics.TopCategorySummary
-import com.andriybobchuk.mooney.mooney.presentation.formatWithCommas
+import com.andriybobchuk.mooney.mooney.domain.TopCategorySummary
+import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import kotlinx.coroutines.flow.first
 import kotlinx.datetime.LocalDate
 

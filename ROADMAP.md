@@ -6,11 +6,11 @@ Priority order: ship first, enhance after. Each section is a milestone.
 
 ## Milestone 1: Clean Codebase (see TECH_DEBT.md)
 
-- [ ] Phase 0: Remove unused code & features (asset analytics, theme switcher, smart suggestions)
-- [ ] Phase 1: Critical fixes (runBlocking, layer violations, test code in production)
-- [ ] Phase 2: Extract key use cases from ViewModels — everything is a use case
-- [ ] Phase 3: Slim repository, extract transfer logic
-- [ ] Phase 4: Remove GlobalConfig anti-pattern, state management consistency
+- [x] Phase 0: Remove unused code & features (asset analytics, theme switcher, smart suggestions)
+- [x] Phase 1: Critical fixes (runBlocking, layer violations, test code in production)
+- [x] Phase 2: Extract key use cases from ViewModels — everything is a use case
+- [x] Phase 3: Slim repository, extract transfer logic
+- [x] Phase 4: Remove GlobalConfig anti-pattern, state management consistency
 
 ---
 

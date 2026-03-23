@@ -26,10 +26,6 @@ class DefaultCoreRepositoryImpl(
     private val goalDao: GoalDao,
 ) : CoreRepository {
 
-    ///////////////////////////// ACCOUNTS //////////////////////////////////////////////////
-    //private val accounts = AccountDataSource.accounts.toMutableList()
-
-
     override suspend fun upsertAccount(account: Account) {
         accountDao.upsert(account.toEntity())
     }
@@ -46,25 +42,14 @@ class DefaultCoreRepositoryImpl(
         return accountDao.getById(id)?.toDomain()
     }
 
-    /////////////////////////////////// TRANSACTIONS /////////////////////////////////
-//
-//    override suspend fun upsertTransaction(transaction: Transaction) {
-//        transactionDao.upsert(transaction.toEntity())
-//    }
-
     override suspend fun upsertTransaction(transaction: Transaction) {
-        // Simple data operation - business logic moved to use cases
         transactionDao.upsert(transaction.toEntity())
-        // Track category usage when creating/updating transactions
         trackCategoryUsage(transaction.subcategory.id)
     }
 
-
     override suspend fun deleteTransaction(id: Int) {
-        // Simple data operation - business logic moved to use cases
         transactionDao.delete(id)
     }
-
 
     override fun getAllTransactions(): Flow<List<Transaction?>> {
         val accountsFlow = getAllAccounts()
@@ -72,35 +57,15 @@ class DefaultCoreRepositoryImpl(
 
         return transactionDao.getAll().combine(accountsFlow) { transactionEntities, accounts ->
             transactionEntities.map { transactionEntity ->
-                val subcategory = categories.find {
-                    it.id == transactionEntity.subcategoryId
-                } ?: run {
-                    // Handle dynamic transfer categories
-                    if (transactionEntity.subcategoryId.startsWith("transfer_to_")) {
-                        val destinationAccountId = transactionEntity.subcategoryId.removePrefix("transfer_to_").toIntOrNull()
-                        val destinationAccount = accounts.find { it?.id == destinationAccountId }
-                        if (destinationAccount != null) {
-                            // Create dynamic transfer category
-                            val transferParent = categories.find { it.id == "internal_transfer" }
-                            Category(
-                                id = transactionEntity.subcategoryId,
-                                title = "Transfer to ${destinationAccount.title}",
-                                type = CategoryType.TRANSFER,
-                                emoji = "↔️",
-                                parent = transferParent
-                            )
-                        } else null
-                    } else null
-                }
+                val subcategory = categories.find { it.id == transactionEntity.subcategoryId }
+                    ?: resolveTransferCategory(transactionEntity.subcategoryId, accounts, categories)
 
-                val account = accounts.find {
-                    it?.id == transactionEntity.accountId
-                }
+                val account = accounts.find { it?.id == transactionEntity.accountId }
 
                 if (subcategory != null && account != null) {
                     transactionEntity.toDomain(subcategory, account)
                 } else {
-                    null // Skip broken/missing data to prevent crash
+                    null
                 }
             }
         }
@@ -108,41 +73,38 @@ class DefaultCoreRepositoryImpl(
 
     override suspend fun getTransactionById(id: Int): Transaction? {
         val entity = transactionDao.getById(id) ?: return null
-
         val categories = getAllCategories()
-        val subcategory = categories.find {
-            it.id == entity.subcategoryId
-        } ?: run {
-            // Handle dynamic transfer categories
-            if (entity.subcategoryId.startsWith("transfer_to_")) {
-                val destinationAccountId = entity.subcategoryId.removePrefix("transfer_to_").toIntOrNull()
-                val accounts = getAllAccounts().first()
-                val destinationAccount = accounts.find { it?.id == destinationAccountId }
-                if (destinationAccount != null) {
-                    val transferParent = categories.find { it.id == "internal_transfer" }
-                    Category(
-                        id = entity.subcategoryId,
-                        title = "Transfer to ${destinationAccount.title}",
-                        type = CategoryType.TRANSFER,
-                        emoji = "↔️",
-                        parent = transferParent
-                    )
-                } else null
-            } else null
-        }
-
         val accounts = getAllAccounts().first()
-        val account = accounts.find {
-            it?.id == entity.accountId
-        }
+
+        val subcategory = categories.find { it.id == entity.subcategoryId }
+            ?: resolveTransferCategory(entity.subcategoryId, accounts, categories)
+
+        val account = accounts.find { it?.id == entity.accountId }
 
         return if (subcategory != null && account != null) {
             entity.toDomain(subcategory, account)
         } else null
     }
 
+    private fun resolveTransferCategory(
+        subcategoryId: String,
+        accounts: List<Account?>,
+        categories: List<Category>
+    ): Category? {
+        if (!subcategoryId.startsWith("transfer_to_")) return null
+        val destinationAccountId = subcategoryId.removePrefix("transfer_to_").toIntOrNull() ?: return null
+        val destinationAccount = accounts.find { it?.id == destinationAccountId } ?: return null
+        val transferParent = categories.find { it.id == "internal_transfer" }
+        return Category(
+            id = subcategoryId,
+            title = "Transfer to ${destinationAccount.title}",
+            type = CategoryType.TRANSFER,
+            emoji = "↔️",
+            parent = transferParent
+        )
+    }
 
-    ///////////////////////////// CATEGORIES - DO NOT MODIFY //////////////////////
+    ///////////////////////////// CATEGORIES //////////////////////
     private val categoriesById = CategoryDataSource.categories.associateBy { it.id }
 
     override fun getAllCategories(): List<Category> = CategoryDataSource.categories

@@ -45,16 +45,16 @@ Everything is a use case. ViewModels are orchestrators only.
 
 ## Phase 3: Repository Refactoring
 
-- [ ] **DefaultCoreRepositoryImpl (207 lines)** — `getAllTransactions()` has 38 lines of dynamic transfer category construction. `getTransactionById()` duplicates it. Extract to service/use case.
-- [ ] **Category usage tracking** — conflates business rules with persistence. Separate concerns.
+- [x] **DefaultCoreRepositoryImpl** — Extracted `resolveTransferCategory()` helper, eliminating duplication between `getAllTransactions()` and `getTransactionById()`. Removed dead comments.
+- [ ] **Category usage tracking** — conflates business rules with persistence. Separate concerns. (Deferred — low risk, works correctly.)
 
 ---
 
 ## Phase 4: Architecture Improvements
 
-- [ ] **Remove GlobalConfig** — `testExchangeRates` and `baseCurrency` should be injected via DI, not global singleton.
-- [ ] **State management consistency** — All ViewModels must use `_uiState.update {}`, never `_uiState.value = ...`
-- [ ] **Create missing use cases** — CategoryAnalysis, HistoricalAnalytics, TaxCalculation, CurrencyConversion, ValidatePinnedCategories, CreateGoal
+- [ ] **Remove GlobalConfig** — `testExchangeRates` used as fallback in CurrencyManagerUseCase (OK). `baseCurrency` still referenced directly. Inject via DI later.
+- [x] **State management consistency** — All ViewModels now use `_uiState.update {}`. Zero `.value =` violations remaining.
+- [ ] **Create missing use cases** — CategoryAnalysis, HistoricalAnalytics, TaxCalculation, CurrencyConversion, ValidatePinnedCategories, CreateGoal (Deferred — add as needed per feature.)
 
 ---
 

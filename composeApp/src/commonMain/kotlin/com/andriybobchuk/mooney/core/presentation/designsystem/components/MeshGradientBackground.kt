@@ -24,9 +24,14 @@ fun MeshGradientBackground(
     val soft = if (isDark) accent.copy(alpha = 0.05f) else Color(0xFFC5DDFB).copy(alpha = 0.30f)
     val transparent = Color.Transparent
 
+    val bg = MaterialTheme.colorScheme.background
+
     Canvas(modifier = modifier.fillMaxSize()) {
         val w = size.width
         val h = size.height
+
+        // Fill with theme background first
+        drawRect(color = bg)
 
         // Block 1 — top left, strong
         drawRect(

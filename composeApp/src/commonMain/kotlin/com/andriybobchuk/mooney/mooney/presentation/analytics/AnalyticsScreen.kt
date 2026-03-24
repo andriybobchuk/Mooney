@@ -59,6 +59,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.FeedbackBottomSheet
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.AnalyticsMetric
 import com.andriybobchuk.mooney.mooney.domain.CategorySheetType
@@ -79,6 +81,7 @@ fun AnalyticsScreen(
     viewModel: AnalyticsViewModel = koinViewModel(),
     bottomNavbar: @Composable () -> Unit,
     onSettingsClick: () -> Unit = {},
+    onNavigateToTransactions: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     var selectedTimePeriod by remember { mutableStateOf(TimePeriod.SIX_MONTHS) }
@@ -114,8 +117,48 @@ fun AnalyticsScreen(
         },
         bottomBar = { bottomNavbar() },
         content = { paddingValues ->
+            val isEmpty = state.metrics.isEmpty() && state.historicalMetrics.isEmpty() && !state.isLoading
+
+            if (isEmpty) {
+                Column(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .background(MaterialTheme.colorScheme.background)
+                        .fillMaxSize()
+                        .padding(horizontal = 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Text(
+                        text = "No analytics yet",
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Start adding transactions to see revenue, expenses, trends, and financial insights.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    MooneyButton(
+                        text = "Add Transaction",
+                        onClick = onNavigateToTransactions,
+                        variant = ButtonVariant.PRIMARY,
+                        fullWidth = true
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+            }
+
             val scrollState = rememberScrollState()
-            
+
+            if (!isEmpty) {
             Column(
                 modifier = Modifier
                     .padding(paddingValues)
@@ -124,28 +167,6 @@ fun AnalyticsScreen(
                     .verticalScroll(scrollState)
                     .fillMaxSize()
             ) {
-                if (state.metrics.isEmpty() && state.historicalMetrics.isEmpty() && !state.isLoading) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 48.dp, horizontal = 32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(text = "\uD83D\uDCC8", fontSize = 64.sp, modifier = Modifier.padding(bottom = 16.dp))
-                        Text(
-                            text = "Analytics will appear here",
-                            style = MaterialTheme.typography.titleMedium,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Start adding transactions to see revenue, expenses, trends, and insights about your finances.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
 
                 if (state.metrics.isNotEmpty() || state.historicalMetrics.isNotEmpty()) {
                     // Trend Chart
@@ -197,7 +218,8 @@ fun AnalyticsScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
             }
-            
+            } // end if (!isEmpty)
+
             // Category Bottom Sheet
             if (state.isCategorySheetOpen) {
                 state.categorySheetType?.let { sheetType ->

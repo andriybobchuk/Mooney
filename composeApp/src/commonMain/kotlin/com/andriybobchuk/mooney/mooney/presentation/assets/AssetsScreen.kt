@@ -199,11 +199,13 @@ private fun AssetsScreenContent(
             item {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 48.dp, horizontal = 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .fillParentMaxSize()
+                        .padding(horizontal = 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Text(text = "\uD83D\uDCB0", fontSize = 64.sp, modifier = Modifier.padding(bottom = 16.dp))
+                    Spacer(modifier = Modifier.weight(1f))
+
                     Text(
                         text = "No accounts yet",
                         style = MaterialTheme.typography.titleMedium,
@@ -211,17 +213,21 @@ private fun AssetsScreenContent(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Add your bank accounts, cash, investments and other assets to track your net worth.",
+                        text = "Add your bank accounts, cash, and investments to track your net worth.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Spacer(modifier = Modifier.weight(1f))
+
                     MooneyButton(
                         text = "Add Account",
                         onClick = onAddAsset,
-                        variant = ButtonVariant.PRIMARY
+                        variant = ButtonVariant.PRIMARY,
+                        fullWidth = true
                     )
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
         }

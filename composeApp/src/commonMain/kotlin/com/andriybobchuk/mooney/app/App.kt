@@ -64,9 +64,7 @@ fun App() {
                     var showDevTools by remember { mutableStateOf(false) }
 
                     Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .padding(top = 200.dp)
+                        modifier = Modifier.align(Alignment.TopEnd)
                     ) {
                         DevLabel(onClick = { showDevTools = true })
                     }

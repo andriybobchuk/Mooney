@@ -27,9 +27,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,20 +45,31 @@ import kotlinx.coroutines.launch
 fun DevLabel(
     onClick: () -> Unit
 ) {
+    val density = LocalDensity.current
+    var offsetYPx by remember { mutableStateOf(800f) }
+
+    val offsetYDp = with(density) { offsetYPx.toDp() }
+
     Box(
         modifier = Modifier
-            .rotate(-90f)
-            .clip(RoundedCornerShape(bottomStart = 6.dp, bottomEnd = 6.dp))
+            .offset(y = offsetYDp)
+            .draggable(
+                state = rememberDraggableState { delta ->
+                    offsetYPx = (offsetYPx + delta).coerceIn(100f, 1800f)
+                },
+                orientation = Orientation.Vertical
+            )
+            .clip(RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp))
             .background(Color(0xFF3562F6))
             .clickable { onClick() }
-            .padding(horizontal = 8.dp, vertical = 3.dp)
+            .padding(horizontal = 10.dp, vertical = 6.dp)
     ) {
         Text(
             text = "DEV",
             color = Color.White,
-            fontSize = 9.sp,
+            fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
-            letterSpacing = 1.sp
+            letterSpacing = 1.5.sp
         )
     }
 }

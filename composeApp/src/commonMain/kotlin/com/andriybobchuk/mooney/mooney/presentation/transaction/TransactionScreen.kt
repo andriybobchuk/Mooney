@@ -155,10 +155,12 @@ fun TransactionsScreen(
                 },
                 scrollBehavior = scrollBehavior,
                 customContent = {
-                    MonthPicker(
-                        selectedMonth = state.selectedMonth,
-                        onMonthSelected = viewModel::onMonthSelected,
-                    )
+                    if (transactions.filterNotNull().isNotEmpty()) {
+                        MonthPicker(
+                            selectedMonth = state.selectedMonth,
+                            onMonthSelected = viewModel::onMonthSelected,
+                        )
+                    }
                 },
                 actions = listOf(
                     Toolbars.ToolBarAction(
@@ -337,41 +339,51 @@ fun TransactionsScreenContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        item {
-            TransactionPagerView(
-                selectedMonth = selectedMonth,
-                dailyTotals = dailyTotals,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-            )
+        // Only show calendar/chart when there are transactions
+        if (sortedGroups.isNotEmpty()) {
+            item {
+                TransactionPagerView(
+                    selectedMonth = selectedMonth,
+                    dailyTotals = dailyTotals,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                )
+            }
         }
 
         if (sortedGroups.isEmpty()) {
             item {
+                // Empty state - fill available space
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 48.dp, horizontal = 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .fillParentMaxSize()
+                        .padding(horizontal = 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Text(text = "\uD83D\uDCDD", fontSize = 64.sp, modifier = Modifier.padding(bottom = 16.dp))
+                    Spacer(modifier = Modifier.weight(1f))
+
                     Text(
-                        text = "No transactions yet",
+                        text = "No transactions this month",
                         style = MaterialTheme.typography.titleMedium,
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Start tracking your spending by adding your first transaction for this month.",
+                        text = "Start tracking your spending by adding your first transaction.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Spacer(modifier = Modifier.weight(1f))
+
                     MooneyButton(
                         text = "Add Transaction",
                         onClick = onAddTransaction,
-                        variant = ButtonVariant.PRIMARY
+                        variant = ButtonVariant.PRIMARY,
+                        fullWidth = true
                     )
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
         }

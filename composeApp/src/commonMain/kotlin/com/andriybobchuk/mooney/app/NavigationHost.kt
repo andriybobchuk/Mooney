@@ -68,7 +68,10 @@ fun NavigationHost() {
                 AnalyticsScreen(
                     viewModel = viewModel,
                     bottomNavbar = { BottomNavigationBar(navController, 3) },
-                    onSettingsClick = { navController.navigate(Route.Settings) }
+                    onSettingsClick = { navController.navigate(Route.Settings) },
+                    onNavigateToTransactions = {
+                        navController.navigate(Route.Transactions) { popUpTo(Route.MooneyGraph) }
+                    }
                 )
             }
 

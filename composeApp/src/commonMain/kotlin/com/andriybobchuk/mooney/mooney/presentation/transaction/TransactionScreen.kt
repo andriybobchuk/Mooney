@@ -142,7 +142,10 @@ fun TransactionsScreen(
                 containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
                 titleContent = {
                     Column(
-                        modifier = Modifier.clickable { viewModel.onTotalCurrencyClick() }
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { viewModel.onTotalCurrencyClick() }
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = "${total.formatWithCommas()} ${totalCurrency.symbol}",

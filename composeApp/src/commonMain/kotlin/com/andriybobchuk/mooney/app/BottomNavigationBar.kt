@@ -42,15 +42,14 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.navigationBars)
+        modifier = Modifier.fillMaxWidth()
     ) {
         // Floating pill bar
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 6.dp)
+                .padding(horizontal = 12.dp)
+                .padding(top = 6.dp, bottom = 6.dp)
                 .clip(RoundedCornerShape(22.dp))
                 .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.82f))
                 .then(
@@ -112,5 +111,12 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
                 }
             }
         }
+
+        // Home indicator space
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars)
+        )
     }
 }

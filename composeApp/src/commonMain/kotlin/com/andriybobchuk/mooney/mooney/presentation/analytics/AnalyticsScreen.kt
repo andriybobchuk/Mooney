@@ -467,7 +467,7 @@ fun EnhancedMetricCard(
     ) {
         Row(
             modifier = Modifier
-                .background(MaterialTheme.appColors.cardBackground)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                 .padding(horizontal = 12.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -506,19 +506,20 @@ fun EnhancedMetricCard(
             // Trend pill
             if (metric.trendPercentage != 0.0) {
                 val isPositive = metric.trendPercentage > 0
-                val pillColor = if (isPositive) Color(0xFF16A34A) else Color(0xFFDC2626)
+                val trendColor = if (isPositive) Color(0xFF16A34A) else Color(0xFFDC2626)
+                val pillBg = if (isPositive) Color(0xFF16A34A).copy(alpha = 0.10f) else Color(0xFFDC2626).copy(alpha = 0.10f)
                 val sign = if (isPositive) "+" else ""
                 val value = kotlin.math.round(metric.trendPercentage * 10) / 10
 
                 Box(
                     modifier = Modifier
-                        .background(pillColor, RoundedCornerShape(50))
+                        .background(pillBg, RoundedCornerShape(50))
                         .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
                         text = "$sign$value%",
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color.White
+                        color = trendColor
                     )
                 }
             }

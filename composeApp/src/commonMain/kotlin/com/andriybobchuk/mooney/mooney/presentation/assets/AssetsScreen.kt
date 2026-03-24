@@ -41,7 +41,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.andriybobchuk.mooney.app.appColors
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.AssetCategory
@@ -80,7 +79,10 @@ fun AssetsScreen(
                 containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
                 titleContent = {
                     Column(
-                        modifier = Modifier.clickable { viewModel.onNetWorthLabelClick() }
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { viewModel.onNetWorthLabelClick() }
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = "${totalNetWorth.formatWithCommas()} ${state.totalNetWorthCurrency.symbol}",
@@ -268,6 +270,9 @@ private fun AssetsScreenContent(
                 }
                 
                 if (isExpanded) {
+                    item {
+                        Spacer(Modifier.height(4.dp))
+                    }
                     items(categoryAssets) { asset ->
                         Box(modifier = Modifier.padding(start = 24.dp)) {
                             AssetCard(
@@ -386,21 +391,15 @@ private fun AssetCard(
             ),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.appColors.cardBackground
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = asset.emoji,
-                fontSize = 24.sp,
-                modifier = Modifier.padding(end = 12.dp)
-            )
-
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = asset.title,

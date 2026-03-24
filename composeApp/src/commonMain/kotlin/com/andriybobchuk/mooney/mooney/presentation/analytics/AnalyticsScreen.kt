@@ -277,7 +277,7 @@ fun CategoryItem(
 fun MonthPicker(
     selectedMonth: MonthKey,
     onMonthSelected: (MonthKey) -> Unit,
-    monthRange: List<MonthKey> = generateRecentMonths(12)
+    monthRange: List<MonthKey> = generateRecentMonths(36)
 ) {
     var showSheet by remember { mutableStateOf(false) }
 
@@ -305,39 +305,52 @@ fun MonthPicker(
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                monthRange.forEach { month ->
-                    val isSelected = month == selectedMonth
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                if (isSelected) MaterialTheme.colorScheme.primaryContainer
-                                else Color.Transparent
+                // Group months by year
+                val monthsByYear = monthRange.groupBy { it.year }.toSortedMap(compareByDescending { it })
+
+                monthsByYear.forEach { (year, months) ->
+                    // Year header
+                    Text(
+                        text = year.toString(),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)
+                    )
+
+                    months.forEach { month ->
+                        val isSelected = month == selectedMonth
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                                    else Color.Transparent
+                                )
+                                .clickable {
+                                    onMonthSelected(month)
+                                    showSheet = false
+                                }
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = month.toDisplayString().substringBeforeLast(' '),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface
                             )
-                            .clickable {
-                                onMonthSelected(month)
-                                showSheet = false
+                            if (isSelected) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .background(
+                                            MaterialTheme.colorScheme.primary,
+                                            androidx.compose.foundation.shape.CircleShape
+                                        )
+                                )
                             }
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = month.toDisplayString(),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurface
-                        )
-                        if (isSelected) {
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .background(
-                                        MaterialTheme.colorScheme.primary,
-                                        androidx.compose.foundation.shape.CircleShape
-                                    )
-                            )
                         }
                     }
                 }
@@ -639,6 +652,16 @@ fun CategoryBreakdownSheet(
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 9.sp
+                            )
+                            Text(
+                                text = when (sheetType) {
+                                    CategorySheetType.REVENUE -> snapshot.revenue.formatToShortString()
+                                    CategorySheetType.TAXES -> snapshot.taxes.formatToShortString()
+                                    CategorySheetType.OPERATING_COSTS -> snapshot.operatingCosts.formatToShortString()
+                                },
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 8.sp
                             )
                         }
                     }

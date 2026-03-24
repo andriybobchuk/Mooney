@@ -1636,27 +1636,35 @@ fun SpendingLineChart(
         getDaysInMonth(year, month)
     }
     
-    val previousMonth = remember(selectedMonth) {
-        if (month == 1) {
-            MonthKey(year - 1, 12)
-        } else {
-            MonthKey(year, month - 1)
-        }
-    }
-    
     val viewModel: TransactionViewModel = koinViewModel()
     val previousMonthTotals = remember { mutableStateOf(emptyMap<Int, Double>()) }
-    
-    LaunchedEffect(previousMonth) {
+
+    LaunchedEffect(selectedMonth) {
         try {
-            val totals = mutableMapOf<Int, Double>()
-            val prevDaysInMonth = getDaysInMonth(previousMonth.year, previousMonth.month)
-            for (day in 1..prevDaysInMonth) {
-                val date = LocalDate(previousMonth.year, previousMonth.month, day)
-                val dayTotal = viewModel.getDailyTotalForMonth(date)
-                totals[day] = dayTotal
+            val avgTotals = mutableMapOf<Int, Double>()
+            val monthsToAverage = 6
+            var currentMonth = selectedMonth
+
+            // Collect daily totals for past 6 months
+            val allMonthTotals = mutableListOf<Map<Int, Double>>()
+            repeat(monthsToAverage) {
+                currentMonth = currentMonth.previousMonth()
+                val totals = mutableMapOf<Int, Double>()
+                val prevDays = getDaysInMonth(currentMonth.year, currentMonth.month)
+                for (day in 1..prevDays) {
+                    val date = LocalDate(currentMonth.year, currentMonth.month, day)
+                    totals[day] = viewModel.getDailyTotalForMonth(date)
+                }
+                allMonthTotals.add(totals)
             }
-            previousMonthTotals.value = totals
+
+            // Average across months for each day
+            for (day in 1..daysInMonth) {
+                val values = allMonthTotals.mapNotNull { it[day] }.filter { it > 0 }
+                avgTotals[day] = if (values.isNotEmpty()) values.average() else 0.0
+            }
+
+            previousMonthTotals.value = avgTotals
         } catch (e: Exception) {
             previousMonthTotals.value = emptyMap()
         }
@@ -1698,7 +1706,7 @@ fun SpendingLineChart(
                 }
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "Previous",
+                    text = "6mo avg",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
@@ -1736,7 +1744,7 @@ fun SpendingLineChart(
                     
                     val width = size.width
                     val height = size.height
-                    val dayWidth = width / maxOf(daysInMonth, getDaysInMonth(previousMonth.year, previousMonth.month))
+                    val dayWidth = width / daysInMonth
                     
                     val currentPath = Path()
                     val previousPath = Path()
@@ -1760,8 +1768,7 @@ fun SpendingLineChart(
                         }
                     }
                     
-                    val prevDaysInMonth = getDaysInMonth(previousMonth.year, previousMonth.month)
-                    for (day in 1..minOf(daysInMonth, prevDaysInMonth)) {
+                    for (day in 1..daysInMonth) {
                         val x = (day - 1) * dayWidth + dayWidth / 2
                         
                         previousCumulative += previousMonthTotals.value[day] ?: 0.0

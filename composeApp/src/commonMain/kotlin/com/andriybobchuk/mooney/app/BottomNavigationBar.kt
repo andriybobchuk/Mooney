@@ -28,7 +28,7 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp,
-        modifier = Modifier.height(72.dp)
+        modifier = Modifier.height(76.dp)
     ) {
         allItems.forEachIndexed { _, (item, route, originalIndex) ->
             NavigationBarItem(

@@ -7,6 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -342,14 +344,14 @@ private fun CollapsibleCategoryHeader(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun AssetCard(
     asset: UiAsset,
     onEdit: (UiAsset) -> Unit,
     onDelete: (UiAsset) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var showActionSheet by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
@@ -357,7 +359,7 @@ private fun AssetCard(
             .clip(RoundedCornerShape(12.dp))
             .combinedClickable(
                 onClick = { onEdit(asset) },
-                onLongClick = { expanded = true }
+                onLongClick = { showActionSheet = true }
             ),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
@@ -375,7 +377,7 @@ private fun AssetCard(
                 fontSize = 24.sp,
                 modifier = Modifier.padding(end = 12.dp)
             )
-            
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = asset.title,
@@ -400,7 +402,7 @@ private fun AssetCard(
                     fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                
+
                 if (asset.originalCurrency != GlobalConfig.baseCurrency) {
                     Text(
                         text = "${asset.originalAmount.formatWithCommas()} ${asset.originalCurrency.symbol}",
@@ -412,21 +414,64 @@ private fun AssetCard(
         }
     }
 
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-        DropdownMenuItem(
-            text = { Text("Edit") },
-            onClick = {
-                expanded = false
-                onEdit(asset)
+    if (showActionSheet) {
+        MooneyBottomSheet(onDismissRequest = { showActionSheet = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
+            ) {
+                Text(
+                    text = asset.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Text(
+                    text = "${asset.originalAmount.formatWithCommas()} ${asset.originalCurrency.symbol}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable {
+                            showActionSheet = false
+                            onEdit(asset)
+                        }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Edit", style = MaterialTheme.typography.bodyLarge)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.errorContainer)
+                        .clickable {
+                            showActionSheet = false
+                            onDelete(asset)
+                        }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Delete",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
-        )
-        DropdownMenuItem(
-            text = { Text("Delete") },
-            onClick = {
-                expanded = false
-                onDelete(asset)
-            }
-        )
+        }
     }
 }
 
@@ -443,7 +488,12 @@ private fun AssetSheet(
     var showCategorySheet by remember { mutableStateOf(false) }
     var showCurrencySheet by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 20.dp, vertical = 16.dp)
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
         Text(
             text = if (editingAsset != null) "Edit Asset" else "Add New Asset",
             style = MaterialTheme.typography.titleLarge,
@@ -458,7 +508,7 @@ private fun AssetSheet(
             singleLine = true
         )
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(8.dp))
 
         MooneyTextField(
             modifier = Modifier.fillMaxWidth(),
@@ -536,6 +586,7 @@ private fun AssetSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 16.dp)
+                    .verticalScroll(rememberScrollState())
             ) {
                 Text("Select Category", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
                 AssetCategory.entries.forEach { category ->

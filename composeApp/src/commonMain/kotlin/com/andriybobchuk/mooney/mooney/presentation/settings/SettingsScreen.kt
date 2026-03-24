@@ -151,9 +151,9 @@ fun SettingsScreen(
                     ) {
                         Text(
                             when (mode) {
-                                ThemeMode.LIGHT -> "\u2600\uFE0F  Light"
-                                ThemeMode.DARK -> "\uD83C\uDF19  Dark"
-                                ThemeMode.SYSTEM -> "\uD83D\uDCF1  System"
+                                ThemeMode.LIGHT -> "Light"
+                                ThemeMode.DARK -> "Dark"
+                                ThemeMode.SYSTEM -> "System"
                             },
                             style = MaterialTheme.typography.bodyLarge,
                             color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
@@ -298,9 +298,8 @@ fun SettingsScreen(
                 item {
                     SettingsGroup {
                         SettingsRow(
-                            icon = "\uD83C\uDFA8",
                             title = "Appearance",
-                            subtitle = when (state.currentThemeMode) {
+                            value = when (state.currentThemeMode) {
                                 ThemeMode.LIGHT -> "Light"
                                 ThemeMode.DARK -> "Dark"
                                 ThemeMode.SYSTEM -> "System"
@@ -309,24 +308,15 @@ fun SettingsScreen(
                         )
                         SettingsDivider()
                         SettingsRow(
-                            icon = "\uD83D\uDCB1",
                             title = "Default Currency",
-                            subtitle = "${state.defaultCurrency.symbol} ${state.defaultCurrency.name}",
+                            value = "${state.defaultCurrency.symbol} ${state.defaultCurrency.name}",
                             onClick = { showCurrencySheet = true }
                         )
                         SettingsDivider()
                         SettingsRow(
-                            icon = "\uD83D\uDCCC",
                             title = "Pinned Categories",
-                            subtitle = "${state.pinnedCategoryIds.size} of ${state.maxPinnedCategories} selected",
+                            value = "${state.pinnedCategoryIds.size}/${state.maxPinnedCategories}",
                             onClick = { showPinnedSheet = true }
-                        )
-                        SettingsDivider()
-                        SettingsToggleRow(
-                            icon = "\uD83D\uDD14",
-                            title = "Notifications",
-                            checked = state.notificationsEnabled,
-                            onCheckedChange = { viewModel.onAction(SettingsAction.OnNotificationsToggle(it)) }
                         )
                     }
                 }
@@ -338,17 +328,13 @@ fun SettingsScreen(
                 item {
                     SettingsGroup {
                         SettingsRow(
-                            icon = "\uD83D\uDCE4",
                             title = "Export Data",
-                            subtitle = "Save backup as JSON",
                             onClick = { viewModel.onAction(SettingsAction.OnExportData) },
                             showLoading = state.isExporting
                         )
                         SettingsDivider()
                         SettingsRow(
-                            icon = "\uD83D\uDCE5",
                             title = "Import Data",
-                            subtitle = "Restore from backup",
                             onClick = {
                                 coroutineScope.launch {
                                     fileHandler.pickAndReadTextFile()
@@ -375,9 +361,8 @@ fun SettingsScreen(
                 item {
                     SettingsGroup {
                         SettingsRow(
-                            icon = "\u2139\uFE0F",
                             title = "Version",
-                            subtitle = "1.0.0",
+                            value = "1.0.0",
                             showChevron = false
                         )
                     }
@@ -415,9 +400,8 @@ private fun SettingsGroup(content: @Composable ColumnScope.() -> Unit) {
 
 @Composable
 private fun SettingsRow(
-    icon: String,
     title: String,
-    subtitle: String = "",
+    value: String = "",
     onClick: () -> Unit = {},
     showChevron: Boolean = true,
     showLoading: Boolean = false
@@ -426,36 +410,35 @@ private fun SettingsRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = !showLoading) { onClick() }
-            .padding(vertical = 14.dp),
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(icon, fontSize = 22.sp, modifier = Modifier.padding(end = 14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
-            if (subtitle.isNotEmpty()) {
+        Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        if (showLoading) {
+            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+        } else {
+            if (value.isNotEmpty()) {
                 Text(
-                    subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    value,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(end = 4.dp)
                 )
             }
-        }
-        if (showLoading) {
-            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-        } else if (showChevron) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
-            )
+            if (showChevron) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun SettingsToggleRow(
-    icon: String,
     title: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
@@ -463,10 +446,9 @@ private fun SettingsToggleRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 14.dp),
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(icon, fontSize = 22.sp, modifier = Modifier.padding(end = 14.dp))
         Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
         Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
@@ -475,7 +457,6 @@ private fun SettingsToggleRow(
 @Composable
 private fun SettingsDivider() {
     HorizontalDivider(
-        modifier = Modifier.padding(start = 44.dp),
         color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
         thickness = 0.5.dp
     )

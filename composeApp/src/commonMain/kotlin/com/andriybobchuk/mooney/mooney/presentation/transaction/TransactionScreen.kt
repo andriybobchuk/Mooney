@@ -22,12 +22,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -35,14 +35,11 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
@@ -311,7 +308,7 @@ fun LocalDate.formatForDisplay(): String {
     return "$dayOfWeek, $month $day" // e.g., "Sun, Aug 23"
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionsScreenContent(
     modifier: Modifier,
@@ -424,32 +421,74 @@ fun TransactionsScreenContent(
             }
 
             items(txList) { tx ->
-                var expanded by remember { mutableStateOf(false) }
+                var showActionSheet by remember { mutableStateOf(false) }
 
                 Box(
                     modifier = Modifier.combinedClickable(
                         onClick = { onEdit(tx) },
-                        onLongClick = { expanded = true }
-                    )) {
+                        onLongClick = { showActionSheet = true }
+                    )
+                ) {
                     TransactionItem(tx, accounts)
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Edit") },
-                            onClick = {
-                                expanded = false
-                                onEdit(tx)
+                }
+
+                if (showActionSheet) {
+                    MooneyBottomSheet(onDismissRequest = { showActionSheet = false }) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 16.dp)
+                        ) {
+                            Text(
+                                text = tx.subcategory.title,
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            Text(
+                                text = "${tx.amount.formatWithCommas()} ${tx.account.currency.symbol}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .clickable {
+                                        showActionSheet = false
+                                        onEdit(tx)
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Edit", style = MaterialTheme.typography.bodyLarge)
                             }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Delete") },
-                            onClick = {
-                                expanded = false
-                                onDelete(tx.id)
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.errorContainer)
+                                    .clickable {
+                                        showActionSheet = false
+                                        onDelete(tx.id)
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "Delete",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.error
+                                )
                             }
-                        )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
                     }
                 }
             }
@@ -628,7 +667,12 @@ fun TransactionBottomSheet(
             keyboardController?.show()
         }
 
-        Column(Modifier.padding(horizontal = 20.dp, vertical = 16.dp).fillMaxSize()) {
+        Column(
+            Modifier
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
             Text(
                 text = if (isEditMode) "Edit This Transaction" else "Add New Transaction",
                 fontWeight = FontWeight.Medium,
@@ -723,7 +767,9 @@ fun TransactionBottomSheet(
                 // For expense/income, show single account
                 AccountField(selectedAccount, accounts.filterNotNull(), { selectedAccount = it })
             }
-            
+
+            Spacer(Modifier.height(12.dp))
+
             // Category display - only show for expense/income
             if (selectedTransactionType != CategoryType.TRANSFER) {
                 // For expense/income, allow category selection
@@ -975,29 +1021,31 @@ fun YearDropdownSelector(
     selectedYear: Int,
     onYearSelected: (Int) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
     val currentDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-    val years = (2000..currentDate.year).toList().reversed()
+    val years = (currentDate.year downTo 2020).toList()
 
-    Box {
-        MooneyButton(
-            text = "Year: $selectedYear",
-            onClick = { expanded = true },
-            modifier = Modifier.fillMaxWidth(),
-            variant = ButtonVariant.SECONDARY
-        )
-        
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            years.forEach { year ->
-                DropdownMenuItem(
-                    text = { Text(year.toString()) },
-                    onClick = {
-                        onYearSelected(year)
-                        expanded = false
-                    }
+    Text("Year", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(years.size) { index ->
+            val year = years[index]
+            val isSelected = year == selectedYear
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(
+                        if (isSelected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceVariant
+                    )
+                    .clickable { onYearSelected(year) }
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = year.toString(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -1009,83 +1057,31 @@ fun MonthSelector(
     selectedMonth: Int,
     onMonthSelected: (Int) -> Unit
 ) {
-    val monthNames = listOf(
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    )
-    val monthAbbreviations = listOf(
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    )
+    val monthAbbreviations = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 
-    val listState = rememberLazyListState()
-    
-    // Auto-scroll to center the selected month
-    LaunchedEffect(selectedMonth) {
-        val targetIndex = selectedMonth - 1
-        // Center the selected month by scrolling to position it in the middle
-        val offset = -500 // Adjust to center the item (card width + spacing)
-        listState.animateScrollToItem(
-            index = maxOf(0, targetIndex),
-            scrollOffset = offset
-        )
-    }
+    Text("Month", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
 
-    Column {
-        Text(
-            text = "Month:",
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-        
-        // Creative horizontal scrollable month selector
-        LazyRow(
-            state = listState,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            items(12) { index ->
-                val month = index + 1
-                val isSelected = month == selectedMonth
-                
-                Card(
-                    modifier = Modifier
-                        .clickable { onMonthSelected(month) }
-                        .width(60.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isSelected) 
-                            MaterialTheme.colorScheme.primary 
-                        else 
-                            MaterialTheme.colorScheme.surface
-                    ),
-                    elevation = CardDefaults.cardElevation(
-                        defaultElevation = if (isSelected) 8.dp else 2.dp
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(12) { index ->
+            val month = index + 1
+            val isSelected = month == selectedMonth
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(
+                        if (isSelected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceVariant
                     )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = monthAbbreviations[index],
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (isSelected) 
-                                MaterialTheme.colorScheme.onPrimary 
-                            else 
-                                MaterialTheme.colorScheme.onSurface,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                        )
-                        Text(
-                            text = month.toString().padStart(2, '0'),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = if (isSelected) 
-                                MaterialTheme.colorScheme.onPrimary 
-                            else 
-                                MaterialTheme.colorScheme.onSurface,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                        )
-                    }
-                }
+                    .clickable { onMonthSelected(month) }
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = monthAbbreviations[index],
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSurface
+                )
             }
         }
     }
@@ -1157,36 +1153,30 @@ fun CalendarDaySelector(
                             val isSelected = day == selectedDay
                             val isToday = LocalDate(year, month, day) == today
                             
-                            Card(
+                            Box(
                                 modifier = Modifier
                                     .size(40.dp)
-                                    .clickable { onDaySelected(day) },
-                                colors = CardDefaults.cardColors(
-                                    containerColor = when {
-                                        isSelected -> MaterialTheme.colorScheme.primary
-                                        isToday -> MaterialTheme.colorScheme.primaryContainer
-                                        else -> MaterialTheme.colorScheme.surface
-                                    }
-                                ),
-                                elevation = CardDefaults.cardElevation(
-                                    defaultElevation = if (isSelected || isToday) 4.dp else 1.dp
-                                )
-                            ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = day.toString(),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = when {
-                                            isSelected -> MaterialTheme.colorScheme.onPrimary
-                                            isToday -> MaterialTheme.colorScheme.onPrimaryContainer
-                                            else -> MaterialTheme.colorScheme.onSurface
-                                        },
-                                        fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(
+                                        when {
+                                            isSelected -> MaterialTheme.colorScheme.primary
+                                            isToday -> MaterialTheme.colorScheme.primaryContainer
+                                            else -> Color.Transparent
+                                        }
                                     )
-                                }
+                                    .clickable { onDaySelected(day) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = day.toString(),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = when {
+                                        isSelected -> MaterialTheme.colorScheme.onPrimary
+                                        isToday -> MaterialTheme.colorScheme.onPrimaryContainer
+                                        else -> MaterialTheme.colorScheme.onSurface
+                                    },
+                                    fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal
+                                )
                             }
                         }
                     }
@@ -1528,7 +1518,7 @@ fun SubCategorySelectionBottomSheet(
                 }
             }
 
-            LazyColumn {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(subCategories) { subCategory ->
                     SubCategoryItem(
                         title = "${subCategory.resolveEmoji()} ${subCategory.title}",

@@ -357,11 +357,13 @@ fun TransactionsScreenContent(
             date to transactions.sortedByDescending { it.id }
         }
 
+    val isEmpty = sortedGroups.isEmpty()
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        userScrollEnabled = sortedGroups.isNotEmpty()
+            .background(if (isEmpty) Color.Transparent else MaterialTheme.colorScheme.background),
+        userScrollEnabled = !isEmpty
     ) {
         if (sortedGroups.isNotEmpty()) {
             // Normal: show calendar + transactions

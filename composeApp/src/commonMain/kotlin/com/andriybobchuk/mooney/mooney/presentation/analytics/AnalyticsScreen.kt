@@ -33,6 +33,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
@@ -84,7 +85,7 @@ fun AnalyticsScreen(
         modifier = Modifier.background(MaterialTheme.colorScheme.background),
         topBar = {
             Toolbars.Primary(
-                title = "Analytics",
+                title = "${state.selectedMonth.toDisplayString()} Analytics",
                 scrollBehavior = scrollBehavior,
                 actions = listOf(
                     Toolbars.ToolBarAction(
@@ -114,7 +115,7 @@ fun AnalyticsScreen(
                         onMonthSelected = viewModel::onMonthSelected,
                         selectedPeriod = selectedTimePeriod,
                         onPeriodSelected = { selectedTimePeriod = it },
-                        modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 8.dp)
+                        modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 0.dp, bottom = 8.dp)
                     )
 
                     Column(
@@ -263,42 +264,78 @@ fun CategoryItem(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MonthPicker(
     selectedMonth: MonthKey,
     onMonthSelected: (MonthKey) -> Unit,
     monthRange: List<MonthKey> = generateRecentMonths(12)
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var showSheet by remember { mutableStateOf(false) }
 
-    Button(
-        onClick = { expanded = true },
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Transparent,
-            contentColor = MaterialTheme.colorScheme.onBackground
-        ),
-        contentPadding = PaddingValues(0.dp),
-        elevation = null
-    ) {
+    IconButton(onClick = { showSheet = true }) {
         Icon(
             Icons.Default.DateRange,
             contentDescription = "Select Month",
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(22.dp),
+            tint = MaterialTheme.colorScheme.onBackground
         )
     }
 
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = { expanded = false }
-    ) {
-        monthRange.forEach { month ->
-            DropdownMenuItem(
-                text = { Text(month.toDisplayString()) },
-                onClick = {
-                    onMonthSelected(month)
-                    expanded = false
+    if (showSheet) {
+        MooneyBottomSheet(
+            onDismissRequest = { showSheet = false }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
+            ) {
+                Text(
+                    text = "Select Month",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                monthRange.forEach { month ->
+                    val isSelected = month == selectedMonth
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                                else Color.Transparent
+                            )
+                            .clickable {
+                                onMonthSelected(month)
+                                showSheet = false
+                            }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = month.toDisplayString(),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface
+                        )
+                        if (isSelected) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.primary,
+                                        androidx.compose.foundation.shape.CircleShape
+                                    )
+                            )
+                        }
+                    }
                 }
-            )
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
     }
 }
@@ -327,20 +364,20 @@ fun EnhancedMetricCard(
                     .clip(androidx.compose.foundation.shape.CircleShape)
                     .background(Color(metric.color))
             )
-            
+
             Spacer(modifier = Modifier.width(12.dp))
-            
+
             // Metric info
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = metric.title,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = metric.value,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    style = MaterialTheme.typography.titleMedium
                 )
                 metric.subtitle?.let {
                     Spacer(modifier = Modifier.height(2.dp))
@@ -351,25 +388,23 @@ fun EnhancedMetricCard(
                     )
                 }
             }
-            
-            // Trend arrow
+
+            // Trend pill
             if (metric.trendPercentage != 0.0) {
                 val isPositive = metric.trendPercentage > 0
-                val trendColor = if (isPositive) Color(0xFF4CAF50) else Color(0xFFF44336)
-                val arrow = if (isPositive) "↗" else "↘"
-                
-                Column(
-                    horizontalAlignment = Alignment.End
+                val pillColor = if (isPositive) Color(0xFF16A34A) else Color(0xFFDC2626)
+                val sign = if (isPositive) "+" else ""
+                val value = kotlin.math.round(metric.trendPercentage * 10) / 10
+
+                Box(
+                    modifier = Modifier
+                        .background(pillColor, RoundedCornerShape(50))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
-                        text = arrow,
-                        fontSize = 20.sp,
-                        color = trendColor
-                    )
-                    Text(
-                        text = "${if (isPositive) "+" else ""}${kotlin.math.round(metric.trendPercentage * 10) / 10}%",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = trendColor
+                        text = "$sign$value%",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White
                     )
                 }
             }

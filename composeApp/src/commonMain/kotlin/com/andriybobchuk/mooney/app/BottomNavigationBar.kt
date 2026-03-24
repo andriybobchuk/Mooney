@@ -1,5 +1,6 @@
 package com.andriybobchuk.mooney.app
 
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -26,7 +27,8 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
 
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = 0.dp
+        tonalElevation = 0.dp,
+        modifier = Modifier.height(64.dp)
     ) {
         allItems.forEachIndexed { _, (item, route, originalIndex) ->
             NavigationBarItem(

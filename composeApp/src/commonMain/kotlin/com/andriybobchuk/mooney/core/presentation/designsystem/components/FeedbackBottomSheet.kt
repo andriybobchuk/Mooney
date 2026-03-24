@@ -59,8 +59,8 @@ fun FeedbackBottomSheet(
             ContactRow(
                 emoji = "\uD83D\uDCF8",
                 label = "Instagram",
-                value = "@andriybobchuk",
-                onClick = { uriHandler.openUri("https://instagram.com/andriybobchuk") }
+                value = "@andriybobchuk.bro",
+                onClick = { uriHandler.openUri("https://instagram.com/andriybobchuk.bro") }
             )
             ContactRow(
                 emoji = "\u2708\uFE0F",
@@ -77,7 +77,7 @@ fun FeedbackBottomSheet(
             ContactRow(
                 emoji = "\uD83C\uDFAE",
                 label = "Discord",
-                value = "andriybobchuk",
+                value = "andriibobchuk",
                 onClick = { }
             )
 

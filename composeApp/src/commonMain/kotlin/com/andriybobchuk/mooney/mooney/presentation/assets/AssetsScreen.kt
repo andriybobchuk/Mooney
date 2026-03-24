@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -17,6 +16,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
@@ -430,82 +430,33 @@ private fun AssetCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AssetSheet(
     editingAsset: UiAsset? = null,
     onAdd: (String, String, Double, Currency, AssetCategory) -> Unit
 ) {
     var title by remember { mutableStateOf(editingAsset?.title ?: "") }
-    var emoji by remember { mutableStateOf(editingAsset?.emoji ?: "💰") }
     var amount by remember { mutableStateOf(editingAsset?.originalAmount?.formatWithCommas() ?: "") }
     var selectedCurrency by remember { mutableStateOf(editingAsset?.originalCurrency ?: GlobalConfig.baseCurrency) }
     var selectedCategory by remember { mutableStateOf(editingAsset?.assetCategory ?: AssetCategory.BANK_ACCOUNT) }
+    var showCategorySheet by remember { mutableStateOf(false) }
+    var showCurrencySheet by remember { mutableStateOf(false) }
 
-    val currencies = Currency.entries.toList()
-    val categories = AssetCategory.entries.toList()
-
-    Column(modifier = Modifier.padding(20.dp)) {
+    Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
         Text(
             text = if (editingAsset != null) "Edit Asset" else "Add New Asset",
-            fontWeight = FontWeight.Medium,
-            fontSize = 20.sp
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
-        Spacer(Modifier.height(16.dp))
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MooneyTextField(
-                modifier = Modifier.width(80.dp),
-                value = emoji,
-                onValueChange = {
-                    if (it.length <= 2) emoji = it
-                },
-                label = "Icon",
-                singleLine = true
-            )
-
-            MooneyTextField(
-                modifier = Modifier.weight(1f),
-                value = title,
-                onValueChange = {
-                    if (it.length <= 24) title = it
-                },
-                label = "Title",
-                singleLine = true
-            )
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        // Asset Category Selection
-        Text(
-            text = "Category",
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(vertical = 8.dp)
+        MooneyTextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = title,
+            onValueChange = { if (it.length <= 24) title = it },
+            label = "Title",
+            singleLine = true
         )
-        
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            items(categories) { category ->
-                FilterChip(
-                    selected = selectedCategory == category,
-                    onClick = { selectedCategory = category },
-                    label = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(category.emoji)
-                            Text(category.displayName, fontSize = 12.sp)
-                        }
-                    },
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Color(category.color).copy(alpha = 0.2f)
-                    )
-                )
-            }
-        }
 
         Spacer(Modifier.height(12.dp))
 
@@ -513,37 +464,56 @@ private fun AssetSheet(
             modifier = Modifier.fillMaxWidth(),
             value = amount,
             onValueChange = { amount = it },
-            label = "Amount",
+            label = "Value",
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal),
             singleLine = true
         )
 
         Spacer(Modifier.height(12.dp))
 
-        // Currency dropdown
-        var currencyExpanded by remember { mutableStateOf(false) }
-        Box {
-            MooneyButton(
-                text = "Currency: ${selectedCurrency.name}",
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { currencyExpanded = true },
-                variant = ButtonVariant.SECONDARY
+        // Category selector row
+        Text("Category", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .clickable { showCategorySheet = true }
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(selectedCategory.displayName, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
             )
-
-            DropdownMenu(expanded = currencyExpanded, onDismissRequest = { currencyExpanded = false }) {
-                currencies.forEach { currency ->
-                    DropdownMenuItem(
-                        text = { Text(currency.name) },
-                        onClick = {
-                            selectedCurrency = currency
-                            currencyExpanded = false
-                        }
-                    )
-                }
-            }
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(12.dp))
+
+        // Currency selector row
+        Text("Currency", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .clickable { showCurrencySheet = true }
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("${selectedCurrency.symbol}  ${selectedCurrency.name}", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        Spacer(Modifier.height(20.dp))
 
         MooneyButton(
             text = if (editingAsset != null) "Update Asset" else "Add Asset",
@@ -551,12 +521,90 @@ private fun AssetSheet(
             variant = ButtonVariant.PRIMARY,
             onClick = {
                 val amt = amount.replace(",", "").toDoubleOrNull() ?: 0.0
-                onAdd(title, emoji, amt, selectedCurrency, selectedCategory)
+                onAdd(title, selectedCategory.emoji, amt, selectedCurrency, selectedCategory)
             },
             enabled = title.isNotBlank() && amount.isNotBlank()
         )
-        
+
         Spacer(Modifier.height(20.dp))
+    }
+
+    // Category bottom sheet
+    if (showCategorySheet) {
+        MooneyBottomSheet(onDismissRequest = { showCategorySheet = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
+            ) {
+                Text("Select Category", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                AssetCategory.entries.forEach { category ->
+                    val isSelected = selectedCategory == category
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                            .clickable { selectedCategory = category; showCategorySheet = false }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(category.emoji, fontSize = 20.sp, modifier = Modifier.padding(end = 12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(category.displayName, style = MaterialTheme.typography.bodyLarge, color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                            Text(category.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        if (isSelected) {
+                            Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.primary, androidx.compose.foundation.shape.CircleShape))
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+        }
+    }
+
+    // Currency bottom sheet
+    if (showCurrencySheet) {
+        MooneyBottomSheet(onDismissRequest = { showCurrencySheet = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
+            ) {
+                Text("Select Currency", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                Currency.entries.forEach { currency ->
+                    val isSelected = selectedCurrency == currency
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                            .clickable { selectedCurrency = currency; showCurrencySheet = false }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = currency.symbol,
+                            fontSize = 24.sp,
+                            modifier = Modifier.padding(end = 16.dp)
+                        )
+                        Text(
+                            text = currency.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(Modifier.weight(1f))
+                        if (isSelected) {
+                            Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.primary, androidx.compose.foundation.shape.CircleShape))
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+        }
     }
 }
 

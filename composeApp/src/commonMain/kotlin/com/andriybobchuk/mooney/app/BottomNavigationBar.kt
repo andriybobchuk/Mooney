@@ -50,7 +50,7 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
                     Icon(
                         painter = item.icon,
                         contentDescription = item.title,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(

@@ -25,9 +25,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -49,8 +46,6 @@ import androidx.compose.material3.ModalBottomSheet
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Card
@@ -1235,33 +1230,101 @@ data class CalendarData(
 )
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AccountField(
     initialSelectedAccount: Account?,
     accounts: List<UiAccount>,
     onAccountSelected: (Account) -> Unit
 ) {
-    var optionsExpanded by remember { mutableStateOf(false) }
-    MooneyButton(
-        text = initialSelectedAccount?.let { "${it.emoji} ${it.title} (${it.amount.formatWithCommas()} ${it.currency.symbol})" }
-            ?: "Select Account",
-        onClick = { optionsExpanded = true },
-        modifier = Modifier.fillMaxWidth(),
-        variant = ButtonVariant.SECONDARY
-    )
+    var showAccountSheet by remember { mutableStateOf(false) }
 
-    DropdownMenu(
-        expanded = optionsExpanded,
-        onDismissRequest = { optionsExpanded = false }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable { showAccountSheet = true }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        accounts.toAccounts().forEach { account ->
-            DropdownMenuItem(
-                text = { Text("${account.emoji} ${account.title} (${account.amount.formatWithCommas()} ${account.currency.symbol})") },
-                onClick = {
-                    onAccountSelected(account)
-                    optionsExpanded = false
-                }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = initialSelectedAccount?.title ?: "Select Account",
+                style = MaterialTheme.typography.bodyLarge
             )
+            initialSelectedAccount?.let {
+                Text(
+                    text = "${it.amount.formatWithCommas()} ${it.currency.symbol}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+
+    if (showAccountSheet) {
+        MooneyBottomSheet(onDismissRequest = { showAccountSheet = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
+            ) {
+                Text(
+                    text = "Select Account",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                accounts.toAccounts().forEach { account ->
+                    val isSelected = account.id == initialSelectedAccount?.id
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                                else Color.Transparent
+                            )
+                            .clickable {
+                                onAccountSelected(account)
+                                showAccountSheet = false
+                            }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = account.title,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "${account.amount.formatWithCommas()} ${account.currency.symbol}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (isSelected) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
     }
 }
@@ -1292,22 +1355,40 @@ fun CategorySelectionBottomSheet(
         Column(Modifier.padding(20.dp).fillMaxSize()) {
             Text(
                 text = "Select Category",
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 fontSize = 20.sp,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            TabRow(selectedTabIndex = selectedTabIndex) {
-                Tab(
-                    selected = selectedTabIndex == 0,
-                    onClick = { selectedTabIndex = 0 },
-                    text = { Text("Expense") }
-                )
-                Tab(
-                    selected = selectedTabIndex == 1,
-                    onClick = { selectedTabIndex = 1 },
-                    text = { Text("Income") }
-                )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                listOf("Expense" to 0, "Income" to 1).forEach { (label, index) ->
+                    val isSelected = selectedTabIndex == index
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(
+                                if (isSelected) MaterialTheme.colorScheme.surface
+                                else Color.Transparent
+                            )
+                            .clickable { selectedTabIndex = index }
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (isSelected) MaterialTheme.colorScheme.onSurface
+                            else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -1315,24 +1396,22 @@ fun CategorySelectionBottomSheet(
             val filteredCategories by remember {
                 derivedStateOf {
                     val categoryType = if (selectedTabIndex == 0) CategoryType.EXPENSE else CategoryType.INCOME
-                    categories.filter { 
-                        it.isGeneralCategory() && it.type == categoryType 
+                    categories.filter {
+                        it.isGeneralCategory() && it.type == categoryType
                     }
                 }
             }
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 items(filteredCategories) { category ->
                     CategoryCard(
                         category = category,
                         isSelected = category.id == initialSelectedCategory?.id,
                         onClick = {
-                            val hasSubCategories = categories.any { 
-                                it.isSubCategory() && it.parent?.id == category.id 
+                            val hasSubCategories = categories.any {
+                                it.isSubCategory() && it.parent?.id == category.id
                             }
                             if (hasSubCategories) {
                                 selectedParentCategory = category
@@ -1375,36 +1454,35 @@ fun CategoryCard(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    Card(
+    Row(
         modifier = Modifier
-            .aspectRatio(1f)
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) 
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) 
-            else 
-                MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = category.emoji ?: "📋",
-                fontSize = 32.sp,
-                modifier = Modifier.padding(bottom = 4.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                else MaterialTheme.colorScheme.surfaceVariant
             )
-            Text(
-                text = category.title,
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = category.emoji ?: "",
+            fontSize = 22.sp,
+            modifier = Modifier.padding(end = 12.dp)
+        )
+        Text(
+            text = category.title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (isSelected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        if (isSelected) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .background(MaterialTheme.colorScheme.primary, CircleShape)
             )
         }
     }
@@ -1428,7 +1506,7 @@ fun SubCategorySelectionBottomSheet(
         Column(Modifier.padding(20.dp).fillMaxSize()) {
             Text(
                 text = "Select ${parentCategory.title}",
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 fontSize = 20.sp,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
@@ -1474,20 +1552,21 @@ fun SubCategoryItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .clip(RoundedCornerShape(12.dp))
             .background(
-                if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                else Color.Transparent,
-                RoundedCornerShape(8.dp)
+                if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                else MaterialTheme.colorScheme.surfaceVariant
             )
-            .padding(16.dp),
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                color = if (isSelected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurface
             )
             if (subtitle != null) {
                 Text(
@@ -1497,13 +1576,11 @@ fun SubCategoryItem(
                 )
             }
         }
-        
         if (isSelected) {
-            Icon(
-                Icons.Default.Add, // You might want to use a checkmark icon
-                contentDescription = "Selected",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .background(MaterialTheme.colorScheme.primary, CircleShape)
             )
         }
     }
@@ -2072,104 +2149,38 @@ fun TransactionTypeSwitch(
     onTypeSelected: (CategoryType) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.appColors.cardBackground
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(3.dp),
-            horizontalArrangement = Arrangement.spacedBy(3.dp)
-        ) {
-            // Expense option
-            TransactionTypeOption(
-                type = CategoryType.EXPENSE,
-                label = "Expense",
-                emoji = "💸",
-                isSelected = selectedType == CategoryType.EXPENSE,
-                onClick = { onTypeSelected(CategoryType.EXPENSE) },
-                modifier = Modifier.weight(1f)
-            )
-            
-            // Income option
-            TransactionTypeOption(
-                type = CategoryType.INCOME,
-                label = "Income",
-                emoji = "💰",
-                isSelected = selectedType == CategoryType.INCOME,
-                onClick = { onTypeSelected(CategoryType.INCOME) },
-                modifier = Modifier.weight(1f)
-            )
-            
-            // Transfer option
-            TransactionTypeOption(
-                type = CategoryType.TRANSFER,
-                label = "Transfer",
-                emoji = "↔️",
-                isSelected = selectedType == CategoryType.TRANSFER,
-                onClick = { onTypeSelected(CategoryType.TRANSFER) },
-                modifier = Modifier.weight(1f)
-            )
-        }
-    }
-}
-
-@Composable
-private fun TransactionTypeOption(
-    type: CategoryType,
-    label: String,
-    emoji: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val backgroundColor = if (isSelected) {
-        when (type) {
-            CategoryType.EXPENSE -> MaterialTheme.appColors.expenseColor.copy(alpha = 0.2f)
-            CategoryType.INCOME -> MaterialTheme.appColors.incomeColor.copy(alpha = 0.2f)
-            CategoryType.TRANSFER -> MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-        }
-    } else {
-        Color.Transparent
-    }
-    
-    val textColor = if (isSelected) {
-        when (type) {
-            CategoryType.EXPENSE -> MaterialTheme.appColors.expenseColor
-            CategoryType.INCOME -> MaterialTheme.appColors.incomeColor
-            CategoryType.TRANSFER -> MaterialTheme.colorScheme.primary
-        }
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    
-    Box(
+    Row(
         modifier = modifier
-            .clip(RoundedCornerShape(7.dp))
-            .background(backgroundColor)
-            .clickable { onClick() }
-            .padding(vertical = 8.dp, horizontal = 4.dp),
-        contentAlignment = Alignment.Center
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = emoji,
-                fontSize = 16.sp
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = textColor,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-            )
+        listOf(
+            CategoryType.EXPENSE to "Expense",
+            CategoryType.INCOME to "Income",
+            CategoryType.TRANSFER to "Transfer"
+        ).forEach { (type, label) ->
+            val isSelected = selectedType == type
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(
+                        if (isSelected) MaterialTheme.colorScheme.surface
+                        else Color.Transparent
+                    )
+                    .clickable { onTypeSelected(type) }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (isSelected) MaterialTheme.colorScheme.onSurface
+                    else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

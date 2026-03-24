@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.andriybobchuk.mooney.core.presentation.theme.AppColorsExtended
 import com.andriybobchuk.mooney.core.presentation.theme.AppTheme
+import com.andriybobchuk.mooney.core.presentation.theme.MooneyTypography
 import com.andriybobchuk.mooney.core.presentation.theme.ThemeManager
 import com.andriybobchuk.mooney.core.presentation.theme.getAppColorsForTheme
 import com.andriybobchuk.mooney.core.presentation.theme.getColorSchemeForTheme
@@ -20,7 +21,6 @@ val LocalAppColors = staticCompositionLocalOf<AppColorsExtended> {
     error("No AppColors provided")
 }
 
-// Extension property to access custom colors easily
 val MaterialTheme.appColors: AppColorsExtended
     @Composable
     get() = LocalAppColors.current
@@ -30,19 +30,20 @@ val MaterialTheme.appColors: AppColorsExtended
 fun App() {
     val themeManager: ThemeManager = koinInject()
     val themeMode by themeManager.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
-    val appTheme by themeManager.currentAppTheme.collectAsState(initial = AppTheme.PURPLE)
+    val appTheme by themeManager.currentAppTheme.collectAsState(initial = AppTheme.BLUE)
     val systemInDarkTheme = isSystemInDarkTheme()
-    
+
     val isDarkMode = themeManager.isSystemInDarkTheme(systemInDarkTheme, themeMode)
     val colorScheme = getColorSchemeForTheme(appTheme, isDarkMode)
     val appColors = getAppColorsForTheme(appTheme, isDarkMode)
-    
+    val typography = MooneyTypography()
+
     CompositionLocalProvider(LocalAppColors provides appColors) {
         MaterialTheme(
-            colorScheme = colorScheme
+            colorScheme = colorScheme,
+            typography = typography
         ) {
             NavigationHost()
         }
     }
 }
-

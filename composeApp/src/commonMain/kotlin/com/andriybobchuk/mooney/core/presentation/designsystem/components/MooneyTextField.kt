@@ -14,7 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -29,7 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -38,17 +36,11 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.andriybobchuk.mooney.core.presentation.designsystem.MooneyDesignSystem
 
-/**
- * Text field variants
- */
 enum class TextFieldVariant {
-    OUTLINED,  // Default outlined style
-    FILLED     // Filled background style
+    OUTLINED,
+    FILLED
 }
 
-/**
- * Primary text input component for Mooney
- */
 @Composable
 fun MooneyTextField(
     value: String,
@@ -74,7 +66,8 @@ fun MooneyTextField(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
-    
+    val hasError = isError || errorText != null
+
     Column(modifier = modifier) {
         when (variant) {
             TextFieldVariant.OUTLINED -> {
@@ -84,51 +77,43 @@ fun MooneyTextField(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = enabled,
                     readOnly = readOnly,
-                    textStyle = MooneyDesignSystem.Typography.BodyLarge,
+                    textStyle = MaterialTheme.typography.bodyLarge,
                     label = label?.let { { Text(it) } },
-                    placeholder = placeholder?.let { { 
+                    placeholder = placeholder?.let { {
                         Text(
                             text = it,
-                            style = MooneyDesignSystem.Typography.BodyLarge,
-                            color = MooneyDesignSystem.Colors.Disabled
-                        ) 
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     } },
                     leadingIcon = leadingIcon?.let { {
                         Icon(
                             imageVector = it,
                             contentDescription = null,
-                            tint = if (isFocused) MooneyDesignSystem.Colors.Primary 
-                                   else MooneyDesignSystem.Colors.Disabled
+                            tint = if (isFocused) MaterialTheme.colorScheme.secondary
+                            else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     } },
                     trailingIcon = {
                         if (showClearButton && value.isNotEmpty() && enabled) {
-                            IconButton(
-                                onClick = { onValueChange("") }
-                            ) {
+                            IconButton(onClick = { onValueChange("") }) {
                                 Icon(
                                     imageVector = Icons.Default.Clear,
                                     contentDescription = "Clear",
-                                    tint = MooneyDesignSystem.Colors.Disabled
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         } else if (trailingIcon != null) {
                             if (onTrailingIconClick != null) {
                                 IconButton(onClick = onTrailingIconClick) {
-                                    Icon(
-                                        imageVector = trailingIcon,
-                                        contentDescription = null
-                                    )
+                                    Icon(imageVector = trailingIcon, contentDescription = null)
                                 }
                             } else {
-                                Icon(
-                                    imageVector = trailingIcon,
-                                    contentDescription = null
-                                )
+                                Icon(imageVector = trailingIcon, contentDescription = null)
                             }
                         }
                     },
-                    isError = isError || errorText != null,
+                    isError = hasError,
                     visualTransformation = visualTransformation,
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,
@@ -137,16 +122,18 @@ fun MooneyTextField(
                     interactionSource = interactionSource,
                     shape = MooneyDesignSystem.Shapes.textField,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MooneyDesignSystem.Colors.Primary,
-                        unfocusedBorderColor = MooneyDesignSystem.Colors.Divider,
-                        errorBorderColor = MooneyDesignSystem.Colors.Error,
-                        focusedLabelColor = MooneyDesignSystem.Colors.Primary,
-                        unfocusedLabelColor = MooneyDesignSystem.Colors.Disabled,
-                        errorLabelColor = MooneyDesignSystem.Colors.Error
+                        focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        errorBorderColor = MaterialTheme.colorScheme.error,
+                        focusedLabelColor = MaterialTheme.colorScheme.secondary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        errorLabelColor = MaterialTheme.colorScheme.error,
+                        disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                     )
                 )
             }
-            
+
             TextFieldVariant.FILLED -> {
                 TextField(
                     value = value,
@@ -154,51 +141,43 @@ fun MooneyTextField(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = enabled,
                     readOnly = readOnly,
-                    textStyle = MooneyDesignSystem.Typography.BodyLarge,
+                    textStyle = MaterialTheme.typography.bodyLarge,
                     label = label?.let { { Text(it) } },
-                    placeholder = placeholder?.let { { 
+                    placeholder = placeholder?.let { {
                         Text(
                             text = it,
-                            style = MooneyDesignSystem.Typography.BodyLarge,
-                            color = MooneyDesignSystem.Colors.Disabled
-                        ) 
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     } },
                     leadingIcon = leadingIcon?.let { {
                         Icon(
                             imageVector = it,
                             contentDescription = null,
-                            tint = if (isFocused) MooneyDesignSystem.Colors.Primary 
-                                   else MooneyDesignSystem.Colors.Disabled
+                            tint = if (isFocused) MaterialTheme.colorScheme.secondary
+                            else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     } },
                     trailingIcon = {
                         if (showClearButton && value.isNotEmpty() && enabled) {
-                            IconButton(
-                                onClick = { onValueChange("") }
-                            ) {
+                            IconButton(onClick = { onValueChange("") }) {
                                 Icon(
                                     imageVector = Icons.Default.Clear,
                                     contentDescription = "Clear",
-                                    tint = MooneyDesignSystem.Colors.Disabled
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         } else if (trailingIcon != null) {
                             if (onTrailingIconClick != null) {
                                 IconButton(onClick = onTrailingIconClick) {
-                                    Icon(
-                                        imageVector = trailingIcon,
-                                        contentDescription = null
-                                    )
+                                    Icon(imageVector = trailingIcon, contentDescription = null)
                                 }
                             } else {
-                                Icon(
-                                    imageVector = trailingIcon,
-                                    contentDescription = null
-                                )
+                                Icon(imageVector = trailingIcon, contentDescription = null)
                             }
                         }
                     },
-                    isError = isError || errorText != null,
+                    isError = hasError,
                     visualTransformation = visualTransformation,
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,
@@ -206,19 +185,18 @@ fun MooneyTextField(
                     maxLines = maxLines,
                     interactionSource = interactionSource,
                     shape = MooneyDesignSystem.Shapes.textField,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MooneyDesignSystem.Colors.Primary,
-                        unfocusedBorderColor = MooneyDesignSystem.Colors.Surface,
-                        errorBorderColor = MooneyDesignSystem.Colors.Error,
-                        focusedLabelColor = MooneyDesignSystem.Colors.Primary,
-                        unfocusedLabelColor = MooneyDesignSystem.Colors.Disabled,
-                        errorLabelColor = MooneyDesignSystem.Colors.Error
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        errorIndicatorColor = MaterialTheme.colorScheme.error,
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                     )
                 )
             }
         }
-        
-        // Helper or error text
+
         AnimatedVisibility(
             visible = errorText != null || helperText != null,
             enter = fadeIn(),
@@ -226,18 +204,15 @@ fun MooneyTextField(
         ) {
             Text(
                 text = errorText ?: helperText ?: "",
-                style = MooneyDesignSystem.Typography.BodySmall,
-                color = if (errorText != null) MooneyDesignSystem.Colors.Error 
-                        else MooneyDesignSystem.Colors.Disabled,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (errorText != null) MaterialTheme.colorScheme.error
+                else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 16.dp, top = 4.dp)
             )
         }
     }
 }
 
-/**
- * Specialized password field with visibility toggle
- */
 @Composable
 fun MooneyPasswordField(
     value: String,
@@ -253,7 +228,7 @@ fun MooneyPasswordField(
     keyboardActions: KeyboardActions = KeyboardActions.Default
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
-    
+
     MooneyTextField(
         value = value,
         onValueChange = onValueChange,
@@ -269,17 +244,11 @@ fun MooneyPasswordField(
         onTrailingIconClick = { passwordVisible = !passwordVisible },
         variant = variant,
         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Password,
-            imeAction = ImeAction.Done
-        ),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
         keyboardActions = keyboardActions
     )
 }
 
-/**
- * Specialized amount/currency input field
- */
 @Composable
 fun MooneyAmountField(
     value: String,
@@ -298,7 +267,6 @@ fun MooneyAmountField(
     MooneyTextField(
         value = value,
         onValueChange = { newValue ->
-            // Only allow numbers and decimal point
             if (newValue.isEmpty() || newValue.matches(Regex("^\\d*\\.?\\d*$"))) {
                 onValueChange(newValue)
             }
@@ -311,19 +279,12 @@ fun MooneyAmountField(
         isError = isError,
         enabled = enabled,
         singleLine = true,
-        leadingIcon = null,
         variant = variant,
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Decimal,
-            imeAction = ImeAction.Done
-        ),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
         keyboardActions = keyboardActions
     )
 }
 
-/**
- * Search field with search icon and clear button
- */
 @Composable
 fun MooneySearchField(
     value: String,
@@ -340,15 +301,10 @@ fun MooneySearchField(
         placeholder = placeholder,
         enabled = enabled,
         singleLine = true,
-        leadingIcon = Icons.Default.Clear, // Replace with search icon
+        leadingIcon = Icons.Default.Clear,
         showClearButton = true,
         variant = TextFieldVariant.FILLED,
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Text,
-            imeAction = ImeAction.Search
-        ),
-        keyboardActions = KeyboardActions(
-            onSearch = { onSearch() }
-        )
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { onSearch() })
     )
 }

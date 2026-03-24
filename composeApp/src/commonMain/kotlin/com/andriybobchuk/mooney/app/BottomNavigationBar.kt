@@ -1,6 +1,7 @@
 package com.andriybobchuk.mooney.app
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.andriybobchuk.mooney.core.presentation.Icons
@@ -50,14 +51,15 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 6.dp)
-                .shadow(
-                    elevation = 12.dp,
-                    shape = RoundedCornerShape(22.dp),
-                    ambientColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),
-                    spotColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
-                )
                 .clip(RoundedCornerShape(22.dp))
                 .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.82f))
+                .then(
+                    Modifier.border(
+                        width = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(22.dp)
+                    )
+                )
         ) {
             Row(
                 modifier = Modifier

@@ -31,7 +31,8 @@ object Toolbars {
         onBackClick: () -> Unit = {},
         scrollBehavior: TopAppBarScrollBehavior,
         actions: List<ToolBarAction> = emptyList(),
-        customContent: @Composable (() -> Unit)? = null
+        customContent: @Composable (() -> Unit)? = null,
+        containerColor: Color = MaterialTheme.colorScheme.background
     ) {
         TopAppBar(
             title = {
@@ -60,8 +61,8 @@ object Toolbars {
             modifier = modifier,
             scrollBehavior = scrollBehavior,
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background,
-                scrolledContainerColor = MaterialTheme.colorScheme.background,
+                containerColor = containerColor,
+                scrolledContainerColor = containerColor,
                 titleContentColor = MaterialTheme.colorScheme.onBackground,
                 actionIconContentColor = MaterialTheme.colorScheme.onBackground,
                 navigationIconContentColor = MaterialTheme.colorScheme.onBackground

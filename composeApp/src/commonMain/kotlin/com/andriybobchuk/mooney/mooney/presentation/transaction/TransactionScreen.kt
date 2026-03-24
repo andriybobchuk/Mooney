@@ -129,11 +129,17 @@ fun TransactionsScreen(
     var transactionToEdit by remember { mutableStateOf<Transaction?>(null) }
     var preselectedCategory by remember { mutableStateOf<Category?>(null) }
 
+    val hasTransactions = transactions.filterNotNull().isNotEmpty()
+    val hasAccounts = state.accounts.filterNotNull().isNotEmpty()
+    val isEmptyState = !hasTransactions
+
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
+        containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
         modifier = Modifier.background(MaterialTheme.colorScheme.background),
         topBar = {
             Toolbars.Primary(
+                containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
                 titleContent = {
                     Column(
                         modifier = Modifier.clickable { viewModel.onTotalCurrencyClick() }
@@ -375,7 +381,7 @@ fun TransactionsScreenContent(
 
                         Text(
                             text = "Let's get started",
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.headlineSmall,
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(12.dp))
@@ -482,7 +488,7 @@ fun TransactionsScreenContent(
 
                         Text(
                             text = "No transactions this month",
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.headlineSmall,
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(8.dp))

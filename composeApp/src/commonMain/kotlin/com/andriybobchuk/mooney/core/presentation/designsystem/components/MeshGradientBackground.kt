@@ -14,57 +14,45 @@ fun MeshGradientBackground(
     modifier: Modifier = Modifier
 ) {
     val primary = MaterialTheme.colorScheme.primary
-    val blob1 = primary.copy(alpha = 0.12f)
-    val blob2 = primary.copy(alpha = 0.08f)
-    val blob3 = primary.copy(alpha = 0.15f)
+    val blob1 = primary.copy(alpha = 0.14f)
+    val blob2 = primary.copy(alpha = 0.10f)
     val transparent = Color.Transparent
 
     Canvas(modifier = modifier.fillMaxSize()) {
         val w = size.width
         val h = size.height
 
-        // Large top-left blob
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(blob3, transparent),
-                center = Offset(w * 0.1f, h * 0.15f),
-                radius = w * 0.6f
-            ),
-            radius = w * 0.6f,
-            center = Offset(w * 0.1f, h * 0.15f)
-        )
-
-        // Medium center-right blob
+        // Top-left blob
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(blob1, transparent),
-                center = Offset(w * 0.85f, h * 0.35f),
+                center = Offset(w * 0.1f, h * 0.15f),
+                radius = w * 0.55f
+            ),
+            radius = w * 0.55f,
+            center = Offset(w * 0.1f, h * 0.15f)
+        )
+
+        // Center-right blob
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(blob2, transparent),
+                center = Offset(w * 0.85f, h * 0.45f),
                 radius = w * 0.5f
             ),
             radius = w * 0.5f,
-            center = Offset(w * 0.85f, h * 0.35f)
+            center = Offset(w * 0.85f, h * 0.45f)
         )
 
         // Bottom-left blob
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(blob2, transparent),
-                center = Offset(w * 0.25f, h * 0.7f),
+                colors = listOf(blob1, transparent),
+                center = Offset(w * 0.3f, h * 0.8f),
                 radius = w * 0.45f
             ),
             radius = w * 0.45f,
-            center = Offset(w * 0.25f, h * 0.7f)
-        )
-
-        // Bottom-right accent blob
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(blob3, transparent),
-                center = Offset(w * 0.75f, h * 0.8f),
-                radius = w * 0.35f
-            ),
-            radius = w * 0.35f,
-            center = Offset(w * 0.75f, h * 0.8f)
+            center = Offset(w * 0.3f, h * 0.8f)
         )
     }
 }

@@ -88,11 +88,17 @@ fun AnalyticsScreen(
     var selectedTimePeriod by remember { mutableStateOf(TimePeriod.SIX_MONTHS) }
     var showFeedbackSheet by remember { mutableStateOf(false) }
 
+    val hasAnyData = state.transactionsForMonth.filterNotNull().isNotEmpty() ||
+        state.historicalMetrics.any { it.revenue > 0 || it.taxes > 0 || it.operatingCosts > 0 || it.netIncome != 0.0 }
+    val isEmptyState = !hasAnyData && !state.isLoading
+
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
+        containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
         modifier = Modifier.background(MaterialTheme.colorScheme.background),
         topBar = {
             Toolbars.Primary(
+                containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
                 title = run {
                     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
                     if (state.selectedMonth.year == now.year) {
@@ -118,9 +124,7 @@ fun AnalyticsScreen(
         },
         bottomBar = { bottomNavbar() },
         content = { paddingValues ->
-            val hasAnyData = state.transactionsForMonth.filterNotNull().isNotEmpty() ||
-                state.historicalMetrics.any { it.revenue > 0 || it.taxes > 0 || it.operatingCosts > 0 || it.netIncome != 0.0 }
-            val isEmpty = !hasAnyData && !state.isLoading
+            val isEmpty = isEmptyState
 
             if (isEmpty) {
                 Box(
@@ -139,7 +143,7 @@ fun AnalyticsScreen(
 
                         Text(
                             text = "No analytics yet",
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.headlineSmall,
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(8.dp))

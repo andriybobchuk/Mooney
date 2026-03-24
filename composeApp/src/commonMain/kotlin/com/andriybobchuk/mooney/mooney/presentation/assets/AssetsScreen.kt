@@ -68,12 +68,16 @@ fun AssetsScreen(
     var editingAsset by remember { mutableStateOf<UiAsset?>(null) }
     var showFeedbackSheet by remember { mutableStateOf(false) }
 
+    val isEmptyState = assets.isEmpty()
+
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    
+
     Scaffold(
+        containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
         modifier = Modifier.background(MaterialTheme.colorScheme.background),
         topBar = {
             Toolbars.Primary(
+                containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
                 titleContent = {
                     Column(
                         modifier = Modifier.clickable { viewModel.onNetWorthLabelClick() }
@@ -191,8 +195,10 @@ private fun AssetsScreenContent(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 10.dp),
+            .then(
+                if (assets.isNotEmpty()) Modifier.padding(horizontal = 10.dp)
+                else Modifier
+            ),
         userScrollEnabled = assets.isNotEmpty()
     ) {
         if (assets.isEmpty()) {
@@ -210,7 +216,7 @@ private fun AssetsScreenContent(
 
                         Text(
                             text = "Welcome to Mooney",
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.headlineSmall,
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(8.dp))

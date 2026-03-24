@@ -136,7 +136,7 @@ fun TransactionsScreen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
         containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
-        modifier = Modifier.background(MaterialTheme.colorScheme.background),
+        modifier = Modifier.background(if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background),
         topBar = {
             Toolbars.Primary(
                 containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
@@ -203,12 +203,18 @@ fun TransactionsScreen(
             }
         },
         content = { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .fillMaxSize()
-            ) {
-                TransactionsScreenContent(
+            Box(modifier = Modifier.fillMaxSize()) {
+                // Mesh background behind everything (ignores paddingValues)
+                if (isEmptyState) {
+                    MeshGradientBackground()
+                }
+
+                Column(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize()
+                ) {
+                    TransactionsScreenContent(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -232,6 +238,7 @@ fun TransactionsScreen(
                             },
                             onNavigateToAssets = onNavigateToAssets,
                         )
+            }
             }
         }
     )
@@ -369,7 +376,6 @@ fun TransactionsScreenContent(
             // No accounts: show onboarding guide
             item {
                 Box(modifier = Modifier.fillParentMaxSize()) {
-                    MeshGradientBackground()
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -476,7 +482,6 @@ fun TransactionsScreenContent(
             // Has accounts but no transactions this month: simple empty state
             item {
                 Box(modifier = Modifier.fillParentMaxSize()) {
-                    MeshGradientBackground()
                     Column(
                         modifier = Modifier
                             .fillMaxSize()

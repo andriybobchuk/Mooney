@@ -95,7 +95,7 @@ fun AnalyticsScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
         containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
-        modifier = Modifier.background(MaterialTheme.colorScheme.background),
+        modifier = Modifier.background(if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background),
         topBar = {
             Toolbars.Primary(
                 containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,

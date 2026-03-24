@@ -74,7 +74,7 @@ fun AssetsScreen(
 
     Scaffold(
         containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
-        modifier = Modifier.background(MaterialTheme.colorScheme.background),
+        modifier = Modifier.background(if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background),
         topBar = {
             Toolbars.Primary(
                 containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
@@ -130,8 +130,12 @@ fun AssetsScreen(
             }
         },
         content = { paddingValues ->
-            AssetsScreenContent(
-                modifier = Modifier.padding(paddingValues),
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (isEmptyState) {
+                    MeshGradientBackground()
+                }
+                AssetsScreenContent(
+                    modifier = Modifier.padding(paddingValues),
                 assets = assets,
                 categoryOrder = state.categoryOrder,
                 expandedCategories = state.expandedCategories,
@@ -144,6 +148,7 @@ fun AssetsScreen(
                 onToggleCategory = { viewModel.toggleCategoryExpansion(it) },
                 onAddAsset = { showSheet = true }
             )
+            }
 
             if (showSheet) {
                 MooneyBottomSheet(
@@ -204,7 +209,6 @@ private fun AssetsScreenContent(
         if (assets.isEmpty()) {
             item {
                 Box(modifier = Modifier.fillParentMaxSize()) {
-                    MeshGradientBackground()
                     Column(
                         modifier = Modifier
                             .fillMaxSize()

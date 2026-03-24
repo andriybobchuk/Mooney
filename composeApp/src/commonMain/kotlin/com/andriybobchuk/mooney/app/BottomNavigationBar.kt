@@ -4,23 +4,23 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.andriybobchuk.mooney.core.presentation.Icons
@@ -36,38 +36,28 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
         if (FeatureFlags.goalsEnabled) add(Triple(BottomNavigationItem("Goals", Icons.GoalsIcon()), Route.Goals, 4))
     }
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(bottom = 12.dp),
-        contentAlignment = Alignment.Center
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
     ) {
         Row(
             modifier = Modifier
-                .shadow(
-                    elevation = 8.dp,
-                    shape = RoundedCornerShape(50),
-                    ambientColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                    spotColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-                )
-                .clip(RoundedCornerShape(50))
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f))
-                .padding(horizontal = 8.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                .fillMaxWidth()
+                .padding(top = 6.dp, bottom = 2.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             allItems.forEach { (item, route, originalIndex) ->
                 val isSelected = selectedItemIndex == originalIndex
+                val color = if (isSelected)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant
 
-                Box(
+                Column(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .then(
-                            if (isSelected) Modifier.background(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                            ) else Modifier
-                        )
+                        .weight(1f)
                         .clickable(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() }
@@ -75,21 +65,31 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
                             if (selectedItemIndex != originalIndex) {
                                 navController.navigate(route) { popUpTo(Route.MooneyGraph) }
                             }
-                        }
-                        .padding(horizontal = 18.dp, vertical = 10.dp),
-                    contentAlignment = Alignment.Center
+                        },
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
                         painter = item.icon,
                         contentDescription = item.title,
                         modifier = Modifier.size(22.dp),
-                        tint = if (isSelected)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = color
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = item.title,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = color,
+                        maxLines = 1
                     )
                 }
             }
         }
+
+        // Space for the iPhone home indicator
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars)
+        )
     }
 }

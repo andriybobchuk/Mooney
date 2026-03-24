@@ -25,6 +25,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -53,9 +54,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import com.andriybobchuk.mooney.app.appColors
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.presentation.Toolbars
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.FeedbackBottomSheet
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.AnalyticsMetric
 import com.andriybobchuk.mooney.mooney.domain.CategorySheetType
@@ -79,6 +82,7 @@ fun AnalyticsScreen(
 ) {
     val state by viewModel.state.collectAsState()
     var selectedTimePeriod by remember { mutableStateOf(TimePeriod.SIX_MONTHS) }
+    var showFeedbackSheet by remember { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
@@ -95,6 +99,11 @@ fun AnalyticsScreen(
                 },
                 scrollBehavior = scrollBehavior,
                 actions = listOf(
+                    Toolbars.ToolBarAction(
+                        icon = Icons.Default.Email,
+                        contentDescription = "Feedback",
+                        onClick = { showFeedbackSheet = true }
+                    ),
                     Toolbars.ToolBarAction(
                         icon = Icons.Default.Settings,
                         contentDescription = "Settings",
@@ -115,6 +124,30 @@ fun AnalyticsScreen(
                     .verticalScroll(scrollState)
                     .fillMaxSize()
             ) {
+                if (state.metrics.isEmpty() && state.historicalMetrics.isEmpty() && !state.isLoading) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 48.dp, horizontal = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(text = "\uD83D\uDCC8", fontSize = 64.sp, modifier = Modifier.padding(bottom = 16.dp))
+                        Text(
+                            text = "Analytics will appear here",
+                            style = MaterialTheme.typography.titleMedium,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Start adding transactions to see revenue, expenses, trends, and insights about your finances.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+                if (state.metrics.isNotEmpty() || state.historicalMetrics.isNotEmpty()) {
                     // Trend Chart
                     TrendChart(
                         historicalData = state.historicalMetrics,
@@ -136,6 +169,31 @@ fun AnalyticsScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
+
+                    // Partial month note
+                    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+                    if (state.selectedMonth.year == now.year && state.selectedMonth.month == now.monthNumber) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                                    RoundedCornerShape(12.dp)
+                                )
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("\uD83D\uDCCA", fontSize = 16.sp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Showing partial data \u2014 month is still in progress",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(32.dp))
             }
@@ -198,6 +256,10 @@ fun AnalyticsScreen(
             }
         }
     )
+
+    if (showFeedbackSheet) {
+        FeedbackBottomSheet(onDismiss = { showFeedbackSheet = false })
+    }
 }
 
 

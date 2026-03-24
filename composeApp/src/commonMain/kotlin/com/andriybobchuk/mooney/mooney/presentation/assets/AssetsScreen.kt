@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
@@ -22,6 +23,7 @@ import com.andriybobchuk.mooney.core.presentation.designsystem.components.Mooney
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyTextField
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyCard
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.FeedbackBottomSheet
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,6 +63,7 @@ fun AssetsScreen(
     val scope = rememberCoroutineScope()
     var showSheet by remember { mutableStateOf(false) }
     var editingAsset by remember { mutableStateOf<UiAsset?>(null) }
+    var showFeedbackSheet by remember { mutableStateOf(false) }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     
@@ -91,6 +94,11 @@ fun AssetsScreen(
                 },
                 scrollBehavior = scrollBehavior,
                 actions = listOf(
+                    Toolbars.ToolBarAction(
+                        icon = Icons.Default.Email,
+                        contentDescription = "Feedback",
+                        onClick = { showFeedbackSheet = true }
+                    ),
                     Toolbars.ToolBarAction(
                         icon = Icons.Default.Settings,
                         contentDescription = "Settings",
@@ -124,7 +132,8 @@ fun AssetsScreen(
                     showSheet = true
                 },
                 onDelete = { viewModel.deleteAsset(it.id) },
-                onToggleCategory = { viewModel.toggleCategoryExpansion(it) }
+                onToggleCategory = { viewModel.toggleCategoryExpansion(it) },
+                onAddAsset = { showSheet = true }
             )
 
             if (showSheet) {
@@ -156,6 +165,10 @@ fun AssetsScreen(
             }
         }
     )
+
+    if (showFeedbackSheet) {
+        FeedbackBottomSheet(onDismiss = { showFeedbackSheet = false })
+    }
 }
 
 @Composable
@@ -167,7 +180,8 @@ private fun AssetsScreenContent(
     baseCurrency: Currency,
     onEdit: (UiAsset) -> Unit,
     onDelete: (UiAsset) -> Unit,
-    onToggleCategory: (AssetCategory) -> Unit
+    onToggleCategory: (AssetCategory) -> Unit,
+    onAddAsset: () -> Unit = {}
 ) {
     LazyColumn(
         modifier = modifier
@@ -184,22 +198,27 @@ private fun AssetsScreenContent(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 64.dp),
+                        .padding(vertical = 48.dp, horizontal = 32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "💰", fontSize = 56.sp, modifier = Modifier.padding(bottom = 12.dp))
+                    Text(text = "\uD83D\uDCB0", fontSize = 64.sp, modifier = Modifier.padding(bottom = 16.dp))
                     Text(
                         text = "No accounts yet",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Tap + to add your first account",
+                        text = "Add your bank accounts, cash, investments and other assets to track your net worth.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 4.dp)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    MooneyButton(
+                        text = "Add Account",
+                        onClick = onAddAsset,
+                        variant = ButtonVariant.PRIMARY
                     )
                 }
             }

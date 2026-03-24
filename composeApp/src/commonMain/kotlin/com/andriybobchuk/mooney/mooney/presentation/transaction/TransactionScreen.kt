@@ -36,6 +36,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -99,6 +100,7 @@ import com.andriybobchuk.mooney.mooney.presentation.analytics.MonthPicker
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyTextField
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.FeedbackBottomSheet
 import com.andriybobchuk.mooney.mooney.domain.MonthKey
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import com.andriybobchuk.mooney.mooney.domain.formatToShortString
@@ -126,6 +128,7 @@ fun TransactionsScreen(
     val total = state.total
     val totalCurrency = state.totalCurrency
     val frequentCategories by viewModel.frequentCategories.collectAsState()
+    var showFeedbackSheet by remember { mutableStateOf(false) }
     // Sheet
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isBottomSheetOpen by remember { mutableStateOf(false) }
@@ -166,6 +169,11 @@ fun TransactionsScreen(
                     )
                 },
                 actions = listOf(
+                    Toolbars.ToolBarAction(
+                        icon = Icons.Default.Email,
+                        contentDescription = "Feedback",
+                        onClick = { showFeedbackSheet = true }
+                    ),
                     Toolbars.ToolBarAction(
                         icon = Icons.Default.Settings,
                         contentDescription = "Settings",
@@ -211,6 +219,10 @@ fun TransactionsScreen(
                             },
                             onDelete = viewModel::deleteTransaction,
                             onDailyTotal = viewModel::getDailyTotal,
+                            onAddTransaction = {
+                                preselectedCategory = null
+                                isBottomSheetOpen = true
+                            },
                         )
             }
         }
@@ -292,6 +304,9 @@ fun TransactionsScreen(
             }
             */
 
+    if (showFeedbackSheet) {
+        FeedbackBottomSheet(onDismiss = { showFeedbackSheet = false })
+    }
 }
 
 fun LocalDate.formatForDisplay(): String {
@@ -314,7 +329,8 @@ fun TransactionsScreenContent(
     onCurrencyClick: () -> Unit,
     onEdit: (Transaction) -> Unit,
     onDelete: (Int) -> Unit,
-    onDailyTotal: (LocalDate) -> Double = { 0.0 }
+    onDailyTotal: (LocalDate) -> Double = { 0.0 },
+    onAddTransaction: () -> Unit = {}
 ) {
     // Group and sort transactions by date (descending), then by ID (most recent first)
     val grouped = transactions.filterNotNull().groupBy { it.date }
@@ -342,22 +358,27 @@ fun TransactionsScreenContent(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 64.dp),
+                        .padding(vertical = 48.dp, horizontal = 32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "📝", fontSize = 56.sp, modifier = Modifier.padding(bottom = 12.dp))
+                    Text(text = "\uD83D\uDCDD", fontSize = 64.sp, modifier = Modifier.padding(bottom = 16.dp))
                     Text(
-                        text = "No transactions this month",
+                        text = "No transactions yet",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Tap + to add your first transaction",
+                        text = "Start tracking your spending by adding your first transaction for this month.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 4.dp)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    MooneyButton(
+                        text = "Add Transaction",
+                        onClick = onAddTransaction,
+                        variant = ButtonVariant.PRIMARY
                     )
                 }
             }

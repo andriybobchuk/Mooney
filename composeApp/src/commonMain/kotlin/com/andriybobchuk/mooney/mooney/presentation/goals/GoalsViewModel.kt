@@ -4,17 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.Goal
-import com.andriybobchuk.mooney.mooney.domain.usecase.AddGoalUseCase
-import com.andriybobchuk.mooney.mooney.domain.usecase.CalculateGoalProgressUseCase
+import com.andriybobchuk.mooney.mooney.domain.GoalWithProgress
 import com.andriybobchuk.mooney.mooney.domain.usecase.DeleteGoalUseCase
-import com.andriybobchuk.mooney.mooney.domain.usecase.EstimateGoalCompletionUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetGoalsUseCase
-import com.andriybobchuk.mooney.mooney.domain.usecase.GoalProgressResult
-import com.andriybobchuk.mooney.mooney.domain.usecase.GoalCompletionEstimate
 import com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase
+import com.andriybobchuk.mooney.mooney.domain.usecase.EnrichGoalsWithProgressUseCase
+import com.andriybobchuk.mooney.mooney.domain.usecase.SaveGoalUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -29,12 +26,6 @@ data class GoalsState(
     val editingGoal: Goal? = null,
     val showDeleteDialog: Boolean = false,
     val goalToDelete: Goal? = null
-)
-
-data class GoalWithProgress(
-    val goal: Goal,
-    val progress: GoalProgressResult?,
-    val completionEstimate: GoalCompletionEstimate?
 )
 
 sealed interface GoalsAction {
@@ -59,11 +50,10 @@ sealed interface GoalsAction {
 
 class GoalsViewModel(
     private val getGoalsUseCase: GetGoalsUseCase,
-    private val addGoalUseCase: AddGoalUseCase,
     private val deleteGoalUseCase: DeleteGoalUseCase,
-    private val calculateGoalProgressUseCase: CalculateGoalProgressUseCase,
-    private val estimateGoalCompletionUseCase: EstimateGoalCompletionUseCase,
-    private val currencyManagerUseCase: CurrencyManagerUseCase
+    private val currencyManagerUseCase: CurrencyManagerUseCase,
+    private val enrichGoalsWithProgressUseCase: EnrichGoalsWithProgressUseCase,
+    private val saveGoalUseCase: SaveGoalUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(GoalsState())
@@ -102,7 +92,7 @@ class GoalsViewModel(
             }
             is GoalsAction.ConfirmDeleteGoal -> deleteGoal(action.goalId)
             is GoalsAction.SaveGoal -> saveGoal(
-                action.emoji, action.title, action.description, 
+                action.emoji, action.title, action.description,
                 action.targetAmount, action.currency
             )
         }
@@ -111,31 +101,17 @@ class GoalsViewModel(
     private fun loadGoals() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, isError = false) }
-            
+
             try {
                 getGoalsUseCase().collect { goals ->
-                    val goalsWithProgress = goals.map { goal ->
-                        val progress = try {
-                            calculateGoalProgressUseCase(goal)
-                        } catch (e: Exception) {
-                            null
-                        }
-                        
-                        val estimate = try {
-                            estimateGoalCompletionUseCase(goal)
-                        } catch (e: Exception) {
-                            com.andriybobchuk.mooney.mooney.domain.usecase.GoalCompletionEstimate.CannotEstimate
-                        }
-                        
-                        GoalWithProgress(goal, progress, estimate)
-                    }.sortedBy { it.goal.targetAmount }
-                    
-                    _uiState.update { 
+                    val goalsWithProgress = enrichGoalsWithProgressUseCase(goals)
+
+                    _uiState.update {
                         it.copy(
-                            goals = goalsWithProgress, 
+                            goals = goalsWithProgress,
                             isLoading = false,
                             currentGoalIndex = if (goalsWithProgress.isNotEmpty() && it.currentGoalIndex >= goalsWithProgress.size) 0 else it.currentGoalIndex
-                        ) 
+                        )
                     }
                 }
             } catch (e: Exception) {
@@ -147,23 +123,14 @@ class GoalsViewModel(
     private fun saveGoal(emoji: String, title: String, description: String, targetAmount: Double, currency: Currency) {
         viewModelScope.launch {
             try {
-                val goal = _uiState.value.editingGoal?.copy(
+                saveGoalUseCase(
+                    existingGoal = _uiState.value.editingGoal,
                     emoji = emoji,
                     title = title,
                     description = description,
                     targetAmount = targetAmount,
                     currency = currency
-                ) ?: Goal(
-                    id = 0,
-                    emoji = emoji,
-                    title = title,
-                    description = description,
-                    targetAmount = targetAmount,
-                    currency = currency,
-                    groupName = "General" // Default group name
                 )
-                
-                addGoalUseCase(goal)
                 _uiState.update { it.copy(showAddGoalSheet = false, editingGoal = null) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isError = true) }
@@ -181,12 +148,11 @@ class GoalsViewModel(
             }
         }
     }
-    
+
     private fun refreshExchangeRates() {
         viewModelScope.launch {
             try {
                 currencyManagerUseCase.refreshExchangeRates()
-                // Reload goals to recalculate with new exchange rates
                 loadGoals()
             } catch (e: Exception) {
                 _uiState.update { it.copy(isError = true) }

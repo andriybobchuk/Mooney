@@ -55,7 +55,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
+import com.andriybobchuk.mooney.mooney.domain.AnalyticsMetric
+import com.andriybobchuk.mooney.mooney.domain.CategorySheetType
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
+import com.andriybobchuk.mooney.mooney.domain.MonthKey
+import com.andriybobchuk.mooney.mooney.domain.MonthlyMetricSnapshot
 import com.andriybobchuk.mooney.mooney.domain.TopCategorySummary
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import com.andriybobchuk.mooney.mooney.domain.formatToShortString
@@ -326,7 +330,7 @@ fun EnhancedMetricCard(
                 modifier = Modifier
                     .size(10.dp)
                     .clip(androidx.compose.foundation.shape.CircleShape)
-                    .background(metric.color)
+                    .background(Color(metric.color))
             )
             
             Spacer(modifier = Modifier.width(12.dp))

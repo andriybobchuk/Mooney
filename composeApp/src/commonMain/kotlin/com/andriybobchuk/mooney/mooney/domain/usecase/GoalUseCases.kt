@@ -109,22 +109,18 @@ class CalculateGoalProgressUseCase(
             
             // Calculate taxes (ZUS + PIT)
             val taxes = currentMonthTransactions
-                .filter { 
-                    it.subcategory.title.contains("ZUS", ignoreCase = true) || 
-                    it.subcategory.title.contains("PIT", ignoreCase = true) 
-                }
-                .sumOf { 
+                .filter { CalculateTaxesUseCase.isTaxTransaction(it) }
+                .sumOf {
                     exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
                 }
-            
+
             // Calculate expenses (excluding taxes)
             val expenses = currentMonthTransactions
-                .filter { 
+                .filter {
                     it.subcategory.type == CategoryType.EXPENSE &&
-                    !it.subcategory.title.contains("ZUS", ignoreCase = true) &&
-                    !it.subcategory.title.contains("PIT", ignoreCase = true)
+                        !CalculateTaxesUseCase.isTaxTransaction(it)
                 }
-                .sumOf { 
+                .sumOf {
                     exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
                 }
             

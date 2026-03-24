@@ -1,8 +1,8 @@
 package com.andriybobchuk.mooney.mooney.domain
 
 object FeatureFlags {
-    val goalsEnabled = true
-    val exchangeEnabled = true
-    val analyticsEnabled = true
-    val exportImportEnabled = true
+    const val goalsEnabled = true
+    const val exchangeEnabled = true
+    const val analyticsEnabled = true
+    const val exportImportEnabled = true
 }

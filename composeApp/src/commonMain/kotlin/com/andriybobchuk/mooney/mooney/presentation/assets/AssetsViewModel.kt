@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Account
+import com.andriybobchuk.mooney.mooney.domain.AccountWithConversion
 import com.andriybobchuk.mooney.mooney.domain.AssetCategory
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
@@ -33,7 +34,8 @@ class AssetsViewModel(
     private val convertAccountsToUiUseCase: ConvertAccountsToUiUseCase,
     private val currencyManagerUseCase: CurrencyManagerUseCase,
     private val manageAssetCategoryOrderUseCase: ManageAssetCategoryOrderUseCase,
-    private val manageCategoryExpansionUseCase: ManageCategoryExpansionUseCase
+    private val manageCategoryExpansionUseCase: ManageCategoryExpansionUseCase,
+    private val shouldRefreshExchangeRatesUseCase: ShouldRefreshExchangeRatesUseCase
 ) : ViewModel() {
 
     private var observeAccountsJob: Job? = null
@@ -53,11 +55,7 @@ class AssetsViewModel(
 
     private fun refreshExchangeRatesOnStart() {
         viewModelScope.launch {
-            // Only refresh if rates are older than 1 hour (3600000 ms)
-            val oneHourAgo = Clock.System.now().toEpochMilliseconds() - 3600000
-            val lastUpdate = _uiState.value.ratesLastUpdated
-            
-            if (lastUpdate == 0L || lastUpdate < oneHourAgo) {
+            if (shouldRefreshExchangeRatesUseCase(_uiState.value.ratesLastUpdated)) {
                 refreshExchangeRates()
             }
         }
@@ -74,41 +72,13 @@ class AssetsViewModel(
         }.onEach { (accounts, categoryOrder, expandedCategories) ->
             _uiState.update {
                 it.copy(
-                    assets = convertToUiAssets(accounts),
+                    assets = convertAccountsToUiUseCase(accounts).filterNotNull(),
                     categoryOrder = categoryOrder,
                     expandedCategories = expandedCategories
                 )
             }
             updateTotalNetWorth()
         }.launchIn(viewModelScope)
-    }
-
-    private fun convertToUiAssets(accounts: List<Account?>): List<UiAsset> {
-        return accounts.filterNotNull().map { account ->
-            val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
-            val baseCurrencyAmount = if (account.currency != GlobalConfig.baseCurrency) {
-                exchangeRates.convert(account.amount, account.currency, GlobalConfig.baseCurrency)
-            } else {
-                account.amount
-            }
-            
-            val exchangeRate = if (account.currency != GlobalConfig.baseCurrency) {
-                exchangeRates.rates[account.currency]
-            } else {
-                null
-            }
-            
-            UiAsset(
-                id = account.id,
-                title = account.title,
-                emoji = account.emoji,
-                originalAmount = account.amount,
-                originalCurrency = account.currency,
-                baseCurrencyAmount = baseCurrencyAmount,
-                exchangeRate = exchangeRate,
-                assetCategory = account.assetCategory
-            )
-        }
     }
 
     private fun updateTotalNetWorth() {
@@ -133,7 +103,7 @@ class AssetsViewModel(
         // Recalculate with new currency
         viewModelScope.launch {
             val accounts = getAccountsUseCase().first()
-            _uiState.update { it.copy(assets = convertToUiAssets(accounts)) }
+            _uiState.update { it.copy(assets = convertAccountsToUiUseCase(accounts).filterNotNull()) }
         }
     }
 
@@ -145,9 +115,9 @@ class AssetsViewModel(
                 is Result.Success -> {
                     // Refresh UI assets with new rates using current accounts
                     val currentAccounts = getAccountsUseCase().first()
-                    _uiState.update { 
+                    _uiState.update {
                         it.copy(
-                            assets = convertToUiAssets(currentAccounts),
+                            assets = convertAccountsToUiUseCase(currentAccounts).filterNotNull(),
                             isRefreshingRates = false,
                             ratesLastUpdated = Clock.System.now().toEpochMilliseconds()
                         )
@@ -213,25 +183,7 @@ class AssetsViewModel(
     
 }
 
-data class UiAsset(
-    val id: Int,
-    val title: String,
-    val emoji: String,
-    val originalAmount: Double,
-    val originalCurrency: Currency,
-    val baseCurrencyAmount: Double,
-    val exchangeRate: Double?,
-    val assetCategory: AssetCategory
-) {
-    fun toAccount(): Account = Account(
-        id = id,
-        title = title,
-        amount = originalAmount,
-        currency = originalCurrency,
-        emoji = emoji,
-        assetCategory = assetCategory
-    )
-}
+typealias UiAsset = AccountWithConversion
 
 data class AssetsState(
     val assets: List<UiAsset> = emptyList(),

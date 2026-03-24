@@ -55,12 +55,11 @@ class CalculateMonthlyAnalyticsUseCase(
     ): Double {
         val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
         return transactions
-            .filter { 
-                it.subcategory.type == CategoryType.EXPENSE && 
-                !it.subcategory.title.contains("ZUS") && 
-                !it.subcategory.title.contains("PIT")
+            .filter {
+                it.subcategory.type == CategoryType.EXPENSE &&
+                    !CalculateTaxesUseCase.isTaxTransaction(it)
             }
-            .sumOf { 
+            .sumOf {
                 exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
             }
     }

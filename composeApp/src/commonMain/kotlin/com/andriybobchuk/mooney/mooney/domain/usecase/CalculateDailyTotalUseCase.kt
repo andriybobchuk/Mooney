@@ -10,19 +10,18 @@ class CalculateDailyTotalUseCase(
     private val currencyManagerUseCase: CurrencyManagerUseCase
 ) {
     private val baseCurrency = GlobalConfig.baseCurrency
-    
+
     operator fun invoke(
         transactions: List<Transaction>,
         date: LocalDate
     ): Double {
+        val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
         return transactions.filter { it.date == date }
-            .filter { 
-                it.subcategory.type == CategoryType.EXPENSE && 
-                !it.subcategory.title.contains("ZUS") && 
-                !it.subcategory.title.contains("PIT")
+            .filter {
+                it.subcategory.type == CategoryType.EXPENSE &&
+                    !CalculateTaxesUseCase.isTaxTransaction(it)
             }
             .sumOf {
-                val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
                 exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
             }
     }

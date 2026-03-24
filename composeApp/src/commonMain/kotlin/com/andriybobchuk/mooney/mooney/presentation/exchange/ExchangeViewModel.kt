@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Currency
-import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
+import com.andriybobchuk.mooney.mooney.domain.usecase.CalculateRatesInBaseCurrencyUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase
 import com.andriybobchuk.mooney.core.domain.Result
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +14,8 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.*
 
 class ExchangeViewModel(
-    private val currencyManagerUseCase: CurrencyManagerUseCase
+    private val currencyManagerUseCase: CurrencyManagerUseCase,
+    private val calculateRatesInBaseCurrencyUseCase: CalculateRatesInBaseCurrencyUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ExchangeState())
@@ -37,11 +38,13 @@ class ExchangeViewModel(
     private fun loadCurrentRates() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
-            
+
             val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
-            val ratesInBaseCurrency = calculateRatesInBaseCurrency(exchangeRates)
-            
-            _state.update { 
+            val ratesInBaseCurrency = calculateRatesInBaseCurrencyUseCase(
+                exchangeRates, _state.value.displayBaseCurrency
+            )
+
+            _state.update {
                 it.copy(
                     currentRates = ratesInBaseCurrency,
                     lastUpdated = Clock.System.now(),
@@ -53,25 +56,19 @@ class ExchangeViewModel(
 
     private fun loadHistoricalRates() {
         viewModelScope.launch {
-            // For now, we'll generate sample historical data
-            // In a real app, this would fetch from an API
-            val historicalData = generateSampleHistoricalData()
-            
-            _state.update { 
-                it.copy(historicalRates = historicalData)
-            }
+            _state.update { it.copy(historicalRates = emptyMap()) }
         }
     }
 
     private fun refreshExchangeRates() {
         viewModelScope.launch {
             _state.update { it.copy(isRefreshing = true) }
-            
+
             when (val result = currencyManagerUseCase.refreshExchangeRates()) {
                 is Result.Success -> {
                     loadCurrentRates()
                     loadHistoricalRates()
-                    _state.update { 
+                    _state.update {
                         it.copy(
                             isRefreshing = false,
                             lastUpdated = Clock.System.now()
@@ -79,7 +76,7 @@ class ExchangeViewModel(
                     }
                 }
                 is Result.Error -> {
-                    _state.update { 
+                    _state.update {
                         it.copy(
                             isRefreshing = false,
                             error = "Failed to update exchange rates"
@@ -99,9 +96,9 @@ class ExchangeViewModel(
         val currentIndex = currencies.indexOf(_state.value.displayBaseCurrency)
         val nextIndex = (currentIndex + 1) % currencies.size
         val nextCurrency = currencies[nextIndex]
-        
+
         _state.update { it.copy(displayBaseCurrency = nextCurrency) }
-        loadCurrentRates() // Recalculate rates in new base currency
+        loadCurrentRates()
     }
 
     private fun toggleTimeRange() {
@@ -112,28 +109,6 @@ class ExchangeViewModel(
             TimeRange.SIX_MONTHS -> TimeRange.ONE_MONTH
         }
         _state.update { it.copy(timeRange = newRange) }
-    }
-
-    private fun calculateRatesInBaseCurrency(exchangeRates: ExchangeRates?): Map<Currency, Double> {
-        if (exchangeRates == null) return emptyMap()
-        
-        val baseCurrency = _state.value.displayBaseCurrency
-        val rates = mutableMapOf<Currency, Double>()
-        
-        // Calculate rate for each currency in terms of the display base currency
-        Currency.entries.forEach { currency ->
-            if (currency != baseCurrency) {
-                val rate = exchangeRates.convert(1.0, currency, baseCurrency)
-                rates[currency] = rate
-            }
-        }
-        
-        return rates
-    }
-
-    private fun generateSampleHistoricalData(): Map<Currency, List<HistoricalRate>> {
-        // Historical rates API not yet available — return empty until implemented
-        return emptyMap()
     }
 }
 

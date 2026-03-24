@@ -50,9 +50,9 @@ val sharedModule = module {
     single { get<AppDatabase>().goalGroupDao }
     single { get<AppDatabase>().recurringTransactionDao }
     single { get<AppDatabase>().pendingTransactionDao }
-    
+
     // Data Export/Import Manager
-    single { 
+    single {
         com.andriybobchuk.mooney.mooney.domain.backup.DataExportImportManager(
             transactionDao = get(),
             accountDao = get(),
@@ -61,19 +61,19 @@ val sharedModule = module {
             categoryUsageDao = get()
         )
     }
-    
+
     // DataStore and Preferences
     single { get<PreferencesDataStoreFactory>().create() }
     singleOf(::DataStorePreferencesRepository).bind<PreferencesRepository>()
 
     // Feature flags
     single<Boolean>(qualifier = named("use_live_exchange_rates")) { true }
-    
+
     // API Key
     single<String>(qualifier = named("exchangerate_api_key")) { "75b9fafdb8e95b3caea57927" }
-    
+
     // Exchange Rate Providers
-    single<com.andriybobchuk.mooney.mooney.domain.ExchangeRateProvider> { 
+    single<com.andriybobchuk.mooney.mooney.domain.ExchangeRateProvider> {
         val useLiveRates = get<Boolean>(named("use_live_exchange_rates"))
         if (useLiveRates) {
             com.andriybobchuk.mooney.mooney.data.LiveExchangeRateProvider(
@@ -85,7 +85,7 @@ val sharedModule = module {
         }
     }
 
-    // Use Cases
+    // Use Cases — existing
     singleOf(::AddTransactionUseCase)
     singleOf(::DeleteTransactionUseCase)
     singleOf(::GetTransactionsUseCase)
@@ -107,11 +107,25 @@ val sharedModule = module {
     singleOf(::GetGoalsUseCase)
     singleOf(::CalculateGoalProgressUseCase)
     singleOf(::EstimateGoalCompletionUseCase)
-    
+
+    // Use Cases — new
+    singleOf(::CalculateTaxesUseCase)
+    singleOf(::CalculateAnalyticsMetricsUseCase)
+    singleOf(::LoadHistoricalAnalyticsUseCase)
+    singleOf(::LoadCategoriesForSheetTypeUseCase)
+    singleOf(::GetPreviousMonthTransactionsUseCase)
+    singleOf(::ReconcileAccountUseCase)
+    singleOf(::ShouldRefreshExchangeRatesUseCase)
+    singleOf(::FilterTransactionsByMonthUseCase)
+    singleOf(::CalculateDailyTotalsMapUseCase)
+    singleOf(::EnrichGoalsWithProgressUseCase)
+    singleOf(::SaveGoalUseCase)
+    singleOf(::CalculateRatesInBaseCurrencyUseCase)
+
     // Asset Use Cases
     singleOf(::ManageAssetCategoryOrderUseCase)
     singleOf(::ManageCategoryExpansionUseCase)
-    
+
     // Settings Use Cases
     singleOf(::GetUserPreferencesUseCase)
     singleOf(::UpdatePinnedCategoriesUseCase)

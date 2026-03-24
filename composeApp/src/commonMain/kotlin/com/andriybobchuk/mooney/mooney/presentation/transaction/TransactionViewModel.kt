@@ -1,27 +1,18 @@
 package com.andriybobchuk.mooney.mooney.presentation.transaction
 
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Category
-import com.andriybobchuk.mooney.mooney.domain.CategoryType
-
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.Transaction
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
 import com.andriybobchuk.mooney.mooney.domain.usecase.settings.GetPinnedCategoriesUseCase
-import com.andriybobchuk.mooney.mooney.domain.usecase.CalculateTransactionTotalUseCase
-import com.andriybobchuk.mooney.mooney.domain.usecase.ConvertAccountsToUiUseCase
-import com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase
-import com.andriybobchuk.mooney.mooney.domain.usecase.GetCategoriesUseCase
-import com.andriybobchuk.mooney.mooney.presentation.account.UiAccount
-
-import com.andriybobchuk.mooney.mooney.presentation.analytics.MonthKey
+import com.andriybobchuk.mooney.mooney.domain.AccountWithConversion
+import com.andriybobchuk.mooney.mooney.domain.MonthKey
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -29,14 +20,12 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.first
-
 
 data class TransactionState(
     val selectedMonth: MonthKey = MonthKey.current(),
     val transactions: List<Transaction?> = emptyList(),
-    val accounts: List<UiAccount?> = emptyList(),
+    val accounts: List<AccountWithConversion?> = emptyList(),
     val categories: List<Category> = emptyList(),
     val total: Double = 0.0,
     val totalCurrency: Currency = GlobalConfig.baseCurrency,
@@ -45,6 +34,7 @@ data class TransactionState(
     val isError: Boolean = false
 )
 
+@Suppress("LongParameterList")
 class TransactionViewModel(
     private val getTransactionsUseCase: GetTransactionsUseCase,
     private val addTransactionUseCase: AddTransactionUseCase,
@@ -55,7 +45,9 @@ class TransactionViewModel(
     private val calculateDailyTotalUseCase: CalculateDailyTotalUseCase,
     private val convertAccountsToUiUseCase: ConvertAccountsToUiUseCase,
     private val currencyManagerUseCase: CurrencyManagerUseCase,
-    private val getPinnedCategoriesUseCase: GetPinnedCategoriesUseCase
+    private val getPinnedCategoriesUseCase: GetPinnedCategoriesUseCase,
+    private val filterTransactionsByMonthUseCase: FilterTransactionsByMonthUseCase,
+    private val calculateDailyTotalsMapUseCase: CalculateDailyTotalsMapUseCase
 ) : ViewModel() {
 
     private var observeTransactionsJob: Job? = null
@@ -86,16 +78,8 @@ class TransactionViewModel(
     private fun observeTransactions(month: MonthKey) {
         observeTransactionsJob?.cancel()
 
-        val start = month.firstDay()
-        val end = month.firstDayOfNextMonth()
-
-
         observeTransactionsJob = getTransactionsUseCase()
-            .map { transactions ->
-                transactions.filterNotNull().filter {
-                    it.date >= start && it.date < end
-                }
-            }
+            .map { transactions -> filterTransactionsByMonthUseCase(transactions, month) }
             .onEach { filteredTransactions ->
                 val sorted = filteredTransactions.sortedByDescending { it.date }
                 _uiState.update { it.copy(transactions = sorted) }
@@ -125,15 +109,8 @@ class TransactionViewModel(
     }
 
     private fun loadDailyTotals(transactions: List<Transaction>, month: MonthKey) {
-        val dailyTotalsMap = transactions
-            .groupBy { it.date.dayOfMonth }
-            .mapValues { (_, dayTransactions) ->
-                calculateDailyTotalUseCase(dayTransactions, dayTransactions.firstOrNull()?.date ?: kotlinx.datetime.LocalDate(month.year, month.month, 1))
-            }
-
-        _uiState.update {
-            it.copy(dailyTotals = dailyTotalsMap)
-        }
+        val dailyTotalsMap = calculateDailyTotalsMapUseCase(transactions, month)
+        _uiState.update { it.copy(dailyTotals = dailyTotalsMap) }
     }
 
     private fun loadDataForBottomSheet() {

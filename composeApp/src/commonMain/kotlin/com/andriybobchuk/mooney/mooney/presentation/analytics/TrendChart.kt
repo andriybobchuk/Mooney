@@ -32,6 +32,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.andriybobchuk.mooney.mooney.domain.MonthKey
+import com.andriybobchuk.mooney.mooney.domain.MonthlyMetricSnapshot
 import kotlin.math.max
 import kotlin.math.min
 

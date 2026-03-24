@@ -76,6 +76,7 @@ import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.Goal
+import com.andriybobchuk.mooney.mooney.domain.GoalWithProgress
 import com.andriybobchuk.mooney.mooney.domain.usecase.GoalCompletionEstimate
 import com.andriybobchuk.mooney.mooney.domain.usecase.GoalProgressResult
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas

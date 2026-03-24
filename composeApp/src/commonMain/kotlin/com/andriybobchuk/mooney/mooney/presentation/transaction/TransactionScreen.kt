@@ -98,7 +98,7 @@ import com.andriybobchuk.mooney.mooney.presentation.analytics.MonthPicker
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyTextField
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
-import com.andriybobchuk.mooney.mooney.presentation.analytics.MonthKey
+import com.andriybobchuk.mooney.mooney.domain.MonthKey
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import com.andriybobchuk.mooney.mooney.domain.formatToShortString
 import com.andriybobchuk.mooney.mooney.domain.formatToPlainString

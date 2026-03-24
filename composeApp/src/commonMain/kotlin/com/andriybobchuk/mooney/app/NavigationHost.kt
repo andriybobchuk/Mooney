@@ -2,6 +2,9 @@ package com.andriybobchuk.mooney.app
 
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import androidx.navigation.NavBackStackEntry
@@ -15,6 +18,7 @@ import com.andriybobchuk.mooney.mooney.presentation.assets.AssetsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsScreen
 import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsViewModel
 import com.andriybobchuk.mooney.mooney.domain.FeatureFlags
+import com.andriybobchuk.mooney.mooney.domain.usecase.GetAccountsUseCase
 import com.andriybobchuk.mooney.mooney.presentation.exchange.ExchangeScreen
 import com.andriybobchuk.mooney.mooney.presentation.exchange.ExchangeViewModel
 import com.andriybobchuk.mooney.mooney.presentation.goals.GoalsScreen
@@ -23,11 +27,29 @@ import com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionViewM
 import com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionsScreen
 import com.andriybobchuk.mooney.mooney.presentation.settings.SettingsScreen
 import com.andriybobchuk.mooney.mooney.presentation.settings.SettingsViewModel
+import kotlinx.coroutines.flow.map
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun NavigationHost() {
+    val getAccountsUseCase: GetAccountsUseCase = koinInject()
+    val hasAccounts by getAccountsUseCase().map { accounts ->
+        accounts.filterNotNull().isNotEmpty()
+    }.collectAsState(initial = true)
+
     val navController = rememberNavController()
+
+    // Navigate to Assets on first launch if no accounts
+    LaunchedEffect(hasAccounts) {
+        if (!hasAccounts) {
+            navController.navigate(Route.Accounts) {
+                popUpTo(Route.MooneyGraph) { inclusive = false }
+                launchSingleTop = true
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = Route.MooneyGraph

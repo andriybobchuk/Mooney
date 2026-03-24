@@ -366,7 +366,7 @@ fun TransactionsScreenContent(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 32.dp),
+                            .padding(horizontal = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -461,7 +461,7 @@ fun TransactionsScreenContent(
                             variant = ButtonVariant.PRIMARY,
                             fullWidth = true
                         )
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(32.dp))
                     }
                 }
             }
@@ -473,7 +473,7 @@ fun TransactionsScreenContent(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 32.dp),
+                            .padding(horizontal = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -500,7 +500,7 @@ fun TransactionsScreenContent(
                             variant = ButtonVariant.PRIMARY,
                             fullWidth = true
                         )
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(32.dp))
                     }
                 }
             }

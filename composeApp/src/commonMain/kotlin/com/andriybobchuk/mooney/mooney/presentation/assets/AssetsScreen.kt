@@ -205,20 +205,27 @@ private fun AssetsScreenContent(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 32.dp),
+                            .padding(horizontal = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
                         Spacer(modifier = Modifier.weight(1f))
 
                         Text(
-                            text = "No accounts yet",
-                            style = MaterialTheme.typography.titleMedium,
+                            text = "Welcome to Mooney",
+                            style = MaterialTheme.typography.headlineSmall,
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Add your bank accounts, cash, and investments to track your net worth.",
+                            text = "Your personal finance companion",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Add your first account to start tracking your finances. You can add bank accounts, cash, investments, and more.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -227,12 +234,13 @@ private fun AssetsScreenContent(
                         Spacer(modifier = Modifier.weight(1f))
 
                         MooneyButton(
-                            text = "Add Account",
+                            text = "Add Your First Account",
                             onClick = onAddAsset,
                             variant = ButtonVariant.PRIMARY,
-                            fullWidth = true
+                            fullWidth = true,
+                            modifier = Modifier.padding(horizontal = 0.dp)
                         )
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(32.dp))
                     }
                 }
             }

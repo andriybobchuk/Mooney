@@ -118,7 +118,9 @@ fun AnalyticsScreen(
         },
         bottomBar = { bottomNavbar() },
         content = { paddingValues ->
-            val isEmpty = state.metrics.isEmpty() && state.historicalMetrics.isEmpty() && !state.isLoading
+            val hasAnyData = state.transactionsForMonth.filterNotNull().isNotEmpty() ||
+                state.historicalMetrics.any { it.revenue > 0 || it.taxes > 0 || it.operatingCosts > 0 || it.netIncome != 0.0 }
+            val isEmpty = !hasAnyData && !state.isLoading
 
             if (isEmpty) {
                 Box(
@@ -130,7 +132,7 @@ fun AnalyticsScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(horizontal = 32.dp),
+                            .padding(horizontal = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -155,9 +157,10 @@ fun AnalyticsScreen(
                             text = "Go to Transactions",
                             onClick = onNavigateToTransactions,
                             variant = ButtonVariant.PRIMARY,
-                            fullWidth = true
+                            fullWidth = true,
+                            modifier = Modifier.padding(horizontal = 24.dp)
                         )
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(32.dp))
                     }
                 }
             }
@@ -173,51 +176,49 @@ fun AnalyticsScreen(
                     .fillMaxSize()
             ) {
 
-                if (state.metrics.isNotEmpty() || state.historicalMetrics.isNotEmpty()) {
-                    // Trend Chart
-                    TrendChart(
-                        historicalData = state.historicalMetrics,
-                        selectedMonth = state.selectedMonth,
-                        onMonthSelected = viewModel::onMonthSelected,
-                        selectedPeriod = selectedTimePeriod,
-                        onPeriodSelected = { selectedTimePeriod = it },
-                        modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 0.dp, bottom = 8.dp)
-                    )
+                // Trend Chart
+                TrendChart(
+                    historicalData = state.historicalMetrics,
+                    selectedMonth = state.selectedMonth,
+                    onMonthSelected = viewModel::onMonthSelected,
+                    selectedPeriod = selectedTimePeriod,
+                    onPeriodSelected = { selectedTimePeriod = it },
+                    modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 0.dp, bottom = 8.dp)
+                )
 
-                    Column(
-                        modifier = Modifier.padding(horizontal = 12.dp)
-                    ) {
-                        state.metrics.forEach { metric ->
-                            EnhancedMetricCard(
-                                metric = metric,
-                                onClick = { viewModel.onMetricCardClicked(metric.title) }
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
+                Column(
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                ) {
+                    state.metrics.forEach { metric ->
+                        EnhancedMetricCard(
+                            metric = metric,
+                            onClick = { viewModel.onMetricCardClicked(metric.title) }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
+                }
 
-                    // Partial month note
-                    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-                    if (state.selectedMonth.year == now.year && state.selectedMonth.month == now.monthNumber) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 4.dp)
-                                .background(
-                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                                    RoundedCornerShape(12.dp)
-                                )
-                                .padding(horizontal = 16.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("\uD83D\uDCCA", fontSize = 16.sp)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Showing partial data \u2014 month is still in progress",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                // Partial month note
+                val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+                if (state.selectedMonth.year == now.year && state.selectedMonth.month == now.monthNumber) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                            .background(
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                                RoundedCornerShape(12.dp)
                             )
-                        }
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("\uD83D\uDCCA", fontSize = 16.sp)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Showing partial data \u2014 month is still in progress",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
 

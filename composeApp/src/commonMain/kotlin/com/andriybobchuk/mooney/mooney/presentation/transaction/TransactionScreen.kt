@@ -368,32 +368,43 @@ fun TransactionsScreenContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 6.dp, horizontal = 14.dp),
+                        .padding(vertical = 4.dp, horizontal = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Date on the left
-                    Text(
-                        text = date.formatForDisplay(),
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Start
-                    )
-                    
-                    // Daily total on the right
-                    val dailyTotal = onDailyTotal(date)
-                    if (dailyTotal > 0) {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.background,
+                                RoundedCornerShape(50)
+                            )
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
                         Text(
-                            text = "${dailyTotal.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                            textAlign = TextAlign.End
+                            text = date.formatForDisplay(),
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                }
 
+                    val dailyTotal = onDailyTotal(date)
+                    if (dailyTotal > 0) {
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    MaterialTheme.colorScheme.background,
+                                    RoundedCornerShape(50)
+                                )
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = "${dailyTotal.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
             }
 
             items(txList) { tx ->
@@ -456,7 +467,7 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
                 // For transfers: show "Internal Transfer" as title
                 Text(
                     "Internal Transfer",
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, fontSize = 15.sp)
                 )
                 // Extract destination account from category ID and show "[Account1] to [Account2]"
                 val destinationAccountId = transaction.subcategory.id.removePrefix("transfer_to_").toIntOrNull()
@@ -470,7 +481,7 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
                 // For regular transactions: show category title
                 Text(
                     transaction.subcategory.title,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, fontSize = 15.sp)
                 )
                 if (transaction.subcategory.isSubCategory()) {
                     Text(
@@ -484,7 +495,7 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
         Column(horizontalAlignment = Alignment.End) {
             Text(
                 "${transaction.amount.formatWithCommas()} ${transaction.account.currency.symbol}",
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold, fontSize = 14.5.sp),
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium, fontSize = 14.5.sp),
                 color = when (transaction.subcategory.type) {
                     CategoryType.INCOME -> MaterialTheme.appColors.incomeColor
                     CategoryType.EXPENSE -> MaterialTheme.appColors.expenseColor

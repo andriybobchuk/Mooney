@@ -85,7 +85,14 @@ fun AnalyticsScreen(
         modifier = Modifier.background(MaterialTheme.colorScheme.background),
         topBar = {
             Toolbars.Primary(
-                title = "${state.selectedMonth.toDisplayString()} Analytics",
+                title = run {
+                    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+                    if (state.selectedMonth.year == now.year) {
+                        "${state.selectedMonth.toDisplayString().substringBeforeLast(' ')} Analytics"
+                    } else {
+                        "${state.selectedMonth.toDisplayString()} Analytics"
+                    }
+                },
                 scrollBehavior = scrollBehavior,
                 actions = listOf(
                     Toolbars.ToolBarAction(
@@ -145,6 +152,7 @@ fun AnalyticsScreen(
                         CategoryBreakdownSheet(
                             sheetType = sheetType,
                             categories = state.sheetCategories,
+                            historicalData = state.historicalMetrics,
                             onCategoryClick = { category ->
                                 viewModel.onCategoryClicked(category)
                                 // Don't dismiss category sheet - keep it open behind subcategory sheet
@@ -441,7 +449,7 @@ fun SubcategoryBottomSheet(
                 Text(
                     text = parentCategory.title,
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Medium
                 )
             }
             Text(
@@ -533,6 +541,7 @@ fun generateRecentMonths(count: Int): List<MonthKey> {
 fun CategoryBreakdownSheet(
     sheetType: CategorySheetType,
     categories: List<TopCategorySummary>,
+    historicalData: List<MonthlyMetricSnapshot> = emptyList(),
     onCategoryClick: (com.andriybobchuk.mooney.mooney.domain.Category) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -570,7 +579,7 @@ fun CategoryBreakdownSheet(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Medium
                 )
             }
             Text(
@@ -581,6 +590,62 @@ fun CategoryBreakdownSheet(
             )
         }
         
+        // 6-month trend mini chart
+        if (historicalData.isNotEmpty()) {
+            val chartData = historicalData.takeLast(6)
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    val values = chartData.map { snapshot ->
+                        when (sheetType) {
+                            CategorySheetType.REVENUE -> snapshot.revenue
+                            CategorySheetType.TAXES -> snapshot.taxes
+                            CategorySheetType.OPERATING_COSTS -> snapshot.operatingCosts
+                        }
+                    }
+                    val maxVal = values.maxOrNull()?.coerceAtLeast(1.0) ?: 1.0
+
+                    chartData.forEachIndexed { index, snapshot ->
+                        val value = values[index]
+                        val barHeight = ((value / maxVal) * 80).dp.coerceAtLeast(4.dp)
+
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.weight(1f).padding(horizontal = 2.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(barHeight)
+                                    .background(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                                        RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                                    )
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = snapshot.month.toShortDisplayString(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 9.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // Categories list
         LazyColumn {
             items(categories) { category ->
@@ -615,7 +680,7 @@ fun NetIncomeChartBottomSheet(
         Text(
             text = "Profit over 6 months",
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.Medium,
             modifier = Modifier.padding(bottom = 16.dp)
         )
         

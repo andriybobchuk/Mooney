@@ -139,20 +139,33 @@ fun TrendChart(
                         )
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = snapshot.month.toShortDisplayString(),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Gray
+                    if (selectedPeriod == TimePeriod.ONE_YEAR) {
+                        // Just a dot in 1-year mode
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .background(
+                                    if (isSelected) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                    CircleShape
+                                )
                         )
-                        Text(
-                            text = "${snapshot.transactionCount}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.7f) else Color.Gray.copy(alpha = 0.7f),
-                            fontSize = 10.sp
-                        )
+                    } else {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = snapshot.month.toShortDisplayString(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Gray
+                            )
+                            Text(
+                                text = "${snapshot.transactionCount}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.7f) else Color.Gray.copy(alpha = 0.7f),
+                                fontSize = 10.sp
+                            )
+                        }
                     }
                 }
             }

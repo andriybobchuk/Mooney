@@ -92,11 +92,6 @@ fun AssetsScreen(
                 scrollBehavior = scrollBehavior,
                 actions = listOf(
                     Toolbars.ToolBarAction(
-                        icon = Icons.Default.Refresh,
-                        contentDescription = "Refresh Exchange Rates",
-                        onClick = { viewModel.refreshExchangeRates() }
-                    ),
-                    Toolbars.ToolBarAction(
                         icon = Icons.Default.Settings,
                         contentDescription = "Settings",
                         onClick = onSettingsClick
@@ -230,11 +225,13 @@ private fun AssetsScreenContent(
                 
                 if (isExpanded) {
                     items(categoryAssets) { asset ->
-                        AssetCard(
-                            asset = asset,
-                            onEdit = onEdit,
-                            onDelete = onDelete
-                        )
+                        Box(modifier = Modifier.padding(start = 24.dp)) {
+                            AssetCard(
+                                asset = asset,
+                                onEdit = onEdit,
+                                onDelete = onDelete
+                            )
+                        }
                         Spacer(Modifier.height(8.dp))
                     }
                 }
@@ -364,23 +361,25 @@ private fun AssetCard(
                 Text(
                     text = asset.title,
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
-            
+
             Column(
                 horizontalAlignment = Alignment.End
             ) {
                 Text(
                     text = buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
                             append("${asset.baseCurrencyAmount.formatWithCommas()} ")
                         }
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
                             append("${GlobalConfig.baseCurrency.symbol}")
                         }
                     },
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 
                 if (asset.originalCurrency != GlobalConfig.baseCurrency) {

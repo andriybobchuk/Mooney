@@ -3,7 +3,7 @@ package com.andriybobchuk.mooney.core.data.database
 import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.andriybobchuk.mooney.core.data.database.AppDatabase
+import com.andriybobchuk.mooney.mooney.domain.FeatureFlags
 
 @Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 actual class MooneyDatabaseFactory(
@@ -11,7 +11,8 @@ actual class MooneyDatabaseFactory(
 ) {
     actual fun create(): RoomDatabase.Builder<AppDatabase> {
         val appContext = context.applicationContext
-        val dbFile = appContext.getDatabasePath(AppDatabase.DB_NAME)
+        val dbName = if (FeatureFlags.isDebug) AppDatabase.DB_NAME_DEV else AppDatabase.DB_NAME
+        val dbFile = appContext.getDatabasePath(dbName)
 
         return Room.databaseBuilder<AppDatabase>(
             context = appContext,

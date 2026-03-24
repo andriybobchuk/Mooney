@@ -7,6 +7,7 @@ import com.andriybobchuk.mooney.core.data.database.MooneyDatabaseFactory
 import com.andriybobchuk.mooney.mooney.data.DefaultCoreRepositoryImpl
 import com.andriybobchuk.mooney.mooney.domain.CoreRepository
 
+import com.andriybobchuk.mooney.mooney.domain.devtools.DevToolsManager
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
 import com.andriybobchuk.mooney.mooney.domain.usecase.settings.*
 import com.andriybobchuk.mooney.mooney.domain.usecase.assets.*
@@ -130,6 +131,9 @@ val sharedModule = module {
     singleOf(::GetUserPreferencesUseCase)
     singleOf(::UpdatePinnedCategoriesUseCase)
     singleOf(::GetPinnedCategoriesUseCase)
+
+    // Dev Tools
+    singleOf(::DevToolsManager)
 
     // Theme
     singleOf(::ThemeManager)

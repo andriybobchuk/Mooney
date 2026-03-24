@@ -305,11 +305,12 @@ fun MonthPicker(
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                // Group months by year
-                val monthsByYear = monthRange.groupBy { it.year }.toSortedMap(compareByDescending { it })
+                // Group months by year, sorted descending
+                val years = monthRange.map { it.year }.distinct().sortedDescending()
 
-                monthsByYear.forEach { (year, months) ->
-                    // Year header
+                years.forEach { year ->
+                    val monthsInYear = monthRange.filter { it.year == year }
+
                     Text(
                         text = year.toString(),
                         style = MaterialTheme.typography.labelMedium,
@@ -317,7 +318,7 @@ fun MonthPicker(
                         modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)
                     )
 
-                    months.forEach { month ->
+                    monthsInYear.forEach { month ->
                         val isSelected = month == selectedMonth
                         Row(
                             modifier = Modifier

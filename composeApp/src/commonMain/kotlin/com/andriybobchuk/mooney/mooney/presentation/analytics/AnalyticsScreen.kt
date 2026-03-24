@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.FeedbackBottomSheet
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MeshGradientBackground
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
@@ -120,45 +121,49 @@ fun AnalyticsScreen(
             val isEmpty = state.metrics.isEmpty() && state.historicalMetrics.isEmpty() && !state.isLoading
 
             if (isEmpty) {
-                Column(
+                Box(
                     modifier = Modifier
-                        .padding(paddingValues)
-                        .background(MaterialTheme.colorScheme.background)
                         .fillMaxSize()
-                        .padding(horizontal = 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                        .padding(paddingValues)
                 ) {
-                    Spacer(modifier = Modifier.weight(1f))
+                    MeshGradientBackground()
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Spacer(modifier = Modifier.weight(1f))
 
-                    Text(
-                        text = "No analytics yet",
-                        style = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Start adding transactions to see revenue, expenses, trends, and financial insights.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
+                        Text(
+                            text = "No analytics yet",
+                            style = MaterialTheme.typography.titleMedium,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Start adding transactions to see revenue, expenses, and financial insights.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
 
-                    Spacer(modifier = Modifier.weight(1f))
+                        Spacer(modifier = Modifier.weight(1f))
 
-                    MooneyButton(
-                        text = "Add Transaction",
-                        onClick = onNavigateToTransactions,
-                        variant = ButtonVariant.PRIMARY,
-                        fullWidth = true
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
+                        MooneyButton(
+                            text = "Go to Transactions",
+                            onClick = onNavigateToTransactions,
+                            variant = ButtonVariant.PRIMARY,
+                            fullWidth = true
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
                 }
             }
 
-            val scrollState = rememberScrollState()
-
             if (!isEmpty) {
+            val scrollState = rememberScrollState()
             Column(
                 modifier = Modifier
                     .padding(paddingValues)

@@ -26,6 +26,7 @@ import com.andriybobchuk.mooney.core.presentation.designsystem.components.Mooney
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyCard
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.FeedbackBottomSheet
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MeshGradientBackground
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -113,14 +114,16 @@ fun AssetsScreen(
             bottomNavbar()
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showSheet = true },
-                content = {
-                    Icon(Icons.Default.Add, contentDescription = "Add Asset")
-                },
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                containerColor = MaterialTheme.colorScheme.primary
-            )
+            if (assets.isNotEmpty()) {
+                FloatingActionButton(
+                    onClick = { showSheet = true },
+                    content = {
+                        Icon(Icons.Default.Add, contentDescription = "Add Asset")
+                    },
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            }
         },
         content = { paddingValues ->
             AssetsScreenContent(
@@ -197,37 +200,40 @@ private fun AssetsScreenContent(
 
         if (assets.isEmpty()) {
             item {
-                Column(
-                    modifier = Modifier
-                        .fillParentMaxSize()
-                        .padding(horizontal = 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Spacer(modifier = Modifier.weight(1f))
+                Box(modifier = Modifier.fillParentMaxSize()) {
+                    MeshGradientBackground()
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Spacer(modifier = Modifier.weight(1f))
 
-                    Text(
-                        text = "No accounts yet",
-                        style = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Add your bank accounts, cash, and investments to track your net worth.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
+                        Text(
+                            text = "No accounts yet",
+                            style = MaterialTheme.typography.titleMedium,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Add your bank accounts, cash, and investments to track your net worth.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
 
-                    Spacer(modifier = Modifier.weight(1f))
+                        Spacer(modifier = Modifier.weight(1f))
 
-                    MooneyButton(
-                        text = "Add Account",
-                        onClick = onAddAsset,
-                        variant = ButtonVariant.PRIMARY,
-                        fullWidth = true
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
+                        MooneyButton(
+                            text = "Add Account",
+                            onClick = onAddAsset,
+                            variant = ButtonVariant.PRIMARY,
+                            fullWidth = true
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
                 }
             }
         }

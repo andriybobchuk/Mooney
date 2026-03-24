@@ -40,7 +40,8 @@ fun NavigationHost() {
                 TransactionsScreen(
                     viewModel = viewModel,
                     bottomNavbar = { BottomNavigationBar(navController, 0) },
-                    onSettingsClick = { navController.navigate(Route.Settings) }
+                    onSettingsClick = { navController.navigate(Route.Settings) },
+                    onNavigateToAssets = { navController.navigate(Route.Accounts) { popUpTo(Route.MooneyGraph) } }
                 )
             }
             composable<Route.Accounts> {

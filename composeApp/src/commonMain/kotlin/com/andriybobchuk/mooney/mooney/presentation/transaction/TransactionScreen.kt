@@ -93,6 +93,7 @@ import com.andriybobchuk.mooney.core.presentation.designsystem.components.Mooney
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyTextField
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.FeedbackBottomSheet
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MeshGradientBackground
 import com.andriybobchuk.mooney.mooney.domain.MonthKey
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import com.andriybobchuk.mooney.mooney.domain.formatToShortString
@@ -114,6 +115,7 @@ fun TransactionsScreen(
     viewModel: TransactionViewModel = koinViewModel(),
     bottomNavbar: @Composable () -> Unit,
     onSettingsClick: () -> Unit = {},
+    onNavigateToAssets: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val transactions = state.transactions
@@ -178,17 +180,21 @@ fun TransactionsScreen(
         },
         bottomBar = { bottomNavbar() },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    preselectedCategory = null
-                    isBottomSheetOpen = true
-                },
-                content = {
-                    Icon(Icons.Default.Add, contentDescription = "Add Transaction")
-                },
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                containerColor = MaterialTheme.colorScheme.primary
-            )
+            val hasTransactions = transactions.filterNotNull().isNotEmpty()
+            val hasAccounts = state.accounts.filterNotNull().isNotEmpty()
+            if (hasTransactions && hasAccounts) {
+                FloatingActionButton(
+                    onClick = {
+                        preselectedCategory = null
+                        isBottomSheetOpen = true
+                    },
+                    content = {
+                        Icon(Icons.Default.Add, contentDescription = "Add Transaction")
+                    },
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            }
         },
         content = { paddingValues ->
             Column(
@@ -206,6 +212,7 @@ fun TransactionsScreen(
                             currency = totalCurrency,
                             selectedMonth = state.selectedMonth,
                             dailyTotals = state.dailyTotals,
+                            hasAccounts = state.accounts.filterNotNull().isNotEmpty(),
                             onCurrencyClick = viewModel::onTotalCurrencyClick,
                             onEdit = {
                                 transactionToEdit = it
@@ -217,6 +224,7 @@ fun TransactionsScreen(
                                 preselectedCategory = null
                                 isBottomSheetOpen = true
                             },
+                            onNavigateToAssets = onNavigateToAssets,
                         )
             }
         }
@@ -320,11 +328,13 @@ fun TransactionsScreenContent(
     currency: Currency,
     selectedMonth: MonthKey,
     dailyTotals: Map<Int, Double> = emptyMap(),
+    hasAccounts: Boolean = true,
     onCurrencyClick: () -> Unit,
     onEdit: (Transaction) -> Unit,
     onDelete: (Int) -> Unit,
     onDailyTotal: (LocalDate) -> Double = { 0.0 },
-    onAddTransaction: () -> Unit = {}
+    onAddTransaction: () -> Unit = {},
+    onNavigateToAssets: () -> Unit = {},
 ) {
     // Group and sort transactions by date (descending), then by ID (most recent first)
     val grouped = transactions.filterNotNull().groupBy { it.date }
@@ -339,8 +349,8 @@ fun TransactionsScreenContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Only show calendar/chart when there are transactions
         if (sortedGroups.isNotEmpty()) {
+            // Normal: show calendar + transactions
             item {
                 TransactionPagerView(
                     selectedMonth = selectedMonth,
@@ -348,42 +358,150 @@ fun TransactionsScreenContent(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                 )
             }
-        }
-
-        if (sortedGroups.isEmpty()) {
+        } else if (!hasAccounts) {
+            // No accounts: show onboarding guide
             item {
-                // Empty state - fill available space
-                Column(
-                    modifier = Modifier
-                        .fillParentMaxSize()
-                        .padding(horizontal = 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Spacer(modifier = Modifier.weight(1f))
+                Box(modifier = Modifier.fillParentMaxSize()) {
+                    MeshGradientBackground()
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Spacer(modifier = Modifier.weight(1f))
 
-                    Text(
-                        text = "No transactions this month",
-                        style = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Start tracking your spending by adding your first transaction.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
+                        Text(
+                            text = "Let's get started",
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                    Spacer(modifier = Modifier.weight(1f))
+                        // Step 1
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                    RoundedCornerShape(16.dp)
+                                )
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.primary,
+                                        CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("1", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.labelLarge)
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Column {
+                                Text("Add an account", style = MaterialTheme.typography.bodyLarge)
+                                Text(
+                                    "Bank account, cash, or investment",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
 
-                    MooneyButton(
-                        text = "Add Transaction",
-                        onClick = onAddTransaction,
-                        variant = ButtonVariant.PRIMARY,
-                        fullWidth = true
-                    )
-                    Spacer(modifier = Modifier.height(24.dp))
+                        // Connector line
+                        Box(
+                            modifier = Modifier
+                                .width(2.dp)
+                                .height(24.dp)
+                                .background(MaterialTheme.colorScheme.outline)
+                        )
+
+                        // Step 2
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    RoundedCornerShape(16.dp)
+                                )
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.outline,
+                                        CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("2", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.labelLarge)
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Column {
+                                Text("Track spending", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(
+                                    "Add transactions to see insights",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        MooneyButton(
+                            text = "Add Your First Account",
+                            onClick = onNavigateToAssets,
+                            variant = ButtonVariant.PRIMARY,
+                            fullWidth = true
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+                }
+            }
+        } else {
+            // Has accounts but no transactions this month: simple empty state
+            item {
+                Box(modifier = Modifier.fillParentMaxSize()) {
+                    MeshGradientBackground()
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        Text(
+                            text = "No transactions this month",
+                            style = MaterialTheme.typography.titleMedium,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Start tracking your spending by adding your first transaction.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        MooneyButton(
+                            text = "Add Transaction",
+                            onClick = onAddTransaction,
+                            variant = ButtonVariant.PRIMARY,
+                            fullWidth = true
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
                 }
             }
         }

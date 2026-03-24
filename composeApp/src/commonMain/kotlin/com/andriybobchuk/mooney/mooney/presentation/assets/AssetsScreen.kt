@@ -192,12 +192,9 @@ private fun AssetsScreenContent(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 10.dp)
+            .padding(horizontal = 10.dp),
+        userScrollEnabled = assets.isNotEmpty()
     ) {
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
         if (assets.isEmpty()) {
             item {
                 Box(modifier = Modifier.fillParentMaxSize()) {
@@ -213,17 +210,10 @@ private fun AssetsScreenContent(
 
                         Text(
                             text = "Welcome to Mooney",
-                            style = MaterialTheme.typography.headlineSmall,
+                            style = MaterialTheme.typography.titleMedium,
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Your personal finance companion",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Add your first account to start tracking your finances. You can add bank accounts, cash, investments, and more.",
                             style = MaterialTheme.typography.bodyMedium,
@@ -237,12 +227,15 @@ private fun AssetsScreenContent(
                             text = "Add Your First Account",
                             onClick = onAddAsset,
                             variant = ButtonVariant.PRIMARY,
-                            fullWidth = true,
-                            modifier = Modifier.padding(horizontal = 0.dp)
+                            fullWidth = true
                         )
                         Spacer(modifier = Modifier.height(32.dp))
                     }
                 }
+            }
+        } else {
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
 

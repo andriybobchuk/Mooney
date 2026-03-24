@@ -347,7 +347,8 @@ fun TransactionsScreenContent(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background),
+        userScrollEnabled = sortedGroups.isNotEmpty()
     ) {
         if (sortedGroups.isNotEmpty()) {
             // Normal: show calendar + transactions
@@ -374,7 +375,7 @@ fun TransactionsScreenContent(
 
                         Text(
                             text = "Let's get started",
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             textAlign = TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(12.dp))

@@ -124,14 +124,13 @@ fun AnalyticsScreen(
 
             if (isEmpty) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     MeshGradientBackground()
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
+                            .padding(paddingValues)
                             .padding(horizontal = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
@@ -157,8 +156,7 @@ fun AnalyticsScreen(
                             text = "Go to Transactions",
                             onClick = onNavigateToTransactions,
                             variant = ButtonVariant.PRIMARY,
-                            fullWidth = true,
-                            modifier = Modifier.padding(horizontal = 24.dp)
+                            fullWidth = true
                         )
                         Spacer(modifier = Modifier.height(32.dp))
                     }

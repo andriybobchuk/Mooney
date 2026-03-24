@@ -223,7 +223,8 @@ private fun AssetsScreenContent(
                         Text(
                             text = "Welcome to Mooney",
                             style = MaterialTheme.typography.headlineSmall,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(

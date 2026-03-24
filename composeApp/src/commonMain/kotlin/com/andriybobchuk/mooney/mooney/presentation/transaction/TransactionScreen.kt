@@ -393,7 +393,8 @@ fun TransactionsScreenContent(
                         Text(
                             text = "Let's get started",
                             style = MaterialTheme.typography.headlineSmall,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Spacer(modifier = Modifier.height(12.dp))
 
@@ -421,7 +422,7 @@ fun TransactionsScreenContent(
                             }
                             Spacer(Modifier.width(12.dp))
                             Column {
-                                Text("Add an account", style = MaterialTheme.typography.bodyLarge)
+                                Text("Add an account", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onBackground)
                                 Text(
                                     "Bank account, cash, or investment",
                                     style = MaterialTheme.typography.bodySmall,
@@ -499,7 +500,8 @@ fun TransactionsScreenContent(
                         Text(
                             text = "No transactions this month",
                             style = MaterialTheme.typography.headlineSmall,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(

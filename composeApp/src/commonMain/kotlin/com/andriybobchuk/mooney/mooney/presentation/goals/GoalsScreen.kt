@@ -44,6 +44,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -741,7 +742,7 @@ private fun AddEditGoalBottomSheet(
                      description.isNotBlank() && 
                      targetAmount.toDoubleOrNull()?.let { it > 0 } == true
 
-    ModalBottomSheet(
+    MooneyBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState
     ) {
@@ -913,7 +914,7 @@ private fun CustomSavingsRateBottomSheet(
         0
     }
     
-    ModalBottomSheet(
+    MooneyBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState
     ) {

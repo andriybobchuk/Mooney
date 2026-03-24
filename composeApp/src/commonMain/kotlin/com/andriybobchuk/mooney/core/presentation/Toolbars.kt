@@ -42,7 +42,7 @@ object Toolbars {
                         if (title.isNotEmpty()) {
                             Text(
                                 text = title,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.Medium,
                                 fontSize = 20.sp
                             )
                         }

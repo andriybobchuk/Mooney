@@ -77,15 +77,15 @@ fun MooneyButton(
 
     when (variant) {
         ButtonVariant.PRIMARY -> {
-            // Filled black (light) / white (dark) — uses Material primary
+            // Filled black (light) / white (dark) — uses inverseSurface
             Button(
                 onClick = onClick,
                 modifier = buttonModifier.height(height),
                 enabled = enabled && !loading,
                 shape = MooneyDesignSystem.Shapes.button,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    containerColor = MaterialTheme.colorScheme.inverseSurface,
+                    contentColor = MaterialTheme.colorScheme.inverseOnSurface,
                     disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                     disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 ),

@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
 
-// Theme variant — kept for compatibility but only BLUE is used
+// Theme variant — kept for compatibility, only BLUE is actively used
 enum class AppTheme {
     BLUE,
     PURPLE,
@@ -16,57 +16,75 @@ enum class AppTheme {
 
 // ── Light Color Scheme ─────────────────────────────────────────────
 val MooneyLightColorScheme = lightColorScheme(
-    primary = Color(0xFF111111),             // Black — primary CTAs
+    // Primary = blue accent (used by M3 for FABs, nav indicators, checkboxes, focus)
+    primary = Color(0xFF3562F6),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFEEF0F2),    // Light grey container
-    onPrimaryContainer = Color(0xFF111111),
-    secondary = Color(0xFF3562F6),           // Revolut-style blue accent
+    primaryContainer = Color(0xFFE8EDFE),
+    onPrimaryContainer = Color(0xFF1A3399),
+
+    secondary = Color(0xFF3562F6),
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFE8EDFE),  // Light blue container
+    secondaryContainer = Color(0xFFE8EDFE),
     onSecondaryContainer = Color(0xFF1A3399),
+
     tertiary = Color(0xFF3562F6),
     onTertiary = Color.White,
-    surface = Color(0xFFFFFFFF),             // Pure white
+
+    surface = Color(0xFFFFFFFF),
     onSurface = Color(0xFF111111),
-    surfaceVariant = Color(0xFFF0F1F3),      // Light grey for cards/inputs
-    onSurfaceVariant = Color(0xFF6B7280),    // Medium grey text
-    background = Color(0xFFFFFFFF),          // White background
+    surfaceVariant = Color(0xFFF0F1F3),
+    onSurfaceVariant = Color(0xFF6B7280),
+
+    background = Color(0xFFFFFFFF),
     onBackground = Color(0xFF111111),
-    outline = Color(0xFFD1D5DB),             // Subtle border grey
-    outlineVariant = Color(0xFFE5E7EB),      // Lighter border
-    error = Color(0xFFDC2626),               // Red
+
+    outline = Color(0xFFD1D5DB),
+    outlineVariant = Color(0xFFE5E7EB),
+
+    error = Color(0xFFDC2626),
     onError = Color.White,
+
+    // inverseSurface = black — used for primary CTA buttons
     inverseSurface = Color(0xFF111111),
     inverseOnSurface = Color.White,
 )
 
 // ── Dark Color Scheme ──────────────────────────────────────────────
 val MooneyDarkColorScheme = darkColorScheme(
-    primary = Color(0xFFF5F5F5),             // White — primary CTAs
-    onPrimary = Color(0xFF111111),
-    primaryContainer = Color(0xFF1E2328),    // Dark grey container
-    onPrimaryContainer = Color(0xFFF5F5F5),
-    secondary = Color(0xFF4DD0C8),           // Teal/cyan accent
-    onSecondary = Color(0xFF111111),
-    secondaryContainer = Color(0xFF1A3A37),  // Dark teal container
+    // Primary = teal/cyan accent
+    primary = Color(0xFF4DD0C8),
+    onPrimary = Color(0xFF003733),
+    primaryContainer = Color(0xFF1A3A37),
+    onPrimaryContainer = Color(0xFF4DD0C8),
+
+    secondary = Color(0xFF4DD0C8),
+    onSecondary = Color(0xFF003733),
+    secondaryContainer = Color(0xFF1A3A37),
     onSecondaryContainer = Color(0xFF4DD0C8),
+
     tertiary = Color(0xFF4DD0C8),
-    onTertiary = Color(0xFF111111),
-    surface = Color(0xFF111518),             // Very dark surface
+    onTertiary = Color(0xFF003733),
+
+    surface = Color(0xFF111518),
     onSurface = Color(0xFFF0F0F0),
-    surfaceVariant = Color(0xFF1C2025),      // Slightly lighter dark for cards
-    onSurfaceVariant = Color(0xFF9CA3AF),    // Medium grey text
-    background = Color(0xFF0D1117),          // Near-black with teal tint
+    surfaceVariant = Color(0xFF1C2025),
+    onSurfaceVariant = Color(0xFF9CA3AF),
+
+    background = Color(0xFF0D1117),
     onBackground = Color(0xFFF0F0F0),
-    outline = Color(0xFF374151),             // Dark border
-    outlineVariant = Color(0xFF1F2937),      // Darker border
-    error = Color(0xFFEF4444),               // Bright red
+
+    outline = Color(0xFF374151),
+    outlineVariant = Color(0xFF1F2937),
+
+    error = Color(0xFFEF4444),
     onError = Color.White,
+
+    // inverseSurface = white — used for primary CTA buttons
     inverseSurface = Color(0xFFF5F5F5),
     inverseOnSurface = Color(0xFF111111),
 )
 
-// Extended app colors for finance-specific use
+// Extended app colors
 @Stable
 data class AppColorsExtended(
     val incomeColor: Color,
@@ -101,7 +119,6 @@ val DarkAppColors = AppColorsExtended(
     accentContainer = Color(0xFF1A3A37),
 )
 
-// All variants resolve to the single Mooney scheme
 @Composable
 fun getColorSchemeForTheme(theme: AppTheme, isSystemDarkMode: Boolean): ColorScheme {
     return if (isSystemDarkMode) MooneyDarkColorScheme else MooneyLightColorScheme

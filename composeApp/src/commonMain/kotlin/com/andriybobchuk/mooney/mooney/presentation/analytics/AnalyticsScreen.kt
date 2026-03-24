@@ -35,6 +35,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -136,11 +137,9 @@ fun AnalyticsScreen(
                 state.categorySheetType?.let { sheetType ->
                     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
                     
-                    ModalBottomSheet(
+                    MooneyBottomSheet(
                         onDismissRequest = { viewModel.onCategorySheetDismissed() },
-                        sheetState = bottomSheetState,
-                        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                        containerColor = MaterialTheme.colorScheme.surface
+                        sheetState = bottomSheetState
                     ) {
                         CategoryBreakdownSheet(
                             sheetType = sheetType,
@@ -160,11 +159,9 @@ fun AnalyticsScreen(
                 state.selectedCategory?.let { category ->
                     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
                     
-                    ModalBottomSheet(
+                    MooneyBottomSheet(
                         onDismissRequest = { viewModel.onSubcategorySheetDismissed() },
-                        sheetState = bottomSheetState,
-                        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                        containerColor = MaterialTheme.colorScheme.surface
+                        sheetState = bottomSheetState
                     ) {
                         SubcategoryBottomSheet(
                             parentCategory = category,
@@ -179,11 +176,9 @@ fun AnalyticsScreen(
             if (state.isNetIncomeSheetOpen) {
                 val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
                 
-                ModalBottomSheet(
+                MooneyBottomSheet(
                     onDismissRequest = { viewModel.onNetIncomeSheetDismissed() },
-                    sheetState = bottomSheetState,
-                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                    containerColor = MaterialTheme.colorScheme.surface
+                    sheetState = bottomSheetState
                 ) {
                     NetIncomeChartBottomSheet(
                         historicalData = state.historicalMetrics,

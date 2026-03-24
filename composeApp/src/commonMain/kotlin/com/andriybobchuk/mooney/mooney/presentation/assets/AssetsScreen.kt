@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyTextField
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyCard
@@ -132,13 +133,12 @@ fun AssetsScreen(
             )
 
             if (showSheet) {
-                ModalBottomSheet(
+                MooneyBottomSheet(
                     onDismissRequest = {
                         showSheet = false
                         editingAsset = null
                     },
-                    sheetState = sheetState,
-                    containerColor = MaterialTheme.appColors.cardBackground
+                    sheetState = sheetState
                 ) {
                     AssetSheet(
                         editingAsset = editingAsset,

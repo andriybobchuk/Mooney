@@ -30,6 +30,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.AlertDialog
@@ -167,13 +168,12 @@ fun AccountScreen(
             )
 
             if (showSheet) {
-                ModalBottomSheet(
+                MooneyBottomSheet(
                     onDismissRequest = {
                         showSheet = false
                         editingAccount = null
                     },
-                    sheetState = sheetState,
-                    containerColor = MaterialTheme.appColors.cardBackground
+                    sheetState = sheetState
                 ) {
                     AccountSheet(
                         editingAccount = editingAccount,

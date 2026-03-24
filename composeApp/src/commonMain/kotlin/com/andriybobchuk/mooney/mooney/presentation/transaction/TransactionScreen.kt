@@ -45,6 +45,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Tab
@@ -584,10 +585,9 @@ fun TransactionBottomSheet(
     var showDateSheet by remember { mutableStateOf(false) }
 
 
-    ModalBottomSheet(
+    MooneyBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        sheetState = sheetState
     ) {
         val focusRequester = remember { FocusRequester() }
         val keyboardController = LocalSoftwareKeyboardController.current
@@ -884,10 +884,9 @@ fun DateSelectionBottomSheet(
     var currentYear by remember { mutableStateOf(selectedDate.year) }
     var currentMonth by remember { mutableStateOf(selectedDate.monthNumber) }
 
-    ModalBottomSheet(
+    MooneyBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        sheetState = sheetState
     ) {
         Column(Modifier.padding(20.dp).fillMaxSize()) {
             Text(
@@ -1251,10 +1250,9 @@ fun CategorySelectionBottomSheet(
     var showSubCategorySheet by remember { mutableStateOf(false) }
     var selectedParentCategory by remember { mutableStateOf<Category?>(null) }
 
-    ModalBottomSheet(
+    MooneyBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        sheetState = sheetState
     ) {
         Column(Modifier.padding(20.dp).fillMaxSize()) {
             Text(
@@ -1388,10 +1386,9 @@ fun SubCategorySelectionBottomSheet(
     onSubCategorySelected: (Category) -> Unit,
     onParentSelected: () -> Unit
 ) {
-    ModalBottomSheet(
+    MooneyBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        sheetState = sheetState
     ) {
         Column(Modifier.padding(20.dp).fillMaxSize()) {
             Text(

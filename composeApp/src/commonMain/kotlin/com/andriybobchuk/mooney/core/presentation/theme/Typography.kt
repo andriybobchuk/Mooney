@@ -29,14 +29,14 @@ fun MooneyTypography(): Typography {
     return Typography(
         displayLarge = TextStyle(
             fontFamily = poppins,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Medium,
             fontSize = 57.sp,
             lineHeight = 64.sp,
             letterSpacing = (-0.25).sp,
         ),
         displayMedium = TextStyle(
             fontFamily = poppins,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Medium,
             fontSize = 45.sp,
             lineHeight = 52.sp,
         ),
@@ -48,7 +48,7 @@ fun MooneyTypography(): Typography {
         ),
         headlineLarge = TextStyle(
             fontFamily = poppins,
-            fontWeight = FontWeight.SemiBold,
+            fontWeight = FontWeight.Medium,
             fontSize = 32.sp,
             lineHeight = 40.sp,
         ),
@@ -107,7 +107,7 @@ fun MooneyTypography(): Typography {
         ),
         labelLarge = TextStyle(
             fontFamily = poppins,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.Normal,
             fontSize = 14.sp,
             lineHeight = 20.sp,
             letterSpacing = 0.1.sp,

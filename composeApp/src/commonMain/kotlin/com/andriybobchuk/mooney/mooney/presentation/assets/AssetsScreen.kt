@@ -196,7 +196,7 @@ private fun AssetsScreenContent(
                     Text(
                         text = "No accounts yet",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center
                     )
                     Text(
@@ -296,7 +296,7 @@ private fun CollapsibleCategoryHeader(
                 Text(
                     text = category.displayName,
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Medium
                 )
                 if (assetCount > 0) {
                     Text(
@@ -320,7 +320,7 @@ private fun CollapsibleCategoryHeader(
                 text = "${totalAmount.formatWithCommas()} ${currency.symbol}",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Medium
             )
         }
     }
@@ -429,7 +429,7 @@ private fun AssetSheet(
     Column(modifier = Modifier.padding(20.dp)) {
         Text(
             text = if (editingAsset != null) "Edit Asset" else "Add New Asset",
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight.Medium,
             fontSize = 20.sp
         )
         Spacer(Modifier.height(16.dp))
@@ -456,7 +456,7 @@ private fun AssetSheet(
             )
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(12.dp))
 
         // Asset Category Selection
         Text(
@@ -489,7 +489,7 @@ private fun AssetSheet(
             }
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(12.dp))
 
         MooneyTextField(
             modifier = Modifier.fillMaxWidth(),
@@ -500,7 +500,7 @@ private fun AssetSheet(
             singleLine = true
         )
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(12.dp))
 
         // Currency dropdown
         var currencyExpanded by remember { mutableStateOf(false) }

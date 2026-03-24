@@ -275,7 +275,7 @@ fun MonthPicker(
         onClick = { expanded = true },
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
-            contentColor = Color.White
+            contentColor = MaterialTheme.colorScheme.onBackground
         ),
         contentPadding = PaddingValues(0.dp),
         elevation = null
@@ -334,7 +334,7 @@ fun EnhancedMetricCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = metric.title,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(4.dp))

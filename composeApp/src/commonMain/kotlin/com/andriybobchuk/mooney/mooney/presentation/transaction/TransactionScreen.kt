@@ -180,10 +180,13 @@ fun TransactionsScreen(
                 onClick = {
                     preselectedCategory = null
                     isBottomSheetOpen = true
-                }
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Transaction")
-            }
+                },
+                content = {
+                    Icon(Icons.Default.Add, contentDescription = "Add Transaction")
+                },
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                containerColor = MaterialTheme.colorScheme.primary
+            )
         },
         content = { paddingValues ->
             Column(
@@ -346,7 +349,7 @@ fun TransactionsScreenContent(
                     Text(
                         text = "No transactions this month",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center
                     )
                     Text(
@@ -598,10 +601,10 @@ fun TransactionBottomSheet(
             keyboardController?.show()
         }
 
-        Column(Modifier.padding(20.dp).fillMaxSize()) {
+        Column(Modifier.padding(horizontal = 20.dp, vertical = 16.dp).fillMaxSize()) {
             Text(
                 text = if (isEditMode) "Edit This Transaction" else "Add New Transaction",
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 fontSize = 20.sp,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
@@ -662,7 +665,7 @@ fun TransactionBottomSheet(
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
 
             // For transfers, show both source and destination accounts
             if (selectedTransactionType == CategoryType.TRANSFER) {
@@ -673,9 +676,9 @@ fun TransactionBottomSheet(
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 AccountField(selectedAccount, accounts.filterNotNull(), { selectedAccount = it })
-                
-                Spacer(Modifier.height(8.dp))
-                
+
+                Spacer(Modifier.height(12.dp))
+
                 Text(
                     text = "To Account",
                     style = MaterialTheme.typography.bodySmall,
@@ -714,7 +717,7 @@ fun TransactionBottomSheet(
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
 
             // Date selector with navigation arrows
             Row(
@@ -891,7 +894,7 @@ fun DateSelectionBottomSheet(
         Column(Modifier.padding(20.dp).fillMaxSize()) {
             Text(
                 text = "Select Date",
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 fontSize = 20.sp,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
@@ -1950,20 +1953,12 @@ fun SpendingCalendarView(
                 
                 // Weekly total column
                 val weekTotal = weeklyTotals[week]
-                Card(
+                Box(
                     modifier = Modifier
                         .width(44.dp)
                         .height(28.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
                         if (weekTotal > 0) {
                             Text(
                                 text = weekTotal.formatToShortString(),
@@ -1983,7 +1978,6 @@ fun SpendingCalendarView(
                             )
                         }
                     }
-                }
             }
             if (week < weeks - 1) {
                 Spacer(Modifier.height(2.dp))

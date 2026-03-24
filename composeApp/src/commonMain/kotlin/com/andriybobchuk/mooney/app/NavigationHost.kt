@@ -14,6 +14,7 @@ import com.andriybobchuk.mooney.mooney.presentation.assets.AssetsScreen
 import com.andriybobchuk.mooney.mooney.presentation.assets.AssetsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsScreen
 import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsViewModel
+import com.andriybobchuk.mooney.mooney.domain.FeatureFlags
 import com.andriybobchuk.mooney.mooney.presentation.exchange.ExchangeScreen
 import com.andriybobchuk.mooney.mooney.presentation.exchange.ExchangeViewModel
 import com.andriybobchuk.mooney.mooney.presentation.goals.GoalsScreen
@@ -51,13 +52,15 @@ fun NavigationHost() {
                 )
             }
 
-            composable<Route.Exchange> {
-                val viewModel = koinViewModel<ExchangeViewModel>()
-                ExchangeScreen(
-                    viewModel = viewModel,
-                    bottomNavbar = { BottomNavigationBar(navController, 2) },
-                    onSettingsClick = { navController.navigate(Route.Settings) }
-                )
+            if (FeatureFlags.exchangeEnabled) {
+                composable<Route.Exchange> {
+                    val viewModel = koinViewModel<ExchangeViewModel>()
+                    ExchangeScreen(
+                        viewModel = viewModel,
+                        bottomNavbar = { BottomNavigationBar(navController, 2) },
+                        onSettingsClick = { navController.navigate(Route.Settings) }
+                    )
+                }
             }
 
             composable<Route.Analytics> {
@@ -69,13 +72,15 @@ fun NavigationHost() {
                 )
             }
 
-            composable<Route.Goals> {
-                val viewModel = koinViewModel<GoalsViewModel>()
-                GoalsScreen(
-                    viewModel = viewModel,
-                    bottomNavbar = { BottomNavigationBar(navController, 4) },
-                    onSettingsClick = { navController.navigate(Route.Settings) }
-                )
+            if (FeatureFlags.goalsEnabled) {
+                composable<Route.Goals> {
+                    val viewModel = koinViewModel<GoalsViewModel>()
+                    GoalsScreen(
+                        viewModel = viewModel,
+                        bottomNavbar = { BottomNavigationBar(navController, 4) },
+                        onSettingsClick = { navController.navigate(Route.Settings) }
+                    )
+                }
             }
 
             composable<Route.Settings> {

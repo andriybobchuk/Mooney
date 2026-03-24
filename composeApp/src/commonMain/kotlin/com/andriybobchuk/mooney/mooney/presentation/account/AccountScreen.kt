@@ -251,7 +251,7 @@ private fun ReconciliationDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text("Account Balance Changed", fontWeight = FontWeight.Bold)
+            Text("Account Balance Changed", fontWeight = FontWeight.Medium)
         },
         text = {
             Column {
@@ -425,7 +425,7 @@ private fun AccountSheet(
     val currencies = Currency.entries.toList()
 
     Column(modifier = Modifier.padding(20.dp)) {
-        Text(if (editingAccount != null) "Edit This Account" else "Add New Account", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+        Text(if (editingAccount != null) "Edit This Account" else "Add New Account", fontWeight = FontWeight.Medium, fontSize = 20.sp)
         Spacer(Modifier.height(16.dp))
 
         OutlinedTextField(

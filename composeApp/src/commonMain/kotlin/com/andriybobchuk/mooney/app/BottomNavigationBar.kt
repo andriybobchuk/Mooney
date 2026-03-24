@@ -12,33 +12,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.andriybobchuk.mooney.core.presentation.Icons
+import com.andriybobchuk.mooney.mooney.domain.FeatureFlags
 
 @Composable
 fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int) {
-    val items = listOf(
-        BottomNavigationItem("Transactions", Icons.TransactionsIcon()),
-        BottomNavigationItem("Assets", Icons.AccountsIcon()),
-        BottomNavigationItem("Exchange", Icons.ExchangeIcon()),
-        BottomNavigationItem("Analytics", Icons.StatsIcon()),
-        BottomNavigationItem("Goals", Icons.GoalsIcon()),
-    )
+    val allItems = buildList {
+        add(Triple(BottomNavigationItem("Transactions", Icons.TransactionsIcon()), Route.Transactions, 0))
+        add(Triple(BottomNavigationItem("Assets", Icons.AccountsIcon()), Route.Accounts, 1))
+        if (FeatureFlags.exchangeEnabled) add(Triple(BottomNavigationItem("Exchange", Icons.ExchangeIcon()), Route.Exchange, 2))
+        add(Triple(BottomNavigationItem("Analytics", Icons.StatsIcon()), Route.Analytics, 3))
+        if (FeatureFlags.goalsEnabled) add(Triple(BottomNavigationItem("Goals", Icons.GoalsIcon()), Route.Goals, 4))
+    }
 
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp
     ) {
-        items.forEachIndexed { index, item ->
+        allItems.forEachIndexed { _, (item, route, originalIndex) ->
             NavigationBarItem(
-                selected = selectedItemIndex == index,
+                selected = selectedItemIndex == originalIndex,
                 onClick = {
-                    if (selectedItemIndex != index) {
-                        when (index) {
-                            0 -> navController.navigate(Route.Transactions) { popUpTo(Route.MooneyGraph) }
-                            1 -> navController.navigate(Route.Accounts) { popUpTo(Route.MooneyGraph) }
-                            2 -> navController.navigate(Route.Exchange) { popUpTo(Route.MooneyGraph) }
-                            3 -> navController.navigate(Route.Analytics) { popUpTo(Route.MooneyGraph) }
-                            4 -> navController.navigate(Route.Goals) { popUpTo(Route.MooneyGraph) }
-                        }
+                    if (selectedItemIndex != originalIndex) {
+                        navController.navigate(route) { popUpTo(Route.MooneyGraph) }
                     }
                 },
                 label = {
@@ -53,7 +48,7 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
                     Icon(
                         painter = item.icon,
                         contentDescription = item.title,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(

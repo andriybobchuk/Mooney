@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.painterResource
 import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.ic_instagram
@@ -45,13 +46,19 @@ fun FeedbackBottomSheet(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Get in touch",
+                text = "\uD83D\uDC4B",
+                fontSize = 48.sp,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            Text(
+                text = "Hey! I'm Andriy",
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
 
             Text(
-                text = "Mooney is actively being built. Found a bug? Have an idea? Reach out — your feedback shapes the app.",
+                text = "I'm actively building Mooney and would love to hear from you. Found a bug? Have an idea? Just want to chat? Reach out through any channel below!",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

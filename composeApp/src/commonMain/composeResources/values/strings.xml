@@ -1,24 +1,132 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <resources>
-    <string name="search_hint">Search...</string>
-    <string name="close_hint">Clear search</string>
-    <string name="search_results">Search Results</string>
-    <string name="favorites">Favorites</string>
-    <string name="no_search_results">Oops, there aren't any books for your search query.</string>
-    <string name="no_favorite_books">No favorite books yet.</string>
-    <string name="book_cover">Book cover</string>
-    <string name="rating">Rating</string>
-    <string name="pages">Pages</string>
-    <string name="languages">Languages</string>
-    <string name="synopsis">Synopsis</string>
-    <string name="go_back">Go back</string>
-    <string name="mark_as_favorite">Mark as favorite</string>
-    <string name="remove_from_favorites">Remove from favorites</string>
-    <string name="description_unavailable">Description not available.</string>
+    <string name="app_name">Mooney</string>
+
+    <!-- Navigation -->
+    <string name="nav_transactions">Transactions</string>
+    <string name="nav_assets">Assets</string>
+    <string name="nav_exchange">Exchange</string>
+    <string name="nav_analytics">Analytics</string>
+    <string name="nav_goals">Goals</string>
+
+    <!-- Common -->
+    <string name="settings">Settings</string>
+    <string name="feedback">Feedback</string>
+    <string name="cancel">Cancel</string>
+    <string name="done">Done</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="add">Add</string>
+    <string name="save">Save</string>
+    <string name="back">Back</string>
+    <string name="version">Version</string>
+
+    <!-- Transactions -->
+    <string name="spent_in">Spent in %s</string>
+    <string name="no_transactions">No transactions</string>
+    <string name="tap_to_add_transaction">Tap + to add your first transaction</string>
+    <string name="add_transaction">Add Transaction</string>
+    <string name="edit_transaction">Edit This Transaction</string>
+    <string name="add_new_transaction">Add New Transaction</string>
+    <string name="update_transaction">Update Transaction</string>
+    <string name="expense">Expense</string>
+    <string name="income">Income</string>
+    <string name="transfer">Transfer</string>
+    <string name="amount">Amount</string>
+    <string name="from_account">From Account</string>
+    <string name="to_account">To Account</string>
+    <string name="select_account">Select Account</string>
+    <string name="select_category">Select Category</string>
+    <string name="select_date">Select Date</string>
+    <string name="internal_transfer">Internal Transfer</string>
+    <string name="new_account_value">New Account Value</string>
+    <string name="spending_comparison">Spending Comparison</string>
+    <string name="current">Current</string>
+    <string name="six_month_avg">6mo avg</string>
+    <string name="select_month">Select Month</string>
+    <string name="year">Year</string>
+    <string name="month">Month</string>
+    <string name="day">Day</string>
+
+    <!-- Onboarding -->
+    <string name="lets_get_started">Let\'s get started</string>
+    <string name="add_account_step">Add an account</string>
+    <string name="add_account_step_desc">Bank account, cash, or investment</string>
+    <string name="track_spending_step">Track spending</string>
+    <string name="track_spending_step_desc">Add transactions to see insights</string>
+    <string name="add_first_account">Add Your First Account</string>
+
+    <!-- Assets -->
+    <string name="total_net_worth">Total Net Worth</string>
+    <string name="welcome_to_mooney">Welcome to Mooney</string>
+    <string name="welcome_description">Add your first account to start tracking your finances. You can add bank accounts, cash, investments, and more.</string>
+    <string name="no_accounts_yet">No accounts yet</string>
+    <string name="add_account">Add Account</string>
+    <string name="edit_asset">Edit Asset</string>
+    <string name="add_new_asset">Add New Asset</string>
+    <string name="update_asset">Update Asset</string>
+    <string name="title">Title</string>
+    <string name="value">Value</string>
+    <string name="category">Category</string>
+    <string name="currency">Currency</string>
+    <string name="select_currency">Select Currency</string>
+
+    <!-- Analytics -->
+    <string name="analytics">Analytics</string>
+    <string name="no_analytics_yet">No analytics yet</string>
+    <string name="analytics_empty_desc">Start adding transactions to see revenue, expenses, and financial insights.</string>
+    <string name="go_to_transactions">Go to Transactions</string>
+    <string name="revenue">Revenue</string>
+    <string name="taxes">Taxes</string>
+    <string name="operating_costs">Operating Costs</string>
+    <string name="net_income">Net Income</string>
+    <string name="revenue_breakdown">Revenue Breakdown</string>
+    <string name="operating_costs_breakdown">Operating Costs Breakdown</string>
+    <string name="tax_breakdown">Tax Breakdown</string>
+    <string name="partial_month_note">Showing partial data — month is still in progress</string>
+    <string name="profit_over_6_months">Profit over 6 months</string>
+    <string name="last_6_months">Last 6 months</string>
+    <string name="next_6_months">Next 6 months</string>
+    <string name="based_on_selected">Based on selected month</string>
+    <string name="subcategories_breakdown">Subcategories breakdown</string>
+    <string name="tap_category_subcategories">Tap a category to see subcategories</string>
+
+    <!-- Settings -->
+    <string name="preferences">Preferences</string>
+    <string name="appearance">Appearance</string>
+    <string name="default_currency">Default Currency</string>
+    <string name="pinned_categories">Pinned Categories</string>
+    <string name="language">Language</string>
+    <string name="data">Data</string>
+    <string name="export_data">Export Data</string>
+    <string name="import_data">Import Data</string>
+    <string name="about">About</string>
+    <string name="confirm_import">Confirm Import</string>
+    <string name="import_preview">The following data will be imported:</string>
+    <string name="transactions_count">%d transactions</string>
+    <string name="accounts_count">%d accounts</string>
+    <string name="goals_count">%d goals</string>
+    <string name="import_add_note">This will add to your existing data.</string>
+    <string name="import_btn">Import</string>
+    <string name="light">Light</string>
+    <string name="dark">Dark</string>
+    <string name="system">System</string>
+    <string name="select_up_to_categories">Select up to %d categories</string>
+
+    <!-- Feedback -->
+    <string name="get_in_touch">Get in touch</string>
+    <string name="feedback_description">Mooney is actively being built. Found a bug? Have an idea? Reach out — your feedback shapes the app.</string>
+
+    <!-- Goals -->
+    <string name="add_goal">Add Goal</string>
+    <string name="edit_goal">Edit Goal</string>
+    <string name="delete_goal">Delete Goal</string>
+
+    <!-- Errors -->
     <string name="error_disk_full">Oops, it seems like your disk is full.</string>
     <string name="error_unknown">Oops, something went wrong.</string>
     <string name="error_request_timeout">The request timed out.</string>
-    <string name="error_no_internet">Couldn't reach server, please check your internet connection.</string>
+    <string name="error_no_internet">Couldn\'t reach server, please check your internet connection.</string>
     <string name="error_too_many_requests">Your quota seems to be exceeded.</string>
-    <string name="error_serialization">Couldn't parse data.</string>
+    <string name="error_serialization">Couldn\'t parse data.</string>
 </resources>

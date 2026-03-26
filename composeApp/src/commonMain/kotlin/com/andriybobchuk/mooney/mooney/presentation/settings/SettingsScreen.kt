@@ -48,6 +48,7 @@ fun SettingsScreen(
     var showThemeSheet by remember { mutableStateOf(false) }
     var showCurrencySheet by remember { mutableStateOf(false) }
     var showPinnedSheet by remember { mutableStateOf(false) }
+    var showLanguageSheet by remember { mutableStateOf(false) }
 
     // Handle events from ViewModel
     LaunchedEffect(Unit) {
@@ -263,6 +264,34 @@ fun SettingsScreen(
         }
     }
 
+    // Language bottom sheet
+    if (showLanguageSheet) {
+        MooneyBottomSheet(onDismissRequest = { showLanguageSheet = false }) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text("Language", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+
+                listOf(
+                    "English" to "en",
+                    "Українська" to "uk",
+                    "Русский" to "ru",
+                    "Polski" to "pl"
+                ).forEach { (name, _) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { showLanguageSheet = false }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(name, style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             Toolbars.Primary(
@@ -317,6 +346,12 @@ fun SettingsScreen(
                             title = "Pinned Categories",
                             value = "${state.pinnedCategoryIds.size}/${state.maxPinnedCategories}",
                             onClick = { showPinnedSheet = true }
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            title = "Language",
+                            value = "English",
+                            onClick = { showLanguageSheet = true }
                         )
                     }
                 }

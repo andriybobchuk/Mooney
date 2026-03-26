@@ -8,19 +8,27 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.painterResource
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.ic_instagram
+import mooney.composeapp.generated.resources.ic_telegram
+import mooney.composeapp.generated.resources.ic_email
+import mooney.composeapp.generated.resources.ic_discord
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,19 +45,13 @@ fun FeedbackBottomSheet(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "\uD83D\uDC4B",
-                fontSize = 48.sp,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            Text(
-                text = "Hey! I'm Andriy",
+                text = "Get in touch",
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
 
             Text(
-                text = "I'm actively building Mooney and would love to hear from you. Found a bug? Have an idea? Just want to chat? Reach out through any channel below!",
+                text = "Mooney is actively being built. Found a bug? Have an idea? Reach out — your feedback shapes the app.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -57,37 +59,28 @@ fun FeedbackBottomSheet(
             )
 
             ContactRow(
-                emoji = "\uD83D\uDCF8",
+                icon = painterResource(Res.drawable.ic_instagram),
                 label = "Instagram",
                 value = "@andriybobchuk.bro",
                 onClick = { uriHandler.openUri("https://instagram.com/andriybobchuk.bro") }
             )
             ContactRow(
-                emoji = "\u2708\uFE0F",
+                icon = painterResource(Res.drawable.ic_telegram),
                 label = "Telegram",
                 value = "@andriybobchuk",
                 onClick = { uriHandler.openUri("https://t.me/andriybobchuk") }
             )
             ContactRow(
-                emoji = "\uD83D\uDCE7",
+                icon = painterResource(Res.drawable.ic_email),
                 label = "Email",
                 value = "andriybobchuk@gmail.com",
                 onClick = { uriHandler.openUri("mailto:andriybobchuk@gmail.com") }
             )
             ContactRow(
-                emoji = "\uD83C\uDFAE",
+                icon = painterResource(Res.drawable.ic_discord),
                 label = "Discord",
                 value = "andriibobchuk",
                 onClick = { }
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "Your feedback shapes the app. Thank you! \uD83D\uDE4F",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -97,7 +90,7 @@ fun FeedbackBottomSheet(
 
 @Composable
 private fun ContactRow(
-    emoji: String,
+    icon: Painter,
     label: String,
     value: String,
     onClick: () -> Unit
@@ -111,7 +104,12 @@ private fun ContactRow(
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(emoji, fontSize = 22.sp)
+        Icon(
+            painter = icon,
+            contentDescription = label,
+            modifier = Modifier.size(22.dp),
+            tint = MaterialTheme.colorScheme.onSurface
+        )
         Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(label, style = MaterialTheme.typography.bodyLarge)

@@ -134,7 +134,11 @@ fun AssetsScreen(
             }
         },
         content = { paddingValues ->
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
                 if (isEmptyState) {
                     MeshGradientBackground()
                 }

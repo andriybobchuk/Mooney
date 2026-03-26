@@ -173,8 +173,9 @@ fun AnalyticsScreen(
             val scrollState = rememberScrollState()
             Column(
                 modifier = Modifier
-                    .padding(paddingValues)
+                    .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background)
+                    .padding(paddingValues)
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
                     .verticalScroll(scrollState)
                     .fillMaxSize()

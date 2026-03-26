@@ -204,8 +204,11 @@ fun TransactionsScreen(
             }
         },
         content = { paddingValues ->
-            Box(modifier = Modifier.fillMaxSize()) {
-                // Mesh background behind everything (ignores paddingValues)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
                 if (isEmptyState) {
                     MeshGradientBackground()
                 }

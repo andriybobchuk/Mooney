@@ -73,11 +73,11 @@ fun AssetsScreen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        modifier = Modifier.background(MaterialTheme.colorScheme.background),
+        containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
+        modifier = Modifier.background(if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background),
         topBar = {
             Toolbars.Primary(
-                containerColor = MaterialTheme.colorScheme.background,
+                containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
                 titleContent = {
                     Column(
                         modifier = Modifier

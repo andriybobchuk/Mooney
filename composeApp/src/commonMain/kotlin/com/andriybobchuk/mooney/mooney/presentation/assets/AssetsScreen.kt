@@ -353,7 +353,8 @@ private fun CollapsibleCategoryHeader(
                 Text(
                     text = category.displayName,
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 if (assetCount > 0) {
                     Text(

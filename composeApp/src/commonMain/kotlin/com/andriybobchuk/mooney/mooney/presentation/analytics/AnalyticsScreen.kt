@@ -27,6 +27,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -114,12 +124,12 @@ fun AnalyticsScreen(
                 scrollBehavior = scrollBehavior,
                 actions = listOf(
                     Toolbars.ToolBarAction(
-                        icon = Icons.Default.Email,
+                        icon = Icons.Outlined.Email,
                         contentDescription = stringResource(Res.string.feedback),
                         onClick = { showFeedbackSheet = true }
                     ),
                     Toolbars.ToolBarAction(
-                        icon = Icons.Default.Settings,
+                        icon = Icons.Outlined.Settings,
                         contentDescription = stringResource(Res.string.settings),
                         onClick = onSettingsClick
                     )
@@ -381,7 +391,7 @@ fun MonthPicker(
 
     IconButton(onClick = { showSheet = true }) {
         Icon(
-            Icons.Default.DateRange,
+            Icons.Outlined.DateRange,
             contentDescription = stringResource(Res.string.select_month),
             modifier = Modifier.size(22.dp),
             tint = MaterialTheme.colorScheme.onBackground

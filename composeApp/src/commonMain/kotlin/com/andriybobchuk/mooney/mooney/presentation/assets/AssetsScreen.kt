@@ -20,6 +20,16 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
@@ -110,12 +120,12 @@ fun AssetsScreen(
                 scrollBehavior = scrollBehavior,
                 actions = listOf(
                     Toolbars.ToolBarAction(
-                        icon = Icons.Default.Email,
+                        icon = Icons.Outlined.Email,
                         contentDescription = stringResource(Res.string.feedback),
                         onClick = { showFeedbackSheet = true }
                     ),
                     Toolbars.ToolBarAction(
-                        icon = Icons.Default.Settings,
+                        icon = Icons.Outlined.Settings,
                         contentDescription = stringResource(Res.string.settings),
                         onClick = onSettingsClick
                     )
@@ -130,7 +140,7 @@ fun AssetsScreen(
                 FloatingActionButton(
                     onClick = { showSheet = true },
                     content = {
-                        Icon(Icons.Default.Add, contentDescription = stringResource(Res.string.add_account))
+                        Icon(Icons.Outlined.Add, contentDescription = stringResource(Res.string.add_account))
                     },
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     containerColor = MaterialTheme.colorScheme.primary
@@ -340,7 +350,7 @@ private fun CollapsibleCategoryHeader(
             modifier = Modifier.weight(1f)
         ) {
             Icon(
-                imageVector = Icons.Default.KeyboardArrowDown,
+                imageVector = Icons.Outlined.KeyboardArrowDown,
                 contentDescription = if (isExpanded) "Collapse" else "Expand",
                 modifier = Modifier
                     .size(24.dp)

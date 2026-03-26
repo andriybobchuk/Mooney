@@ -10,6 +10,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -74,12 +84,12 @@ fun ExchangeScreen(
                 scrollBehavior = scrollBehavior,
                 actions = listOf(
                     Toolbars.ToolBarAction(
-                        icon = Icons.Default.Refresh,
+                        icon = Icons.Outlined.Refresh,
                         contentDescription = "Refresh Rates",
                         onClick = { viewModel.onAction(ExchangeAction.RefreshRates) }
                     ),
                     Toolbars.ToolBarAction(
-                        icon = Icons.Default.Settings,
+                        icon = Icons.Outlined.Settings,
                         contentDescription = "Settings",
                         onClick = onSettingsClick
                     )

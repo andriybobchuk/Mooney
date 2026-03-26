@@ -35,6 +35,16 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -177,12 +187,12 @@ fun TransactionsScreen(
                 },
                 actions = listOf(
                     Toolbars.ToolBarAction(
-                        icon = Icons.Default.Email,
+                        icon = Icons.Outlined.Email,
                         contentDescription = "Feedback",
                         onClick = { showFeedbackSheet = true }
                     ),
                     Toolbars.ToolBarAction(
-                        icon = Icons.Default.Settings,
+                        icon = Icons.Outlined.Settings,
                         contentDescription = "Settings",
                         onClick = onSettingsClick
                     )
@@ -200,7 +210,7 @@ fun TransactionsScreen(
                         isBottomSheetOpen = true
                     },
                     content = {
-                        Icon(Icons.Default.Add, contentDescription = "Add Transaction")
+                        Icon(Icons.Outlined.Add, contentDescription = "Add Transaction")
                     },
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     containerColor = MaterialTheme.colorScheme.primary

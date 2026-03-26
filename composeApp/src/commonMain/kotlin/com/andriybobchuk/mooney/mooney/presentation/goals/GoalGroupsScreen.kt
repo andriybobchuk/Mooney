@@ -17,6 +17,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -95,7 +105,7 @@ fun GoalGroupsScreen(
                 scrollBehavior = scrollBehavior,
                 actions = listOf(
                     Toolbars.ToolBarAction(
-                        icon = Icons.Default.Settings,
+                        icon = Icons.Outlined.Settings,
                         contentDescription = "Settings",
                         onClick = onSettingsClick
                     )
@@ -108,7 +118,7 @@ fun GoalGroupsScreen(
                 onClick = { viewModel.onAction(GoalsAction.ShowAddGoalSheet) },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Goal")
+                Icon(Icons.Outlined.Add, contentDescription = "Add Goal")
             }
         }
     ) { paddingValues ->

@@ -31,6 +31,16 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -103,7 +113,7 @@ fun GoalsScreen(
                 scrollBehavior = scrollBehavior,
                 actions = listOf(
                     Toolbars.ToolBarAction(
-                        icon = Icons.Default.Settings,
+                        icon = Icons.Outlined.Settings,
                         contentDescription = "Settings",
                         onClick = onSettingsClick
                     )
@@ -116,7 +126,7 @@ fun GoalsScreen(
                 onClick = { viewModel.onAction(GoalsAction.ShowAddGoalSheet) },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Goal")
+                Icon(Icons.Outlined.Add, contentDescription = "Add Goal")
             }
         }
     ) { paddingValues ->
@@ -655,7 +665,7 @@ private fun GoalCard(
                             onEditGoal(goal)
                             showContextMenu = false
                         },
-                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) }
+                        leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null) }
                     )
                     DropdownMenuItem(
                         text = { Text("Delete") },
@@ -663,7 +673,7 @@ private fun GoalCard(
                             onDeleteGoal(goal)
                             showContextMenu = false
                         },
-                        leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) }
+                        leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) }
                     )
                 }
             }

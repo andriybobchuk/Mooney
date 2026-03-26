@@ -155,10 +155,11 @@ fun TransactionsScreen(
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 20.sp
-                            )
+                            ),
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = stringResource(Res.string.spent_in, state.selectedMonth.toDisplayString().substringBeforeLast(' ')),
+                            text = "Spent in ${state.selectedMonth.toDisplayString().substringBeforeLast(' ')}",
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Normal,
@@ -1915,6 +1916,7 @@ fun SpendingLineChart(
         Text(
             text = stringResource(Res.string.spending_comparison),
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(bottom = 8.dp)
         )
         
@@ -1931,7 +1933,8 @@ fun SpendingLineChart(
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = stringResource(Res.string.current),
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
             

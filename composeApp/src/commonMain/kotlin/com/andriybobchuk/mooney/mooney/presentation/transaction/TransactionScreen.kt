@@ -131,7 +131,7 @@ fun TransactionsScreen(
 
     val hasTransactions = transactions.filterNotNull().isNotEmpty()
     val hasAccounts = state.accounts.filterNotNull().isNotEmpty()
-    val isEmptyState = !hasTransactions
+    val isEmptyState = !hasTransactions && !state.isLoading
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
@@ -503,7 +503,7 @@ fun TransactionsScreenContent(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Tap + to add your first transaction",
+                            text = "Start tracking your spending by adding your first transaction.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center

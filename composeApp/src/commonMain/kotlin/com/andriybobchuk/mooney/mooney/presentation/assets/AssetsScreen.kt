@@ -68,7 +68,7 @@ fun AssetsScreen(
     var editingAsset by remember { mutableStateOf<UiAsset?>(null) }
     var showFeedbackSheet by remember { mutableStateOf(false) }
 
-    val isEmptyState = assets.isEmpty()
+    val isEmptyState = assets.isEmpty() && !state.isLoading
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -409,14 +409,15 @@ private fun AssetCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Box {
-            // Percentage fill background
+            // Percentage fill — accent color from left to right
             if (animatedPercentage > 0f) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(animatedPercentage)
                         .matchParentSize()
                         .background(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.06f)
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                            RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
                         )
                 )
             }
@@ -454,23 +455,12 @@ private fun AssetCard(
                         )
                     }
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (asset.originalCurrency != GlobalConfig.baseCurrency) {
-                            Text(
-                                text = "${asset.originalAmount.formatWithCommas()} ${asset.originalCurrency.symbol}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(Modifier.width(6.dp))
-                        }
-                        // Small percentage label
-                        if (percentage > 0.001f) {
-                            Text(
-                                text = "${(percentage * 100).toInt()}%",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                            )
-                        }
+                    if (asset.originalCurrency != GlobalConfig.baseCurrency) {
+                        Text(
+                            text = "${asset.originalAmount.formatWithCommas()} ${asset.originalCurrency.symbol}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }

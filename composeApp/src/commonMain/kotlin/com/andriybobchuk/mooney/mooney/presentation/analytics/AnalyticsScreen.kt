@@ -95,11 +95,11 @@ fun AnalyticsScreen(
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
-        containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
-        modifier = Modifier.background(if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background),
+        containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.background(MaterialTheme.colorScheme.background),
         topBar = {
             Toolbars.Primary(
-                containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
+                containerColor = MaterialTheme.colorScheme.background,
                 title = run {
                     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
                     if (state.selectedMonth.year == now.year) {
@@ -709,8 +709,9 @@ fun CategoryBreakdownSheet(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
-                    .padding(horizontal = 20.dp, vertical = 8.dp)
+                    .height(140.dp)
+                    .padding(horizontal = 20.dp)
+                    .padding(top = 8.dp, bottom = 8.dp)
             ) {
                 Row(
                     modifier = Modifier

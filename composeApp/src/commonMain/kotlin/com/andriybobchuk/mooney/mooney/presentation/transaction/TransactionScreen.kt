@@ -135,11 +135,11 @@ fun TransactionsScreen(
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
-        containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
-        modifier = Modifier.background(if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background),
+        containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.background(MaterialTheme.colorScheme.background),
         topBar = {
             Toolbars.Primary(
-                containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
+                containerColor = MaterialTheme.colorScheme.background,
                 titleContent = {
                     Column(
                         modifier = Modifier
@@ -166,12 +166,10 @@ fun TransactionsScreen(
                 },
                 scrollBehavior = scrollBehavior,
                 customContent = {
-                    if (transactions.filterNotNull().isNotEmpty()) {
-                        MonthPicker(
-                            selectedMonth = state.selectedMonth,
-                            onMonthSelected = viewModel::onMonthSelected,
-                        )
-                    }
+                    MonthPicker(
+                        selectedMonth = state.selectedMonth,
+                        onMonthSelected = viewModel::onMonthSelected,
+                    )
                 },
                 actions = listOf(
                     Toolbars.ToolBarAction(
@@ -498,14 +496,14 @@ fun TransactionsScreenContent(
                         Spacer(modifier = Modifier.weight(1f))
 
                         Text(
-                            text = "No transactions this month",
+                            text = "No transactions",
                             style = MaterialTheme.typography.headlineSmall,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Start tracking your spending by adding your first transaction.",
+                            text = "Tap + to add your first transaction",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center

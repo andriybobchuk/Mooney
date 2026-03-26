@@ -18,9 +18,9 @@ fun MeshGradientBackground(
     val accent = MaterialTheme.colorScheme.primary
     val bg = MaterialTheme.colorScheme.background
 
-    val blob1 = if (isDark) accent.copy(alpha = 0.10f) else Color(0xFF93BBEC).copy(alpha = 0.30f)
-    val blob2 = if (isDark) accent.copy(alpha = 0.07f) else Color(0xFFAFCDF5).copy(alpha = 0.25f)
-    val blob3 = if (isDark) accent.copy(alpha = 0.08f) else Color(0xFFC5DDFB).copy(alpha = 0.20f)
+    val blob1 = if (isDark) accent.copy(alpha = 0.14f) else Color(0xFF93BBEC).copy(alpha = 0.40f)
+    val blob2 = if (isDark) accent.copy(alpha = 0.10f) else Color(0xFFAFCDF5).copy(alpha = 0.35f)
+    val blob3 = if (isDark) accent.copy(alpha = 0.12f) else Color(0xFFC5DDFB).copy(alpha = 0.30f)
     val transparent = Color.Transparent
 
     Canvas(modifier = modifier.fillMaxSize()) {

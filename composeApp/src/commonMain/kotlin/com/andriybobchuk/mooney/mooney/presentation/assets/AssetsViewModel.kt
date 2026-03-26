@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 
 class AssetsViewModel(
@@ -149,7 +150,12 @@ class AssetsViewModel(
 
             try {
                 addAccountUseCase(account)
-                observeAssets()
+                // Force immediate recalculation
+                val accounts = getAccountsUseCase().first()
+                withContext(Dispatchers.Main) {
+                    _uiState.update { it.copy(assets = convertAccountsToUiUseCase(accounts).filterNotNull()) }
+                    updateTotalNetWorth()
+                }
             } catch (e: Exception) {
                 // Handle error
             }
@@ -160,6 +166,11 @@ class AssetsViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 deleteAccountUseCase(id)
+                val accounts = getAccountsUseCase().first()
+                withContext(Dispatchers.Main) {
+                    _uiState.update { it.copy(assets = convertAccountsToUiUseCase(accounts).filterNotNull()) }
+                    updateTotalNetWorth()
+                }
             } catch (e: Exception) {
                 // Handle error
             }

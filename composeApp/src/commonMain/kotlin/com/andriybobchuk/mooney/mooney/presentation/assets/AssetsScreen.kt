@@ -1,6 +1,7 @@
 package com.andriybobchuk.mooney.mooney.presentation.assets
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -72,11 +73,11 @@ fun AssetsScreen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
-        containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
-        modifier = Modifier.background(if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background),
+        containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.background(MaterialTheme.colorScheme.background),
         topBar = {
             Toolbars.Primary(
-                containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
+                containerColor = MaterialTheme.colorScheme.background,
                 titleContent = {
                     Column(
                         modifier = Modifier
@@ -142,6 +143,7 @@ fun AssetsScreen(
                 categoryOrder = state.categoryOrder,
                 expandedCategories = state.expandedCategories,
                 baseCurrency = state.totalNetWorthCurrency,
+                totalNetWorth = totalNetWorth,
                 onEdit = {
                     editingAsset = it
                     showSheet = true
@@ -194,6 +196,7 @@ private fun AssetsScreenContent(
     categoryOrder: List<AssetCategory>,
     expandedCategories: Set<AssetCategory>,
     baseCurrency: Currency,
+    totalNetWorth: Double = 0.0,
     onEdit: (UiAsset) -> Unit,
     onDelete: (UiAsset) -> Unit,
     onToggleCategory: (AssetCategory) -> Unit,
@@ -275,9 +278,11 @@ private fun AssetsScreenContent(
                         Spacer(Modifier.height(4.dp))
                     }
                     items(categoryAssets) { asset ->
+                        val pct = if (totalNetWorth > 0) (asset.baseCurrencyAmount / totalNetWorth).toFloat().coerceIn(0f, 1f) else 0f
                         Box(modifier = Modifier.padding(start = 24.dp)) {
                             AssetCard(
                                 asset = asset,
+                                percentage = pct,
                                 onEdit = onEdit,
                                 onDelete = onDelete
                             )
@@ -377,10 +382,17 @@ private fun CollapsibleCategoryHeader(
 @Composable
 private fun AssetCard(
     asset: UiAsset,
+    percentage: Float,
     onEdit: (UiAsset) -> Unit,
     onDelete: (UiAsset) -> Unit
 ) {
     var showActionSheet by remember { mutableStateOf(false) }
+
+    val animatedPercentage by animateFloatAsState(
+        targetValue = percentage,
+        animationSpec = tween(durationMillis = 600),
+        label = "percentage"
+    )
 
     Card(
         modifier = Modifier
@@ -393,45 +405,73 @@ private fun AssetCard(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = asset.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
+        Box {
+            // Percentage fill background
+            if (animatedPercentage > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(animatedPercentage)
+                        .matchParentSize()
+                        .background(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.06f)
+                        )
                 )
             }
 
-            Column(
-                horizontalAlignment = Alignment.End
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = buildAnnotatedString {
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
-                            append("${asset.baseCurrencyAmount.formatWithCommas()} ")
-                        }
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                            append("${GlobalConfig.baseCurrency.symbol}")
-                        }
-                    },
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                if (asset.originalCurrency != GlobalConfig.baseCurrency) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "${asset.originalAmount.formatWithCommas()} ${asset.originalCurrency.symbol}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        text = asset.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = buildAnnotatedString {
+                                withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
+                                    append("${asset.baseCurrencyAmount.formatWithCommas()} ")
+                                }
+                                withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
+                                    append(GlobalConfig.baseCurrency.symbol)
+                                }
+                            },
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (asset.originalCurrency != GlobalConfig.baseCurrency) {
+                            Text(
+                                text = "${asset.originalAmount.formatWithCommas()} ${asset.originalCurrency.symbol}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.width(6.dp))
+                        }
+                        // Small percentage label
+                        if (percentage > 0.001f) {
+                            Text(
+                                text = "${(percentage * 100).toInt()}%",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
                 }
             }
         }

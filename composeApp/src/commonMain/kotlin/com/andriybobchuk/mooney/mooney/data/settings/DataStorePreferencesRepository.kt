@@ -31,7 +31,8 @@ class DataStorePreferencesRepository(
                     AppTheme.BLUE
                 },
                 notificationsEnabled = preferences[PreferencesKeys.NOTIFICATIONS_ENABLED] ?: true,
-                version = preferences[PreferencesKeys.PREFERENCES_VERSION] ?: 1
+                version = preferences[PreferencesKeys.PREFERENCES_VERSION] ?: 1,
+                appLanguage = preferences[PreferencesKeys.APP_LANGUAGE] ?: "system"
             )
         }
     }
@@ -57,6 +58,12 @@ class DataStorePreferencesRepository(
     override suspend fun updateAppTheme(appTheme: AppTheme) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.APP_THEME] = appTheme.name
+        }
+    }
+
+    override suspend fun updateAppLanguage(language: String) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.APP_LANGUAGE] = language
         }
     }
 

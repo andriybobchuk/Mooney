@@ -58,6 +58,7 @@ class SettingsViewModel(
                         notificationsEnabled = preferences.notificationsEnabled,
                         defaultCurrency = Currency.entries.firstOrNull { c -> c.name == preferences.defaultCurrency }
                             ?: Currency.PLN,
+                        appLanguage = preferences.appLanguage,
                         error = null
                     )
                 }
@@ -74,6 +75,7 @@ class SettingsViewModel(
             is SettingsAction.OnThemeModeChange -> handleThemeModeChange(action.themeMode)
             is SettingsAction.OnNotificationsToggle -> handleNotificationsToggle(action.enabled)
             is SettingsAction.OnDefaultCurrencyChange -> handleDefaultCurrencyChange(action.currency)
+            is SettingsAction.OnLanguageChange -> handleLanguageChange(action.language)
             is SettingsAction.OnExportData -> handleExportData()
             is SettingsAction.OnImportData -> handleImportData(action.jsonData)
             is SettingsAction.OnBackClick -> {}
@@ -198,6 +200,17 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 preferencesRepository.updateDefaultCurrency(currency)
+            } catch (e: Exception) {
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    private fun handleLanguageChange(language: String) {
+        viewModelScope.launch {
+            try {
+                preferencesRepository.updateAppLanguage(language)
+                _state.update { it.copy(appLanguage = language) }
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message) }
             }

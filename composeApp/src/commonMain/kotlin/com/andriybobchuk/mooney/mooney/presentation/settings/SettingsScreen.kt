@@ -301,7 +301,7 @@ fun SettingsScreen(
                     "日本語" to "ja",
                     "中文" to "zh",
                 ).forEach { (name, code) ->
-                    val isCurrentLocale = code == "en" // Simplified — would need platform locale check
+                    val isCurrentLocale = state.appLanguage == code || (state.appLanguage == "system" && code == "en")
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -310,7 +310,10 @@ fun SettingsScreen(
                                 if (isCurrentLocale) MaterialTheme.colorScheme.primaryContainer
                                 else Color.Transparent
                             )
-                            .clickable { showLanguageSheet = false }
+                            .clickable {
+                                viewModel.onAction(SettingsAction.OnLanguageChange(code))
+                                showLanguageSheet = false
+                            }
                             .padding(horizontal = 16.dp, vertical = 13.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -403,7 +406,21 @@ fun SettingsScreen(
                         SettingsDivider()
                         SettingsRow(
                             title = stringResource(Res.string.language),
-                            value = "System",
+                            value = when (state.appLanguage) {
+                                "uk" -> "Українська"
+                                "ru" -> "Русский"
+                                "pl" -> "Polski"
+                                "de" -> "Deutsch"
+                                "es" -> "Español"
+                                "fr" -> "Français"
+                                "pt" -> "Português"
+                                "it" -> "Italiano"
+                                "tr" -> "Türkçe"
+                                "ja" -> "日本語"
+                                "zh" -> "中文"
+                                "en" -> "English"
+                                else -> "System"
+                            },
                             onClick = { showLanguageSheet = true }
                         )
                     }

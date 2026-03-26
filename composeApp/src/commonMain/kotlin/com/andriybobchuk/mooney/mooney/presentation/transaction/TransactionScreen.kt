@@ -676,7 +676,8 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
                 // For transfers: show "Internal Transfer" as title
                 Text(
                     stringResource(Res.string.internal_transfer),
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, fontSize = 15.sp)
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, fontSize = 15.sp),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 // Extract destination account from category ID and show "[Account1] to [Account2]"
                 val destinationAccountId = transaction.subcategory.id.removePrefix("transfer_to_").toIntOrNull()
@@ -690,7 +691,8 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
                 // For regular transactions: show category title
                 Text(
                     transaction.subcategory.title,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, fontSize = 15.sp)
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, fontSize = 15.sp),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 if (transaction.subcategory.isSubCategory()) {
                     Text(

@@ -17,6 +17,8 @@ interface PreferencesRepository {
     
     suspend fun updateNotificationsEnabled(enabled: Boolean)
     
+    suspend fun updateAppLanguage(language: String)
+
     suspend fun clearPreferences()
     
     suspend fun getCurrentPreferences(): UserPreferences

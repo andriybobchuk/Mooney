@@ -500,7 +500,8 @@ fun EnhancedMetricCard(
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = metric.value,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 metric.subtitle?.let {
                     Spacer(modifier = Modifier.height(2.dp))

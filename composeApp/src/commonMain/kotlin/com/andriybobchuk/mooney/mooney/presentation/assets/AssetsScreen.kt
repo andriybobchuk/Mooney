@@ -69,19 +69,16 @@ fun AssetsScreen(
     var editingAsset by remember { mutableStateOf<UiAsset?>(null) }
     var showFeedbackSheet by remember { mutableStateOf(false) }
 
-    // Track if data has loaded at least once to prevent flicker
-    var hasLoadedOnce by remember { mutableStateOf(false) }
-    if (assets.isNotEmpty()) hasLoadedOnce = true
-    val isEmptyState = hasLoadedOnce && assets.isEmpty()
+    val isEmptyState = assets.isEmpty()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
-        containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
-        modifier = Modifier.background(if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background),
+        containerColor = Color.Transparent,
+        modifier = Modifier.background(Color.Transparent),
         topBar = {
             Toolbars.Primary(
-                containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
+                containerColor = Color.Transparent,
                 titleContent = {
                     Column(
                         modifier = Modifier

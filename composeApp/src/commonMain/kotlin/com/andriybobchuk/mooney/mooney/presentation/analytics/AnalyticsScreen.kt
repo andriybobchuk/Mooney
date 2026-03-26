@@ -95,11 +95,11 @@ fun AnalyticsScreen(
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
-        containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
-        modifier = Modifier.background(if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background),
+        containerColor = Color.Transparent,
+        modifier = Modifier.background(Color.Transparent),
         topBar = {
             Toolbars.Primary(
-                containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
+                containerColor = Color.Transparent,
                 title = run {
                     val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
                     if (state.selectedMonth.year == now.year) {

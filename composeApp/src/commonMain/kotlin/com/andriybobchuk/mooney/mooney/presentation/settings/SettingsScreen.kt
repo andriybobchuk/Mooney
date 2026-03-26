@@ -267,24 +267,74 @@ fun SettingsScreen(
     // Language bottom sheet
     if (showLanguageSheet) {
         MooneyBottomSheet(onDismissRequest = { showLanguageSheet = false }) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Text("Language", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
+            ) {
+                Text(
+                    "Language",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Text(
+                    "App follows your device language. Set it in system settings.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
 
                 listOf(
                     "English" to "en",
                     "Українська" to "uk",
                     "Русский" to "ru",
-                    "Polski" to "pl"
-                ).forEach { (name, _) ->
+                    "Polski" to "pl",
+                    "Deutsch" to "de",
+                    "Español" to "es",
+                    "Français" to "fr",
+                    "Português" to "pt",
+                    "Italiano" to "it",
+                    "Türkçe" to "tr",
+                    "日本語" to "ja",
+                    "中文" to "zh",
+                ).forEach { (name, code) ->
+                    val isCurrentLocale = code == "en" // Simplified — would need platform locale check
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                if (isCurrentLocale) MaterialTheme.colorScheme.primaryContainer
+                                else Color.Transparent
+                            )
                             .clickable { showLanguageSheet = false }
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(horizontal = 16.dp, vertical = 13.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(name, style = MaterialTheme.typography.bodyLarge)
+                        Column {
+                            Text(
+                                name,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = if (isCurrentLocale) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                code.uppercase(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (isCurrentLocale) {
+                            Box(
+                                Modifier
+                                    .size(8.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.primary,
+                                        CircleShape
+                                    )
+                            )
+                        }
                     }
                 }
                 Spacer(Modifier.height(16.dp))
@@ -350,7 +400,7 @@ fun SettingsScreen(
                         SettingsDivider()
                         SettingsRow(
                             title = "Language",
-                            value = "English",
+                            value = "System",
                             onClick = { showLanguageSheet = true }
                         )
                     }

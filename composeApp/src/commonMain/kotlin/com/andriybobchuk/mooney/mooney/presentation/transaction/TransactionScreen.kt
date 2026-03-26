@@ -131,18 +131,15 @@ fun TransactionsScreen(
 
     val hasTransactions = transactions.filterNotNull().isNotEmpty()
     val hasAccounts = state.accounts.filterNotNull().isNotEmpty()
-    // Track if data has loaded at least once to prevent flicker on initial render
-    var hasLoadedOnce by remember { mutableStateOf(false) }
-    if (hasTransactions || state.accounts.filterNotNull().isNotEmpty()) hasLoadedOnce = true
-    val isEmptyState = hasLoadedOnce && !hasTransactions
+    val isEmptyState = !hasTransactions
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
-        containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
-        modifier = Modifier.background(if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background),
+        containerColor = Color.Transparent,
+        modifier = Modifier.background(Color.Transparent),
         topBar = {
             Toolbars.Primary(
-                containerColor = if (isEmptyState) Color.Transparent else MaterialTheme.colorScheme.background,
+                containerColor = Color.Transparent,
                 titleContent = {
                     Column(
                         modifier = Modifier

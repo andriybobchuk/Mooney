@@ -106,6 +106,9 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.stringResource
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.*
 import org.koin.compose.viewmodel.koinViewModel
 
 
@@ -155,7 +158,7 @@ fun TransactionsScreen(
                             )
                         )
                         Text(
-                            text = "Spent in ${state.selectedMonth.toDisplayString().substringBeforeLast(' ')}",
+                            text = stringResource(Res.string.spent_in, state.selectedMonth.toDisplayString().substringBeforeLast(' ')),
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Normal,
@@ -392,7 +395,7 @@ fun TransactionsScreenContent(
                         Spacer(modifier = Modifier.weight(1f))
 
                         Text(
-                            text = "Let's get started",
+                            text = stringResource(Res.string.lets_get_started),
                             style = MaterialTheme.typography.headlineSmall,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onBackground
@@ -423,9 +426,9 @@ fun TransactionsScreenContent(
                             }
                             Spacer(Modifier.width(12.dp))
                             Column {
-                                Text("Add an account", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onBackground)
+                                Text(stringResource(Res.string.add_account_step), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onBackground)
                                 Text(
-                                    "Bank account, cash, or investment",
+                                    stringResource(Res.string.add_account_step_desc),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -464,9 +467,9 @@ fun TransactionsScreenContent(
                             }
                             Spacer(Modifier.width(12.dp))
                             Column {
-                                Text("Track spending", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(stringResource(Res.string.track_spending_step), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(
-                                    "Add transactions to see insights",
+                                    stringResource(Res.string.track_spending_step_desc),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                 )
@@ -476,7 +479,7 @@ fun TransactionsScreenContent(
                         Spacer(modifier = Modifier.weight(1f))
 
                         MooneyButton(
-                            text = "Add Your First Account",
+                            text = stringResource(Res.string.add_first_account),
                             onClick = onNavigateToAssets,
                             variant = ButtonVariant.PRIMARY,
                             fullWidth = true
@@ -499,7 +502,7 @@ fun TransactionsScreenContent(
                         Spacer(modifier = Modifier.weight(1f))
 
                         Text(
-                            text = "No transactions",
+                            text = stringResource(Res.string.no_transactions),
                             style = MaterialTheme.typography.headlineSmall,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onBackground
@@ -515,7 +518,7 @@ fun TransactionsScreenContent(
                         Spacer(modifier = Modifier.weight(1f))
 
                         MooneyButton(
-                            text = "Add Transaction",
+                            text = stringResource(Res.string.add_transaction),
                             onClick = onAddTransaction,
                             variant = ButtonVariant.PRIMARY,
                             fullWidth = true
@@ -613,7 +616,7 @@ fun TransactionsScreenContent(
                                     .padding(horizontal = 16.dp, vertical = 14.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("Edit", style = MaterialTheme.typography.bodyLarge)
+                                Text(stringResource(Res.string.edit), style = MaterialTheme.typography.bodyLarge)
                             }
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -631,7 +634,7 @@ fun TransactionsScreenContent(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    "Delete",
+                                    stringResource(Res.string.delete),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.error
                                 )
@@ -671,7 +674,7 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
             if (transaction.subcategory.type == CategoryType.TRANSFER) {
                 // For transfers: show "Internal Transfer" as title
                 Text(
-                    "Internal Transfer",
+                    stringResource(Res.string.internal_transfer),
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, fontSize = 15.sp)
                 )
                 // Extract destination account from category ID and show "[Account1] to [Account2]"
@@ -824,7 +827,7 @@ fun TransactionBottomSheet(
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
-                text = if (isEditMode) "Edit This Transaction" else "Add New Transaction",
+                text = if (isEditMode) stringResource(Res.string.edit_transaction) else stringResource(Res.string.add_new_transaction),
                 fontWeight = FontWeight.Medium,
                 fontSize = 20.sp,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -880,7 +883,7 @@ fun TransactionBottomSheet(
                 MooneyTextField(
                     value = amount ?: "",
                     onValueChange = { amount = it },
-                    label = "Amount",
+                    label = stringResource(Res.string.amount),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
                 )
@@ -891,7 +894,7 @@ fun TransactionBottomSheet(
             // For transfers, show both source and destination accounts
             if (selectedTransactionType == CategoryType.TRANSFER) {
                 Text(
-                    text = "From Account",
+                    text = stringResource(Res.string.from_account),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 4.dp)
@@ -901,7 +904,7 @@ fun TransactionBottomSheet(
                 Spacer(Modifier.height(12.dp))
 
                 Text(
-                    text = "To Account",
+                    text = stringResource(Res.string.to_account),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 4.dp)
@@ -929,7 +932,7 @@ fun TransactionBottomSheet(
                     else -> when (selectedTransactionType) {
                         CategoryType.EXPENSE -> "🛒 Groceries & Household"
                         CategoryType.INCOME -> "💸 Salary"
-                        else -> "Select Category"
+                        else -> stringResource(Res.string.select_category)
                     }
                 }
                 MooneyButton(
@@ -990,7 +993,7 @@ fun TransactionBottomSheet(
             Spacer(Modifier.height(16.dp))
 
             MooneyButton(
-                text = if (transactionToEdit != null) "Update Transaction" else "Add Transaction",
+                text = if (transactionToEdit != null) stringResource(Res.string.update_transaction) else stringResource(Res.string.add_transaction),
                 modifier = Modifier.fillMaxWidth(),
                 variant = ButtonVariant.PRIMARY,
                 onClick = {
@@ -1116,7 +1119,7 @@ fun DateSelectionBottomSheet(
     ) {
         Column(Modifier.padding(20.dp).fillMaxSize()) {
             Text(
-                text = "Select Date",
+                text = stringResource(Res.string.select_date),
                 fontWeight = FontWeight.Medium,
                 fontSize = 20.sp,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -1174,7 +1177,7 @@ fun YearDropdownSelector(
     val currentDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     val years = (currentDate.year downTo 2020).toList()
 
-    Text("Year", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+    Text(stringResource(Res.string.year), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
 
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(years.size) { index ->
@@ -1209,7 +1212,7 @@ fun MonthSelector(
 ) {
     val monthAbbreviations = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 
-    Text("Month", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+    Text(stringResource(Res.string.month), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
 
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(12) { index ->
@@ -1390,7 +1393,7 @@ private fun AccountField(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = initialSelectedAccount?.title ?: "Select Account",
+                text = initialSelectedAccount?.title ?: stringResource(Res.string.select_account),
                 style = MaterialTheme.typography.bodyLarge
             )
             initialSelectedAccount?.let {
@@ -1494,7 +1497,7 @@ fun CategorySelectionBottomSheet(
     ) {
         Column(Modifier.padding(20.dp).fillMaxSize()) {
             Text(
-                text = "Select Category",
+                text = stringResource(Res.string.select_category),
                 fontWeight = FontWeight.Medium,
                 fontSize = 20.sp,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -1507,7 +1510,7 @@ fun CategorySelectionBottomSheet(
                     .padding(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                listOf("Expense" to 0, "Income" to 1).forEach { (label, index) ->
+                listOf(stringResource(Res.string.expense) to 0, stringResource(Res.string.income) to 1).forEach { (label, index) ->
                     val isSelected = selectedTabIndex == index
                     Box(
                         modifier = Modifier
@@ -1910,7 +1913,7 @@ fun SpendingLineChart(
     
     Column(modifier = modifier.padding(16.dp)) {
         Text(
-            text = "Spending Comparison",
+            text = stringResource(Res.string.spending_comparison),
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
             modifier = Modifier.padding(bottom = 8.dp)
         )
@@ -1927,7 +1930,7 @@ fun SpendingLineChart(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "Current",
+                    text = stringResource(Res.string.current),
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -1944,7 +1947,7 @@ fun SpendingLineChart(
                 }
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "6mo avg",
+                    text = stringResource(Res.string.six_month_avg),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
@@ -2297,9 +2300,9 @@ fun TransactionTypeSwitch(
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         listOf(
-            CategoryType.EXPENSE to "Expense",
-            CategoryType.INCOME to "Income",
-            CategoryType.TRANSFER to "Transfer"
+            CategoryType.EXPENSE to stringResource(Res.string.expense),
+            CategoryType.INCOME to stringResource(Res.string.income),
+            CategoryType.TRANSFER to stringResource(Res.string.transfer)
         ).forEach { (type, label) ->
             val isSelected = selectedType == type
             Box(

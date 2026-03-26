@@ -27,15 +27,18 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.andriybobchuk.mooney.core.presentation.Icons
 import com.andriybobchuk.mooney.mooney.domain.FeatureFlags
+import org.jetbrains.compose.resources.stringResource
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.*
 
 @Composable
 fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int) {
     val allItems = buildList {
-        add(Triple(BottomNavigationItem("Transactions", Icons.TransactionsIcon()), Route.Transactions, 0))
-        add(Triple(BottomNavigationItem("Assets", Icons.AccountsIcon()), Route.Accounts, 1))
-        if (FeatureFlags.exchangeEnabled) add(Triple(BottomNavigationItem("Exchange", Icons.ExchangeIcon()), Route.Exchange, 2))
-        add(Triple(BottomNavigationItem("Analytics", Icons.StatsIcon()), Route.Analytics, 3))
-        if (FeatureFlags.goalsEnabled) add(Triple(BottomNavigationItem("Goals", Icons.GoalsIcon()), Route.Goals, 4))
+        add(Triple(BottomNavigationItem(stringResource(Res.string.nav_transactions), Icons.TransactionsIcon()), Route.Transactions, 0))
+        add(Triple(BottomNavigationItem(stringResource(Res.string.nav_assets), Icons.AccountsIcon()), Route.Accounts, 1))
+        if (FeatureFlags.exchangeEnabled) add(Triple(BottomNavigationItem(stringResource(Res.string.nav_exchange), Icons.ExchangeIcon()), Route.Exchange, 2))
+        add(Triple(BottomNavigationItem(stringResource(Res.string.nav_analytics), Icons.StatsIcon()), Route.Analytics, 3))
+        if (FeatureFlags.goalsEnabled) add(Triple(BottomNavigationItem(stringResource(Res.string.nav_goals), Icons.GoalsIcon()), Route.Goals, 4))
     }
 
     Column(

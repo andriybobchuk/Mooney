@@ -28,6 +28,9 @@ import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 import com.andriybobchuk.mooney.core.platform.FileHandler
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.koinInject
+import org.jetbrains.compose.resources.stringResource
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.*
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -96,7 +99,7 @@ fun SettingsScreen(
                 importJsonData = null
                 importPreview = null
             },
-            title = { Text("Confirm Import") },
+            title = { Text(stringResource(Res.string.confirm_import)) },
             text = {
                 Column {
                     Text("The following data will be imported:")
@@ -125,7 +128,7 @@ fun SettingsScreen(
                         importPreview = null
                     }
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(Res.string.cancel))
                 }
             }
         )
@@ -135,7 +138,7 @@ fun SettingsScreen(
     if (showThemeSheet) {
         MooneyBottomSheet(onDismissRequest = { showThemeSheet = false }) {
             Column(modifier = Modifier.padding(20.dp)) {
-                Text("Appearance", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                Text(stringResource(Res.string.appearance), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
                 ThemeMode.entries.forEach { mode ->
                     val isSelected = state.currentThemeMode == mode
                     Row(
@@ -152,9 +155,9 @@ fun SettingsScreen(
                     ) {
                         Text(
                             when (mode) {
-                                ThemeMode.LIGHT -> "Light"
-                                ThemeMode.DARK -> "Dark"
-                                ThemeMode.SYSTEM -> "System"
+                                ThemeMode.LIGHT -> stringResource(Res.string.light)
+                                ThemeMode.DARK -> stringResource(Res.string.dark)
+                                ThemeMode.SYSTEM -> stringResource(Res.string.system)
                             },
                             style = MaterialTheme.typography.bodyLarge,
                             color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
@@ -174,7 +177,7 @@ fun SettingsScreen(
     if (showCurrencySheet) {
         MooneyBottomSheet(onDismissRequest = { showCurrencySheet = false }) {
             Column(modifier = Modifier.padding(20.dp)) {
-                Text("Default Currency", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                Text(stringResource(Res.string.default_currency), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
                 state.availableCurrencies.forEach { currency ->
                     val isSelected = currency == state.defaultCurrency
                     Row(
@@ -209,7 +212,7 @@ fun SettingsScreen(
     if (showPinnedSheet) {
         MooneyBottomSheet(onDismissRequest = { showPinnedSheet = false }) {
             Column(modifier = Modifier.padding(20.dp)) {
-                Text("Pinned Categories", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 4.dp))
+                Text(stringResource(Res.string.pinned_categories), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 4.dp))
                 Text(
                     "Select up to ${state.maxPinnedCategories} categories",
                     style = MaterialTheme.typography.bodySmall,
@@ -273,7 +276,7 @@ fun SettingsScreen(
                     .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
                 Text(
-                    "Language",
+                    stringResource(Res.string.language),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
@@ -345,7 +348,7 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             Toolbars.Primary(
-                title = "Settings",
+                title = stringResource(Res.string.settings),
                 showBackButton = true,
                 onBackClick = onBackClick,
                 scrollBehavior = scrollBehavior
@@ -372,34 +375,34 @@ fun SettingsScreen(
             ) {
                 // PREFERENCES section
                 item {
-                    SettingsSectionHeader("Preferences")
+                    SettingsSectionHeader(stringResource(Res.string.preferences))
                 }
                 item {
                     SettingsGroup {
                         SettingsRow(
-                            title = "Appearance",
+                            title = stringResource(Res.string.appearance),
                             value = when (state.currentThemeMode) {
-                                ThemeMode.LIGHT -> "Light"
-                                ThemeMode.DARK -> "Dark"
-                                ThemeMode.SYSTEM -> "System"
+                                ThemeMode.LIGHT -> stringResource(Res.string.light)
+                                ThemeMode.DARK -> stringResource(Res.string.dark)
+                                ThemeMode.SYSTEM -> stringResource(Res.string.system)
                             },
                             onClick = { showThemeSheet = true }
                         )
                         SettingsDivider()
                         SettingsRow(
-                            title = "Default Currency",
+                            title = stringResource(Res.string.default_currency),
                             value = "${state.defaultCurrency.symbol} ${state.defaultCurrency.name}",
                             onClick = { showCurrencySheet = true }
                         )
                         SettingsDivider()
                         SettingsRow(
-                            title = "Pinned Categories",
+                            title = stringResource(Res.string.pinned_categories),
                             value = "${state.pinnedCategoryIds.size}/${state.maxPinnedCategories}",
                             onClick = { showPinnedSheet = true }
                         )
                         SettingsDivider()
                         SettingsRow(
-                            title = "Language",
+                            title = stringResource(Res.string.language),
                             value = "System",
                             onClick = { showLanguageSheet = true }
                         )
@@ -408,18 +411,18 @@ fun SettingsScreen(
 
                 // DATA section
                 item {
-                    SettingsSectionHeader("Data")
+                    SettingsSectionHeader(stringResource(Res.string.data))
                 }
                 item {
                     SettingsGroup {
                         SettingsRow(
-                            title = "Export Data",
+                            title = stringResource(Res.string.export_data),
                             onClick = { viewModel.onAction(SettingsAction.OnExportData) },
                             showLoading = state.isExporting
                         )
                         SettingsDivider()
                         SettingsRow(
-                            title = "Import Data",
+                            title = stringResource(Res.string.import_data),
                             onClick = {
                                 coroutineScope.launch {
                                     fileHandler.pickAndReadTextFile()
@@ -441,12 +444,12 @@ fun SettingsScreen(
 
                 // ABOUT section
                 item {
-                    SettingsSectionHeader("About")
+                    SettingsSectionHeader(stringResource(Res.string.about))
                 }
                 item {
                     SettingsGroup {
                         SettingsRow(
-                            title = "Version",
+                            title = stringResource(Res.string.version),
                             value = "1.0.0",
                             showChevron = false
                         )

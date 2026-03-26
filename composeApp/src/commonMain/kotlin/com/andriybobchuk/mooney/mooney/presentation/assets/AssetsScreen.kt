@@ -49,6 +49,9 @@ import com.andriybobchuk.mooney.mooney.domain.AssetCategory
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.*
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,7 +97,7 @@ fun AssetsScreen(
                             )
                         )
                         Text(
-                            text = "Total Net Worth",
+                            text = stringResource(Res.string.total_net_worth),
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Normal,
@@ -107,12 +110,12 @@ fun AssetsScreen(
                 actions = listOf(
                     Toolbars.ToolBarAction(
                         icon = Icons.Default.Email,
-                        contentDescription = "Feedback",
+                        contentDescription = stringResource(Res.string.feedback),
                         onClick = { showFeedbackSheet = true }
                     ),
                     Toolbars.ToolBarAction(
                         icon = Icons.Default.Settings,
-                        contentDescription = "Settings",
+                        contentDescription = stringResource(Res.string.settings),
                         onClick = onSettingsClick
                     )
                 )
@@ -126,7 +129,7 @@ fun AssetsScreen(
                 FloatingActionButton(
                     onClick = { showSheet = true },
                     content = {
-                        Icon(Icons.Default.Add, contentDescription = "Add Asset")
+                        Icon(Icons.Default.Add, contentDescription = stringResource(Res.string.add_account))
                     },
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     containerColor = MaterialTheme.colorScheme.primary
@@ -229,7 +232,7 @@ private fun AssetsScreenContent(
                         Spacer(modifier = Modifier.weight(1f))
 
                         Text(
-                            text = "Welcome to Mooney",
+                            text = stringResource(Res.string.welcome_to_mooney),
                             style = MaterialTheme.typography.headlineSmall,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onBackground
@@ -245,7 +248,7 @@ private fun AssetsScreenContent(
                         Spacer(modifier = Modifier.weight(1f))
 
                         MooneyButton(
-                            text = "Add Your First Account",
+                            text = stringResource(Res.string.add_first_account),
                             onClick = onAddAsset,
                             variant = ButtonVariant.PRIMARY,
                             fullWidth = true
@@ -504,7 +507,7 @@ private fun AssetCard(
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Edit", style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(Res.string.edit), style = MaterialTheme.typography.bodyLarge)
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -522,7 +525,7 @@ private fun AssetCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "Delete",
+                        stringResource(Res.string.delete),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -554,7 +557,7 @@ private fun AssetSheet(
             .verticalScroll(rememberScrollState())
     ) {
         Text(
-            text = if (editingAsset != null) "Edit Asset" else "Add New Asset",
+            text = if (editingAsset != null) stringResource(Res.string.edit_asset) else stringResource(Res.string.add_new_asset),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -563,7 +566,7 @@ private fun AssetSheet(
             modifier = Modifier.fillMaxWidth(),
             value = title,
             onValueChange = { if (it.length <= 24) title = it },
-            label = "Title",
+            label = stringResource(Res.string.title),
             singleLine = true
         )
 
@@ -573,7 +576,7 @@ private fun AssetSheet(
             modifier = Modifier.fillMaxWidth(),
             value = amount,
             onValueChange = { amount = it },
-            label = "Value",
+            label = stringResource(Res.string.value),
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal),
             singleLine = true
         )
@@ -581,7 +584,7 @@ private fun AssetSheet(
         Spacer(Modifier.height(12.dp))
 
         // Category selector row
-        Text("Category", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+        Text(stringResource(Res.string.category), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -603,7 +606,7 @@ private fun AssetSheet(
         Spacer(Modifier.height(12.dp))
 
         // Currency selector row
-        Text("Currency", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+        Text(stringResource(Res.string.currency), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -625,7 +628,7 @@ private fun AssetSheet(
         Spacer(Modifier.height(20.dp))
 
         MooneyButton(
-            text = if (editingAsset != null) "Update Asset" else "Add Asset",
+            text = if (editingAsset != null) stringResource(Res.string.update_asset) else stringResource(Res.string.add_account),
             modifier = Modifier.fillMaxWidth(),
             variant = ButtonVariant.PRIMARY,
             onClick = {
@@ -647,7 +650,7 @@ private fun AssetSheet(
                     .padding(horizontal = 20.dp, vertical = 16.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                Text("Select Category", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                Text(stringResource(Res.string.select_category), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
                 AssetCategory.entries.forEach { category ->
                     val isSelected = selectedCategory == category
                     Row(
@@ -683,7 +686,7 @@ private fun AssetSheet(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
-                Text("Select Currency", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                Text(stringResource(Res.string.select_currency), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
                 Currency.entries.forEach { currency ->
                     val isSelected = selectedCurrency == currency
                     Row(

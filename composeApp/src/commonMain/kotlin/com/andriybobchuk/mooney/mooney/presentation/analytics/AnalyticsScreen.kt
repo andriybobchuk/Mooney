@@ -75,6 +75,9 @@ import com.andriybobchuk.mooney.mooney.domain.formatToShortString
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import org.jetbrains.compose.resources.stringResource
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.*
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -112,12 +115,12 @@ fun AnalyticsScreen(
                 actions = listOf(
                     Toolbars.ToolBarAction(
                         icon = Icons.Default.Email,
-                        contentDescription = "Feedback",
+                        contentDescription = stringResource(Res.string.feedback),
                         onClick = { showFeedbackSheet = true }
                     ),
                     Toolbars.ToolBarAction(
                         icon = Icons.Default.Settings,
-                        contentDescription = "Settings",
+                        contentDescription = stringResource(Res.string.settings),
                         onClick = onSettingsClick
                     )
                 )
@@ -143,7 +146,7 @@ fun AnalyticsScreen(
                         Spacer(modifier = Modifier.weight(1f))
 
                         Text(
-                            text = "No analytics yet",
+                            text = stringResource(Res.string.no_analytics_yet),
                             style = MaterialTheme.typography.headlineSmall,
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onBackground
@@ -159,7 +162,7 @@ fun AnalyticsScreen(
                         Spacer(modifier = Modifier.weight(1f))
 
                         MooneyButton(
-                            text = "Go to Transactions",
+                            text = stringResource(Res.string.go_to_transactions),
                             onClick = onNavigateToTransactions,
                             variant = ButtonVariant.PRIMARY,
                             fullWidth = true
@@ -379,7 +382,7 @@ fun MonthPicker(
     IconButton(onClick = { showSheet = true }) {
         Icon(
             Icons.Default.DateRange,
-            contentDescription = "Select Month",
+            contentDescription = stringResource(Res.string.select_month),
             modifier = Modifier.size(22.dp),
             tint = MaterialTheme.colorScheme.onBackground
         )
@@ -395,7 +398,7 @@ fun MonthPicker(
                     .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
                 Text(
-                    text = "Select Month",
+                    text = stringResource(Res.string.select_month),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
@@ -566,7 +569,7 @@ fun SubcategoryBottomSheet(
                 )
             }
             Text(
-                text = "Subcategories breakdown",
+                text = stringResource(Res.string.subcategories_breakdown),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp)
@@ -659,9 +662,9 @@ fun CategoryBreakdownSheet(
     onDismiss: () -> Unit
 ) {
     val title = when (sheetType) {
-        CategorySheetType.REVENUE -> "Revenue Breakdown"
-        CategorySheetType.OPERATING_COSTS -> "Operating Costs Breakdown"
-        CategorySheetType.TAXES -> "Tax Breakdown"
+        CategorySheetType.REVENUE -> stringResource(Res.string.revenue_breakdown)
+        CategorySheetType.OPERATING_COSTS -> stringResource(Res.string.operating_costs_breakdown)
+        CategorySheetType.TAXES -> stringResource(Res.string.tax_breakdown)
     }
     
     val emoji = when (sheetType) {
@@ -696,7 +699,7 @@ fun CategoryBreakdownSheet(
                 )
             }
             Text(
-                text = "Tap a category to see subcategories",
+                text = stringResource(Res.string.tap_category_subcategories),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp)
@@ -802,7 +805,7 @@ fun NetIncomeChartBottomSheet(
     ) {
         // Header
         Text(
-            text = "Profit over 6 months",
+            text = stringResource(Res.string.profit_over_6_months),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.padding(bottom = 16.dp)
@@ -835,7 +838,7 @@ fun NetIncomeChartBottomSheet(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Last 6 months",
+                        text = stringResource(Res.string.last_6_months),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -870,7 +873,7 @@ fun NetIncomeChartBottomSheet(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Next 6 months",
+                        text = stringResource(Res.string.next_6_months),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -884,7 +887,7 @@ fun NetIncomeChartBottomSheet(
                     )
 
                     Text(
-                        text = "Based on selected month",
+                        text = stringResource(Res.string.based_on_selected),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
                         modifier = Modifier.padding(bottom = 8.dp)

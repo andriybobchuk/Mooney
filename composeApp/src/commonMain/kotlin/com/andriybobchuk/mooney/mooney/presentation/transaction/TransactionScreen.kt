@@ -131,7 +131,10 @@ fun TransactionsScreen(
 
     val hasTransactions = transactions.filterNotNull().isNotEmpty()
     val hasAccounts = state.accounts.filterNotNull().isNotEmpty()
-    val isEmptyState = !hasTransactions && !state.isLoading
+    // Track if data has loaded at least once to prevent flicker on initial render
+    var hasLoadedOnce by remember { mutableStateOf(false) }
+    if (hasTransactions || state.accounts.filterNotNull().isNotEmpty()) hasLoadedOnce = true
+    val isEmptyState = hasLoadedOnce && !hasTransactions
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(

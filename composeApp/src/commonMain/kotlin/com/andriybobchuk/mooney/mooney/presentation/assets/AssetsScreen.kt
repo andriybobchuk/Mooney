@@ -3,6 +3,7 @@ package com.andriybobchuk.mooney.mooney.presentation.assets
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -68,7 +69,10 @@ fun AssetsScreen(
     var editingAsset by remember { mutableStateOf<UiAsset?>(null) }
     var showFeedbackSheet by remember { mutableStateOf(false) }
 
-    val isEmptyState = assets.isEmpty() && !state.isLoading
+    // Track if data has loaded at least once to prevent flicker
+    var hasLoadedOnce by remember { mutableStateOf(false) }
+    if (assets.isNotEmpty()) hasLoadedOnce = true
+    val isEmptyState = hasLoadedOnce && assets.isEmpty()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -408,18 +412,18 @@ private fun AssetCard(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Box {
+        Box(modifier = Modifier.fillMaxWidth()) {
             // Percentage fill — accent color from left to right
-            if (animatedPercentage > 0f) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(animatedPercentage)
-                        .matchParentSize()
-                        .background(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                            RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)
+            if (animatedPercentage > 0.001f) {
+                Canvas(modifier = Modifier.matchParentSize()) {
+                    drawRect(
+                        color = androidx.compose.ui.graphics.Color(0xFF3562F6).copy(alpha = 0.08f),
+                        size = androidx.compose.ui.geometry.Size(
+                            width = size.width * animatedPercentage,
+                            height = size.height
                         )
-                )
+                    )
+                }
             }
 
             Row(

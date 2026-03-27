@@ -3,6 +3,7 @@ package com.andriybobchuk.mooney.testutil
 import com.andriybobchuk.mooney.mooney.domain.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 
 class FakeCoreRepository : CoreRepository {
     private val accounts = MutableStateFlow<List<Account?>>(emptyList())
@@ -67,6 +68,8 @@ class FakeCoreRepository : CoreRepository {
     override fun getSubcategories(parentId: String): List<Category> =
         TestFixtures.allCategories.filter { it.parent?.id == parentId }
 
+    override fun reloadCategories() { /* no-op in tests */ }
+
     override suspend fun trackCategoryUsage(categoryId: String) {
         categoryUsages[categoryId] = (categoryUsages[categoryId] ?: 0) + 1
     }
@@ -97,4 +100,35 @@ class FakeCoreRepository : CoreRepository {
 
     override suspend fun getGoalById(id: Int): Goal? =
         goals.value.find { it.id == id }
+
+    // Primary Account
+    override suspend fun setPrimaryAccount(accountId: Int) {
+        accounts.value = accounts.value.filterNotNull().map {
+            it.copy(isPrimary = it.id == accountId)
+        }
+    }
+
+    override suspend fun getPrimaryAccount(): Account? =
+        accounts.value.filterNotNull().find { it.isPrimary }
+
+    // User Currencies
+    private val userCurrencies = MutableStateFlow<List<UserCurrency>>(emptyList())
+
+    override fun getUserCurrencies(): Flow<List<UserCurrency>> =
+        userCurrencies.map { it.sortedBy { c -> c.sortOrder } }
+
+    override suspend fun upsertUserCurrency(userCurrency: UserCurrency) {
+        val current = userCurrencies.value.toMutableList()
+        val existing = current.indexOfFirst { it.code == userCurrency.code }
+        if (existing >= 0) {
+            current[existing] = userCurrency
+        } else {
+            current.add(userCurrency)
+        }
+        userCurrencies.value = current
+    }
+
+    override suspend fun deleteUserCurrency(code: String) {
+        userCurrencies.value = userCurrencies.value.filter { it.code != code }
+    }
 }

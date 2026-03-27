@@ -46,7 +46,13 @@ data class Account(
     val amount: Double,
     val currency: Currency,
     val emoji: String,
-    val assetCategory: AssetCategory = AssetCategory.BANK_ACCOUNT
+    val assetCategory: AssetCategory = AssetCategory.BANK_ACCOUNT,
+    val isPrimary: Boolean = false
+)
+
+data class UserCurrency(
+    val code: String,
+    val sortOrder: Int
 )
 
 enum class Currency(val symbol: String) {
@@ -54,6 +60,19 @@ enum class Currency(val symbol: String) {
     USD("$"),
     EUR("€"),
     UAH("₴"),
+    GBP("£"),
+    CHF("Fr"),
+    CZK("Kč"),
+    SEK("kr"),
+    NOK("kr"),
+    DKK("kr"),
+    JPY("¥"),
+    CAD("C$"),
+    AUD("A$"),
+    TRY("₺"),
+    BRL("R$"),
+    RUB("₽"),
+    AED("د.إ"),
 }
 
 data class ExchangeRates(

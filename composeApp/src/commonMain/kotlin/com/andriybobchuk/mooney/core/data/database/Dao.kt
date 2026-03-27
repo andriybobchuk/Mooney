@@ -33,6 +33,15 @@ interface AccountDao {
 
     @Query("SELECT * FROM AccountEntity WHERE id = :id")
     suspend fun getById(id: Int): AccountEntity?
+
+    @Query("UPDATE AccountEntity SET isPrimary = 0 WHERE isPrimary = 1")
+    suspend fun clearAllPrimary()
+
+    @Query("UPDATE AccountEntity SET isPrimary = 1 WHERE id = :id")
+    suspend fun setPrimary(id: Int)
+
+    @Query("SELECT * FROM AccountEntity WHERE isPrimary = 1 LIMIT 1")
+    suspend fun getPrimary(): AccountEntity?
 }
 
 @Dao
@@ -129,4 +138,34 @@ interface PendingTransactionDao {
 
     @Query("DELETE FROM pending_transactions WHERE status != 'PENDING' AND scheduledDate < :cutoffDate")
     suspend fun cleanupOldProcessed(cutoffDate: String)
+}
+
+@Dao
+interface CategoryDao {
+    @Query("SELECT * FROM categories")
+    fun getAll(): Flow<List<CategoryEntity>>
+
+    @Query("SELECT * FROM categories WHERE id = :id")
+    suspend fun getById(id: String): CategoryEntity?
+
+    @Query("SELECT * FROM categories WHERE parentId = :parentId")
+    suspend fun getByParentId(parentId: String): List<CategoryEntity>
+
+    @Upsert
+    suspend fun upsert(category: CategoryEntity)
+
+    @Query("DELETE FROM categories WHERE id = :id")
+    suspend fun delete(id: String)
+}
+
+@Dao
+interface UserCurrencyDao {
+    @Query("SELECT * FROM user_currencies ORDER BY sortOrder ASC")
+    fun getAll(): Flow<List<UserCurrencyEntity>>
+
+    @Upsert
+    suspend fun upsert(userCurrency: UserCurrencyEntity)
+
+    @Query("DELETE FROM user_currencies WHERE code = :code")
+    suspend fun delete(code: String)
 }

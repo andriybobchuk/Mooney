@@ -1,10 +1,13 @@
 package com.andriybobchuk.mooney.mooney.data
 
 import com.andriybobchuk.mooney.core.data.database.AccountDao
+import com.andriybobchuk.mooney.core.data.database.CategoryDao
 import com.andriybobchuk.mooney.core.data.database.CategoryUsageDao
 import com.andriybobchuk.mooney.core.data.database.CategoryUsageEntity
 import com.andriybobchuk.mooney.core.data.database.GoalDao
 import com.andriybobchuk.mooney.core.data.database.TransactionDao
+import com.andriybobchuk.mooney.core.data.database.UserCurrencyDao
+import com.andriybobchuk.mooney.core.data.database.UserCurrencyEntity
 import com.andriybobchuk.mooney.core.data.database.toDomain
 import com.andriybobchuk.mooney.core.data.database.toEntity
 import com.andriybobchuk.mooney.mooney.domain.Account
@@ -13,17 +16,25 @@ import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.CoreRepository
 import com.andriybobchuk.mooney.mooney.domain.Goal
 import com.andriybobchuk.mooney.mooney.domain.Transaction
+import com.andriybobchuk.mooney.mooney.domain.UserCurrency
 import com.andriybobchuk.mooney.mooney.domain.toEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlin.concurrent.Volatile
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.runBlocking
 
+@Suppress("TooManyFunctions")
 class DefaultCoreRepositoryImpl(
     private val accountDao: AccountDao,
     private val transactionDao: TransactionDao,
     private val categoryUsageDao: CategoryUsageDao,
     private val goalDao: GoalDao,
+    private val userCurrencyDao: UserCurrencyDao,
+    private val categoryDao: CategoryDao,
 ) : CoreRepository {
 
     override suspend fun upsertAccount(account: Account) {
@@ -105,17 +116,40 @@ class DefaultCoreRepositoryImpl(
     }
 
     ///////////////////////////// CATEGORIES //////////////////////
-    private val categoriesById = CategoryDataSource.categories.associateBy { it.id }
 
-    override fun getAllCategories(): List<Category> = CategoryDataSource.categories
+    @Volatile
+    private var cachedCategories: List<Category> = emptyList()
 
-    override fun getCategoryById(id: String): Category? = categoriesById[id]
+    @Volatile
+    private var cachedCategoriesById: Map<String, Category> = emptyMap()
+
+    init {
+        reloadCategories()
+    }
+
+    override fun reloadCategories() {
+        val entities = runBlocking(Dispatchers.IO) { categoryDao.getAll().first() }
+        val entitiesById = entities.associateBy { it.id }
+
+        fun resolve(entityId: String): Category? {
+            val entity = entitiesById[entityId] ?: return null
+            val parent = entity.parentId?.let { resolve(it) }
+            return entity.toDomain(parent)
+        }
+
+        cachedCategories = entities.mapNotNull { resolve(it.id) }
+        cachedCategoriesById = cachedCategories.associateBy { it.id }
+    }
+
+    override fun getAllCategories(): List<Category> = cachedCategories
+
+    override fun getCategoryById(id: String): Category? = cachedCategoriesById[id]
 
     override fun getTopLevelCategories(): List<Category> =
-        CategoryDataSource.categories.filter { it.parent == null }
+        cachedCategories.filter { it.parent == null }
 
     override fun getSubcategories(parentId: String): List<Category> =
-        CategoryDataSource.categories.filter { it.parent?.id == parentId }
+        cachedCategories.filter { it.parent?.id == parentId }
 
     ///////////////////////////// CATEGORY USAGE ///////////////////////////////////////
     
@@ -166,4 +200,35 @@ class DefaultCoreRepositoryImpl(
         return goalDao.getById(id)?.toDomain()
     }
 
+    ///////////////////////////// PRIMARY ACCOUNT ////////////////////////////////
+
+    override suspend fun setPrimaryAccount(accountId: Int) {
+        accountDao.clearAllPrimary()
+        accountDao.setPrimary(accountId)
+    }
+
+    override suspend fun getPrimaryAccount(): Account? {
+        return accountDao.getPrimary()?.toDomain()
+    }
+
+    ///////////////////////////// USER CURRENCIES ////////////////////////////////
+
+    override fun getUserCurrencies(): Flow<List<UserCurrency>> {
+        return userCurrencyDao.getAll().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
+    override suspend fun upsertUserCurrency(userCurrency: UserCurrency) {
+        userCurrencyDao.upsert(
+            UserCurrencyEntity(
+                code = userCurrency.code,
+                sortOrder = userCurrency.sortOrder
+            )
+        )
+    }
+
+    override suspend fun deleteUserCurrency(code: String) {
+        userCurrencyDao.delete(code)
+    }
 }

@@ -2,6 +2,7 @@ package com.andriybobchuk.mooney.mooney.domain
 
 import kotlinx.coroutines.flow.Flow
 
+@Suppress("TooManyFunctions")
 interface CoreRepository {
 
     // Account CRUD
@@ -21,6 +22,7 @@ interface CoreRepository {
     fun getCategoryById(id: String): Category?
     fun getTopLevelCategories(): List<Category>
     fun getSubcategories(parentId: String): List<Category>
+    fun reloadCategories()
     
     // Category Usage
     suspend fun trackCategoryUsage(categoryId: String)
@@ -31,4 +33,13 @@ interface CoreRepository {
     suspend fun deleteGoal(id: Int)
     fun getAllGoals(): Flow<List<Goal>>
     suspend fun getGoalById(id: Int): Goal?
+
+    // Primary Account
+    suspend fun setPrimaryAccount(accountId: Int)
+    suspend fun getPrimaryAccount(): Account?
+
+    // User Currencies
+    fun getUserCurrencies(): Flow<List<UserCurrency>>
+    suspend fun upsertUserCurrency(userCurrency: UserCurrency)
+    suspend fun deleteUserCurrency(code: String)
 }

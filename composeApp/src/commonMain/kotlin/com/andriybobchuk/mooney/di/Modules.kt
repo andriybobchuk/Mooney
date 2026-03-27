@@ -51,6 +51,8 @@ val sharedModule = module {
     single { get<AppDatabase>().goalGroupDao }
     single { get<AppDatabase>().recurringTransactionDao }
     single { get<AppDatabase>().pendingTransactionDao }
+    single { get<AppDatabase>().categoryDao }
+    single { get<AppDatabase>().userCurrencyDao }
 
     // Data Export/Import Manager
     single {
@@ -59,7 +61,11 @@ val sharedModule = module {
             accountDao = get(),
             goalDao = get(),
             goalGroupDao = get(),
-            categoryUsageDao = get()
+            categoryUsageDao = get(),
+            categoryDao = get(),
+            userCurrencyDao = get(),
+            recurringTransactionDao = get(),
+            pendingTransactionDao = get()
         )
     }
 
@@ -122,6 +128,11 @@ val sharedModule = module {
     singleOf(::EnrichGoalsWithProgressUseCase)
     singleOf(::SaveGoalUseCase)
     singleOf(::CalculateRatesInBaseCurrencyUseCase)
+
+    // Primary Account & Currency Use Cases
+    singleOf(::SetPrimaryAccountUseCase)
+    singleOf(::GetUserCurrenciesUseCase)
+    singleOf(::UpdateUserCurrenciesUseCase)
 
     // Asset Use Cases
     singleOf(::ManageAssetCategoryOrderUseCase)

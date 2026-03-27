@@ -10,7 +10,23 @@ data class AccountEntity(
     val amount: Double,
     val currency: String,
     val emoji: String,
-    val assetCategory: String = "BANK_ACCOUNT"
+    val assetCategory: String = "BANK_ACCOUNT",
+    val isPrimary: Boolean = false
+)
+
+@Entity(tableName = "categories")
+data class CategoryEntity(
+    @PrimaryKey val id: String,
+    val title: String,
+    val type: String,
+    val emoji: String? = null,
+    val parentId: String? = null
+)
+
+@Entity(tableName = "user_currencies")
+data class UserCurrencyEntity(
+    @PrimaryKey val code: String,
+    val sortOrder: Int
 )
 
 @Entity

@@ -12,13 +12,15 @@ import androidx.room.RoomDatabase
         GoalEntity::class,
         GoalGroupEntity::class,
         RecurringTransactionEntity::class,
-        PendingTransactionEntity::class
+        PendingTransactionEntity::class,
+        CategoryEntity::class,
+        UserCurrencyEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = true
 )
 @ConstructedBy(AppDatabaseConstructor::class)
-abstract class  AppDatabase : RoomDatabase() {
+abstract class AppDatabase : RoomDatabase() {
     abstract val transactionDao: TransactionDao
     abstract val accountDao: AccountDao
     abstract val categoryUsageDao: CategoryUsageDao
@@ -26,6 +28,8 @@ abstract class  AppDatabase : RoomDatabase() {
     abstract val goalGroupDao: GoalGroupDao
     abstract val recurringTransactionDao: RecurringTransactionDao
     abstract val pendingTransactionDao: PendingTransactionDao
+    abstract val categoryDao: CategoryDao
+    abstract val userCurrencyDao: UserCurrencyDao
 
     companion object {
         const val DB_NAME = "mooney.db"

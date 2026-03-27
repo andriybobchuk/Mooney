@@ -3,10 +3,12 @@ package com.andriybobchuk.mooney.core.data.database
 import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.AssetCategory
 import com.andriybobchuk.mooney.mooney.domain.Category
+import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.Goal
 import com.andriybobchuk.mooney.mooney.domain.GoalGroup
 import com.andriybobchuk.mooney.mooney.domain.Transaction
+import com.andriybobchuk.mooney.mooney.domain.UserCurrency
 import kotlinx.datetime.LocalDate
 
 fun AccountEntity.toDomain(): Account = Account(
@@ -15,7 +17,21 @@ fun AccountEntity.toDomain(): Account = Account(
     amount = amount,
     currency = Currency.valueOf(currency),
     emoji = emoji,
-    assetCategory = AssetCategory.fromString(assetCategory)
+    assetCategory = AssetCategory.fromString(assetCategory),
+    isPrimary = isPrimary
+)
+
+fun CategoryEntity.toDomain(parent: Category? = null): Category = Category(
+    id = id,
+    title = title,
+    type = CategoryType.valueOf(type),
+    emoji = emoji,
+    parent = parent
+)
+
+fun UserCurrencyEntity.toDomain(): UserCurrency = UserCurrency(
+    code = code,
+    sortOrder = sortOrder
 )
 
 fun TransactionEntity.toDomain(

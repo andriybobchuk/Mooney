@@ -52,6 +52,13 @@ fun SettingsScreen(
     var showCurrencySheet by remember { mutableStateOf(false) }
     var showPinnedSheet by remember { mutableStateOf(false) }
     var showLanguageSheet by remember { mutableStateOf(false) }
+    var showUserCurrenciesSheet by remember { mutableStateOf(false) }
+    var showCategoriesSheet by remember { mutableStateOf(false) }
+    var showAddCategorySheet by remember { mutableStateOf(false) }
+    var addCategoryParentId by remember { mutableStateOf<String?>(null) }
+    var addCategoryType by remember { mutableStateOf("EXPENSE") }
+    var deleteCategoryId by remember { mutableStateOf<String?>(null) }
+    var deleteCategoryName by remember { mutableStateOf("") }
 
     // Handle events from ViewModel
     LaunchedEffect(Unit) {
@@ -348,6 +355,306 @@ fun SettingsScreen(
         }
     }
 
+    // User currencies bottom sheet (fullscreen)
+    if (showUserCurrenciesSheet) {
+        MooneyBottomSheet(onDismissRequest = { showUserCurrenciesSheet = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.85f)
+                    .padding(horizontal = 20.dp)
+            ) {
+                Text(
+                    stringResource(Res.string.manage_currencies),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
+                )
+                Text(
+                    "Select currencies you use. These appear when cycling the net worth display and when creating accounts.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(Currency.entries.size) { index ->
+                        val currency = Currency.entries[index]
+                        val isEnabled = state.userCurrencies.any { it.code == currency.name }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    if (isEnabled) MaterialTheme.colorScheme.primaryContainer
+                                    else Color.Transparent
+                                )
+                                .clickable {
+                                    viewModel.onAction(SettingsAction.OnToggleUserCurrency(currency.name))
+                                }
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "${currency.symbol} ${currency.name}",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = if (isEnabled) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(Modifier.weight(1f))
+                            if (isEnabled) {
+                                Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
+                            }
+                        }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+        }
+    }
+
+    // Delete category confirmation dialog
+    if (deleteCategoryId != null) {
+        AlertDialog(
+            onDismissRequest = { deleteCategoryId = null },
+            title = { Text(stringResource(Res.string.delete)) },
+            text = {
+                Text("Delete \"$deleteCategoryName\"? Transactions using this category will become unlinked.")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.onAction(SettingsAction.OnDeleteCategory(deleteCategoryId!!))
+                    deleteCategoryId = null
+                }) {
+                    Text(stringResource(Res.string.delete), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteCategoryId = null }) {
+                    Text(stringResource(Res.string.cancel))
+                }
+            }
+        )
+    }
+
+    // Categories management bottom sheet (full screen)
+    if (showCategoriesSheet) {
+        val generalCategories = remember(state.allCategories) {
+            state.allCategories.filter { it.isGeneralCategory() }
+        }
+        MooneyBottomSheet(onDismissRequest = { showCategoriesSheet = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.85f)
+                    .padding(horizontal = 20.dp)
+            ) {
+                Text(
+                    stringResource(Res.string.manage_categories),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
+                )
+                Text(
+                    "Add, remove, or organize your transaction categories and subcategories.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                // Add main category button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+                        .clickable {
+                            addCategoryParentId = null
+                            addCategoryType = "EXPENSE"
+                            showAddCategorySheet = true
+                        }
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        "+ ${stringResource(Res.string.add_category)}",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(generalCategories.size) { index ->
+                        val category = generalCategories[index]
+                        val subcategories = remember(state.allCategories, category.id) {
+                            state.allCategories.filter { it.parent?.id == category.id }
+                        }
+                        Column {
+                            // General category header
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(category.resolveEmoji(), fontSize = 18.sp)
+                                Spacer(Modifier.width(10.dp))
+                                Text(
+                                    category.title,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TextButton(
+                                    onClick = {
+                                        addCategoryParentId = category.id
+                                        addCategoryType = category.type.name
+                                        showAddCategorySheet = true
+                                    },
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                                ) {
+                                    Text(
+                                        "+ ${stringResource(Res.string.add_subcategory)}",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+
+                            // Subcategories — indented, no dots
+                            subcategories.forEach { sub ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 40.dp, top = 6.dp, bottom = 6.dp, end = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        sub.title,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    IconButton(
+                                        onClick = {
+                                            deleteCategoryId = sub.id
+                                            deleteCategoryName = sub.title
+                                        },
+                                        modifier = Modifier.size(40.dp)
+                                    ) {
+                                        Text(
+                                            "×",
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+        }
+    }
+
+    // Add category bottom sheet
+    if (showAddCategorySheet) {
+        val isAddingSubcategory = addCategoryParentId != null
+        MooneyBottomSheet(onDismissRequest = { showAddCategorySheet = false }) {
+            var newCategoryName by remember { mutableStateOf("") }
+            var newCategoryEmoji by remember { mutableStateOf("") }
+            var selectedType by remember { mutableStateOf(addCategoryType) }
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(
+                    if (isAddingSubcategory) stringResource(Res.string.add_subcategory)
+                    else stringResource(Res.string.add_category),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // Expense/Income toggle — only for parent categories
+                if (!isAddingSubcategory) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .padding(4.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        listOf("EXPENSE" to stringResource(Res.string.expense), "INCOME" to stringResource(Res.string.income)).forEach { (type, label) ->
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(
+                                        if (selectedType == type) MaterialTheme.colorScheme.surface
+                                        else Color.Transparent
+                                    )
+                                    .clickable { selectedType = type }
+                                    .padding(vertical = 10.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    label,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = if (selectedType == type) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(16.dp))
+                }
+
+                OutlinedTextField(
+                    value = newCategoryName,
+                    onValueChange = { newCategoryName = it },
+                    label = { Text(stringResource(Res.string.category_name)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (!isAddingSubcategory) {
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = newCategoryEmoji,
+                        onValueChange = { newCategoryEmoji = it },
+                        label = { Text(stringResource(Res.string.emoji_label)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                Spacer(Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        if (newCategoryName.isNotBlank()) {
+                            viewModel.onAction(
+                                SettingsAction.OnAddCategory(
+                                    title = newCategoryName.trim(),
+                                    type = selectedType,
+                                    emoji = if (isAddingSubcategory) null else newCategoryEmoji.ifBlank { null },
+                                    parentId = addCategoryParentId
+                                )
+                            )
+                            showAddCategorySheet = false
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = newCategoryName.isNotBlank()
+                ) {
+                    Text(stringResource(Res.string.add))
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             Toolbars.Primary(
@@ -399,12 +706,6 @@ fun SettingsScreen(
                         )
                         SettingsDivider()
                         SettingsRow(
-                            title = stringResource(Res.string.pinned_categories),
-                            value = "${state.pinnedCategoryIds.size}/${state.maxPinnedCategories}",
-                            onClick = { showPinnedSheet = true }
-                        )
-                        SettingsDivider()
-                        SettingsRow(
                             title = stringResource(Res.string.language),
                             value = when (state.appLanguage) {
                                 "uk" -> "Українська"
@@ -422,6 +723,18 @@ fun SettingsScreen(
                                 else -> "System"
                             },
                             onClick = { showLanguageSheet = true }
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            title = stringResource(Res.string.currencies),
+                            value = state.userCurrencies.joinToString(", ") { it.code },
+                            onClick = { showUserCurrenciesSheet = true }
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            title = stringResource(Res.string.categories),
+                            value = "${state.allCategories.size}",
+                            onClick = { showCategoriesSheet = true }
                         )
                     }
                 }

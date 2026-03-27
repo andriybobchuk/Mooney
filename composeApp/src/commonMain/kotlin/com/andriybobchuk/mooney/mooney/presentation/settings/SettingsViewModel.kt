@@ -2,9 +2,15 @@ package com.andriybobchuk.mooney.mooney.presentation.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.andriybobchuk.mooney.core.data.database.CategoryDao
+import com.andriybobchuk.mooney.core.data.database.CategoryEntity
 import com.andriybobchuk.mooney.mooney.domain.Category
+import com.andriybobchuk.mooney.mooney.domain.CoreRepository
 import com.andriybobchuk.mooney.mooney.domain.Currency
+import com.andriybobchuk.mooney.mooney.domain.UserCurrency
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetCategoriesUseCase
+import com.andriybobchuk.mooney.mooney.domain.usecase.GetUserCurrenciesUseCase
+import com.andriybobchuk.mooney.mooney.domain.usecase.UpdateUserCurrenciesUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.settings.GetPinnedCategoriesUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.settings.GetUserPreferencesUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.settings.UpdatePinnedCategoriesUseCase
@@ -29,7 +35,11 @@ class SettingsViewModel(
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val getPinnedCategoriesUseCase: GetPinnedCategoriesUseCase,
     private val preferencesRepository: PreferencesRepository,
-    private val dataExportImportManager: DataExportImportManager
+    private val dataExportImportManager: DataExportImportManager,
+    private val getUserCurrenciesUseCase: GetUserCurrenciesUseCase,
+    private val updateUserCurrenciesUseCase: UpdateUserCurrenciesUseCase,
+    private val categoryDao: CategoryDao,
+    private val repository: CoreRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsState())
@@ -40,6 +50,7 @@ class SettingsViewModel(
 
     init {
         observeData()
+        observeUserCurrencies()
     }
 
     private fun observeData() {
@@ -68,6 +79,12 @@ class SettingsViewModel(
         }.launchIn(viewModelScope)
     }
 
+    private fun observeUserCurrencies() {
+        getUserCurrenciesUseCase().onEach { currencies ->
+            _state.update { it.copy(userCurrencies = currencies) }
+        }.launchIn(viewModelScope)
+    }
+
     fun onAction(action: SettingsAction) {
         when (action) {
             is SettingsAction.OnCategorySelectionToggle -> handleCategoryToggle(action.category)
@@ -78,6 +95,9 @@ class SettingsViewModel(
             is SettingsAction.OnLanguageChange -> handleLanguageChange(action.language)
             is SettingsAction.OnExportData -> handleExportData()
             is SettingsAction.OnImportData -> handleImportData(action.jsonData)
+            is SettingsAction.OnToggleUserCurrency -> handleToggleUserCurrency(action.currencyCode)
+            is SettingsAction.OnDeleteCategory -> handleDeleteCategory(action.categoryId)
+            is SettingsAction.OnAddCategory -> handleAddCategory(action.title, action.type, action.emoji, action.parentId)
             is SettingsAction.OnBackClick -> {}
         }
     }
@@ -225,6 +245,50 @@ class SettingsViewModel(
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message) }
             }
+        }
+    }
+
+    private fun handleToggleUserCurrency(currencyCode: String) {
+        viewModelScope.launch {
+            val current = _state.value.userCurrencies
+            val exists = current.any { it.code == currencyCode }
+            if (exists) {
+                if (current.size <= 1) return@launch
+                updateUserCurrenciesUseCase.remove(currencyCode)
+            } else {
+                val nextOrder = (current.maxOfOrNull { it.sortOrder } ?: -1) + 1
+                updateUserCurrenciesUseCase.add(UserCurrency(currencyCode, nextOrder))
+            }
+        }
+    }
+
+    private fun handleDeleteCategory(categoryId: String) {
+        viewModelScope.launch {
+            // Delete children first, then the category itself
+            val children = categoryDao.getByParentId(categoryId)
+            children.forEach { categoryDao.delete(it.id) }
+            categoryDao.delete(categoryId)
+            repository.reloadCategories()
+            _state.update { it.copy(allCategories = getCategoriesUseCase()) }
+        }
+    }
+
+    private fun handleAddCategory(title: String, type: String, emoji: String?, parentId: String?) {
+        viewModelScope.launch {
+            val id = title.lowercase().replace(" ", "_").replace(Regex("[^a-z0-9_]"), "")
+            // When parentId is null, this is a new general category — parent is the type root
+            val resolvedParentId = parentId ?: type.lowercase()
+            categoryDao.upsert(
+                CategoryEntity(
+                    id = id,
+                    title = title,
+                    type = type,
+                    emoji = emoji,
+                    parentId = resolvedParentId
+                )
+            )
+            repository.reloadCategories()
+            _state.update { it.copy(allCategories = getCategoriesUseCase()) }
         }
     }
 

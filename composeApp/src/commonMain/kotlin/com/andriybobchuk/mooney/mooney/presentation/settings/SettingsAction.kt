@@ -19,6 +19,18 @@ sealed interface SettingsAction {
     data class OnLanguageChange(val language: String) : SettingsAction
     
     data object OnExportData : SettingsAction
-    
+
     data class OnImportData(val jsonData: String) : SettingsAction
+
+    // User Currencies
+    data class OnToggleUserCurrency(val currencyCode: String) : SettingsAction
+
+    // Categories
+    data class OnDeleteCategory(val categoryId: String) : SettingsAction
+    data class OnAddCategory(
+        val title: String,
+        val type: String,
+        val emoji: String?,
+        val parentId: String?
+    ) : SettingsAction
 }

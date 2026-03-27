@@ -2,6 +2,7 @@ package com.andriybobchuk.mooney.mooney.presentation.settings
 
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.domain.Currency
+import com.andriybobchuk.mooney.mooney.domain.UserCurrency
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 
 data class SettingsState(
@@ -13,6 +14,7 @@ data class SettingsState(
     val notificationsEnabled: Boolean = true,
     val defaultCurrency: Currency = Currency.PLN,
     val availableCurrencies: List<Currency> = Currency.entries,
+    val userCurrencies: List<UserCurrency> = emptyList(),
     val error: String? = null,
     val isExporting: Boolean = false,
     val isImporting: Boolean = false,

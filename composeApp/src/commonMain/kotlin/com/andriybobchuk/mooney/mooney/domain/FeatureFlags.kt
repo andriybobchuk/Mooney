@@ -6,7 +6,7 @@ object FeatureFlags {
      * Controls: dev DB file, dev toolbar overlay, mock data tools.
      * IMPORTANT: Must be false for release builds.
      */
-    const val isDebug = true
+    const val isDebug = false
 
     const val goalsEnabled = false
     const val exchangeEnabled = false

@@ -10,6 +10,8 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 kotlin {
@@ -89,11 +91,11 @@ kotlin {
 }
 
 android {
-    namespace = "com.plcoding.bookpedia"
+    namespace = "com.andriybobchuk.mooney"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.plcoding.bookpedia"
+        applicationId = "com.andriybobchuk.mooney"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
@@ -119,15 +121,18 @@ dependencies {
     implementation(libs.androidx.ui.android)
     implementation(libs.androidx.material3.android)
     debugImplementation(compose.uiTooling)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
 }
 
 compose.desktop {
     application {
-        mainClass = "com.plcoding.bookpedia.MainKt"
+        mainClass = "com.andriybobchuk.mooney.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.plcoding.bookpedia"
+            packageName = "com.andriybobchuk.mooney"
             packageVersion = "1.0.0"
         }
     }

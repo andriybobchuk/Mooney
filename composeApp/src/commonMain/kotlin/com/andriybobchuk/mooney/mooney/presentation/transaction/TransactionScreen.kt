@@ -755,7 +755,7 @@ fun TransactionBottomSheet(
     var amount by remember { mutableStateOf(transactionToEdit?.amount?.formatToPlainString()) }
     var newAccountValue by remember { mutableStateOf("") }
 
-    val defaultAccount = accounts.filterNotNull().toAccounts().find { it.title.contains("Primary") }
+    val defaultAccount = accounts.filterNotNull().toAccounts().find { it.isPrimary }
     var selectedAccount by remember { mutableStateOf(transactionToEdit?.account ?: defaultAccount) }
     
     // For edit mode transfers, extract destination account from category ID
@@ -1748,21 +1748,20 @@ fun FrequentCategoriesSection(
 ) {
     var frequentCategories by remember { mutableStateOf<List<Category>>(emptyList()) }
     val getMostUsedCategoriesUseCase = org.koin.compose.koinInject<com.andriybobchuk.mooney.mooney.domain.usecase.GetMostUsedCategoriesUseCase>()
-    
+    val getCategoriesUseCase = org.koin.compose.koinInject<com.andriybobchuk.mooney.mooney.domain.usecase.GetCategoriesUseCase>()
+
     LaunchedEffect(Unit) {
         try {
             val categories = getMostUsedCategoriesUseCase(8)
             frequentCategories = if (categories.isEmpty()) {
-                // Fallback to default categories if no usage data exists
-                com.andriybobchuk.mooney.mooney.data.CategoryDataSource.categories
+                getCategoriesUseCase()
                     .filter { !it.isSubCategory() }
                     .take(8)
             } else {
                 categories
             }
         } catch (e: Exception) {
-            // Fallback in case of error
-            frequentCategories = com.andriybobchuk.mooney.mooney.data.CategoryDataSource.categories
+            frequentCategories = getCategoriesUseCase()
                 .filter { !it.isSubCategory() }
                 .take(8)
         }

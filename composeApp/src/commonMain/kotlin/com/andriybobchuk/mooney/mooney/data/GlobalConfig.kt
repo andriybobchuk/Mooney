@@ -8,10 +8,23 @@ object GlobalConfig {
 
     val testExchangeRates = ExchangeRates(
         rates = mapOf(
-            Currency.PLN to 1.0,     // base
-            Currency.USD to 0.27,    // 1 PLN = 0.27 USD
-            Currency.EUR to 0.24,     // 1 PLN = 0.24 EUR
-            Currency.UAH to 11.08     // 1 PLN = 11.08 UAH
+            Currency.PLN to 1.0,
+            Currency.USD to 0.27,
+            Currency.EUR to 0.24,
+            Currency.UAH to 11.08,
+            Currency.GBP to 0.21,
+            Currency.CHF to 0.23,
+            Currency.CZK to 6.1,
+            Currency.SEK to 2.7,
+            Currency.NOK to 2.8,
+            Currency.DKK to 1.8,
+            Currency.JPY to 40.0,
+            Currency.CAD to 0.36,
+            Currency.AUD to 0.41,
+            Currency.TRY to 9.5,
+            Currency.BRL to 1.5,
+            Currency.RUB to 22.0,
+            Currency.AED to 0.98
         )
     )
 }

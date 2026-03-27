@@ -415,9 +415,22 @@ private fun generateMonthLabels(currentDate: LocalDate, monthsBack: Int): List<S
 // Helper function to get consistent colors for each currency
 private fun getCurrencyColor(currency: Currency): Color {
     return when (currency) {
-        Currency.USD -> Color(0xFF4CAF50) // Green
-        Currency.EUR -> Color(0xFF2196F3) // Blue
-        Currency.UAH -> Color(0xFFFFD700) // Gold
-        Currency.PLN -> Color(0xFF9C27B0) // Purple
+        Currency.USD -> Color(0xFF4CAF50)
+        Currency.EUR -> Color(0xFF2196F3)
+        Currency.UAH -> Color(0xFFFFD700)
+        Currency.PLN -> Color(0xFF9C27B0)
+        Currency.GBP -> Color(0xFFE91E63)
+        Currency.CHF -> Color(0xFFFF5722)
+        Currency.CZK -> Color(0xFF795548)
+        Currency.SEK -> Color(0xFF00BCD4)
+        Currency.NOK -> Color(0xFF607D8B)
+        Currency.DKK -> Color(0xFFFF9800)
+        Currency.JPY -> Color(0xFFF44336)
+        Currency.CAD -> Color(0xFF8BC34A)
+        Currency.AUD -> Color(0xFF3F51B5)
+        Currency.TRY -> Color(0xFFCDDC39)
+        Currency.BRL -> Color(0xFF009688)
+        Currency.RUB -> Color(0xFF455A64)
+        Currency.AED -> Color(0xFFD4AF37)
     }
 }

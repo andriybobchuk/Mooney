@@ -1,7 +1,6 @@
 package com.andriybobchuk.mooney.mooney.presentation.assets
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -163,11 +162,13 @@ fun AssetsScreen(
                 expandedCategories = state.expandedCategories,
                 baseCurrency = state.totalNetWorthCurrency,
                 totalNetWorth = totalNetWorth,
+                baseNetWorth = state.baseNetWorth,
                 onEdit = {
                     editingAsset = it
                     showSheet = true
                 },
                 onDelete = { viewModel.deleteAsset(it.id) },
+                onSetPrimary = { viewModel.setPrimaryAccount(it.id) },
                 onToggleCategory = { viewModel.toggleCategoryExpansion(it) },
                 onAddAsset = { showSheet = true }
             )
@@ -216,8 +217,10 @@ private fun AssetsScreenContent(
     expandedCategories: Set<AssetCategory>,
     baseCurrency: Currency,
     totalNetWorth: Double = 0.0,
+    baseNetWorth: Double = 0.0,
     onEdit: (UiAsset) -> Unit,
     onDelete: (UiAsset) -> Unit,
+    onSetPrimary: (UiAsset) -> Unit,
     onToggleCategory: (AssetCategory) -> Unit,
     onAddAsset: () -> Unit = {}
 ) {
@@ -297,13 +300,14 @@ private fun AssetsScreenContent(
                         Spacer(Modifier.height(4.dp))
                     }
                     items(categoryAssets) { asset ->
-                        val pct = if (totalNetWorth > 0) (asset.baseCurrencyAmount / totalNetWorth).toFloat().coerceIn(0f, 1f) else 0f
+                        val pct = if (baseNetWorth > 0) (asset.baseCurrencyAmount / baseNetWorth).toFloat().coerceIn(0f, 1f) else 0f
                         Box(modifier = Modifier.padding(start = 24.dp)) {
                             AssetCard(
                                 asset = asset,
                                 percentage = pct,
                                 onEdit = onEdit,
-                                onDelete = onDelete
+                                onDelete = onDelete,
+                                onSetPrimary = onSetPrimary
                             )
                         }
                         Spacer(Modifier.height(8.dp))
@@ -404,15 +408,10 @@ private fun AssetCard(
     asset: UiAsset,
     percentage: Float,
     onEdit: (UiAsset) -> Unit,
-    onDelete: (UiAsset) -> Unit
+    onDelete: (UiAsset) -> Unit,
+    onSetPrimary: (UiAsset) -> Unit
 ) {
     var showActionSheet by remember { mutableStateOf(false) }
-
-    val animatedPercentage by animateFloatAsState(
-        targetValue = percentage,
-        animationSpec = tween(durationMillis = 600),
-        label = "percentage"
-    )
 
     Card(
         modifier = Modifier
@@ -430,12 +429,12 @@ private fun AssetCard(
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             // Percentage fill — accent color from left to right
-            if (animatedPercentage > 0.001f) {
+            if (percentage > 0.001f) {
                 Canvas(modifier = Modifier.matchParentSize()) {
                     drawRect(
                         color = androidx.compose.ui.graphics.Color(0xFF3562F6).copy(alpha = 0.08f),
                         size = androidx.compose.ui.geometry.Size(
-                            width = size.width * animatedPercentage,
+                            width = size.width * percentage,
                             height = size.height
                         )
                     )
@@ -455,6 +454,25 @@ private fun AssetCard(
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
+                    if (asset.isPrimary) {
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.primary_account).uppercase(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 9.sp,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                    }
                 }
 
                 Column(
@@ -519,6 +537,32 @@ private fun AssetCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(stringResource(Res.string.edit), style = MaterialTheme.typography.bodyLarge)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            if (asset.isPrimary) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.surfaceVariant
+                        )
+                        .clickable {
+                            showActionSheet = false
+                            if (!asset.isPrimary) onSetPrimary(asset)
+                        }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        if (asset.isPrimary) "✓ ${stringResource(Res.string.primary_account)}"
+                        else stringResource(Res.string.set_as_primary),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (asset.isPrimary) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurface
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -698,7 +742,9 @@ private fun AssetSheet(
                     .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
                 Text(stringResource(Res.string.select_currency), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
-                Currency.entries.forEach { currency ->
+                LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
+                items(Currency.entries.size) { index ->
+                    val currency = Currency.entries[index]
                     val isSelected = selectedCurrency == currency
                     Row(
                         modifier = Modifier
@@ -725,6 +771,7 @@ private fun AssetSheet(
                         }
                     }
                     Spacer(Modifier.height(4.dp))
+                }
                 }
                 Spacer(Modifier.height(16.dp))
             }

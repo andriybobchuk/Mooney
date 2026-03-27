@@ -109,4 +109,14 @@
     <string name="error_no_internet">Nie udało się połączyć z serwerem. Sprawdź połączenie internetowe.</string>
     <string name="error_too_many_requests">Wygląda na to, że Twój limit został przekroczony.</string>
     <string name="error_serialization">Nie udało się przetworzyć danych.</string>
+    <string name="set_as_primary">Ustaw jako główne</string>
+    <string name="primary_account">Konto główne</string>
+    <string name="currencies">Waluty</string>
+    <string name="manage_currencies">Zarządzaj walutami</string>
+    <string name="categories">Kategorie</string>
+    <string name="manage_categories">Zarządzaj kategoriami</string>
+    <string name="add_category">Dodaj kategorię</string>
+    <string name="add_subcategory">Dodaj podkategorię</string>
+    <string name="category_name">Nazwa kategorii</string>
+    <string name="emoji_label">Emoji</string>
 </resources>

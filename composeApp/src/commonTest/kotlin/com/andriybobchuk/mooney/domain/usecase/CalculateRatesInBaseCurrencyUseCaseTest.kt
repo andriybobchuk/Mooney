@@ -27,15 +27,15 @@ class CalculateRatesInBaseCurrencyUseCaseTest {
     @Test
     fun `result contains all currencies except the base`() {
         val result = sut(exchangeRates = TestFixtures.testRates, displayBaseCurrency = Currency.PLN)
-        val expectedSize = Currency.entries.size - 1
+        val expectedSize = TestFixtures.testRates.rates.size - 1
 
         assertEquals(expectedSize, result.size)
     }
 
     @Test
-    fun `result has Currency entries size minus 1 entries`() {
+    fun `result has rates size minus 1 entries`() {
         val result = sut(exchangeRates = TestFixtures.testRates, displayBaseCurrency = Currency.USD)
-        assertEquals(Currency.entries.size - 1, result.size)
+        assertEquals(TestFixtures.testRates.rates.size - 1, result.size)
     }
 
     @Test

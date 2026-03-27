@@ -23,6 +23,7 @@ class CurrencyManagerUseCaseTest {
     @BeforeTest
     fun setup() = runTest {
         sut.refreshExchangeRates()
+        sut.setUserCurrencies(listOf("PLN", "USD", "EUR", "UAH"))
     }
 
     @Test

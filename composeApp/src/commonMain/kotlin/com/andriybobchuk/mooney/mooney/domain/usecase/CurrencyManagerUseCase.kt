@@ -11,11 +11,25 @@ class CurrencyManagerUseCase(
     private val exchangeRateProvider: ExchangeRateProvider
 ) {
     val baseCurrency = GlobalConfig.baseCurrency
-    
+
     // Cached exchange rates
     private var cachedExchangeRates: ExchangeRates = GlobalConfig.testExchangeRates
     private var selectedCurrencyIndex = 0
     private var selectedCurrency = baseCurrency
+
+    // User-selected currencies for cycling (defaults to all supported)
+    private var userCurrencies: List<Currency> = listOf(baseCurrency)
+
+    fun setUserCurrencies(codes: List<String>) {
+        userCurrencies = codes.mapNotNull { code ->
+            Currency.entries.find { it.name == code }
+        }.ifEmpty { listOf(baseCurrency) }
+        // Reset selection if current currency is no longer in the list
+        if (selectedCurrency !in userCurrencies) {
+            selectedCurrencyIndex = 0
+            selectedCurrency = userCurrencies.first()
+        }
+    }
 
     suspend fun refreshExchangeRates(): Result<ExchangeRates, *> {
         return when (val result = exchangeRateProvider.getExchangeRates(baseCurrency)) {
@@ -34,18 +48,18 @@ class CurrencyManagerUseCase(
 
     fun getCurrentCurrency(): Currency = selectedCurrency
 
-    fun getAvailableCurrencies(): List<Currency> = cachedExchangeRates.rates.keys.toList()
+    fun getAvailableCurrencies(): List<Currency> = userCurrencies
 
     fun cycleToNextCurrency(): Currency {
-        val availableCurrencies = getAvailableCurrencies()
-        selectedCurrencyIndex = (selectedCurrencyIndex + 1) % availableCurrencies.size
-        selectedCurrency = availableCurrencies[selectedCurrencyIndex]
+        val available = userCurrencies
+        if (available.size <= 1) return selectedCurrency
+        selectedCurrencyIndex = (selectedCurrencyIndex + 1) % available.size
+        selectedCurrency = available[selectedCurrencyIndex]
         return selectedCurrency
     }
 
     fun resetToBaseCurrency() {
-        val availableCurrencies = getAvailableCurrencies()
-        selectedCurrencyIndex = availableCurrencies.indexOf(baseCurrency)
+        selectedCurrencyIndex = userCurrencies.indexOf(baseCurrency).coerceAtLeast(0)
         selectedCurrency = baseCurrency
     }
 

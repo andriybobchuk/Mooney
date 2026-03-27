@@ -1,6 +1,5 @@
 package com.andriybobchuk.mooney.mooney.domain.devtools
 
-import com.andriybobchuk.mooney.mooney.data.CategoryDataSource
 import com.andriybobchuk.mooney.mooney.domain.*
 import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Clock
@@ -41,7 +40,7 @@ class DevToolsManager(
 
         val primaryAccount = accounts.first()
         val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val categories = CategoryDataSource.categories
+        val categories = repository.getAllCategories()
 
         val salary = categories.find { it.id == "salary" }
         val groceries = categories.find { it.id == "groceries" }

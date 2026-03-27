@@ -109,4 +109,14 @@
     <string name="error_no_internet">Не удалось связаться с сервером. Проверьте интернет-соединение.</string>
     <string name="error_too_many_requests">Похоже, ваша квота исчерпана.</string>
     <string name="error_serialization">Не удалось обработать данные.</string>
+    <string name="set_as_primary">Сделать основным</string>
+    <string name="primary_account">Основной счёт</string>
+    <string name="currencies">Валюты</string>
+    <string name="manage_currencies">Управление валютами</string>
+    <string name="categories">Категории</string>
+    <string name="manage_categories">Управление категориями</string>
+    <string name="add_category">Добавить категорию</string>
+    <string name="add_subcategory">Добавить подкатегорию</string>
+    <string name="category_name">Название категории</string>
+    <string name="emoji_label">Эмодзи</string>
 </resources>

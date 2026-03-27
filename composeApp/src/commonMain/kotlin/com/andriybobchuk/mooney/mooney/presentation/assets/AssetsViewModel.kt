@@ -8,6 +8,8 @@ import com.andriybobchuk.mooney.mooney.domain.AccountWithConversion
 import com.andriybobchuk.mooney.mooney.domain.AssetCategory
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
+import com.andriybobchuk.mooney.mooney.domain.usecase.GetUserCurrenciesUseCase
+import com.andriybobchuk.mooney.mooney.domain.usecase.SetPrimaryAccountUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageAssetCategoryOrderUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageCategoryExpansionUseCase
 import com.andriybobchuk.mooney.core.domain.Result
@@ -36,7 +38,9 @@ class AssetsViewModel(
     private val currencyManagerUseCase: CurrencyManagerUseCase,
     private val manageAssetCategoryOrderUseCase: ManageAssetCategoryOrderUseCase,
     private val manageCategoryExpansionUseCase: ManageCategoryExpansionUseCase,
-    private val shouldRefreshExchangeRatesUseCase: ShouldRefreshExchangeRatesUseCase
+    private val shouldRefreshExchangeRatesUseCase: ShouldRefreshExchangeRatesUseCase,
+    private val setPrimaryAccountUseCase: SetPrimaryAccountUseCase,
+    private val getUserCurrenciesUseCase: GetUserCurrenciesUseCase
 ) : ViewModel() {
 
     private var observeAccountsJob: Job? = null
@@ -45,6 +49,7 @@ class AssetsViewModel(
 
     val state = _uiState
         .onStart {
+            observeUserCurrencies()
             observeAssets()
             refreshExchangeRatesOnStart()
         }
@@ -53,6 +58,12 @@ class AssetsViewModel(
             SharingStarted.WhileSubscribed(5000L),
             _uiState.value
         )
+
+    private fun observeUserCurrencies() {
+        getUserCurrenciesUseCase().onEach { currencies ->
+            currencyManagerUseCase.setUserCurrencies(currencies.map { it.code })
+        }.launchIn(viewModelScope)
+    }
 
     private fun refreshExchangeRatesOnStart() {
         viewModelScope.launch {
@@ -89,10 +100,16 @@ class AssetsViewModel(
             selectedCurrency = currencyManagerUseCase.getCurrentCurrency(),
             baseCurrency = GlobalConfig.baseCurrency
         )
+        val baseResult = calculateNetWorthUseCase(
+            accounts = accounts,
+            selectedCurrency = GlobalConfig.baseCurrency,
+            baseCurrency = GlobalConfig.baseCurrency
+        )
 
         _uiState.update {
             it.copy(
                 totalNetWorth = result.totalNetWorth,
+                baseNetWorth = baseResult.totalNetWorth,
                 totalNetWorthCurrency = result.currency
             )
         }
@@ -191,7 +208,12 @@ class AssetsViewModel(
             )
         }
     }
-    
+
+    fun setPrimaryAccount(accountId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            setPrimaryAccountUseCase(accountId)
+        }
+    }
 }
 
 typealias UiAsset = AccountWithConversion
@@ -199,6 +221,7 @@ typealias UiAsset = AccountWithConversion
 data class AssetsState(
     val assets: List<UiAsset> = emptyList(),
     val totalNetWorth: Double = 0.0,
+    val baseNetWorth: Double = 0.0,
     val totalNetWorthCurrency: Currency = GlobalConfig.baseCurrency,
     val categoryOrder: List<AssetCategory> = AssetCategory.entries,
     val expandedCategories: Set<AssetCategory> = AssetCategory.entries.toSet(),

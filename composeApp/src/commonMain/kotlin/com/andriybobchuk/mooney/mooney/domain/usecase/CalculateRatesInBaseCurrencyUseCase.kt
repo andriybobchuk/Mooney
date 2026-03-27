@@ -12,7 +12,7 @@ class CalculateRatesInBaseCurrencyUseCase {
         if (exchangeRates == null) return emptyMap()
 
         val rates = mutableMapOf<Currency, Double>()
-        Currency.entries.forEach { currency ->
+        exchangeRates.rates.keys.forEach { currency ->
             if (currency != displayBaseCurrency) {
                 val rate = exchangeRates.convert(1.0, currency, displayBaseCurrency)
                 rates[currency] = rate

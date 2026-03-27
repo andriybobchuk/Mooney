@@ -1,15 +1,17 @@
 package com.andriybobchuk.mooney.mooney.domain.usecase
 
-import com.andriybobchuk.mooney.mooney.data.CategoryDataSource
 import com.andriybobchuk.mooney.mooney.domain.CategorySheetType
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
+import com.andriybobchuk.mooney.mooney.domain.CoreRepository
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
 import com.andriybobchuk.mooney.mooney.domain.TopCategorySummary
 import com.andriybobchuk.mooney.mooney.domain.Transaction
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 
-class LoadCategoriesForSheetTypeUseCase {
+class LoadCategoriesForSheetTypeUseCase(
+    private val repository: CoreRepository
+) {
 
     operator fun invoke(
         sheetType: CategorySheetType,
@@ -18,20 +20,17 @@ class LoadCategoriesForSheetTypeUseCase {
         baseCurrency: Currency,
         exchangeRates: ExchangeRates
     ): List<TopCategorySummary> {
+        val allCategories = repository.getAllCategories()
         val relevantCategories = when (sheetType) {
-            CategorySheetType.REVENUE -> listOf(
-                CategoryDataSource.salary,
-                CategoryDataSource.tax_return,
-                CategoryDataSource.refund,
-                CategoryDataSource.repayment,
-                CategoryDataSource.positive_reconciliation
-            )
-            CategorySheetType.TAXES -> CategoryDataSource.taxSub
+            CategorySheetType.REVENUE -> listOf("salary", "tax_return", "refund", "repayment", "positive_reconciliation")
+                .mapNotNull { id -> allCategories.find { it.id == id } }
+            CategorySheetType.TAXES -> repository.getSubcategories("tax")
             CategorySheetType.OPERATING_COSTS -> {
-                CategoryDataSource.categories.filter { category ->
+                allCategories.filter { category ->
                     category.type == CategoryType.EXPENSE &&
-                        category.parent == CategoryDataSource.expense &&
-                        category != CategoryDataSource.tax
+                        category.parent?.parent == null &&
+                        category.parent != null &&
+                        category.id != "tax"
                 }
             }
         }

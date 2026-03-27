@@ -122,6 +122,20 @@
     <string name="edit_goal">Edit Goal</string>
     <string name="delete_goal">Delete Goal</string>
 
+    <!-- Assets -->
+    <string name="set_as_primary">Set as primary</string>
+    <string name="primary_account">Primary account</string>
+
+    <!-- Settings - Currencies & Categories -->
+    <string name="currencies">Currencies</string>
+    <string name="manage_currencies">Manage Currencies</string>
+    <string name="categories">Categories</string>
+    <string name="manage_categories">Manage Categories</string>
+    <string name="add_category">Add Category</string>
+    <string name="add_subcategory">Add subcategory</string>
+    <string name="category_name">Category name</string>
+    <string name="emoji_label">Emoji</string>
+
     <!-- Errors -->
     <string name="error_disk_full">Oops, it seems like your disk is full.</string>
     <string name="error_unknown">Oops, something went wrong.</string>

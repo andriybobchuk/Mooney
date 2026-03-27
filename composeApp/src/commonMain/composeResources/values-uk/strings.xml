@@ -109,4 +109,14 @@
     <string name="error_no_internet">Не вдалося з\'єднатися з сервером. Перевірте інтернет-з\'єднання.</string>
     <string name="error_too_many_requests">Схоже, ваша квота вичерпана.</string>
     <string name="error_serialization">Не вдалося обробити дані.</string>
+    <string name="set_as_primary">Зробити основним</string>
+    <string name="primary_account">Основний рахунок</string>
+    <string name="currencies">Валюти</string>
+    <string name="manage_currencies">Керування валютами</string>
+    <string name="categories">Категорії</string>
+    <string name="manage_categories">Керування категоріями</string>
+    <string name="add_category">Додати категорію</string>
+    <string name="add_subcategory">Додати підкатегорію</string>
+    <string name="category_name">Назва категорії</string>
+    <string name="emoji_label">Емодзі</string>
 </resources>

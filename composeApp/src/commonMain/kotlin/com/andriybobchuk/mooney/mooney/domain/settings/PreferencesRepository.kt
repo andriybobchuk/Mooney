@@ -19,7 +19,9 @@ interface PreferencesRepository {
     
     suspend fun updateAppLanguage(language: String)
 
+    suspend fun markOnboardingCompleted()
+
     suspend fun clearPreferences()
-    
+
     suspend fun getCurrentPreferences(): UserPreferences
 }

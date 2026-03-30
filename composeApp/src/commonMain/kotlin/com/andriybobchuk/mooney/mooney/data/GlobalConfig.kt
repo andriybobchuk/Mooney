@@ -2,9 +2,11 @@ package com.andriybobchuk.mooney.mooney.data
 
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
+import kotlin.concurrent.Volatile
 
 object GlobalConfig {
-    val baseCurrency = Currency.PLN
+    @Volatile
+    var baseCurrency = Currency.PLN
 
     val testExchangeRates = ExchangeRates(
         rates = mapOf(

@@ -12,15 +12,25 @@ import androidx.compose.ui.graphics.Color
 
 @Composable
 fun MeshGradientBackground(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    prominent: Boolean = false
 ) {
     val isDark = isSystemInDarkTheme()
     val accent = MaterialTheme.colorScheme.primary
     val bg = MaterialTheme.colorScheme.background
 
-    val blob1 = if (isDark) accent.copy(alpha = 0.14f) else Color(0xFF93BBEC).copy(alpha = 0.40f)
-    val blob2 = if (isDark) accent.copy(alpha = 0.10f) else Color(0xFFAFCDF5).copy(alpha = 0.35f)
-    val blob3 = if (isDark) accent.copy(alpha = 0.12f) else Color(0xFFC5DDFB).copy(alpha = 0.30f)
+    val blob1: Color
+    val blob2: Color
+    val blob3: Color
+    if (prominent) {
+        blob1 = if (isDark) accent.copy(alpha = 0.28f) else Color(0xFF7AACF0).copy(alpha = 0.80f)
+        blob2 = if (isDark) accent.copy(alpha = 0.22f) else Color(0xFF9FC5F5).copy(alpha = 0.70f)
+        blob3 = if (isDark) accent.copy(alpha = 0.25f) else Color(0xFFB8D5FA).copy(alpha = 0.65f)
+    } else {
+        blob1 = if (isDark) accent.copy(alpha = 0.14f) else Color(0xFF93BBEC).copy(alpha = 0.40f)
+        blob2 = if (isDark) accent.copy(alpha = 0.10f) else Color(0xFFAFCDF5).copy(alpha = 0.35f)
+        blob3 = if (isDark) accent.copy(alpha = 0.12f) else Color(0xFFC5DDFB).copy(alpha = 0.30f)
+    }
     val transparent = Color.Transparent
 
     Canvas(modifier = modifier.fillMaxSize()) {

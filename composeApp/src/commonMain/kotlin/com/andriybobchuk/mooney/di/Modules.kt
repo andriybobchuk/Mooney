@@ -21,6 +21,7 @@ import com.andriybobchuk.mooney.mooney.presentation.exchange.ExchangeViewModel
 import com.andriybobchuk.mooney.mooney.presentation.goals.GoalsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionViewModel
 import com.andriybobchuk.mooney.mooney.presentation.settings.SettingsViewModel
+import com.andriybobchuk.mooney.mooney.presentation.onboarding.OnboardingViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -31,6 +32,9 @@ import org.koin.dsl.module
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase
 import com.andriybobchuk.mooney.core.presentation.theme.ThemeManager
+import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
+import com.andriybobchuk.mooney.core.analytics.DefaultAnalyticsTracker
+import com.andriybobchuk.mooney.core.premium.PremiumManager
 
 expect val platformModule: Module
 
@@ -53,6 +57,7 @@ val sharedModule = module {
     single { get<AppDatabase>().pendingTransactionDao }
     single { get<AppDatabase>().categoryDao }
     single { get<AppDatabase>().userCurrencyDao }
+    single { get<AppDatabase>().assetCategoryDao }
 
     // Data Export/Import Manager
     single {
@@ -77,7 +82,7 @@ val sharedModule = module {
     single<Boolean>(qualifier = named("use_live_exchange_rates")) { true }
 
     // API Key
-    single<String>(qualifier = named("exchangerate_api_key")) { "75b9fafdb8e95b3caea57927" }
+    single<String>(qualifier = named("exchangerate_api_key")) { com.andriybobchuk.mooney.core.data.Secrets.EXCHANGE_RATE_API_KEY }
 
     // Exchange Rate Providers
     single<com.andriybobchuk.mooney.mooney.domain.ExchangeRateProvider> {
@@ -143,11 +148,20 @@ val sharedModule = module {
     singleOf(::UpdatePinnedCategoriesUseCase)
     singleOf(::GetPinnedCategoriesUseCase)
 
+    // Onboarding
+    singleOf(::CompleteOnboardingUseCase)
+
     // Dev Tools
     singleOf(::DevToolsManager)
 
     // Theme
     singleOf(::ThemeManager)
+
+    // Premium
+    single { PremiumManager(get()) }
+
+    // Analytics
+    singleOf(::DefaultAnalyticsTracker).bind<AnalyticsTracker>()
 
     viewModelOf(::AccountViewModel)
     viewModelOf(::AssetsViewModel)
@@ -156,4 +170,5 @@ val sharedModule = module {
     viewModelOf(::ExchangeViewModel)
     viewModelOf(::GoalsViewModel)
     viewModelOf(::SettingsViewModel)
+    viewModelOf(::OnboardingViewModel)
 }

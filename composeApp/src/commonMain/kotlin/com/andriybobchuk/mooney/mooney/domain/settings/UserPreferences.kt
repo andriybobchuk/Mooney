@@ -10,7 +10,8 @@ data class UserPreferences(
     val appTheme: AppTheme = AppTheme.BLUE,
     val notificationsEnabled: Boolean = true,
     val version: Int = 1,
-    val appLanguage: String = "system"
+    val appLanguage: String = "system",
+    val onboardingCompleted: Boolean = false
 )
 
 enum class ThemeMode {

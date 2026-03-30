@@ -32,7 +32,8 @@ class DataStorePreferencesRepository(
                 },
                 notificationsEnabled = preferences[PreferencesKeys.NOTIFICATIONS_ENABLED] ?: true,
                 version = preferences[PreferencesKeys.PREFERENCES_VERSION] ?: 1,
-                appLanguage = preferences[PreferencesKeys.APP_LANGUAGE] ?: "system"
+                appLanguage = preferences[PreferencesKeys.APP_LANGUAGE] ?: "system",
+                onboardingCompleted = preferences[PreferencesKeys.ONBOARDING_COMPLETED] ?: false
             )
         }
     }
@@ -70,6 +71,12 @@ class DataStorePreferencesRepository(
     override suspend fun updateNotificationsEnabled(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.NOTIFICATIONS_ENABLED] = enabled
+        }
+    }
+
+    override suspend fun markOnboardingCompleted() {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.ONBOARDING_COMPLETED] = true
         }
     }
 

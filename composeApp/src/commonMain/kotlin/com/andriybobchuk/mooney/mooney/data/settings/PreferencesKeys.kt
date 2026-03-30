@@ -13,4 +13,7 @@ object PreferencesKeys {
     val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
     val PREFERENCES_VERSION = intPreferencesKey("preferences_version")
     val APP_LANGUAGE = stringPreferencesKey("app_language")
+    val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
+    val IS_PREMIUM = booleanPreferencesKey("is_premium")
+    val CUSTOM_CATEGORY_COUNT = intPreferencesKey("custom_category_count")
 }

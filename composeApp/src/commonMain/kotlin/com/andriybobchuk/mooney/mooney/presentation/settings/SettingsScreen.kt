@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
+import com.andriybobchuk.mooney.core.premium.PaywallSheet
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 import com.andriybobchuk.mooney.core.platform.FileHandler
@@ -59,6 +61,10 @@ fun SettingsScreen(
     var addCategoryType by remember { mutableStateOf("EXPENSE") }
     var deleteCategoryId by remember { mutableStateOf<String?>(null) }
     var deleteCategoryName by remember { mutableStateOf("") }
+    var showAssetCategoriesSheet by remember { mutableStateOf(false) }
+    var showAddAssetCategorySheet by remember { mutableStateOf(false) }
+    var deleteAssetCategoryId by remember { mutableStateOf<String?>(null) }
+    var deleteAssetCategoryName by remember { mutableStateOf("") }
 
     // Handle events from ViewModel
     LaunchedEffect(Unit) {
@@ -655,6 +661,283 @@ fun SettingsScreen(
         }
     }
 
+    // Delete asset category confirmation dialog
+    if (deleteAssetCategoryId != null) {
+        AlertDialog(
+            onDismissRequest = { deleteAssetCategoryId = null },
+            text = {
+                Text("Delete \"$deleteAssetCategoryName\"? Accounts using this category will keep their data but appear under \"Other\".")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.onAction(SettingsAction.OnDeleteAssetCategory(deleteAssetCategoryId!!))
+                    deleteAssetCategoryId = null
+                }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteAssetCategoryId = null }) {
+                    Text(stringResource(Res.string.cancel))
+                }
+            }
+        )
+    }
+
+    // Asset categories management bottom sheet
+    // Track which type (asset/liability) we're adding a new category for
+    var addAssetCategoryIsLiability by remember { mutableStateOf(false) }
+
+    if (showAssetCategoriesSheet) {
+        var renamingCategoryId by remember { mutableStateOf<String?>(null) }
+        var renameText by remember { mutableStateOf("") }
+
+        val assetCats = state.assetCategories.filter { !it.isLiability }
+        val liabilityCats = state.assetCategories.filter { it.isLiability }
+
+        MooneyBottomSheet(onDismissRequest = { showAssetCategoriesSheet = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 32.dp)
+            ) {
+                Text(
+                    "Asset & Liability Categories",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
+                    // Assets section
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "ASSETS",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                            TextButton(onClick = {
+                                addAssetCategoryIsLiability = false
+                                showAddAssetCategorySheet = true
+                            }) {
+                                Text("+ Add")
+                            }
+                        }
+                    }
+                    items(assetCats.size) { index ->
+                        val category = assetCats[index]
+                        val isRenaming = renamingCategoryId == category.id
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable {
+                                    renamingCategoryId = category.id
+                                    renameText = category.title
+                                }
+                                .padding(horizontal = 12.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (isRenaming) {
+                                OutlinedTextField(
+                                    value = renameText,
+                                    onValueChange = { if (it.length <= 30) renameText = it },
+                                    modifier = Modifier.weight(1f),
+                                    singleLine = true,
+                                    textStyle = MaterialTheme.typography.bodyLarge
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                TextButton(onClick = {
+                                    if (renameText.isNotBlank()) {
+                                        viewModel.onAction(SettingsAction.OnRenameAssetCategory(category.id, renameText.trim()))
+                                    }
+                                    renamingCategoryId = null
+                                }) {
+                                    Text("Save")
+                                }
+                            } else {
+                                Text(
+                                    category.title,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                IconButton(
+                                    onClick = {
+                                        deleteAssetCategoryId = category.id
+                                        deleteAssetCategoryName = category.title
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Delete",
+                                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                        if (index < assetCats.size - 1) {
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.08f),
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            )
+                        }
+                    }
+
+                    // Liabilities section
+                    item {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "LIABILITIES",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                            TextButton(onClick = {
+                                addAssetCategoryIsLiability = true
+                                showAddAssetCategorySheet = true
+                            }) {
+                                Text("+ Add")
+                            }
+                        }
+                    }
+                    items(liabilityCats.size) { index ->
+                        val category = liabilityCats[index]
+                        val isRenaming = renamingCategoryId == category.id
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable {
+                                    renamingCategoryId = category.id
+                                    renameText = category.title
+                                }
+                                .padding(horizontal = 12.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (isRenaming) {
+                                OutlinedTextField(
+                                    value = renameText,
+                                    onValueChange = { if (it.length <= 30) renameText = it },
+                                    modifier = Modifier.weight(1f),
+                                    singleLine = true,
+                                    textStyle = MaterialTheme.typography.bodyLarge
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                TextButton(onClick = {
+                                    if (renameText.isNotBlank()) {
+                                        viewModel.onAction(SettingsAction.OnRenameAssetCategory(category.id, renameText.trim()))
+                                    }
+                                    renamingCategoryId = null
+                                }) {
+                                    Text("Save")
+                                }
+                            } else {
+                                Text(
+                                    category.title,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                IconButton(
+                                    onClick = {
+                                        deleteAssetCategoryId = category.id
+                                        deleteAssetCategoryName = category.title
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Delete",
+                                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                        if (index < liabilityCats.size - 1) {
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.08f),
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Add asset category bottom sheet
+    if (showAddAssetCategorySheet) {
+        MooneyBottomSheet(onDismissRequest = { showAddAssetCategorySheet = false }) {
+            var title by remember { mutableStateOf("") }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 32.dp)
+            ) {
+                Text(
+                    "New Category",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { if (it.length <= 30) title = it },
+                    label = { Text("Category name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        viewModel.onAction(SettingsAction.OnAddAssetCategory(title.trim(), addAssetCategoryIsLiability))
+                        showAddAssetCategorySheet = false
+                    },
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    enabled = title.isNotBlank(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.inverseSurface,
+                        contentColor = MaterialTheme.colorScheme.inverseOnSurface
+                    )
+                ) {
+                    Text("Add", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+
+    if (state.showPaywall) {
+        PaywallSheet(
+            onDismiss = { viewModel.dismissPaywall() },
+            onSubscribe = { viewModel.dismissPaywall() },
+            onRestore = { viewModel.dismissPaywall() }
+        )
+    }
+
     Scaffold(
         topBar = {
             Toolbars.Primary(
@@ -736,6 +1019,12 @@ fun SettingsScreen(
                             value = "${state.allCategories.size}",
                             onClick = { showCategoriesSheet = true }
                         )
+                        SettingsDivider()
+                        SettingsRow(
+                            title = "Asset Categories",
+                            value = "${state.assetCategories.size}",
+                            onClick = { showAssetCategoriesSheet = true }
+                        )
                     }
                 }
 
@@ -777,11 +1066,17 @@ fun SettingsScreen(
                     SettingsSectionHeader(stringResource(Res.string.about))
                 }
                 item {
+                    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
                     SettingsGroup {
                         SettingsRow(
                             title = stringResource(Res.string.version),
                             value = "1.0.0",
                             showChevron = false
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                        SettingsRow(
+                            title = "Privacy Policy",
+                            onClick = { uriHandler.openUri("https://andriybobchuk.github.io/Mooney/privacy-policy.html") }
                         )
                     }
                 }

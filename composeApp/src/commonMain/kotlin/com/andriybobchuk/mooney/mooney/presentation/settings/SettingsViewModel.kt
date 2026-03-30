@@ -2,12 +2,18 @@ package com.andriybobchuk.mooney.mooney.presentation.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.andriybobchuk.mooney.core.data.database.AssetCategoryDao
+import com.andriybobchuk.mooney.core.data.database.AssetCategoryEntity
 import com.andriybobchuk.mooney.core.data.database.CategoryDao
 import com.andriybobchuk.mooney.core.data.database.CategoryEntity
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.domain.CoreRepository
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.UserCurrency
+import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
+import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
+import com.andriybobchuk.mooney.core.premium.PremiumConfig
+import com.andriybobchuk.mooney.core.premium.PremiumManager
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetCategoriesUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetUserCurrenciesUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.UpdateUserCurrenciesUseCase
@@ -17,6 +23,10 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.settings.UpdatePinnedCateg
 import com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 import com.andriybobchuk.mooney.mooney.domain.backup.DataExportImportManager
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -28,7 +38,9 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 
+@Suppress("LongParameterList")
 class SettingsViewModel(
     private val getUserPreferencesUseCase: GetUserPreferencesUseCase,
     private val updatePinnedCategoriesUseCase: UpdatePinnedCategoriesUseCase,
@@ -39,7 +51,11 @@ class SettingsViewModel(
     private val getUserCurrenciesUseCase: GetUserCurrenciesUseCase,
     private val updateUserCurrenciesUseCase: UpdateUserCurrenciesUseCase,
     private val categoryDao: CategoryDao,
-    private val repository: CoreRepository
+    private val assetCategoryDao: AssetCategoryDao,
+    private val repository: CoreRepository,
+    private val analyticsTracker: AnalyticsTracker,
+    private val premiumManager: PremiumManager,
+    private val dataStore: DataStore<Preferences>
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsState())
@@ -51,6 +67,7 @@ class SettingsViewModel(
     init {
         observeData()
         observeUserCurrencies()
+        observeAssetCategories()
     }
 
     private fun observeData() {
@@ -73,7 +90,10 @@ class SettingsViewModel(
                         error = null
                     )
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (error: Throwable) {
+                analyticsTracker.recordException(error, "Settings")
                 _state.update { it.copy(isLoading = false, error = error.message) }
             }
         }.launchIn(viewModelScope)
@@ -82,6 +102,12 @@ class SettingsViewModel(
     private fun observeUserCurrencies() {
         getUserCurrenciesUseCase().onEach { currencies ->
             _state.update { it.copy(userCurrencies = currencies) }
+        }.launchIn(viewModelScope)
+    }
+
+    private fun observeAssetCategories() {
+        assetCategoryDao.getAll().onEach { categories ->
+            _state.update { it.copy(assetCategories = categories) }
         }.launchIn(viewModelScope)
     }
 
@@ -98,6 +124,9 @@ class SettingsViewModel(
             is SettingsAction.OnToggleUserCurrency -> handleToggleUserCurrency(action.currencyCode)
             is SettingsAction.OnDeleteCategory -> handleDeleteCategory(action.categoryId)
             is SettingsAction.OnAddCategory -> handleAddCategory(action.title, action.type, action.emoji, action.parentId)
+            is SettingsAction.OnAddAssetCategory -> handleAddAssetCategory(action.title, action.isLiability)
+            is SettingsAction.OnDeleteAssetCategory -> handleDeleteAssetCategory(action.categoryId)
+            is SettingsAction.OnRenameAssetCategory -> handleRenameAssetCategory(action.categoryId, action.newTitle)
             is SettingsAction.OnBackClick -> {}
         }
     }
@@ -107,9 +136,13 @@ class SettingsViewModel(
             try {
                 _state.update { it.copy(isExporting = true, error = null) }
                 val exportData = dataExportImportManager.exportAllData()
+                analyticsTracker.trackEvent(AnalyticsEvent.ExportData)
                 _events.emit(SettingsEvent.ExportReady(exportData))
                 _state.update { it.copy(isExporting = false) }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
+                analyticsTracker.recordException(e, "Settings", mapOf("action" to "export"))
                 _state.update { it.copy(isExporting = false, error = "Export failed: ${e.message}") }
             }
         }
@@ -134,7 +167,10 @@ class SettingsViewModel(
                         }
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
+                analyticsTracker.recordException(e, "Settings", mapOf("action" to "import_validate"))
                 _state.update {
                     it.copy(isImporting = false, error = "Import validation failed: ${e.message}")
                 }
@@ -149,6 +185,11 @@ class SettingsViewModel(
 
                 when (val result = dataExportImportManager.importData(jsonData, clearExisting = false)) {
                     is DataExportImportManager.ImportResult.Success -> {
+                        analyticsTracker.trackEvent(AnalyticsEvent.ImportData(
+                            success = true,
+                            transactionCount = result.importedTransactions,
+                            accountCount = result.importedAccounts
+                        ))
                         _events.emit(SettingsEvent.ImportSuccess(
                             importedTransactions = result.importedTransactions,
                             importedAccounts = result.importedAccounts,
@@ -157,12 +198,18 @@ class SettingsViewModel(
                         _state.update { it.copy(isImporting = false) }
                     }
                     is DataExportImportManager.ImportResult.Error -> {
+                        analyticsTracker.trackEvent(AnalyticsEvent.ImportData(
+                            success = false, transactionCount = 0, accountCount = 0
+                        ))
                         _state.update {
                             it.copy(isImporting = false, error = "Import failed: ${result.message}")
                         }
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
+                analyticsTracker.recordException(e, "Settings", mapOf("action" to "import"))
                 _state.update {
                     it.copy(isImporting = false, error = "Import failed: ${e.message}")
                 }
@@ -200,6 +247,9 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 preferencesRepository.updateThemeMode(themeMode)
+                analyticsTracker.trackEvent(AnalyticsEvent.ChangeTheme(themeMode.name))
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message) }
             }
@@ -210,6 +260,8 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 preferencesRepository.updateNotificationsEnabled(enabled)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message) }
             }
@@ -220,6 +272,9 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 preferencesRepository.updateDefaultCurrency(currency)
+                analyticsTracker.trackEvent(AnalyticsEvent.ChangeDefaultCurrency(currency))
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message) }
             }
@@ -230,7 +285,10 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 preferencesRepository.updateAppLanguage(language)
+                analyticsTracker.trackEvent(AnalyticsEvent.ChangeLanguage(language))
                 _state.update { it.copy(appLanguage = language) }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message) }
             }
@@ -242,6 +300,8 @@ class SettingsViewModel(
             try {
                 updatePinnedCategoriesUseCase(categoryIds)
                 clearError()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message) }
             }
@@ -255,26 +315,27 @@ class SettingsViewModel(
             if (exists) {
                 if (current.size <= 1) return@launch
                 updateUserCurrenciesUseCase.remove(currencyCode)
+                analyticsTracker.trackEvent(AnalyticsEvent.ToggleUserCurrency(currencyCode, enabled = false))
             } else {
                 val nextOrder = (current.maxOfOrNull { it.sortOrder } ?: -1) + 1
                 updateUserCurrenciesUseCase.add(UserCurrency(currencyCode, nextOrder))
+                analyticsTracker.trackEvent(AnalyticsEvent.ToggleUserCurrency(currencyCode, enabled = true))
             }
-        }
-    }
-
-    private fun handleDeleteCategory(categoryId: String) {
-        viewModelScope.launch {
-            // Delete children first, then the category itself
-            val children = categoryDao.getByParentId(categoryId)
-            children.forEach { categoryDao.delete(it.id) }
-            categoryDao.delete(categoryId)
-            repository.reloadCategories()
-            _state.update { it.copy(allCategories = getCategoriesUseCase()) }
         }
     }
 
     private fun handleAddCategory(title: String, type: String, emoji: String?, parentId: String?) {
         viewModelScope.launch {
+            // Gate: check custom category limit
+            val isPremium = premiumManager.getIsPremium()
+            if (!isPremium) {
+                val currentCount = dataStore.data.first()[PreferencesKeys.CUSTOM_CATEGORY_COUNT] ?: 0
+                if (currentCount >= PremiumConfig.maxFreeCustomCategories) {
+                    _state.update { it.copy(showPaywall = true) }
+                    return@launch
+                }
+            }
+
             val id = title.lowercase().replace(" ", "_").replace(Regex("[^a-z0-9_]"), "")
             // When parentId is null, this is a new general category — parent is the type root
             val resolvedParentId = parentId ?: type.lowercase()
@@ -287,9 +348,65 @@ class SettingsViewModel(
                     parentId = resolvedParentId
                 )
             )
+            // Track custom category count
+            dataStore.edit { prefs ->
+                val current = prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] ?: 0
+                prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] = current + 1
+            }
+            analyticsTracker.trackEvent(AnalyticsEvent.AddCustomCategory(type))
             repository.reloadCategories()
             _state.update { it.copy(allCategories = getCategoriesUseCase()) }
         }
+    }
+
+    private fun handleDeleteCategory(categoryId: String) {
+        viewModelScope.launch {
+            // Delete children first, then the category itself
+            val children = categoryDao.getByParentId(categoryId)
+            children.forEach { categoryDao.delete(it.id) }
+            categoryDao.delete(categoryId)
+            // Decrement custom category count
+            dataStore.edit { prefs ->
+                val current = prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] ?: 0
+                prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] = (current - 1).coerceAtLeast(0)
+            }
+            analyticsTracker.trackEvent(AnalyticsEvent.DeleteCustomCategory)
+            repository.reloadCategories()
+            _state.update { it.copy(allCategories = getCategoriesUseCase()) }
+        }
+    }
+
+    private fun handleAddAssetCategory(title: String, isLiability: Boolean = false) {
+        viewModelScope.launch {
+            val id = title.lowercase().replace(" ", "_").replace(Regex("[^a-z0-9_]"), "")
+            val currentCount = assetCategoryDao.getCount()
+            assetCategoryDao.upsert(
+                AssetCategoryEntity(
+                    id = id,
+                    title = title,
+                    emoji = "📁",
+                    sortOrder = currentCount,
+                    isLiability = isLiability
+                )
+            )
+        }
+    }
+
+    private fun handleDeleteAssetCategory(categoryId: String) {
+        viewModelScope.launch {
+            assetCategoryDao.delete(categoryId)
+        }
+    }
+
+    private fun handleRenameAssetCategory(categoryId: String, newTitle: String) {
+        viewModelScope.launch {
+            val existing = assetCategoryDao.getById(categoryId) ?: return@launch
+            assetCategoryDao.upsert(existing.copy(title = newTitle))
+        }
+    }
+
+    fun dismissPaywall() {
+        _state.update { it.copy(showPaywall = false) }
     }
 
     fun clearError() {

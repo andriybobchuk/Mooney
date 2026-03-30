@@ -241,3 +241,30 @@ class FakePendingTransactionDao : PendingTransactionDao {
         items.value = items.value.filter { it.status == "PENDING" || it.scheduledDate >= cutoffDate }
     }
 }
+
+class FakeAssetCategoryDao : AssetCategoryDao {
+    private val categories = MutableStateFlow<List<AssetCategoryEntity>>(emptyList())
+
+    override fun getAll(): Flow<List<AssetCategoryEntity>> =
+        categories.map { it.sortedBy { c -> c.sortOrder } }
+
+    override suspend fun getById(id: String): AssetCategoryEntity? =
+        categories.value.find { it.id == id }
+
+    override suspend fun upsert(category: AssetCategoryEntity) {
+        val current = categories.value.toMutableList()
+        val existing = current.indexOfFirst { it.id == category.id }
+        if (existing >= 0) {
+            current[existing] = category
+        } else {
+            current.add(category)
+        }
+        categories.value = current
+    }
+
+    override suspend fun delete(id: String) {
+        categories.value = categories.value.filter { it.id != id }
+    }
+
+    override suspend fun getCount(): Int = categories.value.size
+}

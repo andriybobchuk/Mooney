@@ -876,19 +876,21 @@ fun TransactionBottomSheet(
                 )
                 
                 // Show current account value and calculated difference
-                val currentValue = selectedAccount!!.amount
+                val reconAccount = selectedAccount
+                val currentValue = reconAccount?.amount ?: 0.0
+                val currencySymbol = reconAccount?.currency?.symbol ?: ""
                 val newValue = newAccountValue.replace(",", "").toDoubleOrNull() ?: currentValue
                 val difference = newValue - currentValue
-                
-                if (difference != 0.0) {
+
+                if (difference != 0.0 && reconAccount != null) {
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Current value: ${currentValue.formatWithCommas()} ${selectedAccount!!.currency.symbol}",
+                        text = "Current value: ${currentValue.formatWithCommas()} $currencySymbol",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "Difference: ${if (difference > 0) "+" else ""}${difference.formatWithCommas()} ${selectedAccount!!.currency.symbol}",
+                        text = "Difference: ${if (difference > 0) "+" else ""}${difference.formatWithCommas()} $currencySymbol",
                         style = MaterialTheme.typography.bodySmall,
                         color = if (difference > 0) MaterialTheme.appColors.incomeColor else MaterialTheme.appColors.expenseColor,
                         fontWeight = FontWeight.Medium
@@ -942,9 +944,11 @@ fun TransactionBottomSheet(
             // Category display - only show for expense/income
             if (selectedTransactionType != CategoryType.TRANSFER) {
                 // For expense/income, allow category selection
+                val subCat = currentSelectedSubCategory
+                val mainCat = currentSelectedCategory
                 val categoryText = when {
-                    currentSelectedSubCategory != null -> "${currentSelectedSubCategory!!.resolveEmoji()} ${currentSelectedSubCategory!!.title}"
-                    currentSelectedCategory != null -> "${currentSelectedCategory!!.emoji ?: ""} ${currentSelectedCategory!!.title}"
+                    subCat != null -> "${subCat.resolveEmoji()} ${subCat.title}"
+                    mainCat != null -> "${mainCat.emoji ?: ""} ${mainCat.title}"
                     else -> when (selectedTransactionType) {
                         CategoryType.EXPENSE -> "🛒 Groceries & Household"
                         CategoryType.INCOME -> "💸 Salary"
@@ -1020,9 +1024,10 @@ fun TransactionBottomSheet(
                     val parsedAmount: Double?
                     val finalAmount: Double?
                     
-                    if (isReconciliation && selectedAccount != null) {
+                    val reconAcct = selectedAccount
+                    if (isReconciliation && reconAcct != null) {
                         // For reconciliation: use the difference between old and new account values
-                        val currentValue = selectedAccount!!.amount
+                        val currentValue = reconAcct.amount
                         val newValue = newAccountValue.replace(",", "").toDoubleOrNull()
                         parsedAmount = newValue
                         finalAmount = if (newValue != null) kotlin.math.abs(newValue - currentValue) else null
@@ -1038,37 +1043,40 @@ fun TransactionBottomSheet(
                         currentSelectedCategory ?: getDefaultCategoryForType(selectedTransactionType)
                     }
                     
+                    // Capture locals for smart casting
+                    val acct = selectedAccount
+                    val destAcct = destinationAccount
+                    val fCat = finalCategory
+                    val fAmt = finalAmount
+
                     // Validation logic
                     val isValid = if (selectedTransactionType == CategoryType.TRANSFER) {
-                        parsedAmount != null && selectedAccount != null && destinationAccount != null && 
-                        finalCategory != null && selectedAccount!!.id != destinationAccount!!.id
+                        parsedAmount != null && acct != null && destAcct != null &&
+                        fCat != null && acct.id != destAcct.id
                     } else if (isReconciliation) {
-                        // For reconciliation: validate new account value is provided and different from current
-                        parsedAmount != null && selectedAccount != null && finalCategory != null &&
-                        finalAmount != null && finalAmount > 0.01 // Ensure meaningful difference
+                        parsedAmount != null && acct != null && fCat != null &&
+                        fAmt != null && fAmt > 0.01
                     } else {
-                        // For regular transactions
-                        parsedAmount != null && selectedAccount != null && finalCategory != null
+                        parsedAmount != null && acct != null && fCat != null
                     }
-                    
-                    if (isValid) {
+
+                    @Suppress("ComplexCondition")
+                    if (isValid && acct != null && fCat != null && fAmt != null) {
                         val transaction = Transaction(
                             id = transactionToEdit?.id ?: 0,
-                            amount = finalAmount!!,
-                            account = if (isReconciliation) {
-                                // For reconciliation: update account to new value
-                                selectedAccount!!.copy(amount = parsedAmount!!)
+                            amount = fAmt,
+                            account = if (isReconciliation && parsedAmount != null) {
+                                acct.copy(amount = parsedAmount)
                             } else {
-                                selectedAccount!!
+                                acct
                             },
-                            subcategory = if (selectedTransactionType == CategoryType.TRANSFER) {
-                                // Create a dynamic category that stores the destination account ID
-                                finalCategory!!.copy(
-                                    id = "transfer_to_${destinationAccount!!.id}",
-                                    title = "Transfer to ${destinationAccount!!.title}"
+                            subcategory = if (selectedTransactionType == CategoryType.TRANSFER && destAcct != null) {
+                                fCat.copy(
+                                    id = "transfer_to_${destAcct.id}",
+                                    title = "Transfer to ${destAcct.title}"
                                 )
                             } else {
-                                currentSelectedSubCategory ?: finalCategory!!
+                                currentSelectedSubCategory ?: fCat
                             },
                             date = selectedDate
                         )
@@ -1595,22 +1603,23 @@ fun CategorySelectionBottomSheet(
         }
     }
 
-    if (showSubCategorySheet && selectedParentCategory != null) {
+    val parentCat = selectedParentCategory
+    if (showSubCategorySheet && parentCat != null) {
         SubCategorySelectionBottomSheet(
             onDismiss = { showSubCategorySheet = false },
             sheetState = rememberModalBottomSheetState(
                 skipPartiallyExpanded = true,
                 confirmValueChange = { true }
             ),
-            parentCategory = selectedParentCategory!!,
+            parentCategory = parentCat,
             categories = categories,
             initialSelectedSubCategory = initialSelectedSubCategory,
             onSubCategorySelected = { subCategory ->
-                onCategorySelected(selectedParentCategory!!, subCategory)
+                onCategorySelected(parentCat, subCategory)
                 showSubCategorySheet = false
             },
             onParentSelected = {
-                onCategorySelected(selectedParentCategory!!, null)
+                onCategorySelected(parentCat, null)
                 showSubCategorySheet = false
             }
         )

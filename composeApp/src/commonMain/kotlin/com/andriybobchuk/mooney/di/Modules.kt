@@ -70,7 +70,8 @@ val sharedModule = module {
             categoryDao = get(),
             userCurrencyDao = get(),
             recurringTransactionDao = get(),
-            pendingTransactionDao = get()
+            pendingTransactionDao = get(),
+            assetCategoryDao = get()
         )
     }
 

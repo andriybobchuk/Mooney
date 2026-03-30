@@ -26,11 +26,12 @@ class DataExportImportManagerTest {
         categoryDao: FakeCategoryDao = FakeCategoryDao(),
         userCurrencyDao: FakeUserCurrencyDao = FakeUserCurrencyDao(),
         recurringTransactionDao: FakeRecurringTransactionDao = FakeRecurringTransactionDao(),
-        pendingTransactionDao: FakePendingTransactionDao = FakePendingTransactionDao()
+        pendingTransactionDao: FakePendingTransactionDao = FakePendingTransactionDao(),
+        assetCategoryDao: FakeAssetCategoryDao = FakeAssetCategoryDao()
     ) = DataExportImportManager(
         transactionDao, accountDao, goalDao, goalGroupDao,
         categoryUsageDao, categoryDao, userCurrencyDao,
-        recurringTransactionDao, pendingTransactionDao
+        recurringTransactionDao, pendingTransactionDao, assetCategoryDao
     )
 
     private fun parseExport(jsonStr: String): DataExportImportManager.CompleteDataExport =
@@ -56,20 +57,24 @@ class DataExportImportManagerTest {
     }
 
     @Test
-    fun `export includes all account fields including isPrimary`() = runTest {
+    fun `export includes all account fields including isPrimary and isLiability`() = runTest {
         val accountDao = FakeAccountDao()
-        accountDao.upsert(AccountEntity(0, "Main", 1000.0, "PLN", "💰", "BANK_ACCOUNT", isPrimary = true))
+        accountDao.upsert(AccountEntity(0, "Main", 1000.0, "PLN", "💰", "BANK_ACCOUNT", isPrimary = true, isLiability = false))
+        accountDao.upsert(AccountEntity(0, "Mortgage", -200000.0, "PLN", "🏠", "REAL_ESTATE", isPrimary = false, isLiability = true))
         val manager = createManager(accountDao = accountDao)
 
         val export = parseExport(manager.exportAllData())
-        assertEquals(1, export.accounts.size)
-        val acc = export.accounts.first()
-        assertEquals("Main", acc.title)
-        assertEquals(1000.0, acc.amount)
-        assertEquals("PLN", acc.currency)
-        assertEquals("💰", acc.emoji)
-        assertEquals("BANK_ACCOUNT", acc.assetCategory)
-        assertEquals(true, acc.isPrimary)
+        assertEquals(2, export.accounts.size)
+        val main = export.accounts.find { it.title == "Main" }!!
+        assertEquals(1000.0, main.amount)
+        assertEquals("PLN", main.currency)
+        assertEquals("💰", main.emoji)
+        assertEquals("BANK_ACCOUNT", main.assetCategory)
+        assertEquals(true, main.isPrimary)
+        assertEquals(false, main.isLiability)
+        val mortgage = export.accounts.find { it.title == "Mortgage" }!!
+        assertEquals(true, mortgage.isLiability)
+        assertEquals(false, mortgage.isPrimary)
     }
 
     @Test
@@ -166,6 +171,26 @@ class DataExportImportManagerTest {
     }
 
     @Test
+    fun `export includes asset categories with all fields`() = runTest {
+        val dao = FakeAssetCategoryDao()
+        dao.upsert(AssetCategoryEntity("BANK_ACCOUNT", "Bank Account", "🏦", "Regular bank accounts", 0xFF3562F6, 0, false))
+        dao.upsert(AssetCategoryEntity("DEBT", "Debt", "💳", "Liabilities", 0xFFFF0000, 1, true))
+        val manager = createManager(assetCategoryDao = dao)
+
+        val export = parseExport(manager.exportAllData())
+        assertEquals(2, export.assetCategories.size)
+        val bank = export.assetCategories.find { it.id == "BANK_ACCOUNT" }!!
+        assertEquals("Bank Account", bank.title)
+        assertEquals("🏦", bank.emoji)
+        assertEquals("Regular bank accounts", bank.description)
+        assertEquals(0xFF3562F6, bank.color)
+        assertEquals(0, bank.sortOrder)
+        assertEquals(false, bank.isLiability)
+        val debt = export.assetCategories.find { it.id == "DEBT" }!!
+        assertEquals(true, debt.isLiability)
+    }
+
+    @Test
     fun `export metadata counts match actual data`() = runTest {
         val accountDao = FakeAccountDao()
         accountDao.upsert(AccountEntity(0, "A1", 100.0, "PLN", "💰", "BANK_ACCOUNT"))
@@ -184,10 +209,10 @@ class DataExportImportManagerTest {
     // region Import Tests
 
     @Test
-    fun `import restores accounts with isPrimary`() = runTest {
+    fun `import restores accounts with isPrimary and isLiability`() = runTest {
         val sourceAccountDao = FakeAccountDao()
-        sourceAccountDao.upsert(AccountEntity(0, "Primary", 5000.0, "PLN", "💰", "BANK_ACCOUNT", isPrimary = true))
-        sourceAccountDao.upsert(AccountEntity(0, "Savings", 10000.0, "USD", "🏦", "SAVINGS", isPrimary = false))
+        sourceAccountDao.upsert(AccountEntity(0, "Primary", 5000.0, "PLN", "💰", "BANK_ACCOUNT", isPrimary = true, isLiability = false))
+        sourceAccountDao.upsert(AccountEntity(0, "Loan", -10000.0, "USD", "🏦", "BANK_ACCOUNT", isPrimary = false, isLiability = true))
         val sourceManager = createManager(accountDao = sourceAccountDao)
         val jsonStr = sourceManager.exportAllData()
 
@@ -198,8 +223,8 @@ class DataExportImportManagerTest {
         assertIs<DataExportImportManager.ImportResult.Success>(result)
         assertEquals(2, result.importedAccounts)
         val imported = targetAccountDao.getAll().first()
-        assertTrue(imported.any { it.title == "Primary" && it.isPrimary })
-        assertTrue(imported.any { it.title == "Savings" && !it.isPrimary })
+        assertTrue(imported.any { it.title == "Primary" && it.isPrimary && !it.isLiability })
+        assertTrue(imported.any { it.title == "Loan" && !it.isPrimary && it.isLiability })
     }
 
     @Test
@@ -274,7 +299,27 @@ class DataExportImportManagerTest {
     }
 
     @Test
-    fun `full round-trip preserves all data across 9 tables`() = runTest {
+    fun `import restores asset categories`() = runTest {
+        val sourceDao = FakeAssetCategoryDao()
+        sourceDao.upsert(AssetCategoryEntity("CASH", "Cash", "💵", "Physical cash", 0xFF00FF00, 0, false))
+        sourceDao.upsert(AssetCategoryEntity("LOAN", "Loans", "🏦", "Bank loans", 0xFFFF0000, 1, true))
+        val sourceManager = createManager(assetCategoryDao = sourceDao)
+        val jsonStr = sourceManager.exportAllData()
+
+        val targetDao = FakeAssetCategoryDao()
+        val targetManager = createManager(assetCategoryDao = targetDao)
+        val result = targetManager.importData(jsonStr)
+
+        assertIs<DataExportImportManager.ImportResult.Success>(result)
+        assertEquals(2, result.importedAssetCategories)
+        val imported = targetDao.getAll().first()
+        assertEquals(2, imported.size)
+        assertTrue(imported.any { it.id == "CASH" && !it.isLiability })
+        assertTrue(imported.any { it.id == "LOAN" && it.isLiability })
+    }
+
+    @Test
+    fun `full round-trip preserves all data across 10 tables`() = runTest {
         val srcAccounts = FakeAccountDao()
         val srcTransactions = FakeTransactionDao()
         val srcGoals = FakeGoalDao()
@@ -284,6 +329,7 @@ class DataExportImportManagerTest {
         val srcCurrencies = FakeUserCurrencyDao()
         val srcRecurring = FakeRecurringTransactionDao()
         val srcPending = FakePendingTransactionDao()
+        val srcAssetCategories = FakeAssetCategoryDao()
 
         srcAccounts.upsert(AccountEntity(0, "Wallet", 500.0, "PLN", "👛", "CASH", isPrimary = true))
         srcTransactions.upsert(TransactionEntity(0, "groceries", 42.5, 1, "2024-06-15"))
@@ -295,8 +341,10 @@ class DataExportImportManagerTest {
         srcCurrencies.upsert(UserCurrencyEntity("EUR", 1))
         srcRecurring.upsert(RecurringTransactionEntity(0, "Rent", "rent", 2800.0, 1, 1, "MONTHLY", null, null, true, "2024-01-01", null))
         srcPending.upsert(PendingTransactionEntity(0, 1, "rent", 2800.0, 1, "2024-04-01", "PENDING", "2024-03-25"))
+        srcAssetCategories.upsert(AssetCategoryEntity("BANK_ACCOUNT", "Bank Account", "🏦", "Regular bank accounts", 0xFF3562F6, 0, false))
+        srcAssetCategories.upsert(AssetCategoryEntity("DEBT", "Debt", "💳", "Liabilities", 0xFFFF0000, 1, true))
 
-        val sourceManager = createManager(srcTransactions, srcAccounts, srcGoals, srcGoalGroups, srcCategoryUsage, srcCategories, srcCurrencies, srcRecurring, srcPending)
+        val sourceManager = createManager(srcTransactions, srcAccounts, srcGoals, srcGoalGroups, srcCategoryUsage, srcCategories, srcCurrencies, srcRecurring, srcPending, srcAssetCategories)
         val jsonStr = sourceManager.exportAllData()
 
         // Import into fresh DAOs
@@ -309,8 +357,9 @@ class DataExportImportManagerTest {
         val tgtCurrencies = FakeUserCurrencyDao()
         val tgtRecurring = FakeRecurringTransactionDao()
         val tgtPending = FakePendingTransactionDao()
+        val tgtAssetCategories = FakeAssetCategoryDao()
 
-        val targetManager = createManager(tgtTransactions, tgtAccounts, tgtGoals, tgtGoalGroups, tgtCategoryUsage, tgtCategories, tgtCurrencies, tgtRecurring, tgtPending)
+        val targetManager = createManager(tgtTransactions, tgtAccounts, tgtGoals, tgtGoalGroups, tgtCategoryUsage, tgtCategories, tgtCurrencies, tgtRecurring, tgtPending, tgtAssetCategories)
         val result = targetManager.importData(jsonStr)
 
         assertIs<DataExportImportManager.ImportResult.Success>(result)
@@ -323,6 +372,7 @@ class DataExportImportManagerTest {
         assertEquals(2, result.importedUserCurrencies)
         assertEquals(1, result.importedRecurringTransactions)
         assertEquals(1, result.importedPendingTransactions)
+        assertEquals(2, result.importedAssetCategories)
 
         // Verify specific field values survived
         val acc = tgtAccounts.getAll().first().first()
@@ -348,6 +398,15 @@ class DataExportImportManagerTest {
         val recurring = tgtRecurring.getAll().first().first()
         assertEquals("Rent", recurring.title)
         assertEquals("MONTHLY", recurring.frequency)
+
+        val assetCats = tgtAssetCategories.getAll().first()
+        assertEquals(2, assetCats.size)
+        val bankCat = assetCats.find { it.id == "BANK_ACCOUNT" }!!
+        assertEquals("Bank Account", bankCat.title)
+        assertEquals("🏦", bankCat.emoji)
+        assertEquals(false, bankCat.isLiability)
+        val debtCat = assetCats.find { it.id == "DEBT" }!!
+        assertEquals(true, debtCat.isLiability)
     }
 
     // endregion
@@ -480,6 +539,96 @@ class DataExportImportManagerTest {
         assertIs<DataExportImportManager.ValidationResult.Valid>(result)
     }
 
+    @Test
+    fun `validate accepts v2 export with v2 checksum`() {
+        val v2Json = """
+        {
+            "exportVersion": 2,
+            "exportDate": 1700000000,
+            "appVersion": "1.0.0",
+            "transactions": [],
+            "accounts": [],
+            "goals": [],
+            "goalGroups": [],
+            "categoryUsages": [],
+            "categories": [],
+            "userCurrencies": [],
+            "recurringTransactions": [],
+            "pendingTransactions": [],
+            "metadata": {
+                "totalTransactions": 0,
+                "totalAccounts": 0,
+                "totalGoals": 0,
+                "totalGoalGroups": 0,
+                "totalCategoryUsages": 0,
+                "totalCategories": 0,
+                "totalUserCurrencies": 0,
+                "totalRecurringTransactions": 0,
+                "totalPendingTransactions": 0,
+                "checksum": "${generateV2Checksum(0, 0, 0, 0, 0, 0, 0, 0, 0)}"
+            }
+        }
+        """.trimIndent()
+
+        val manager = createManager()
+        val result = manager.validateExportData(v2Json)
+        assertIs<DataExportImportManager.ValidationResult.Valid>(result)
+    }
+
+    @Test
+    fun `import handles v2 export without asset categories gracefully`() = runTest {
+        val v2Json = """
+        {
+            "exportVersion": 2,
+            "exportDate": 1700000000,
+            "appVersion": "1.0.0",
+            "transactions": [],
+            "accounts": [
+                {
+                    "id": 1,
+                    "title": "Savings",
+                    "amount": 5000.0,
+                    "currency": "PLN",
+                    "emoji": "💰",
+                    "assetCategory": "BANK_ACCOUNT",
+                    "isPrimary": true
+                }
+            ],
+            "goals": [],
+            "goalGroups": [],
+            "categoryUsages": [],
+            "categories": [],
+            "userCurrencies": [],
+            "recurringTransactions": [],
+            "pendingTransactions": [],
+            "metadata": {
+                "totalTransactions": 0,
+                "totalAccounts": 1,
+                "totalGoals": 0,
+                "totalGoalGroups": 0,
+                "totalCategoryUsages": 0,
+                "totalCategories": 0,
+                "totalUserCurrencies": 0,
+                "totalRecurringTransactions": 0,
+                "totalPendingTransactions": 0,
+                "checksum": "${generateV2Checksum(0, 1, 0, 0, 0, 0, 0, 0, 0)}"
+            }
+        }
+        """.trimIndent()
+
+        val targetAccountDao = FakeAccountDao()
+        val targetAssetCategoryDao = FakeAssetCategoryDao()
+        val targetManager = createManager(accountDao = targetAccountDao, assetCategoryDao = targetAssetCategoryDao)
+        val result = targetManager.importData(v2Json)
+
+        assertIs<DataExportImportManager.ImportResult.Success>(result)
+        assertEquals(1, result.importedAccounts)
+        assertEquals(0, result.importedAssetCategories)
+        val acc = targetAccountDao.getAll().first().first()
+        assertEquals("Savings", acc.title)
+        assertEquals(false, acc.isLiability) // default when missing from v2
+    }
+
     // endregion
 
     // region Edge Cases
@@ -575,5 +724,9 @@ class DataExportImportManagerTest {
 
     private fun generateV1Checksum(t: Int, a: Int, g: Int, gg: Int, cu: Int): String {
         return "$t-$a-$g-$gg-$cu".hashCode().toString()
+    }
+
+    private fun generateV2Checksum(vararg counts: Int): String {
+        return counts.joinToString("-").hashCode().toString()
     }
 }

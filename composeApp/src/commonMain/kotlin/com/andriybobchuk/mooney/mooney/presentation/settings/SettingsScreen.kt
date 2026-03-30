@@ -105,7 +105,9 @@ fun SettingsScreen(
     }
 
     // Import confirmation dialog
-    if (showImportConfirmDialog && importPreview != null && importJsonData != null) {
+    val currentPreview = importPreview
+    val currentJsonData = importJsonData
+    if (showImportConfirmDialog && currentPreview != null && currentJsonData != null) {
         AlertDialog(
             onDismissRequest = {
                 showImportConfirmDialog = false
@@ -117,9 +119,9 @@ fun SettingsScreen(
                 Column {
                     Text("The following data will be imported:")
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("\u2022 ${importPreview!!.first} transactions")
-                    Text("\u2022 ${importPreview!!.second} accounts")
-                    Text("\u2022 ${importPreview!!.third} goals")
+                    Text("\u2022 ${currentPreview.first} transactions")
+                    Text("\u2022 ${currentPreview.second} accounts")
+                    Text("\u2022 ${currentPreview.third} goals")
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("This will add to your existing data.", style = MaterialTheme.typography.bodySmall)
                 }
@@ -127,7 +129,7 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.confirmImport(importJsonData!!)
+                        viewModel.confirmImport(currentJsonData)
                     }
                 ) {
                     Text("Import")
@@ -418,7 +420,8 @@ fun SettingsScreen(
     }
 
     // Delete category confirmation dialog
-    if (deleteCategoryId != null) {
+    val currentDeleteCatId = deleteCategoryId
+    if (currentDeleteCatId != null) {
         AlertDialog(
             onDismissRequest = { deleteCategoryId = null },
             title = { Text(stringResource(Res.string.delete)) },
@@ -427,7 +430,7 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.onAction(SettingsAction.OnDeleteCategory(deleteCategoryId!!))
+                    viewModel.onAction(SettingsAction.OnDeleteCategory(currentDeleteCatId))
                     deleteCategoryId = null
                 }) {
                     Text(stringResource(Res.string.delete), color = MaterialTheme.colorScheme.error)
@@ -662,7 +665,8 @@ fun SettingsScreen(
     }
 
     // Delete asset category confirmation dialog
-    if (deleteAssetCategoryId != null) {
+    val currentDeleteAssetCatId = deleteAssetCategoryId
+    if (currentDeleteAssetCatId != null) {
         AlertDialog(
             onDismissRequest = { deleteAssetCategoryId = null },
             text = {
@@ -670,7 +674,7 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.onAction(SettingsAction.OnDeleteAssetCategory(deleteAssetCategoryId!!))
+                    viewModel.onAction(SettingsAction.OnDeleteAssetCategory(currentDeleteAssetCatId))
                     deleteAssetCategoryId = null
                 }) {
                     Text("Delete", color = MaterialTheme.colorScheme.error)

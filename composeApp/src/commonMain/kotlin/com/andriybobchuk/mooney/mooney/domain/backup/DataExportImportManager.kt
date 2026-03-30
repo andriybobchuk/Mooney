@@ -17,7 +17,8 @@ class DataExportImportManager(
     private val categoryDao: CategoryDao,
     private val userCurrencyDao: UserCurrencyDao,
     private val recurringTransactionDao: RecurringTransactionDao,
-    private val pendingTransactionDao: PendingTransactionDao
+    private val pendingTransactionDao: PendingTransactionDao,
+    private val assetCategoryDao: AssetCategoryDao
 ) {
     private val json = Json {
         prettyPrint = true
@@ -41,6 +42,7 @@ class DataExportImportManager(
         val userCurrencies: List<UserCurrencyExport> = emptyList(),
         val recurringTransactions: List<RecurringTransactionExport> = emptyList(),
         val pendingTransactions: List<PendingTransactionExport> = emptyList(),
+        val assetCategories: List<AssetCategoryExport> = emptyList(),
         val metadata: ExportMetadata
     )
 
@@ -61,7 +63,8 @@ class DataExportImportManager(
         val currency: String,
         val emoji: String,
         val assetCategory: String,
-        val isPrimary: Boolean = false
+        val isPrimary: Boolean = false,
+        val isLiability: Boolean = false
     )
 
     @Serializable
@@ -137,6 +140,17 @@ class DataExportImportManager(
     )
 
     @Serializable
+    data class AssetCategoryExport(
+        val id: String,
+        val title: String,
+        val emoji: String,
+        val description: String = "",
+        val color: Long = 0xFF3562F6,
+        val sortOrder: Int = 0,
+        val isLiability: Boolean = false
+    )
+
+    @Serializable
     data class ExportMetadata(
         val totalTransactions: Int,
         val totalAccounts: Int,
@@ -147,6 +161,7 @@ class DataExportImportManager(
         val totalUserCurrencies: Int = 0,
         val totalRecurringTransactions: Int = 0,
         val totalPendingTransactions: Int = 0,
+        val totalAssetCategories: Int = 0,
         val checksum: String
     )
 
@@ -162,6 +177,7 @@ class DataExportImportManager(
         val userCurrencies = userCurrencyDao.getAll().first().map { it.toExport() }
         val recurringTransactions = recurringTransactionDao.getAll().first().map { it.toExport() }
         val pendingTransactions = pendingTransactionDao.getAll().first().map { it.toExport() }
+        val assetCategories = assetCategoryDao.getAll().first().map { it.toExport() }
 
         val metadata = ExportMetadata(
             totalTransactions = transactions.size,
@@ -173,10 +189,12 @@ class DataExportImportManager(
             totalUserCurrencies = userCurrencies.size,
             totalRecurringTransactions = recurringTransactions.size,
             totalPendingTransactions = pendingTransactions.size,
+            totalAssetCategories = assetCategories.size,
             checksum = generateChecksum(
                 transactions.size, accounts.size, goals.size,
                 goalGroups.size, categoryUsages.size, categories.size,
-                userCurrencies.size, recurringTransactions.size, pendingTransactions.size
+                userCurrencies.size, recurringTransactions.size, pendingTransactions.size,
+                assetCategories.size
             )
         )
 
@@ -191,6 +209,7 @@ class DataExportImportManager(
             userCurrencies = userCurrencies,
             recurringTransactions = recurringTransactions,
             pendingTransactions = pendingTransactions,
+            assetCategories = assetCategories,
             metadata = metadata
         )
 
@@ -229,7 +248,7 @@ class DataExportImportManager(
             // 4. Accounts (transactions reference them)
             export.accounts.forEach { acc ->
                 accountDao.upsert(
-                    AccountEntity(0, acc.title, acc.amount, acc.currency, acc.emoji, acc.assetCategory, acc.isPrimary)
+                    AccountEntity(0, acc.title, acc.amount, acc.currency, acc.emoji, acc.assetCategory, acc.isPrimary, acc.isLiability)
                 )
                 counts = counts.copy(accounts = counts.accounts + 1)
             }
@@ -274,6 +293,14 @@ class DataExportImportManager(
                 counts = counts.copy(pendingTransactions = counts.pendingTransactions + 1)
             }
 
+            // 10. Asset categories
+            export.assetCategories.forEach { ac ->
+                assetCategoryDao.upsert(
+                    AssetCategoryEntity(ac.id, ac.title, ac.emoji, ac.description, ac.color, ac.sortOrder, ac.isLiability)
+                )
+                counts = counts.copy(assetCategories = counts.assetCategories + 1)
+            }
+
             ImportResult.Success(
                 importedTransactions = counts.transactions,
                 importedAccounts = counts.accounts,
@@ -283,7 +310,8 @@ class DataExportImportManager(
                 importedCategories = counts.categories,
                 importedUserCurrencies = counts.userCurrencies,
                 importedRecurringTransactions = counts.recurringTransactions,
-                importedPendingTransactions = counts.pendingTransactions
+                importedPendingTransactions = counts.pendingTransactions,
+                importedAssetCategories = counts.assetCategories
             )
         } catch (e: Exception) {
             ImportResult.Error(e.message ?: "Unknown error during import")
@@ -294,18 +322,24 @@ class DataExportImportManager(
         return try {
             val export = json.decodeFromString<CompleteDataExport>(jsonData)
 
-            // For v1 exports, validate with old checksum format
-            val expectedChecksum = if (export.exportVersion == 1) {
-                generateChecksumV1(
+            // Validate with checksum format matching export version
+            val expectedChecksum = when (export.exportVersion) {
+                1 -> generateChecksumV1(
                     export.transactions.size, export.accounts.size,
                     export.goals.size, export.goalGroups.size, export.categoryUsages.size
                 )
-            } else {
-                generateChecksum(
+                2 -> generateChecksum(
                     export.transactions.size, export.accounts.size,
                     export.goals.size, export.goalGroups.size, export.categoryUsages.size,
                     export.categories.size, export.userCurrencies.size,
                     export.recurringTransactions.size, export.pendingTransactions.size
+                )
+                else -> generateChecksum(
+                    export.transactions.size, export.accounts.size,
+                    export.goals.size, export.goalGroups.size, export.categoryUsages.size,
+                    export.categories.size, export.userCurrencies.size,
+                    export.recurringTransactions.size, export.pendingTransactions.size,
+                    export.assetCategories.size
                 )
             }
 
@@ -343,7 +377,7 @@ class DataExportImportManager(
 
     private fun TransactionEntity.toExport() = TransactionExport(id, subcategoryId, amount, accountId, date)
 
-    private fun AccountEntity.toExport() = AccountExport(id, title, amount, currency, emoji, assetCategory, isPrimary)
+    private fun AccountEntity.toExport() = AccountExport(id, title, amount, currency, emoji, assetCategory, isPrimary, isLiability)
 
     private fun GoalEntity.toExport() = GoalExport(id, emoji, title, description, targetAmount, currency, createdDate, groupName, imagePath)
 
@@ -364,6 +398,10 @@ class DataExportImportManager(
         id, recurringTransactionId, subcategoryId, amount, accountId, scheduledDate, status, createdDate
     )
 
+    private fun AssetCategoryEntity.toExport() = AssetCategoryExport(
+        id, title, emoji, description, color, sortOrder, isLiability
+    )
+
     // endregion
 
     private data class ImportCounts(
@@ -375,7 +413,8 @@ class DataExportImportManager(
         val categories: Int = 0,
         val userCurrencies: Int = 0,
         val recurringTransactions: Int = 0,
-        val pendingTransactions: Int = 0
+        val pendingTransactions: Int = 0,
+        val assetCategories: Int = 0
     )
 
     sealed class ImportResult {
@@ -388,7 +427,8 @@ class DataExportImportManager(
             val importedCategories: Int = 0,
             val importedUserCurrencies: Int = 0,
             val importedRecurringTransactions: Int = 0,
-            val importedPendingTransactions: Int = 0
+            val importedPendingTransactions: Int = 0,
+            val importedAssetCategories: Int = 0
         ) : ImportResult()
 
         data class Error(val message: String) : ImportResult()
@@ -408,6 +448,6 @@ class DataExportImportManager(
     }
 
     companion object {
-        const val CURRENT_EXPORT_VERSION = 2
+        const val CURRENT_EXPORT_VERSION = 3
     }
 }

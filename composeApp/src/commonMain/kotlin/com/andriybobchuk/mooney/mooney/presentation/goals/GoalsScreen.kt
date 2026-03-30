@@ -2,17 +2,14 @@ package com.andriybobchuk.mooney.mooney.presentation.goals
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,31 +18,23 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material.icons.outlined.DateRange
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,16 +42,12 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -73,27 +58,32 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.presentation.Toolbars
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MeshGradientBackground
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyTextField
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
+import com.andriybobchuk.mooney.mooney.data.GlobalConfig
+import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.Goal
+import com.andriybobchuk.mooney.mooney.domain.GoalTrackingType
 import com.andriybobchuk.mooney.mooney.domain.GoalWithProgress
-import com.andriybobchuk.mooney.mooney.domain.usecase.GoalCompletionEstimate
-import com.andriybobchuk.mooney.mooney.domain.usecase.GoalProgressResult
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
-import com.andriybobchuk.mooney.mooney.presentation.goals.components.SimpleGamefiedTimeline
+import com.andriybobchuk.mooney.mooney.domain.usecase.GoalCompletionEstimate
+import com.andriybobchuk.mooney.mooney.domain.usecase.MonthProjection
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GoalsScreen(
     viewModel: GoalsViewModel,
@@ -102,14 +92,15 @@ fun GoalsScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
-
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    
+
     Scaffold(
-        modifier = Modifier.background(MaterialTheme.colorScheme.background),
+        containerColor = Color.Transparent,
+        modifier = Modifier.background(Color.Transparent),
         topBar = {
             Toolbars.Primary(
                 title = "Goals",
+                containerColor = Color.Transparent,
                 scrollBehavior = scrollBehavior,
                 actions = listOf(
                     Toolbars.ToolBarAction(
@@ -124,915 +115,550 @@ fun GoalsScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { viewModel.onAction(GoalsAction.ShowAddGoalSheet) },
-                containerColor = MaterialTheme.colorScheme.primary
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
                 Icon(Icons.Outlined.Add, contentDescription = "Add Goal")
             }
         }
     ) { paddingValues ->
-        // Main content
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(paddingValues)
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
         ) {
-                if (state.goals.isEmpty() && !state.isLoading) {
-                    EmptyGoalsState(
-                        onAddGoalClick = { viewModel.onAction(GoalsAction.ShowAddGoalSheet) }
+            if (state.goals.isEmpty() && !state.isLoading) {
+                MeshGradientBackground()
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "No goals yet",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
                     )
-                } else {
-                    GoalsContent(
-                        goals = state.goals,
-                        currentIndex = state.currentGoalIndex,
-                        onSwipeToGoal = { index -> viewModel.onAction(GoalsAction.SwipeToGoal(index)) },
-                        onEditGoal = { goal -> viewModel.onAction(GoalsAction.EditGoal(goal)) },
-                        onDeleteGoal = { goal -> viewModel.onAction(GoalsAction.ShowDeleteDialog(goal)) }
-                    )
-                }
-
-                // Add/Edit Goal Bottom Sheet
-                if (state.showAddGoalSheet) {
-                    AddEditGoalBottomSheet(
-                        editingGoal = state.editingGoal,
-                        onDismiss = { viewModel.onAction(GoalsAction.HideAddGoalSheet) },
-                        onSave = { emoji, title, description, amount, currency ->
-                            viewModel.onAction(
-                                GoalsAction.SaveGoal(emoji, title, description, amount, currency)
-                            )
-                            keyboardController?.hide()
-                        }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Set financial goals and track your progress toward them.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-
-                // Delete Confirmation Dialog
-                if (state.showDeleteDialog && state.goalToDelete != null) {
-                    val goalToDelete = state.goalToDelete!!
-                    DeleteGoalDialog(
-                        goal = goalToDelete,
-                        onConfirm = { viewModel.onAction(GoalsAction.ConfirmDeleteGoal(goalToDelete.id)) },
-                        onDismiss = { viewModel.onAction(GoalsAction.HideDeleteDialog) }
-                    )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .nestedScroll(scrollBehavior.nestedScrollConnection),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(state.goals, key = { it.goal.id }) { goalWithProgress ->
+                        GoalCard(
+                            goalWithProgress = goalWithProgress,
+                            accounts = state.accounts,
+                            onEdit = { viewModel.onAction(GoalsAction.EditGoal(it)) },
+                            onDelete = { viewModel.onAction(GoalsAction.ShowDeleteDialog(it)) }
+                        )
+                    }
+                    item { Spacer(modifier = Modifier.height(72.dp)) }
                 }
+            }
         }
+    }
+
+    if (state.showAddGoalSheet) {
+        AddEditGoalSheet(
+            editingGoal = state.editingGoal,
+            accounts = state.accounts,
+            onDismiss = { viewModel.onAction(GoalsAction.HideAddGoalSheet) },
+            onSave = { title, targetAmount, currency, trackingType, accountId ->
+                viewModel.onAction(
+                    GoalsAction.SaveGoal(title, targetAmount, currency, trackingType, accountId)
+                )
+                keyboardController?.hide()
+            }
+        )
+    }
+
+    if (state.showDeleteDialog && state.goalToDelete != null) {
+        val goalToDelete = state.goalToDelete!!
+        AlertDialog(
+            onDismissRequest = { viewModel.onAction(GoalsAction.HideDeleteDialog) },
+            title = { Text("Delete Goal") },
+            text = { Text("Delete \"${goalToDelete.title}\"? This cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.onAction(GoalsAction.ConfirmDeleteGoal(goalToDelete.id)) }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.onAction(GoalsAction.HideDeleteDialog) }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun GoalsContent(
-    goals: List<GoalWithProgress>,
-    currentIndex: Int,
-    onSwipeToGoal: (Int) -> Unit,
-    onEditGoal: (Goal) -> Unit,
-    onDeleteGoal: (Goal) -> Unit
-) {
-    val pagerState = rememberPagerState(
-        initialPage = currentIndex,
-        pageCount = { goals.size }
-    )
-
-    LaunchedEffect(pagerState.currentPage) {
-        onSwipeToGoal(pagerState.currentPage)
-    }
-
-    LaunchedEffect(currentIndex) {
-        if (currentIndex != pagerState.currentPage && currentIndex < goals.size) {
-            pagerState.animateScrollToPage(currentIndex)
-        }
-    }
-
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        HorizontalPager(
-            state = pagerState,
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 0.dp, top = 16.dp),
-            pageSpacing = 16.dp,
-            modifier = Modifier.weight(1f)
-        ) { page ->
-            GoalCard(
-                goalWithProgress = goals[page],
-                onEditGoal = onEditGoal,
-                onDeleteGoal = onDeleteGoal
-            )
-        }
-
-        // Page indicator
-        if (goals.size > 1) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                repeat(goals.size) { index ->
-                    val color = if (index == currentIndex) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                    }
-                    
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(color)
-                    )
-                    
-                    if (index < goals.size - 1) {
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun GoalCard(
     goalWithProgress: GoalWithProgress,
-    onEditGoal: (Goal) -> Unit,
-    onDeleteGoal: (Goal) -> Unit
+    accounts: List<Account>,
+    onEdit: (Goal) -> Unit,
+    onDelete: (Goal) -> Unit
 ) {
     val goal = goalWithProgress.goal
     val progress = goalWithProgress.progress
     val estimate = goalWithProgress.completionEstimate
+    val progressPct = progress?.progressPercentage ?: 0.0
+    val baseCurrency = progress?.baseCurrency ?: GlobalConfig.baseCurrency
+    val savedAmount = progress?.savedAmount ?: 0.0
+    val targetAmount = progress?.targetAmount ?: goal.targetAmount
 
     var showContextMenu by remember { mutableStateOf(false) }
-    var showCustomRateSheet by remember { mutableStateOf(false) }
 
-    Card(
-        modifier = Modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onLongPress = { showContextMenu = true },
-                    onTap = { }
-                )
-            },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        shape = RoundedCornerShape(28.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = androidx.compose.foundation.BorderStroke(
-            width = 1.5.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-        )
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize()
+    val animatedProgress by animateFloatAsState(
+        targetValue = (progressPct / 100f).toFloat().coerceIn(0f, 1f),
+        animationSpec = tween(600)
+    )
+
+    val trackingLabel = when (goal.trackingType) {
+        GoalTrackingType.ACCOUNT -> accounts.find { it.id == goal.accountId }?.title ?: "Account"
+        GoalTrackingType.NET_WORTH -> "Net Worth"
+        GoalTrackingType.TOTAL_ASSETS -> "Total Assets"
+    }
+
+    val isCompleted = progressPct >= 100.0
+
+    val accentColor = MaterialTheme.colorScheme.primary
+
+    Box {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = { onEdit(goal) },
+                    onLongClick = { showContextMenu = true }
+                ),
+            shape = RoundedCornerShape(16.dp),
+            color = if (isCompleted) accentColor.copy(alpha = 0.08f)
+            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            border = if (isCompleted) androidx.compose.foundation.BorderStroke(
+                1.5.dp, accentColor.copy(alpha = 0.3f)
+            ) else null
         ) {
-            // Background gradient and decorative elements
-            Box(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                // Subtle gradient background
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.radialGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                                    MaterialTheme.colorScheme.secondary.copy(alpha = 0.04f),
-                                    Color.Transparent
-                                ),
-                                center = Offset(0.7f, 0.3f),
-                                radius = 1000f
-                            )
-                        )
-                )
-                
-                // Decorative circles
-                Box(
-                    modifier = Modifier
-                        .size(120.dp)
-                        .align(Alignment.TopEnd)
-                        .offset(x = 40.dp, y = (-20).dp)
-                        .background(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.05f),
-                            CircleShape
-                        )
-                )
-                
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .align(Alignment.BottomStart)
-                        .offset(x = (-30).dp, y = 30.dp)
-                        .background(
-                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.06f),
-                            CircleShape
-                        )
-                )
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Compact header
+            Column(modifier = Modifier.padding(16.dp)) {
+                // Header: title + tracking type pill
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = goal.title,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = goal.description,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            maxLines = 2,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(top = 2.dp)
-                        )
-                    }
-                    
                     Text(
-                        text = "${goal.targetAmount.toInt().formatWithCommas()} ${goal.currency.symbol}",
+                        text = goal.title,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
                     )
-                }
-
-                // Progress Section
-                if (progress != null) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(horizontalAlignment = Alignment.Start) {
-                                Text(
-                                    text = "Progress",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                
-                                // Monthly Progress under Progress text, aligned left
-                                val monthlyProgressText = if (progress.monthlyProgressPercentage >= 0) {
-                                    "+${progress.monthlyProgressPercentage.toString().take(4)}% this month"
-                                } else {
-                                    "${progress.monthlyProgressPercentage.toString().take(5)}% this month"
-                                }
-                                
-                                Text(
-                                    text = monthlyProgressText,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = if (progress.monthlyProgressPercentage >= 0) {
-                                        Color(0xFF4CAF50)
-                                    } else {
-                                        Color(0xFFEF5350)
-                                    },
-                                    fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.padding(top = 4.dp)
-                                )
-                            }
-                            
-                            Card(
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                                ),
-                                shape = RoundedCornerShape(16.dp)
-                            ) {
-                                Text(
-                                    text = "${progress.progressPercentage.toInt()}%",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Animated Progress Bar
-                        val animatedProgress by animateFloatAsState(
-                            targetValue = (progress.progressPercentage / 100).toFloat(),
-                            animationSpec = tween(durationMillis = 1000),
-                            label = "progress"
+                        Text(
+                            text = trackingLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
-
-                        // Progress Bar with Position Indicator
-                        BoxWithConstraints(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            LinearProgressIndicator(
-                                progress = { animatedProgress },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(8.dp)
-                                    .clip(RoundedCornerShape(4.dp)),
-                                color = MaterialTheme.colorScheme.primary,
-                                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                            )
-                            
-                            // Small indicator dot on the progress bar
-                            val indicatorOffset = maxWidth * animatedProgress - 3.dp // Center the 6dp dot
-                            
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .offset(x = indicatorOffset, y = 1.dp) // Slightly overlap the bar
-                                    .background(
-                                        Color.White,
-                                        CircleShape
-                                    )
-                                    .border(
-                                        1.dp,
-                                        MaterialTheme.colorScheme.primary,
-                                        CircleShape
-                                    )
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Tag-Pin below the progress bar
-                        BoxWithConstraints(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            val tagPinWidth = 80.dp
-                            val progressBarWidth = maxWidth
-                            val tagPinOffset = (progressBarWidth - tagPinWidth) * animatedProgress
-                            
-                            Card(
-                                modifier = Modifier
-                                    .width(tagPinWidth)
-                                    .offset(x = tagPinOffset),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                                ),
-                                shape = RoundedCornerShape(8.dp),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                                border = androidx.compose.foundation.BorderStroke(
-                                    1.dp,
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                                )
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = progress.savedAmount.toInt().formatWithCommas(),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        textAlign = TextAlign.Center,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = "${progress.baseCurrency.symbol} saved",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                        textAlign = TextAlign.Center,
-                                        maxLines = 1
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
                     }
                 }
 
-                // Gamified Timeline - Only show for estimated completions
-                estimate?.let { goalEstimate ->
-                    if (goalEstimate is GoalCompletionEstimate.EstimatedCompletion) {
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        SimpleGamefiedTimeline(
-                            goal = goal,
-                            currentProgress = progress,
-                            completionEstimate = goalEstimate,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-                }
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // Completion Estimate Card
-                estimate?.let { goalEstimate ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showCustomRateSheet = true },
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        ),
-                        shape = RoundedCornerShape(20.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                        border = androidx.compose.foundation.BorderStroke(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(17.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = "Estimated completion",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            
-                            Spacer(modifier = Modifier.height(8.dp))
-                            
-                            when (goalEstimate) {
-                                is GoalCompletionEstimate.EstimatedCompletion -> {
-                                    // Format months/years display
-                                    val monthsText = when {
-                                        goalEstimate.months <= 1 -> "1 month"
-                                        goalEstimate.months < 12 -> "${goalEstimate.months} months"
-                                        goalEstimate.months == 12 -> "1 year"
-                                        goalEstimate.months < 24 -> "1 year ${goalEstimate.months - 12} months"
-                                        else -> {
-                                            val years = goalEstimate.months / 12
-                                            val remainingMonths = goalEstimate.months % 12
-                                            if (remainingMonths == 0) "$years years"
-                                            else "$years years $remainingMonths months"
-                                        }
-                                    }
-                                    
-                                    Text(
-                                        text = monthsText,
-                                        style = MaterialTheme.typography.headlineSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    
-                                    Text(
-                                        text = "${goalEstimate.targetDate.month.name.take(3)} ${goalEstimate.targetDate.year}",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-                                        textAlign = TextAlign.Center
-                                    )
-                                    
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    
-                                    // Calculate final amount using real savings rate (matching timeline calculation)
-                                    val targetAmountInBaseCurrency = progress?.targetAmount ?: goal.targetAmount
-                                    val currentSavings = progress?.savedAmount ?: 0.0
-                                    val remainingAmount = targetAmountInBaseCurrency - currentSavings
-                                    val monthsToComplete = if (remainingAmount <= 0) 0 else kotlin.math.ceil(remainingAmount / goalEstimate.monthlySavingsRate).toInt()
-                                    val finalAmount = currentSavings + (goalEstimate.monthlySavingsRate * monthsToComplete)
-                                    
-                                    Text(
-                                        text = "You'll have ${finalAmount.toInt().formatWithCommas()} ${goalEstimate.baseCurrency.symbol}",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.9f),
-                                        textAlign = TextAlign.Center
-                                    )
-                                    
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    
-                                    Text(
-                                        text = "at current rate of ${goalEstimate.monthlySavingsRate.toInt().formatWithCommas()} ${goalEstimate.baseCurrency.symbol}/mo",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                                is GoalCompletionEstimate.AlreadyCompleted -> {
-                                    Text(
-                                        text = "Completed! 🎉",
-                                        style = MaterialTheme.typography.headlineSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                is GoalCompletionEstimate.CannotEstimate -> {
-                                    Text(
-                                        text = "Cannot estimate",
-                                        style = MaterialTheme.typography.headlineSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    
-                                    Text(
-                                        text = "Add more transactions to get an estimate",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Context Menu
-            Box(
-                modifier = Modifier.align(Alignment.TopEnd)
-            ) {
-                DropdownMenu(
-                    expanded = showContextMenu,
-                    onDismissRequest = { showContextMenu = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Edit") },
-                        onClick = {
-                            onEditGoal(goal)
-                            showContextMenu = false
-                        },
-                        leadingIcon = { Icon(Icons.Outlined.Edit, contentDescription = null) }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Delete") },
-                        onClick = {
-                            onDeleteGoal(goal)
-                            showContextMenu = false
-                        },
-                        leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) }
-                    )
-                }
-            }
-        }
-        
-        // Custom Savings Rate Bottom Sheet
-        if (showCustomRateSheet) {
-            CustomSavingsRateBottomSheet(
-                goal = goal,
-                currentProgress = progress,
-                onDismiss = { showCustomRateSheet = false }
-            )
-        }
-    }
-}
-
-@Composable
-private fun EmptyGoalsState(
-    onAddGoalClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "🎯",
-            fontSize = 72.sp,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-        
-        Text(
-            text = "No goals yet",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-        
-        Text(
-            text = "Set your first financial goal and start tracking your progress towards achieving it!",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
-        )
-        
-        Button(
-            onClick = onAddGoalClick,
-            modifier = Modifier.fillMaxWidth(0.6f)
-        ) {
-            Text("Create your first goal")
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AddEditGoalBottomSheet(
-    editingGoal: Goal?,
-    onDismiss: () -> Unit,
-    onSave: (String, String, String, Double, Currency) -> Unit
-) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    
-    var emoji by remember(editingGoal) { mutableStateOf(editingGoal?.emoji ?: "") }
-    var title by remember(editingGoal) { mutableStateOf(editingGoal?.title ?: "") }
-    var description by remember(editingGoal) { mutableStateOf(editingGoal?.description ?: "") }
-    var targetAmount by remember(editingGoal) { mutableStateOf(editingGoal?.targetAmount?.toString() ?: "") }
-    var selectedCurrency by remember(editingGoal) { mutableStateOf(editingGoal?.currency ?: Currency.PLN) }
-    var showCurrencyDropdown by remember { mutableStateOf(false) }
-
-    val isFormValid = emoji.isNotBlank() && 
-                     title.isNotBlank() && 
-                     description.isNotBlank() && 
-                     targetAmount.toDoubleOrNull()?.let { it > 0 } == true
-
-    MooneyBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = if (editingGoal != null) "Edit Goal" else "Create New Goal",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = emoji,
-                onValueChange = { emoji = it },
-                label = { Text("Goal Emoji") },
-                placeholder = { Text("🏠 🚗 💻 ✈️") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
-                label = { Text("Goal Title") },
-                placeholder = { Text("e.g., New House") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("Description") },
-                placeholder = { Text("e.g., Save for a down payment on our dream home") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 2,
-                maxLines = 3
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = targetAmount,
-                    onValueChange = { targetAmount = it },
-                    label = { Text("Target Amount") },
-                    placeholder = { Text("50000") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.weight(1f),
-                    singleLine = true
-                )
-
-                Box {
-                    OutlinedButton(
-                        onClick = { showCurrencyDropdown = true },
-                        modifier = Modifier.width(100.dp)
-                    ) {
-                        Text(selectedCurrency.name)
-                    }
-                    
-                    DropdownMenu(
-                        expanded = showCurrencyDropdown,
-                        onDismissRequest = { showCurrencyDropdown = false }
-                    ) {
-                        Currency.entries.forEach { currency ->
-                            DropdownMenuItem(
-                                text = { Text("${currency.name} (${currency.symbol})") },
-                                onClick = {
-                                    selectedCurrency = currency
-                                    showCurrencyDropdown = false
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Cancel")
-                }
-                
-                Button(
-                    onClick = {
-                        val amount = targetAmount.toDoubleOrNull() ?: 0.0
-                        onSave(emoji, title, description, amount, selectedCurrency)
-                    },
-                    enabled = isFormValid,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(if (editingGoal != null) "Update" else "Create")
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun DeleteGoalDialog(
-    goal: Goal,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Delete Goal") },
-        text = { 
-            Text("Are you sure you want to delete \"${goal.title}\"? This action cannot be undone.") 
-        },
-        confirmButton = {
-            Button(
-                onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Text("Delete")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CustomSavingsRateBottomSheet(
-    goal: Goal,
-    currentProgress: GoalProgressResult?,
-    onDismiss: () -> Unit
-) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var customRate by remember { mutableStateOf("") }
-    var useCustomRate by remember { mutableStateOf(false) }
-    
-    // Calculate estimates based on custom rate or current rate
-    val currentMonthlyRate = currentProgress?.let { 
-        // Assuming we have saved amount for this month - this should be calculated properly
-        1000.0 // Placeholder - should get actual monthly savings from data
-    } ?: 0.0
-    
-    val rateToUse = if (useCustomRate && customRate.toDoubleOrNull() != null) {
-        customRate.toDouble()
-    } else {
-        currentMonthlyRate
-    }
-    
-    val remainingAmount = goal.targetAmount - (currentProgress?.savedAmount ?: 0.0)
-    val monthsToComplete = if (rateToUse > 0) {
-        kotlin.math.ceil(remainingAmount / rateToUse).toInt()
-    } else {
-        0
-    }
-    
-    MooneyBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-                .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Savings Rate Playground",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-            
-            Text(
-                text = "Experiment with different monthly savings amounts",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                textAlign = TextAlign.Center
-            )
-            
-            OutlinedTextField(
-                value = customRate,
-                onValueChange = { 
-                    customRate = it
-                    useCustomRate = it.isNotBlank()
-                },
-                label = { Text("Monthly savings amount") },
-                placeholder = { Text("Enter amount per month") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                suffix = { Text(goal.currency.symbol) }
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // Results Card - Centered content
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                ),
-                shape = RoundedCornerShape(20.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                border = androidx.compose.foundation.BorderStroke(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                )
-            ) {
-                Column(
+                // Progress bar
+                LinearProgressIndicator(
+                    progress = { animatedProgress },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+                    color = accentColor,
+                    trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Amount row: current / target + percentage
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
                 ) {
                     Text(
-                        text = "Estimated completion",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        textAlign = TextAlign.Center
+                        text = "${savedAmount.formatWithCommas()} / ${targetAmount.formatWithCommas()} ${baseCurrency.symbol}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                    
+                    Text(
+                        text = "${progressPct.toInt()}%",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isCompleted) accentColor else MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                // Estimation info
+                if (estimate is GoalCompletionEstimate.InProgress) {
                     Spacer(modifier = Modifier.height(12.dp))
-                    
-                    if (rateToUse > 0 && remainingAmount > 0) {
-                        val yearsText = when {
-                            monthsToComplete <= 1 -> "1 month"
-                            monthsToComplete < 12 -> "$monthsToComplete months"
-                            monthsToComplete == 12 -> "1 year"
-                            monthsToComplete < 24 -> "1 year ${monthsToComplete - 12} months"
-                            else -> {
-                                val years = monthsToComplete / 12
-                                val remainingMonths = monthsToComplete % 12
-                                if (remainingMonths == 0) "$years years"
-                                else "$years years $remainingMonths months"
+
+                    if (estimate.estimatedMonths != null) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            val label = if (estimate.estimatedCompletionLabel != null) {
+                                "Estimated ${estimate.estimatedCompletionLabel}"
+                            } else {
+                                "~${estimate.estimatedMonths} months left"
+                            }
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            if (estimate.monthlySavingsRate > 0) {
+                                val pctPerMonth = if (targetAmount > 0) (estimate.monthlySavingsRate / targetAmount * 100).toInt() else 0
+                                Text(
+                                    text = "+${formatCompact(estimate.monthlySavingsRate)}/mo · ${pctPerMonth}% avg",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Medium,
+                                    color = accentColor
+                                )
                             }
                         }
-                        
+                    } else if (estimate.monthlySavingsRate <= 0) {
                         Text(
-                            text = yearsText,
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
+                            text = "Not enough data to estimate",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )
-                        
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
+                    }
+
+                    // Timeline — show only if <= 6 months to completion
+                    if (estimate.timeline.isNotEmpty() && (estimate.estimatedMonths ?: 0) <= 6) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        TimelineRow(
+                            timeline = estimate.timeline,
+                            targetAmount = targetAmount,
+                            baseCurrency = baseCurrency
+                        )
+                    }
+                } else if (estimate is GoalCompletionEstimate.AlreadyCompleted) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Goal reached!",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = accentColor
+                    )
+                }
+            }
+        }
+
+        DropdownMenu(
+            expanded = showContextMenu,
+            onDismissRequest = { showContextMenu = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("Edit") },
+                onClick = { onEdit(goal); showContextMenu = false },
+                leadingIcon = { Icon(Icons.Outlined.Edit, null) }
+            )
+            DropdownMenuItem(
+                text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
+                onClick = { onDelete(goal); showContextMenu = false },
+                leadingIcon = { Icon(Icons.Outlined.Delete, null, tint = MaterialTheme.colorScheme.error) }
+            )
+        }
+    }
+}
+
+private fun formatCompact(amount: Double): String {
+    val abs = kotlin.math.abs(amount)
+    return when {
+        abs >= 1_000_000 -> "${((amount / 1_000_000 * 10).toLong() / 10.0)}M"
+        abs >= 1_000 -> "${(amount / 1_000).toLong()}k"
+        else -> "${amount.toLong()}"
+    }
+}
+
+@Composable
+private fun TimelineRow(
+    timeline: List<MonthProjection>,
+    targetAmount: Double,
+    baseCurrency: Currency
+) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        items(timeline) { month ->
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.width(52.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (month.isCompletionMonth) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                            else MaterialTheme.colorScheme.outline.copy(alpha = 0.08f)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = formatCompact(month.projectedAmount),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 9.sp,
+                        fontWeight = if (month.isCompletionMonth) FontWeight.Bold else FontWeight.Normal,
+                        color = if (month.isCompletionMonth) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(modifier = Modifier.height(3.dp))
+                Text(
+                    text = month.monthLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontSize = 9.sp,
+                    color = if (month.isCompletionMonth) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    fontWeight = if (month.isCompletionMonth) FontWeight.Bold else FontWeight.Normal
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddEditGoalSheet(
+    editingGoal: Goal?,
+    accounts: List<Account>,
+    onDismiss: () -> Unit,
+    onSave: (String, Double, Currency, GoalTrackingType, Int?) -> Unit
+) {
+    var title by remember(editingGoal) { mutableStateOf(editingGoal?.title ?: "") }
+    var targetAmount by remember(editingGoal) { mutableStateOf(editingGoal?.targetAmount?.toString() ?: "") }
+    var selectedCurrency by remember(editingGoal) { mutableStateOf(editingGoal?.currency ?: GlobalConfig.baseCurrency) }
+    var trackingType by remember(editingGoal) { mutableStateOf(editingGoal?.trackingType ?: GoalTrackingType.NET_WORTH) }
+    var selectedAccountId by remember(editingGoal) { mutableStateOf(editingGoal?.accountId) }
+    var showCurrencySheet by remember { mutableStateOf(false) }
+    var showAccountSheet by remember { mutableStateOf(false) }
+
+    val isFormValid = title.isNotBlank() &&
+            targetAmount.toDoubleOrNull()?.let { it > 0 } == true &&
+            (trackingType != GoalTrackingType.ACCOUNT || selectedAccountId != null)
+
+    MooneyBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 32.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Text(
+                text = if (editingGoal != null) "Edit Goal" else "New Goal",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            MooneyTextField(
+                value = title,
+                onValueChange = { if (it.length <= 40) title = it },
+                label = "Title",
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            MooneyTextField(
+                value = targetAmount,
+                onValueChange = { targetAmount = it },
+                label = "Target amount",
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Currency selector
+            Text("Currency", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable { showCurrencySheet = true }
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("${selectedCurrency.symbol}  ${selectedCurrency.name}", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Tracking type
+            Text("Track progress against", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                listOf(
+                    "Account" to GoalTrackingType.ACCOUNT,
+                    "Net Worth" to GoalTrackingType.NET_WORTH,
+                    "Assets" to GoalTrackingType.TOTAL_ASSETS
+                ).forEach { (label, type) ->
+                    val isSelected = trackingType == type
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isSelected) MaterialTheme.colorScheme.background else Color.Transparent)
+                            .clickable { trackingType = type }
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Text(
-                            text = "at ${rateToUse.toInt().formatWithCommas()} ${goal.currency.symbol}/mo",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            textAlign = TextAlign.Center
+                            text = label,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    } else {
-                        Text(
-                            text = if (remainingAmount <= 0) "Goal already completed! 🎉" else "Enter a monthly savings rate",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
+                    }
+                }
+            }
+
+            // Account selector
+            if (trackingType == GoalTrackingType.ACCOUNT) {
+                Spacer(modifier = Modifier.height(12.dp))
+                val selectedAccount = accounts.find { it.id == selectedAccountId }
+                Text("Account", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable { showAccountSheet = true }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(selectedAccount?.title ?: "Select account", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            MooneyButton(
+                text = if (editingGoal != null) "Save" else "Create Goal",
+                variant = ButtonVariant.PRIMARY,
+                onClick = {
+                    val amount = targetAmount.toDoubleOrNull() ?: 0.0
+                    onSave(title, amount, selectedCurrency, trackingType, selectedAccountId)
+                },
+                enabled = isFormValid,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+
+    // Currency bottom sheet
+    if (showCurrencySheet) {
+        MooneyBottomSheet(onDismissRequest = { showCurrencySheet = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
+            ) {
+                Text("Select Currency", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                LazyColumn(modifier = Modifier.height(400.dp)) {
+                    items(Currency.entries) { currency ->
+                        val isSelected = selectedCurrency == currency
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                                .clickable { selectedCurrency = currency; showCurrencySheet = false }
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(currency.symbol, fontSize = 20.sp, modifier = Modifier.padding(end = 16.dp))
+                            Text(currency.name, style = MaterialTheme.typography.bodyLarge, color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                            Spacer(Modifier.weight(1f))
+                            if (isSelected) {
+                                Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
+                            }
+                        }
+                        Spacer(Modifier.height(4.dp))
+                    }
+                }
+            }
+        }
+    }
+
+    // Account bottom sheet
+    if (showAccountSheet) {
+        MooneyBottomSheet(onDismissRequest = { showAccountSheet = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
+            ) {
+                Text("Select Account", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                LazyColumn(modifier = Modifier.height(400.dp)) {
+                    items(accounts.filter { !it.isLiability }) { account ->
+                        val isSelected = selectedAccountId == account.id
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                                .clickable { selectedAccountId = account.id; showAccountSheet = false }
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(account.title, style = MaterialTheme.typography.bodyLarge, color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                                Text("${account.amount.formatWithCommas()} ${account.currency.symbol}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            if (isSelected) {
+                                Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
+                            }
+                        }
+                        Spacer(Modifier.height(4.dp))
                     }
                 }
             }

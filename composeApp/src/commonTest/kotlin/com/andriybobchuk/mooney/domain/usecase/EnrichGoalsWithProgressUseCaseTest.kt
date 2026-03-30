@@ -1,10 +1,7 @@
 package com.andriybobchuk.mooney.domain.usecase
 
 import com.andriybobchuk.mooney.mooney.domain.Account
-import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.domain.CoreRepository
-import com.andriybobchuk.mooney.mooney.domain.Goal
-import com.andriybobchuk.mooney.mooney.domain.Transaction
 import com.andriybobchuk.mooney.mooney.domain.usecase.CalculateGoalProgressUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.EnrichGoalsWithProgressUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.EstimateGoalCompletionUseCase
@@ -12,7 +9,6 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.GoalCompletionEstimate
 import com.andriybobchuk.mooney.testutil.FakeCoreRepository
 import com.andriybobchuk.mooney.testutil.TestFixtures
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -123,15 +119,11 @@ class EnrichGoalsWithProgressUseCaseTest {
     }
 
     /**
-     * When [EstimateGoalCompletionUseCase] cannot estimate (e.g. no monthly income data),
-     * [EnrichGoalsWithProgressUseCase] must return [GoalCompletionEstimate.CannotEstimate].
-     *
-     * With an empty repository and no transactions, monthly net income is 0,
-     * which causes [EstimateGoalCompletionUseCase] to return CannotEstimate.
+     * When no accounts exist (no progress toward goal), the estimate should be InProgress
+     * with the full remaining amount.
      */
     @Test
-    fun `no monthly income results in CannotEstimate completion estimate`() = runTest {
-        // No accounts and no transactions — monthly net income will be 0
+    fun `no accounts results in InProgress completion estimate`() = runTest {
         val emptyRepository = FakeCoreRepository()
         val calculateProgress = CalculateGoalProgressUseCase(emptyRepository, currencyManager)
         val estimate = EstimateGoalCompletionUseCase(calculateProgress, emptyRepository, currencyManager)
@@ -142,7 +134,7 @@ class EnrichGoalsWithProgressUseCaseTest {
         val result = sutEmpty(goals)
 
         assertEquals(1, result.size)
-        assertEquals(GoalCompletionEstimate.CannotEstimate, result.first().completionEstimate)
+        assertTrue(result.first().completionEstimate is GoalCompletionEstimate.InProgress)
     }
 
     @Test

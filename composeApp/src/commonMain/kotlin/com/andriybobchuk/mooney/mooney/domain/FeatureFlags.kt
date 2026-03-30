@@ -8,7 +8,7 @@ object FeatureFlags {
      */
     const val isDebug = false
 
-    const val goalsEnabled = false
+    const val goalsEnabled = true
     const val exchangeEnabled = false
     const val analyticsEnabled = true
     const val exportImportEnabled = true

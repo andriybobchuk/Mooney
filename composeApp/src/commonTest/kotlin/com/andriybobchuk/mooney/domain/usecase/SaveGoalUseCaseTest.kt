@@ -1,6 +1,7 @@
 package com.andriybobchuk.mooney.domain.usecase
 
 import com.andriybobchuk.mooney.mooney.domain.Currency
+import com.andriybobchuk.mooney.mooney.domain.GoalTrackingType
 import com.andriybobchuk.mooney.mooney.domain.usecase.AddGoalUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.SaveGoalUseCase
 import com.andriybobchuk.mooney.testutil.FakeCoreRepository
@@ -11,6 +12,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class SaveGoalUseCaseTest {
 
@@ -24,48 +26,44 @@ class SaveGoalUseCaseTest {
     }
 
     @Test
-    fun `new goal with null existing creates goal with id zero and groupName General`() = runTest {
+    fun `new goal with null existing creates goal with default tracking type`() = runTest {
         sut(
             existingGoal = null,
-            emoji = "🎯",
             title = "Emergency Fund",
-            description = "Six months of expenses",
             targetAmount = 20000.0,
-            currency = Currency.PLN
+            currency = Currency.PLN,
+            trackingType = GoalTrackingType.NET_WORTH,
+            accountId = null
         )
 
         val goals = repository.getAllGoals().first()
         assertEquals(1, goals.size)
 
         val saved = goals.first()
-        // FakeCoreRepository assigns id=1 when id==0, so the goal is persisted
         assertNotNull(saved)
         assertEquals("Emergency Fund", saved.title)
-        assertEquals("General", saved.groupName)
         assertEquals(20000.0, saved.targetAmount, 0.001)
         assertEquals(Currency.PLN, saved.currency)
-        assertEquals("🎯", saved.emoji)
-        assertEquals("Six months of expenses", saved.description)
+        assertEquals(GoalTrackingType.NET_WORTH, saved.trackingType)
+        assertNull(saved.accountId)
     }
 
     @Test
     fun `existing goal is updated with new field values but keeps original id`() = runTest {
         val existing = TestFixtures.goal(
             id = 42,
-            emoji = "💰",
             title = "Old Title",
-            description = "Old description",
             targetAmount = 5000.0,
             currency = Currency.PLN
         )
 
         sut(
             existingGoal = existing,
-            emoji = "🏖️",
             title = "Vacation",
-            description = "Trip to Italy",
             targetAmount = 8000.0,
-            currency = Currency.EUR
+            currency = Currency.EUR,
+            trackingType = GoalTrackingType.ACCOUNT,
+            accountId = 7
         )
 
         val goals = repository.getAllGoals().first()
@@ -74,21 +72,21 @@ class SaveGoalUseCaseTest {
         val saved = goals.first()
         assertEquals(42, saved.id)
         assertEquals("Vacation", saved.title)
-        assertEquals("Trip to Italy", saved.description)
         assertEquals(8000.0, saved.targetAmount, 0.001)
         assertEquals(Currency.EUR, saved.currency)
-        assertEquals("🏖️", saved.emoji)
+        assertEquals(GoalTrackingType.ACCOUNT, saved.trackingType)
+        assertEquals(7, saved.accountId)
     }
 
     @Test
     fun `new goal is saved in repository`() = runTest {
         sut(
             existingGoal = null,
-            emoji = "🚗",
             title = "New Car",
-            description = "Electric vehicle",
             targetAmount = 60000.0,
-            currency = Currency.PLN
+            currency = Currency.PLN,
+            trackingType = GoalTrackingType.TOTAL_ASSETS,
+            accountId = null
         )
 
         val goals = repository.getAllGoals().first()
@@ -101,24 +99,39 @@ class SaveGoalUseCaseTest {
 
         sut(
             existingGoal = existing,
-            emoji = "🏠",
             title = "House",
-            description = "Dream house",
             targetAmount = 500000.0,
-            currency = Currency.PLN
+            currency = Currency.PLN,
+            trackingType = GoalTrackingType.NET_WORTH,
+            accountId = null
         )
 
         val saved = repository.getAllGoals().first().first()
-        // copy() preserves groupName from the existing goal
         assertEquals("Long Term", saved.groupName)
     }
 
     @Test
     fun `saving multiple new goals creates separate entries`() = runTest {
-        sut(null, "🎯", "Goal A", "Description A", 1000.0, Currency.PLN)
-        sut(null, "🏆", "Goal B", "Description B", 2000.0, Currency.USD)
+        sut(null, "Goal A", 1000.0, Currency.PLN, GoalTrackingType.NET_WORTH, null)
+        sut(null, "Goal B", 2000.0, Currency.USD, GoalTrackingType.NET_WORTH, null)
 
         val goals = repository.getAllGoals().first()
         assertEquals(2, goals.size)
+    }
+
+    @Test
+    fun `account tracking type saves accountId`() = runTest {
+        sut(
+            existingGoal = null,
+            title = "Save in checking",
+            targetAmount = 10000.0,
+            currency = Currency.PLN,
+            trackingType = GoalTrackingType.ACCOUNT,
+            accountId = 3
+        )
+
+        val saved = repository.getAllGoals().first().first()
+        assertEquals(GoalTrackingType.ACCOUNT, saved.trackingType)
+        assertEquals(3, saved.accountId)
     }
 }

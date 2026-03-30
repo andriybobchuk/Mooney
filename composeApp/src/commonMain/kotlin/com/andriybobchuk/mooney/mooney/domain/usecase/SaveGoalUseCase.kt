@@ -2,34 +2,35 @@ package com.andriybobchuk.mooney.mooney.domain.usecase
 
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.Goal
+import com.andriybobchuk.mooney.mooney.domain.GoalTrackingType
 
 class SaveGoalUseCase(
     private val addGoalUseCase: AddGoalUseCase
 ) {
     suspend operator fun invoke(
         existingGoal: Goal?,
-        emoji: String,
         title: String,
-        description: String,
         targetAmount: Double,
-        currency: Currency
+        currency: Currency,
+        trackingType: GoalTrackingType,
+        accountId: Int?
     ) {
         val goal = existingGoal?.copy(
-            emoji = emoji,
             title = title,
-            description = description,
-            targetAmount = targetAmount,
-            currency = currency
-        ) ?: Goal(
-            id = 0,
-            emoji = emoji,
-            title = title,
-            description = description,
             targetAmount = targetAmount,
             currency = currency,
-            groupName = "General"
+            trackingType = trackingType,
+            accountId = accountId
+        ) ?: Goal(
+            id = 0,
+            emoji = "",
+            title = title,
+            description = "",
+            targetAmount = targetAmount,
+            currency = currency,
+            trackingType = trackingType,
+            accountId = accountId
         )
-
         addGoalUseCase(goal)
     }
 }

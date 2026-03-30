@@ -7,6 +7,7 @@ import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.Goal
 import com.andriybobchuk.mooney.mooney.domain.GoalGroup
+import com.andriybobchuk.mooney.mooney.domain.GoalTrackingType
 import com.andriybobchuk.mooney.mooney.domain.Transaction
 import com.andriybobchuk.mooney.mooney.domain.UserCurrency
 import kotlinx.datetime.LocalDate
@@ -18,7 +19,9 @@ fun AccountEntity.toDomain(): Account = Account(
     currency = Currency.valueOf(currency),
     emoji = emoji,
     assetCategory = AssetCategory.fromString(assetCategory),
-    isPrimary = isPrimary
+    assetCategoryId = assetCategory,
+    isPrimary = isPrimary,
+    isLiability = isLiability
 )
 
 fun CategoryEntity.toDomain(parent: Category? = null): Category = Category(
@@ -54,7 +57,9 @@ fun GoalEntity.toDomain(): Goal = Goal(
     currency = Currency.valueOf(currency),
     createdDate = LocalDate.parse(createdDate),
     groupName = groupName,
-    imagePath = imagePath
+    imagePath = imagePath,
+    trackingType = try { GoalTrackingType.valueOf(trackingType) } catch (_: Exception) { GoalTrackingType.NET_WORTH },
+    accountId = accountId
 )
 
 fun Goal.toEntity(): GoalEntity = GoalEntity(
@@ -66,7 +71,9 @@ fun Goal.toEntity(): GoalEntity = GoalEntity(
     currency = currency.name,
     createdDate = createdDate.toString(),
     groupName = groupName,
-    imagePath = imagePath
+    imagePath = imagePath,
+    trackingType = trackingType.name,
+    accountId = accountId
 )
 
 fun GoalGroupEntity.toDomain(): GoalGroup = GoalGroup(

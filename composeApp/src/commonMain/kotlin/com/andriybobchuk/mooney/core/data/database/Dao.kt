@@ -169,3 +169,21 @@ interface UserCurrencyDao {
     @Query("DELETE FROM user_currencies WHERE code = :code")
     suspend fun delete(code: String)
 }
+
+@Dao
+interface AssetCategoryDao {
+    @Query("SELECT * FROM asset_categories ORDER BY sortOrder ASC")
+    fun getAll(): Flow<List<AssetCategoryEntity>>
+
+    @Query("SELECT * FROM asset_categories WHERE id = :id")
+    suspend fun getById(id: String): AssetCategoryEntity?
+
+    @Upsert
+    suspend fun upsert(category: AssetCategoryEntity)
+
+    @Query("DELETE FROM asset_categories WHERE id = :id")
+    suspend fun delete(id: String)
+
+    @Query("SELECT COUNT(*) FROM asset_categories")
+    suspend fun getCount(): Int
+}

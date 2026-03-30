@@ -21,11 +21,12 @@ class CalculateNetWorthUseCase(
     ): NetWorthResult {
         val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
         val totalBaseCurrency = accounts.sumOf { account ->
-            if (account.currency != baseCurrency) {
+            val amountInBase = if (account.currency != baseCurrency) {
                 exchangeRates.convert(account.amount, account.currency, baseCurrency)
             } else {
                 account.amount
             }
+            if (account.isLiability) -amountInBase else amountInBase
         }
 
         val converted = if (selectedCurrency != baseCurrency) {

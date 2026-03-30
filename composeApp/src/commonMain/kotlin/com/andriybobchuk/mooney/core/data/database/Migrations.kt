@@ -5,6 +5,22 @@ import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
 
 /**
+ * Checks if a column exists in a table using PRAGMA table_info.
+ * Safe to call on any platform (Android, iOS).
+ */
+private fun hasColumn(connection: SQLiteConnection, table: String, column: String): Boolean {
+    val stmt = connection.prepare("PRAGMA table_info(`$table`)")
+    try {
+        while (stmt.step()) {
+            if (stmt.getText(1) == column) return true
+        }
+    } finally {
+        stmt.close()
+    }
+    return false
+}
+
+/**
  * Migration from version 1 to 2
  * Adds the category_usage table to track frequently used categories
  */
@@ -247,7 +263,7 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('clothing', 'Clothing', 'EXPENSE', '👕', 'expense')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('reconciliation', 'Account Reconciliation', 'EXPENSE', '💱', 'expense')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('subscriptions', 'Subscriptions', 'EXPENSE', '🎧', 'expense')")
-        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('beverages', 'Beverages', 'EXPENSE', '🥙', 'expense')")
+        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('beverages', 'Dining & Drinks', 'EXPENSE', '🍽️', 'expense')")
 
         // Transfer general category
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('internal_transfer', 'Internal Transfer', 'TRANSFER', '🔄', 'transfer')")
@@ -265,7 +281,6 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('business_courses', 'Courses', 'EXPENSE', NULL, 'business')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('business_meetups', 'Networking/Meetups', 'EXPENSE', NULL, 'business')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('business_communities', 'Paid Communities', 'EXPENSE', NULL, 'business')")
-        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('business_linkedin', 'LinkedIn', 'EXPENSE', NULL, 'business')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('software', 'Software Tools', 'EXPENSE', NULL, 'business')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('employees', 'Employees', 'EXPENSE', NULL, 'business')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('ai_assistants', 'AI Assistants', 'EXPENSE', NULL, 'business')")
@@ -277,21 +292,19 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('health_exams', 'Examinations', 'EXPENSE', NULL, 'health')")
         // Sport
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('sport_gym', 'Gym', 'EXPENSE', NULL, 'sport')")
-        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('sport_pool', 'Pool', 'EXPENSE', NULL, 'sport')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('sport_equipment', 'Equipment', 'EXPENSE', NULL, 'sport')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('sport_supplements', 'Supplements', 'EXPENSE', NULL, 'sport')")
-        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('sport_boxing', 'Boxing', 'EXPENSE', NULL, 'sport')")
         // Gifts
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('gifts_family', 'Family', 'EXPENSE', NULL, 'gifts')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('gifts_friends', 'Friends', 'EXPENSE', NULL, 'gifts')")
-        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('gifts_girlfriend', 'Girlfriend', 'EXPENSE', NULL, 'gifts')")
+        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('gifts_girlfriend', 'Partner', 'EXPENSE', NULL, 'gifts')")
         // Housing
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('rent', 'Rent', 'EXPENSE', NULL, 'housing')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('mortgage', 'Mortgage', 'EXPENSE', NULL, 'housing')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('utilities', 'Utilities', 'EXPENSE', NULL, 'housing')")
         // Tax
-        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('zus', 'ZUS', 'EXPENSE', NULL, 'tax')")
-        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('pit', 'PIT', 'EXPENSE', NULL, 'tax')")
+        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('zus', 'Social Security', 'EXPENSE', NULL, 'tax')")
+        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('pit', 'Income Tax', 'EXPENSE', NULL, 'tax')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('gov_fee', 'Government Fee', 'EXPENSE', NULL, 'tax')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('fine', 'Fine', 'EXPENSE', NULL, 'tax')")
         // Transport
@@ -300,7 +313,7 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('transport_metro', 'Metro & Bus & Tram', 'EXPENSE', NULL, 'transport')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('transport_taxi', 'Taxi', 'EXPENSE', NULL, 'transport')")
         // Travelling
-        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('accommodation', 'Accommodation', 'EXPENSE', NULL, 'transport')")
+        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('accommodation', 'Accommodation', 'EXPENSE', NULL, 'travelling')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('travelling_transport', 'Local Transport', 'EXPENSE', NULL, 'travelling')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('flights', 'Flights', 'EXPENSE', NULL, 'travelling')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('food_drinks', 'Food & Drinks', 'EXPENSE', NULL, 'travelling')")
@@ -310,13 +323,12 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('souvenirs', 'Souvenirs', 'EXPENSE', NULL, 'travelling')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('shopping', 'Shopping', 'EXPENSE', NULL, 'travelling')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('luggage', 'Luggage', 'EXPENSE', NULL, 'travelling')")
-        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('airbnb_rent', 'Accommodation', 'EXPENSE', NULL, 'travelling')")
         // Clothing
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('shoes', 'Shoes', 'EXPENSE', NULL, 'clothing')")
         // Subscriptions
-        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('spotify', 'Spotify', 'EXPENSE', NULL, 'subscriptions')")
+        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('spotify', 'Music', 'EXPENSE', NULL, 'subscriptions')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('internet', 'Phone & Internet', 'EXPENSE', NULL, 'subscriptions')")
-        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('apple', 'Apple', 'EXPENSE', NULL, 'subscriptions')")
+        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('apple', 'Cloud & Storage', 'EXPENSE', NULL, 'subscriptions')")
         // Beverages
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('pubs', 'Pubs', 'EXPENSE', NULL, 'beverages')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('eating_out', 'Eating Out', 'EXPENSE', NULL, 'beverages')")
@@ -330,10 +342,118 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('refund', 'Refund', 'INCOME', '💸', 'income')")
         connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('repayment', 'Repayment', 'INCOME', '💸', 'income')")
         // Salary subcategories
-        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('effectivesoft', 'EffectiveSoft', 'INCOME', NULL, 'salary')")
-        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('unikie', 'Unikie', 'INCOME', NULL, 'salary')")
-        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('squareone', 'SquareOne', 'INCOME', NULL, 'salary')")
-        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('usoftware', 'USoftware', 'INCOME', NULL, 'salary')")
+        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('primary_job', 'Primary Job', 'INCOME', NULL, 'salary')")
+        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('side_income', 'Side Income', 'INCOME', NULL, 'salary')")
+        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('freelance', 'Freelance', 'INCOME', NULL, 'salary')")
+    }
+}
+
+/**
+ * Migration from version 9 to 10
+ * Adds generic salary subcategories for new public release.
+ * Existing users keep all their categories untouched — these are additive only.
+ * New users get clean categories from MIGRATION_8_9 (which was updated in this release).
+ */
+val MIGRATION_9_10 = object : Migration(9, 10) {
+    override fun migrate(connection: SQLiteConnection) {
+        // Add generic salary subcategories (INSERT OR IGNORE = safe for all users)
+        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('primary_job', 'Primary Job', 'INCOME', NULL, 'salary')")
+        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('side_income', 'Side Income', 'INCOME', NULL, 'salary')")
+        connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('freelance', 'Freelance', 'INCOME', NULL, 'salary')")
+    }
+}
+
+val MIGRATION_10_11 = object : Migration(10, 11) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("""
+            CREATE TABLE IF NOT EXISTS `asset_categories` (
+                `id` TEXT NOT NULL,
+                `title` TEXT NOT NULL,
+                `emoji` TEXT NOT NULL,
+                `description` TEXT NOT NULL DEFAULT '',
+                `color` INTEGER NOT NULL DEFAULT ${0xFF3562F6},
+                `sortOrder` INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY(`id`)
+            )
+        """)
+
+        // Seed with the 11 default categories matching existing enum names
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder) VALUES ('BANK_ACCOUNT', 'Bank Account', '🏦', 'Traditional bank accounts and deposits', ${0xFF4285F4}, 0)")
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder) VALUES ('CASH', 'Cash Reserve', '💵', 'Physical cash holdings', ${0xFF34A853}, 1)")
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder) VALUES ('REAL_ESTATE', 'Real Estate', '🏠', 'Property and real estate investments', ${0xFF795548}, 2)")
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder) VALUES ('STOCKS', 'Stocks', '📈', 'Stock market investments', ${0xFFE91E63}, 3)")
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder) VALUES ('BONDS', 'Bonds', '📜', 'Government and corporate bonds', ${0xFF9C27B0}, 4)")
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder) VALUES ('CRYPTO', 'Cryptocurrency', '₿', 'Digital assets and cryptocurrencies', ${0xFFF57C00}, 5)")
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder) VALUES ('PRECIOUS_METALS', 'Precious Metals', '🥇', 'Gold, silver, and other precious metals', ${0xFFFFD700}, 6)")
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder) VALUES ('RETIREMENT', 'Retirement Fund', '🏖️', '401k, IRA, pension funds', ${0xFF00BCD4}, 7)")
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder) VALUES ('BUSINESS', 'Business Assets', '💼', 'Business ownership and investments', ${0xFF607D8B}, 8)")
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder) VALUES ('COLLECTIBLES', 'Collectibles', '🎨', 'Art, antiques, and collectible items', ${0xFFFF5722}, 9)")
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder) VALUES ('OTHER', 'Other Assets', '📦', 'Miscellaneous assets', ${0xFF9E9E9E}, 10)")
+    }
+}
+
+val MIGRATION_11_12 = object : Migration(11, 12) {
+    override fun migrate(connection: SQLiteConnection) {
+        // Add isLiability to AccountEntity (only if not already present)
+        if (!hasColumn(connection, "AccountEntity", "isLiability")) {
+            connection.execSQL(
+                "ALTER TABLE AccountEntity ADD COLUMN isLiability INTEGER NOT NULL DEFAULT 0"
+            )
+        }
+        // Add isLiability to asset_categories (only if not already present)
+        if (!hasColumn(connection, "asset_categories", "isLiability")) {
+            connection.execSQL(
+                "ALTER TABLE asset_categories ADD COLUMN isLiability INTEGER NOT NULL DEFAULT 0"
+            )
+        }
+        // Seed default liability categories
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('MORTGAGE', 'Mortgage', '🏠', '', ${0xFFE53935}, 0, 1)")
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('LOAN', 'Loan', '📋', '', ${0xFFFF7043}, 1, 1)")
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('CREDIT_CARD', 'Credit Card', '💳', '', ${0xFFAB47BC}, 2, 1)")
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('DEBT', 'Debt', '📉', '', ${0xFF78909C}, 3, 1)")
+    }
+}
+
+/**
+ * Safety migration for devices that may have been at v12 during development
+ * without the isLiability columns. Uses hasColumn checks to be fully idempotent.
+ */
+val MIGRATION_12_13 = object : Migration(12, 13) {
+    override fun migrate(connection: SQLiteConnection) {
+        if (!hasColumn(connection, "AccountEntity", "isLiability")) {
+            connection.execSQL(
+                "ALTER TABLE AccountEntity ADD COLUMN isLiability INTEGER NOT NULL DEFAULT 0"
+            )
+        }
+        if (!hasColumn(connection, "asset_categories", "isLiability")) {
+            connection.execSQL(
+                "ALTER TABLE asset_categories ADD COLUMN isLiability INTEGER NOT NULL DEFAULT 0"
+            )
+        }
+        // Seed default liability categories (safe — INSERT OR IGNORE)
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('MORTGAGE', 'Mortgage', '🏠', '', ${0xFFE53935}, 0, 1)")
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('LOAN', 'Loan', '📋', '', ${0xFFFF7043}, 1, 1)")
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('CREDIT_CARD', 'Credit Card', '💳', '', ${0xFFAB47BC}, 2, 1)")
+        connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('DEBT', 'Debt', '📉', '', ${0xFF78909C}, 3, 1)")
+    }
+}
+
+/**
+ * Migration from version 13 to 14
+ * Adds trackingType and accountId columns to goals table for the redesigned Goals feature
+ */
+val MIGRATION_13_14 = object : Migration(13, 14) {
+    override fun migrate(connection: SQLiteConnection) {
+        if (!hasColumn(connection, "goals", "trackingType")) {
+            connection.execSQL(
+                "ALTER TABLE goals ADD COLUMN trackingType TEXT NOT NULL DEFAULT 'NET_WORTH'"
+            )
+        }
+        if (!hasColumn(connection, "goals", "accountId")) {
+            connection.execSQL(
+                "ALTER TABLE goals ADD COLUMN accountId INTEGER"
+            )
+        }
     }
 }
 

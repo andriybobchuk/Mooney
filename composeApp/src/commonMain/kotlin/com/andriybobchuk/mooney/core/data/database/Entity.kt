@@ -11,7 +11,8 @@ data class AccountEntity(
     val currency: String,
     val emoji: String,
     val assetCategory: String = "BANK_ACCOUNT",
-    val isPrimary: Boolean = false
+    val isPrimary: Boolean = false,
+    val isLiability: Boolean = false
 )
 
 @Entity(tableName = "categories")
@@ -55,7 +56,9 @@ data class GoalEntity(
     val currency: String,
     val createdDate: String, // ISO date string
     val groupName: String = "General",
-    val imagePath: String? = null
+    val imagePath: String? = null,
+    val trackingType: String = "NET_WORTH",  // "ACCOUNT", "NET_WORTH", "TOTAL_ASSETS"
+    val accountId: Int? = null               // only used when trackingType = "ACCOUNT"
 )
 
 @Entity(tableName = "goal_groups")
@@ -93,4 +96,15 @@ data class PendingTransactionEntity(
     val scheduledDate: String, // ISO date string - when it should be added
     val status: String = "PENDING", // "PENDING", "ACCEPTED", "REJECTED", "SKIPPED"
     val createdDate: String // ISO date string - when the pending entry was created
+)
+
+@Entity(tableName = "asset_categories")
+data class AssetCategoryEntity(
+    @PrimaryKey val id: String,
+    val title: String,
+    val emoji: String,
+    val description: String = "",
+    val color: Long = 0xFF3562F6,
+    val sortOrder: Int = 0,
+    val isLiability: Boolean = false
 )

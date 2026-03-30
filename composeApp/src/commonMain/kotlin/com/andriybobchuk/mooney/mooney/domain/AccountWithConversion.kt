@@ -9,7 +9,9 @@ data class AccountWithConversion(
     val baseCurrencyAmount: Double,
     val exchangeRate: Double?,
     val assetCategory: AssetCategory = AssetCategory.BANK_ACCOUNT,
-    val isPrimary: Boolean = false
+    val assetCategoryId: String = assetCategory.name,
+    val isPrimary: Boolean = false,
+    val isLiability: Boolean = false
 ) {
     fun toAccount(): Account = Account(
         id = id,
@@ -18,6 +20,8 @@ data class AccountWithConversion(
         currency = originalCurrency,
         emoji = emoji,
         assetCategory = assetCategory,
-        isPrimary = isPrimary
+        assetCategoryId = assetCategoryId,
+        isPrimary = isPrimary,
+        isLiability = isLiability
     )
 }

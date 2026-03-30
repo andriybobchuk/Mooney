@@ -24,7 +24,9 @@ class ConvertAccountsToUiUseCase(
                     baseCurrencyAmount = account.amount,
                     exchangeRate = null,
                     assetCategory = account.assetCategory,
-                    isPrimary = account.isPrimary
+                    assetCategoryId = account.assetCategoryId,
+                    isPrimary = account.isPrimary,
+                    isLiability = account.isLiability
                 )
             } else {
                 account?.let {
@@ -39,7 +41,9 @@ class ConvertAccountsToUiUseCase(
                         baseCurrencyAmount = converted,
                         exchangeRate = rate,
                         assetCategory = account.assetCategory,
-                        isPrimary = account.isPrimary
+                        assetCategoryId = account.assetCategoryId,
+                        isPrimary = account.isPrimary,
+                        isLiability = account.isLiability
                     )
                 }
             }

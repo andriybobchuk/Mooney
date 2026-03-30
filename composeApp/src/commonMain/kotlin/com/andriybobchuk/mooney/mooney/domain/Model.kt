@@ -47,7 +47,9 @@ data class Account(
     val currency: Currency,
     val emoji: String,
     val assetCategory: AssetCategory = AssetCategory.BANK_ACCOUNT,
-    val isPrimary: Boolean = false
+    val assetCategoryId: String = assetCategory.name,
+    val isPrimary: Boolean = false,
+    val isLiability: Boolean = false
 )
 
 data class UserCurrency(
@@ -85,6 +87,12 @@ data class ExchangeRates(
     }
 }
 
+enum class GoalTrackingType {
+    ACCOUNT,
+    NET_WORTH,
+    TOTAL_ASSETS
+}
+
 data class Goal(
     val id: Int,
     val emoji: String,
@@ -94,7 +102,9 @@ data class Goal(
     val currency: Currency,
     val createdDate: LocalDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
     val groupName: String = "General",
-    val imagePath: String? = null
+    val imagePath: String? = null,
+    val trackingType: GoalTrackingType = GoalTrackingType.NET_WORTH,
+    val accountId: Int? = null
 )
 
 data class GoalGroup(

@@ -11,11 +11,13 @@ import com.andriybobchuk.mooney.mooney.domain.MonthKey
 import com.andriybobchuk.mooney.mooney.domain.MonthlyMetricSnapshot
 import com.andriybobchuk.mooney.mooney.domain.TopCategorySummary
 import com.andriybobchuk.mooney.mooney.domain.Transaction
+import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 
 data class AnalyticsState(
     val selectedMonth: MonthKey = MonthKey.current(),
@@ -41,7 +43,8 @@ class AnalyticsViewModel(
     private val calculateAnalyticsMetricsUseCase: CalculateAnalyticsMetricsUseCase,
     private val loadHistoricalAnalyticsUseCase: LoadHistoricalAnalyticsUseCase,
     private val loadCategoriesForSheetTypeUseCase: LoadCategoriesForSheetTypeUseCase,
-    private val getPreviousMonthTransactionsUseCase: GetPreviousMonthTransactionsUseCase
+    private val getPreviousMonthTransactionsUseCase: GetPreviousMonthTransactionsUseCase,
+    private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
     private val baseCurrency: Currency = GlobalConfig.baseCurrency
 
@@ -94,8 +97,11 @@ class AnalyticsViewModel(
                     exchangeRates = exchangeRates
                 )
                 _state.update { it.copy(metrics = metrics) }
-            } catch (_: Exception) {
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false) }
+                analyticsTracker.recordException(e, "Analytics")
             }
         }
     }

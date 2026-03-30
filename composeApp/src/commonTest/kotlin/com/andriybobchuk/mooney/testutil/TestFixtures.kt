@@ -61,8 +61,9 @@ object TestFixtures {
         currency: Currency = Currency.PLN,
         emoji: String = "💰",
         assetCategory: AssetCategory = AssetCategory.BANK_ACCOUNT,
-        isPrimary: Boolean = false
-    ) = Account(id, title, amount, currency, emoji, assetCategory, isPrimary)
+        isPrimary: Boolean = false,
+        isLiability: Boolean = false
+    ) = Account(id, title, amount, currency, emoji, assetCategory, assetCategory.name, isPrimary, isLiability)
 
     fun transaction(
         id: Int = 0,

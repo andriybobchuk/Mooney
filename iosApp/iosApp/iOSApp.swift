@@ -1,5 +1,6 @@
 import SwiftUI
 import FirebaseCore
+import ComposeApp
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(
@@ -7,6 +8,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         FirebaseApp.configure()
+        Analytics.shared.setBridge(bridge: FirebaseAnalyticsBridge())
         return true
     }
 }

@@ -73,6 +73,7 @@ kotlin {
             implementation("androidx.datastore:datastore-preferences-core:1.1.1")
 
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
+            implementation("sh.calvin.reorderable:reorderable:2.4.3")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -108,7 +109,12 @@ android {
     }
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {

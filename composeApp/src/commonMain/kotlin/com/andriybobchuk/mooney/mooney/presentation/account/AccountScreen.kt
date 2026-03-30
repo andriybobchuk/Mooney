@@ -188,16 +188,10 @@ fun AccountScreen(
                     AccountSheet(
                         editingAccount = editingAccount,
                         onAdd = { title, emoji, amount, currency ->
-                            println("DEBUG: Update clicked - editingAccount: ${editingAccount?.id}")
-                            
                             // Check if this is an edit and if amount changed
                             editingAccount?.let { account ->
                                 val difference = amount - account.originalAmount
-                                println("DEBUG: Amount difference: $difference (old: ${account.originalAmount}, new: $amount)")
-                                
                                 if (kotlin.math.abs(difference) >= 0.01) {
-                                    println("DEBUG: Difference significant, setting reconciliation data")
-                                    // Store reconciliation data for dialog
                                     reconciliationData = ReconciliationData(
                                         accountId = account.id,
                                         accountTitle = title,
@@ -205,27 +199,16 @@ fun AccountScreen(
                                         newAmount = amount,
                                         difference = difference
                                     )
-                                } else {
-                                    println("DEBUG: Difference too small or zero")
                                 }
-                            } ?: run {
-                                println("DEBUG: editingAccount is null - this is a new account")
                             }
-                            
-                            // Always update the account first
+
                             viewModel.upsertAccount(editingAccount?.id ?: 0, title, emoji, amount, currency)
-                            
-                            // Close sheet
                             showSheet = false
-                            
-                            // Show reconciliation dialog if amount changed
+
                             if (reconciliationData != null) {
-                                println("DEBUG: Showing reconciliation dialog")
                                 showReconciliationDialog = true
-                            } else {
-                                println("DEBUG: No reconciliation data, not showing dialog")
                             }
-                            
+
                             editingAccount = null
                         }
                     )

@@ -7,6 +7,7 @@ import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.AccountWithConversion
 import com.andriybobchuk.mooney.mooney.domain.AssetCategory
 import com.andriybobchuk.mooney.mooney.domain.Currency
+import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
 import com.andriybobchuk.mooney.core.domain.Result
 import kotlinx.coroutines.Dispatchers
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
+import kotlin.coroutines.cancellation.CancellationException
 
 class AccountViewModel(
     private val getAccountsUseCase: GetAccountsUseCase,
@@ -33,7 +35,8 @@ class AccountViewModel(
     private val currencyManagerUseCase: CurrencyManagerUseCase,
     private val createReconciliationUseCase: CreateReconciliationUseCase,
     private val reconcileAccountUseCase: ReconcileAccountUseCase,
-    private val shouldRefreshExchangeRatesUseCase: ShouldRefreshExchangeRatesUseCase
+    private val shouldRefreshExchangeRatesUseCase: ShouldRefreshExchangeRatesUseCase,
+    private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
 
     private var observeAccountsJob: Job? = null
@@ -86,7 +89,10 @@ class AccountViewModel(
                 }
                 updateTotalNetWorth()
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
+            analyticsTracker.recordException(e, "Account")
             _uiState.update { it.copy(isError = true, isLoading = false) }
         }
     }
@@ -177,7 +183,11 @@ class AccountViewModel(
                     )
                     reconcileAccountUseCase(reconciliationDiff, targetAccount)
                     observeAccounts()
-                } catch (_: Exception) { }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    analyticsTracker.recordException(e, "Account")
+                }
             }
 
             clearReconciliationState()
@@ -217,7 +227,10 @@ class AccountViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 deleteAccountUseCase(id)
-            } catch (_: Exception) {
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                analyticsTracker.recordException(e, "Account")
             }
         }
     }

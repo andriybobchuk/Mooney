@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Currency
+import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
+import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.mooney.domain.usecase.CalculateRatesInBaseCurrencyUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase
 import com.andriybobchuk.mooney.core.domain.Result
@@ -15,7 +17,8 @@ import kotlinx.datetime.*
 
 class ExchangeViewModel(
     private val currencyManagerUseCase: CurrencyManagerUseCase,
-    private val calculateRatesInBaseCurrencyUseCase: CalculateRatesInBaseCurrencyUseCase
+    private val calculateRatesInBaseCurrencyUseCase: CalculateRatesInBaseCurrencyUseCase,
+    private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ExchangeState())
@@ -63,9 +66,9 @@ class ExchangeViewModel(
     private fun refreshExchangeRates() {
         viewModelScope.launch {
             _state.update { it.copy(isRefreshing = true) }
-
             when (val result = currencyManagerUseCase.refreshExchangeRates()) {
                 is Result.Success -> {
+                    analyticsTracker.trackEvent(AnalyticsEvent.RefreshExchangeRates)
                     loadCurrentRates()
                     loadHistoricalRates()
                     _state.update {
@@ -76,6 +79,7 @@ class ExchangeViewModel(
                     }
                 }
                 is Result.Error -> {
+                    analyticsTracker.log("Exchange rate refresh failed: ${result.error}")
                     _state.update {
                         it.copy(
                             isRefreshing = false,
@@ -98,6 +102,7 @@ class ExchangeViewModel(
         val nextCurrency = currencies[nextIndex]
 
         _state.update { it.copy(displayBaseCurrency = nextCurrency) }
+        analyticsTracker.trackEvent(AnalyticsEvent.CycleCurrencyDisplay(nextCurrency.name))
         loadCurrentRates()
     }
 

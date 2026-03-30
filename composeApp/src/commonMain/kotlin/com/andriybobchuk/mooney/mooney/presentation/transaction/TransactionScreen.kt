@@ -57,6 +57,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -282,7 +283,8 @@ fun TransactionsScreen(
                     onUpdate = {
                         isBottomSheetOpen = false
                         viewModel.upsertTransaction(it)
-                    }
+                    },
+                    onEditCategories = onSettingsClick
                 )
             }
 
@@ -749,6 +751,7 @@ fun TransactionBottomSheet(
     preselectedCategory: Category? = null,
     onAdd: (Transaction) -> Unit,
     onUpdate: (Transaction) -> Unit,
+    onEditCategories: () -> Unit = {},
 ) {
     val isEditMode = transactionToEdit != null
 
@@ -1095,7 +1098,8 @@ fun TransactionBottomSheet(
                 currentSelectedCategory = category
                 currentSelectedSubCategory = subCategory
                 showCategorySheet = false
-            }
+            },
+            onEditCategories = onEditCategories
         )
     }
 
@@ -1494,7 +1498,8 @@ fun CategorySelectionBottomSheet(
     categories: List<Category>,
     initialSelectedCategory: Category?,
     initialSelectedSubCategory: Category?,
-    onCategorySelected: (Category, Category?) -> Unit
+    onCategorySelected: (Category, Category?) -> Unit,
+    onEditCategories: () -> Unit = {}
 ) {
     var selectedTabIndex by remember { 
         mutableStateOf(
@@ -1509,12 +1514,20 @@ fun CategorySelectionBottomSheet(
         sheetState = sheetState
     ) {
         Column(Modifier.padding(20.dp).fillMaxSize()) {
-            Text(
-                text = stringResource(Res.string.select_category),
-                fontWeight = FontWeight.Medium,
-                fontSize = 20.sp,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(Res.string.select_category),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 20.sp
+                )
+                TextButton(onClick = { onDismiss(); onEditCategories() }) {
+                    Text("Edit")
+                }
+            }
 
             Row(
                 modifier = Modifier

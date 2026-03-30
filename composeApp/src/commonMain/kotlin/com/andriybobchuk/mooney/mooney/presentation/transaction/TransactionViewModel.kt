@@ -6,6 +6,8 @@ import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.Transaction
+import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
+import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
 import com.andriybobchuk.mooney.mooney.domain.usecase.settings.GetPinnedCategoriesUseCase
 import com.andriybobchuk.mooney.mooney.domain.AccountWithConversion
@@ -21,6 +23,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import kotlin.coroutines.cancellation.CancellationException
 
 data class TransactionState(
     val selectedMonth: MonthKey = MonthKey.current(),
@@ -47,7 +50,8 @@ class TransactionViewModel(
     private val currencyManagerUseCase: CurrencyManagerUseCase,
     private val getPinnedCategoriesUseCase: GetPinnedCategoriesUseCase,
     private val filterTransactionsByMonthUseCase: FilterTransactionsByMonthUseCase,
-    private val calculateDailyTotalsMapUseCase: CalculateDailyTotalsMapUseCase
+    private val calculateDailyTotalsMapUseCase: CalculateDailyTotalsMapUseCase,
+    private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
 
     private var observeTransactionsJob: Job? = null
@@ -127,7 +131,10 @@ class TransactionViewModel(
                         )
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
+                analyticsTracker.recordException(e, "Transactions")
                 _uiState.update { it.copy(isError = true, isLoading = false) }
             }
         }
@@ -135,6 +142,9 @@ class TransactionViewModel(
 
     fun onTotalCurrencyClick() {
         currencyManagerUseCase.cycleToNextCurrency()
+        analyticsTracker.trackEvent(
+            AnalyticsEvent.CycleCurrencyDisplay(currencyManagerUseCase.getCurrentCurrency().name)
+        )
         loadTotal()
     }
 

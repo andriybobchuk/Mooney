@@ -1,0 +1,5 @@
+git_url(ENV["MATCH_GIT_URL"] || "https://github.com/andriybobchuk/certificates.git")
+storage_mode("git")
+type("appstore")
+app_identifier("com.andriybobchuk.mooney")
+team_id("2GGQ4M8T47")

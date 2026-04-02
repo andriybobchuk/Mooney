@@ -24,3 +24,10 @@ api.properties
 # Firebase config (contains API keys)
 **/google-services.json
 **/GoogleService-Info.plist
+
+# Fastlane
+iosApp/fastlane/report.xml
+iosApp/fastlane/Preview.html
+iosApp/fastlane/screenshots
+iosApp/fastlane/test_output
+iosApp/vendor/

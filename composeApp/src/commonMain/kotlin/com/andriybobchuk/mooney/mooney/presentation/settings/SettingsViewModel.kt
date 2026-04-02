@@ -14,8 +14,10 @@ import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
 import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.core.premium.PremiumConfig
 import com.andriybobchuk.mooney.core.premium.PremiumManager
+import com.andriybobchuk.mooney.mooney.domain.usecase.GetAccountsUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetCategoriesUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetUserCurrenciesUseCase
+import com.andriybobchuk.mooney.mooney.domain.usecase.SetPrimaryAccountUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.UpdateUserCurrenciesUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.settings.GetPinnedCategoriesUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.settings.GetUserPreferencesUseCase
@@ -40,7 +42,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.coroutines.cancellation.CancellationException
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions")
 class SettingsViewModel(
     private val getUserPreferencesUseCase: GetUserPreferencesUseCase,
     private val updatePinnedCategoriesUseCase: UpdatePinnedCategoriesUseCase,
@@ -55,7 +57,9 @@ class SettingsViewModel(
     private val repository: CoreRepository,
     private val analyticsTracker: AnalyticsTracker,
     private val premiumManager: PremiumManager,
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
+    private val getAccountsUseCase: GetAccountsUseCase,
+    private val setPrimaryAccountUseCase: SetPrimaryAccountUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsState())
@@ -68,6 +72,7 @@ class SettingsViewModel(
         observeData()
         observeUserCurrencies()
         observeAssetCategories()
+        observeAccounts()
     }
 
     private fun observeData() {
@@ -87,6 +92,8 @@ class SettingsViewModel(
                         defaultCurrency = Currency.entries.firstOrNull { c -> c.name == preferences.defaultCurrency }
                             ?: Currency.PLN,
                         appLanguage = preferences.appLanguage,
+                        defaultExpenseCategoryId = preferences.defaultExpenseCategory,
+                        defaultIncomeCategoryId = preferences.defaultIncomeCategory,
                         error = null
                     )
                 }
@@ -111,6 +118,14 @@ class SettingsViewModel(
         }.launchIn(viewModelScope)
     }
 
+    private fun observeAccounts() {
+        getAccountsUseCase().onEach { accounts ->
+            val nonNull = accounts.filterNotNull()
+            val primary = nonNull.find { it.isPrimary }
+            _state.update { it.copy(accounts = nonNull, primaryAccountId = primary?.id) }
+        }.launchIn(viewModelScope)
+    }
+
     fun onAction(action: SettingsAction) {
         when (action) {
             is SettingsAction.OnCategorySelectionToggle -> handleCategoryToggle(action.category)
@@ -124,6 +139,9 @@ class SettingsViewModel(
             is SettingsAction.OnToggleUserCurrency -> handleToggleUserCurrency(action.currencyCode)
             is SettingsAction.OnDeleteCategory -> handleDeleteCategory(action.categoryId)
             is SettingsAction.OnAddCategory -> handleAddCategory(action.title, action.type, action.emoji, action.parentId)
+            is SettingsAction.OnDefaultExpenseCategoryChange -> handleDefaultExpenseCategoryChange(action.categoryId)
+            is SettingsAction.OnDefaultIncomeCategoryChange -> handleDefaultIncomeCategoryChange(action.categoryId)
+            is SettingsAction.OnPrimaryAccountChange -> handlePrimaryAccountChange(action.accountId)
             is SettingsAction.OnAddAssetCategory -> handleAddAssetCategory(action.title, action.isLiability)
             is SettingsAction.OnDeleteAssetCategory -> handleDeleteAssetCategory(action.categoryId)
             is SettingsAction.OnRenameAssetCategory -> handleRenameAssetCategory(action.categoryId, action.newTitle)
@@ -272,6 +290,11 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 preferencesRepository.updateDefaultCurrency(currency)
+                // Update global config so all screens pick up the change immediately
+                try {
+                    com.andriybobchuk.mooney.mooney.data.GlobalConfig.baseCurrency =
+                        com.andriybobchuk.mooney.mooney.domain.Currency.valueOf(currency)
+                } catch (_: IllegalArgumentException) { }
                 analyticsTracker.trackEvent(AnalyticsEvent.ChangeDefaultCurrency(currency))
             } catch (e: CancellationException) {
                 throw e
@@ -300,6 +323,42 @@ class SettingsViewModel(
             try {
                 updatePinnedCategoriesUseCase(categoryIds)
                 clearError()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    private fun handleDefaultExpenseCategoryChange(categoryId: String) {
+        viewModelScope.launch {
+            try {
+                preferencesRepository.updateDefaultExpenseCategory(categoryId)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    private fun handleDefaultIncomeCategoryChange(categoryId: String) {
+        viewModelScope.launch {
+            try {
+                preferencesRepository.updateDefaultIncomeCategory(categoryId)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    private fun handlePrimaryAccountChange(accountId: Int) {
+        viewModelScope.launch {
+            try {
+                setPrimaryAccountUseCase(accountId)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

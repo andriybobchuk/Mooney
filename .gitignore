@@ -21,8 +21,7 @@ captures
 api.properties
 **/Secrets.kt
 
-# Firebase config (contains API keys)
-**/google-services.json
+# Firebase config (iOS)
 **/GoogleService-Info.plist
 
 # Fastlane

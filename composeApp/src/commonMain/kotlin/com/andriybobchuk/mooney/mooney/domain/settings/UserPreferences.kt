@@ -11,7 +11,9 @@ data class UserPreferences(
     val notificationsEnabled: Boolean = true,
     val version: Int = 1,
     val appLanguage: String = "system",
-    val onboardingCompleted: Boolean = false
+    val onboardingCompleted: Boolean = false,
+    val defaultExpenseCategory: String = "groceries",
+    val defaultIncomeCategory: String = "salary"
 )
 
 enum class ThemeMode {

@@ -30,6 +30,7 @@ import com.andriybobchuk.mooney.mooney.domain.FeatureFlags
 import com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetAccountsUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetTransactionsUseCase
+import com.andriybobchuk.mooney.mooney.domain.usecase.ProcessRecurringTransactionsUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetUserCurrenciesUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.settings.GetUserPreferencesUseCase
 import kotlinx.coroutines.flow.first
@@ -39,6 +40,8 @@ import com.andriybobchuk.mooney.mooney.presentation.goals.GoalsScreen
 import com.andriybobchuk.mooney.mooney.presentation.goals.GoalsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionViewModel
 import com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionsScreen
+import com.andriybobchuk.mooney.mooney.presentation.recurring.RecurringTransactionsScreen
+import com.andriybobchuk.mooney.mooney.presentation.recurring.RecurringTransactionsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.settings.SettingsScreen
 import com.andriybobchuk.mooney.mooney.presentation.settings.SettingsViewModel
 import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
@@ -131,6 +134,16 @@ fun NavigationHost() {
         }
     }
 
+    // Process recurring transactions on app start
+    val processRecurringUseCase: ProcessRecurringTransactionsUseCase = koinInject()
+    LaunchedEffect(Unit) {
+        try {
+            processRecurringUseCase()
+        } catch (_: Exception) {
+            // Best-effort — never crash the app for recurring processing
+        }
+    }
+
     // Navigate to Assets once if user has no accounts (first launch after onboarding)
     LaunchedEffect(Unit) {
         if (!hasAccounts && resolvedStart == Route.MooneyGraph) {
@@ -169,7 +182,8 @@ fun NavigationHost() {
                     viewModel = viewModel,
                     bottomNavbar = { BottomNavigationBar(navController, 0) },
                     onSettingsClick = { navController.navigate(Route.Settings) },
-                    onNavigateToAssets = { navController.navigate(Route.Accounts) { popUpTo(Route.MooneyGraph) } }
+                    onNavigateToAssets = { navController.navigate(Route.Accounts) { popUpTo(Route.MooneyGraph) } },
+                    onNavigateToRecurring = { navController.navigate(Route.RecurringTransactions) }
                 )
             }
             composable<Route.Accounts> {
@@ -177,7 +191,10 @@ fun NavigationHost() {
                 AssetsScreen(
                     viewModel = viewModel,
                     bottomNavbar = { BottomNavigationBar(navController, 1) },
-                    onSettingsClick = { navController.navigate(Route.Settings) }
+                    onSettingsClick = { navController.navigate(Route.Settings) },
+                    onGoalsClick = if (FeatureFlags.goalsEnabled) {
+                        { navController.navigate(Route.Goals) }
+                    } else null
                 )
             }
 
@@ -209,10 +226,17 @@ fun NavigationHost() {
                     val viewModel = koinViewModel<GoalsViewModel>()
                     GoalsScreen(
                         viewModel = viewModel,
-                        bottomNavbar = { BottomNavigationBar(navController, 4) },
-                        onSettingsClick = { navController.navigate(Route.Settings) }
+                        onBackClick = { navController.navigateUp() }
                     )
                 }
+            }
+
+            composable<Route.RecurringTransactions> {
+                val viewModel = koinViewModel<RecurringTransactionsViewModel>()
+                RecurringTransactionsScreen(
+                    viewModel = viewModel,
+                    onBackClick = { navController.navigateUp() }
+                )
             }
 
             composable<Route.Settings> {

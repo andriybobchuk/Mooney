@@ -87,8 +87,7 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.MonthProjection
 @Composable
 fun GoalsScreen(
     viewModel: GoalsViewModel,
-    bottomNavbar: @Composable () -> Unit,
-    onSettingsClick: () -> Unit = {},
+    onBackClick: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -102,16 +101,10 @@ fun GoalsScreen(
                 title = "Goals",
                 containerColor = Color.Transparent,
                 scrollBehavior = scrollBehavior,
-                actions = listOf(
-                    Toolbars.ToolBarAction(
-                        icon = Icons.Outlined.Settings,
-                        contentDescription = "Settings",
-                        onClick = onSettingsClick
-                    )
-                )
+                showBackButton = true,
+                onBackClick = onBackClick
             )
         },
-        bottomBar = bottomNavbar,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { viewModel.onAction(GoalsAction.ShowAddGoalSheet) },

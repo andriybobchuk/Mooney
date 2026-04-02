@@ -23,10 +23,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Share
@@ -42,7 +40,6 @@ import com.andriybobchuk.mooney.core.presentation.designsystem.components.Mooney
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyTextField
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyCard
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
-import com.andriybobchuk.mooney.core.presentation.designsystem.components.FeedbackBottomSheet
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MeshGradientBackground
 import com.andriybobchuk.mooney.core.premium.PaywallSheet
 import androidx.compose.runtime.*
@@ -81,18 +78,32 @@ fun AssetsScreen(
     viewModel: AssetsViewModel = koinViewModel(),
     bottomNavbar: @Composable () -> Unit,
     onSettingsClick: () -> Unit = {},
+    onGoalsClick: (() -> Unit)? = null,
 ) {
     val state by viewModel.state.collectAsState()
     val assets = state.assets
     val totalNetWorth = state.totalNetWorth
+
+    // Achieved goals count for badge
+    var achievedGoalsCount by remember { mutableStateOf(0) }
+    if (onGoalsClick != null) {
+        val getGoalsUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.GetGoalsUseCase = org.koin.compose.koinInject()
+        val enrichGoalsUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.EnrichGoalsWithProgressUseCase = org.koin.compose.koinInject()
+        LaunchedEffect(Unit) {
+            getGoalsUseCase().collect { goals ->
+                val enriched = enrichGoalsUseCase(goals)
+                achievedGoalsCount = enriched.count { gwp ->
+                    gwp.progress?.progressPercentage?.let { it >= 100.0 } == true
+                }
+            }
+        }
+    }
 
     // Sheet
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
     var showSheet by remember { mutableStateOf(false) }
     var editingAsset by remember { mutableStateOf<UiAsset?>(null) }
-    var showFeedbackSheet by remember { mutableStateOf(false) }
-
     val isEmptyState = assets.isEmpty()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -129,12 +140,32 @@ fun AssetsScreen(
                     }
                 },
                 scrollBehavior = scrollBehavior,
+                customContent = if (onGoalsClick != null) {
+                    {
+                        IconButton(onClick = onGoalsClick) {
+                            BadgedBox(
+                                badge = {
+                                    if (achievedGoalsCount > 0) {
+                                        Badge(
+                                            containerColor = MaterialTheme.colorScheme.primary,
+                                            contentColor = MaterialTheme.colorScheme.onPrimary
+                                        ) {
+                                            Text(achievedGoalsCount.toString())
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    painter = com.andriybobchuk.mooney.core.presentation.Icons.GoalsIcon(),
+                                    contentDescription = "Goals",
+                                    modifier = Modifier.size(22.dp),
+                                    tint = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                        }
+                    }
+                } else null,
                 actions = listOf(
-                    Toolbars.ToolBarAction(
-                        icon = Icons.Outlined.Email,
-                        contentDescription = stringResource(Res.string.feedback),
-                        onClick = { showFeedbackSheet = true }
-                    ),
                     Toolbars.ToolBarAction(
                         icon = Icons.Outlined.Settings,
                         contentDescription = stringResource(Res.string.settings),
@@ -234,10 +265,6 @@ fun AssetsScreen(
             }
         }
     )
-
-    if (showFeedbackSheet) {
-        FeedbackBottomSheet(onDismiss = { showFeedbackSheet = false })
-    }
 
     if (state.showPaywall) {
         PaywallSheet(

@@ -19,6 +19,10 @@ interface PreferencesRepository {
     
     suspend fun updateAppLanguage(language: String)
 
+    suspend fun updateDefaultExpenseCategory(categoryId: String)
+
+    suspend fun updateDefaultIncomeCategory(categoryId: String)
+
     suspend fun markOnboardingCompleted()
 
     suspend fun clearPreferences()

@@ -3,6 +3,7 @@ package com.andriybobchuk.mooney.mooney.presentation.transaction
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -33,10 +34,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Share
@@ -51,6 +50,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
@@ -88,6 +89,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.andriybobchuk.mooney.core.data.database.PendingTransactionEntity
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.app.appColors
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
@@ -96,14 +98,23 @@ import com.andriybobchuk.mooney.mooney.domain.AssetCategory
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.Currency
+import com.andriybobchuk.mooney.mooney.domain.RecurringFrequency
+import com.andriybobchuk.mooney.mooney.domain.RecurringSchedule
 import com.andriybobchuk.mooney.mooney.domain.Transaction
+import com.andriybobchuk.mooney.mooney.presentation.recurring.RecurringScheduleSheet
+import com.andriybobchuk.mooney.mooney.domain.usecase.TransactionValidation
+import com.andriybobchuk.mooney.mooney.domain.usecase.ValidateTransactionUseCase
+import org.koin.compose.koinInject
 import com.andriybobchuk.mooney.mooney.presentation.account.UiAccount
 import com.andriybobchuk.mooney.mooney.presentation.account.toAccounts
 import com.andriybobchuk.mooney.mooney.presentation.analytics.MonthPicker
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyTextField
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
-import com.andriybobchuk.mooney.core.presentation.designsystem.components.FeedbackBottomSheet
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.HorizontalDivider
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MeshGradientBackground
 import com.andriybobchuk.mooney.mooney.domain.MonthKey
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
@@ -130,13 +141,13 @@ fun TransactionsScreen(
     bottomNavbar: @Composable () -> Unit,
     onSettingsClick: () -> Unit = {},
     onNavigateToAssets: () -> Unit = {},
+    onNavigateToRecurring: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val transactions = state.transactions
     val total = state.total
     val totalCurrency = state.totalCurrency
     val frequentCategories by viewModel.frequentCategories.collectAsState()
-    var showFeedbackSheet by remember { mutableStateOf(false) }
     // Sheet
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isBottomSheetOpen by remember { mutableStateOf(false) }
@@ -188,9 +199,9 @@ fun TransactionsScreen(
                 },
                 actions = listOf(
                     Toolbars.ToolBarAction(
-                        icon = Icons.Outlined.Email,
-                        contentDescription = "Feedback",
-                        onClick = { showFeedbackSheet = true }
+                        icon = Icons.Outlined.Refresh,
+                        contentDescription = "Recurring",
+                        onClick = onNavigateToRecurring
                     ),
                     Toolbars.ToolBarAction(
                         icon = Icons.Outlined.Settings,
@@ -256,6 +267,10 @@ fun TransactionsScreen(
                                 isBottomSheetOpen = true
                             },
                             onNavigateToAssets = onNavigateToAssets,
+                            pendingTransactions = state.pendingTransactions,
+                            categories = state.categories,
+                            onAcceptPending = viewModel::acceptPendingTransaction,
+                            onSkipPending = viewModel::skipPendingTransaction,
                         )
             }
             }
@@ -275,14 +290,18 @@ fun TransactionsScreen(
                     categories = state.categories,
                     selectedMonth = state.selectedMonth,
                     preselectedCategory = preselectedCategory,
-                    onAdd = {
+                    onAdd = { transaction, schedule ->
                         isBottomSheetOpen = false
                         transactionToEdit = null
-                        viewModel.upsertTransaction(it)
+                        if (schedule != null) {
+                            viewModel.createRecurringFromTransaction(transaction, schedule)
+                        } else {
+                            viewModel.upsertTransaction(transaction)
+                        }
                     },
-                    onUpdate = {
+                    onUpdate = { transaction, _ ->
                         isBottomSheetOpen = false
-                        viewModel.upsertTransaction(it)
+                        viewModel.upsertTransaction(transaction)
                     },
                     onEditCategories = onSettingsClick
                 )
@@ -339,9 +358,6 @@ fun TransactionsScreen(
             }
             */
 
-    if (showFeedbackSheet) {
-        FeedbackBottomSheet(onDismiss = { showFeedbackSheet = false })
-    }
 }
 
 fun LocalDate.formatForDisplay(): String {
@@ -349,6 +365,103 @@ fun LocalDate.formatForDisplay(): String {
     val month = this.month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
     val day = this.dayOfMonth
     return "$dayOfWeek, $month $day" // e.g., "Sun, Aug 23"
+}
+
+@Composable
+private fun PendingTransactionItem(
+    pending: PendingTransactionEntity,
+    accounts: List<UiAccount?>,
+    categories: List<Category>,
+    onAccept: () -> Unit,
+    onSkip: () -> Unit
+) {
+    val account = accounts.filterNotNull().find { it.id == pending.accountId }
+    val category = categories.find { it.id == pending.subcategoryId }
+    val contentAlpha = 0.45f
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+            .padding(vertical = 8.dp, horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Emoji icon — ghosted
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                category?.resolveEmoji() ?: "",
+                fontSize = 25.sp,
+                modifier = Modifier.alpha(contentAlpha)
+            )
+        }
+
+        Spacer(Modifier.width(11.dp))
+
+        // Title + amount
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "↻ ",
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                )
+                Text(
+                    category?.title ?: pending.subcategoryId,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 15.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha)
+                )
+            }
+            Text(
+                "${pending.amount.formatWithCommas()} ${account?.originalCurrency?.symbol ?: ""}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            )
+        }
+
+        // Action buttons
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            // Skip button
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
+                    .clickable(onClick = onSkip)
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Skip",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            // Confirm button
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                    .clickable(onClick = onAccept)
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Confirm",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -368,16 +481,42 @@ fun TransactionsScreenContent(
     onDailyTotal: (LocalDate) -> Double = { 0.0 },
     onAddTransaction: () -> Unit = {},
     onNavigateToAssets: () -> Unit = {},
+    pendingTransactions: List<PendingTransactionEntity> = emptyList(),
+    categories: List<Category> = emptyList(),
+    onAcceptPending: (PendingTransactionEntity) -> Unit = {},
+    onSkipPending: (Int) -> Unit = {},
 ) {
     // Group and sort transactions by date (descending), then by ID (most recent first)
-    val grouped = transactions.filterNotNull().groupBy { it.date }
-    val sortedGroups = grouped.entries
-        .sortedByDescending { it.key }
-        .map { (date, transactions) ->
-            date to transactions.sortedByDescending { it.id }
+    val grouped by remember(transactions) {
+        derivedStateOf {
+            transactions.filterNotNull().groupBy { it.date }
         }
+    }
+    val sortedGroups by remember(grouped) {
+        derivedStateOf {
+            grouped.entries
+                .sortedByDescending { it.key }
+                .map { (date, txs) -> date to txs.sortedByDescending { it.id } }
+        }
+    }
 
-    val isEmpty = sortedGroups.isEmpty()
+    // Group pending transactions by scheduled date
+    val pendingGrouped by remember(pendingTransactions) {
+        derivedStateOf {
+            pendingTransactions.groupBy { pending ->
+                try { LocalDate.parse(pending.scheduledDate) } catch (_: Exception) { null }
+            }.filterKeys { it != null }.mapKeys { it.key!! }
+        }
+    }
+
+    // Merge all dates from both real and pending transactions
+    val allDates by remember(sortedGroups, pendingGrouped) {
+        derivedStateOf {
+            (sortedGroups.map { it.first }.toSet() + pendingGrouped.keys).sortedDescending()
+        }
+    }
+
+    val isEmpty = sortedGroups.isEmpty() && pendingTransactions.isEmpty()
 
     LazyColumn(
         modifier = modifier
@@ -385,7 +524,7 @@ fun TransactionsScreenContent(
             .background(if (isEmpty) Color.Transparent else MaterialTheme.colorScheme.background),
         userScrollEnabled = !isEmpty
     ) {
-        if (sortedGroups.isNotEmpty()) {
+        if (sortedGroups.isNotEmpty() || pendingTransactions.isNotEmpty()) {
             // Normal: show calendar + transactions
             item {
                 TransactionPagerView(
@@ -542,7 +681,10 @@ fun TransactionsScreenContent(
             }
         }
 
-        sortedGroups.forEach { (date, txList) ->
+        allDates.forEach { date ->
+            val txList = grouped[date]?.sortedByDescending { it.id } ?: emptyList()
+            val pendingList = pendingGrouped[date] ?: emptyList()
+
             stickyHeader {
                 Row(
                     modifier = Modifier
@@ -586,6 +728,18 @@ fun TransactionsScreenContent(
                 }
             }
 
+            // Pending (proposed) transactions — ghosted style
+            items(pendingList, key = { "pending_${it.id}" }) { pending ->
+                PendingTransactionItem(
+                    pending = pending,
+                    accounts = accounts,
+                    categories = categories,
+                    onAccept = { onAcceptPending(pending) },
+                    onSkip = { onSkipPending(pending.id) }
+                )
+            }
+
+            // Real transactions
             items(txList) { tx ->
                 var showActionSheet by remember { mutableStateOf(false) }
 
@@ -749,9 +903,13 @@ fun TransactionBottomSheet(
     categories: List<Category>,
     selectedMonth: MonthKey,
     preselectedCategory: Category? = null,
-    onAdd: (Transaction) -> Unit,
-    onUpdate: (Transaction) -> Unit,
+    forceRecurringEnabled: Boolean = false,
+    initialRecurringSchedule: RecurringSchedule? = null,
+    onAdd: (Transaction, RecurringSchedule?) -> Unit = { _, _ -> },
+    onUpdate: (Transaction, RecurringSchedule?) -> Unit = { _, _ -> },
     onEditCategories: () -> Unit = {},
+    validateUseCase: ValidateTransactionUseCase = koinInject(),
+    preferencesRepository: com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository = koinInject(),
 ) {
     val isEditMode = transactionToEdit != null
 
@@ -782,12 +940,42 @@ fun TransactionBottomSheet(
         )
     }
     
-    // Auto-select default categories based on transaction type
+    // Load saved default categories from preferences
+    val userPrefs by preferencesRepository.getUserPreferences()
+        .collectAsState(initial = com.andriybobchuk.mooney.mooney.domain.settings.UserPreferences())
+
+    // Auto-select default categories based on transaction type (uses saved preferences)
     val getDefaultCategoryForType: (CategoryType) -> Category? = { type ->
         when (type) {
-            CategoryType.EXPENSE -> categories.find { it.title.contains("Groceries") }
-            CategoryType.INCOME -> categories.find { it.id == "salary" }
+            CategoryType.EXPENSE -> {
+                val savedId = userPrefs.defaultExpenseCategory
+                val saved = categories.find { it.id == savedId }
+                // If saved is a subcategory, return its parent as "general" (the sheet tracks sub separately)
+                if (saved?.isSubCategory() == true) saved.parent else saved
+                    ?: categories.find { it.title.contains("Groceries") }
+            }
+            CategoryType.INCOME -> {
+                val savedId = userPrefs.defaultIncomeCategory
+                val saved = categories.find { it.id == savedId }
+                if (saved?.isSubCategory() == true) saved.parent else saved
+                    ?: categories.find { it.id == "salary" }
+            }
             CategoryType.TRANSFER -> categories.find { it.id == "internal_transfer" }
+        }
+    }
+
+    // Also resolve default subcategory from preferences
+    val getDefaultSubCategoryForType: (CategoryType) -> Category? = { type ->
+        when (type) {
+            CategoryType.EXPENSE -> {
+                val saved = categories.find { it.id == userPrefs.defaultExpenseCategory }
+                if (saved?.isSubCategory() == true) saved else null
+            }
+            CategoryType.INCOME -> {
+                val saved = categories.find { it.id == userPrefs.defaultIncomeCategory }
+                if (saved?.isSubCategory() == true) saved else null
+            }
+            CategoryType.TRANSFER -> null
         }
     }
     
@@ -801,11 +989,24 @@ fun TransactionBottomSheet(
     } else {
         preselectedCategory ?: getDefaultCategoryForType(selectedTransactionType)
     }
-    val selectedSubCategory: Category? = if (transactionToEdit?.subcategory?.isSubCategory() == true) transactionToEdit.subcategory else null
+    val selectedSubCategory: Category? = if (transactionToEdit?.subcategory?.isSubCategory() == true) {
+        transactionToEdit.subcategory
+    } else if (!isEditMode) {
+        getDefaultSubCategoryForType(selectedTransactionType)
+    } else null
     
     var currentSelectedCategory by remember { mutableStateOf(selectedCategory) }
     var currentSelectedSubCategory by remember { mutableStateOf(selectedSubCategory) }
     var showCategorySheet by remember { mutableStateOf(false) }
+
+    // When preferences load asynchronously, update defaults if user hasn't manually changed them
+    var hasUserChangedCategory by remember { mutableStateOf(false) }
+    LaunchedEffect(userPrefs.defaultExpenseCategory, userPrefs.defaultIncomeCategory) {
+        if (!isEditMode && !hasUserChangedCategory && preselectedCategory == null) {
+            currentSelectedCategory = getDefaultCategoryForType(selectedTransactionType)
+            currentSelectedSubCategory = getDefaultSubCategoryForType(selectedTransactionType)
+        }
+    }
 
 
     var selectedDate by remember {
@@ -821,6 +1022,18 @@ fun TransactionBottomSheet(
         )
     }
     var showDateSheet by remember { mutableStateOf(false) }
+
+    // Recurring state
+    var isRecurringEnabled by remember { mutableStateOf(forceRecurringEnabled) }
+    var recurringSchedule by remember {
+        mutableStateOf(
+            initialRecurringSchedule ?: RecurringSchedule(
+                frequency = RecurringFrequency.MONTHLY,
+                dayOfMonth = selectedDate.dayOfMonth
+            )
+        )
+    }
+    var showScheduleSheet by remember { mutableStateOf(false) }
 
 
     MooneyBottomSheet(
@@ -838,17 +1051,16 @@ fun TransactionBottomSheet(
 
         Column(
             Modifier
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .padding(horizontal = 20.dp)
+                .padding(top = 8.dp)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
         ) {
-            Text(
-                text = if (isEditMode) stringResource(Res.string.edit_transaction) else stringResource(Res.string.add_new_transaction),
-                fontWeight = FontWeight.Medium,
-                fontSize = 20.sp,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            
+            // Scrollable form content
+            Column(
+                Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+            ) {
             // Triple switch for transaction type
             TransactionTypeSwitch(
                 selectedType = selectedTransactionType,
@@ -856,7 +1068,7 @@ fun TransactionBottomSheet(
                     selectedTransactionType = type
                     // Auto-select appropriate category when type changes
                     currentSelectedCategory = getDefaultCategoryForType(type)
-                    currentSelectedSubCategory = null
+                    currentSelectedSubCategory = getDefaultSubCategoryForType(type)
                 },
                 modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
             )
@@ -864,46 +1076,43 @@ fun TransactionBottomSheet(
             // Detect if reconciliation category is selected
             val isReconciliation = currentSelectedSubCategory?.id?.contains("reconciliation") == true ||
                                    currentSelectedCategory?.id?.contains("reconciliation") == true
-            
+
+            val currencySymbol = selectedAccount?.currency?.symbol ?: ""
+
             if (isReconciliation && selectedAccount != null) {
                 // For reconciliation: show new account value field instead of amount
-                MooneyTextField(
+                AmountHeroField(
                     value = newAccountValue,
                     onValueChange = { newAccountValue = it },
-                    label = "New Account Value",
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
+                    currencySymbol = currencySymbol,
+                    placeholder = selectedAccount?.amount?.formatWithCommas() ?: "0",
+                    focusRequester = focusRequester
                 )
-                
+
                 // Show current account value and calculated difference
                 val reconAccount = selectedAccount
                 val currentValue = reconAccount?.amount ?: 0.0
-                val currencySymbol = reconAccount?.currency?.symbol ?: ""
-                val newValue = newAccountValue.replace(",", "").toDoubleOrNull() ?: currentValue
+                val newValue = newAccountValue.toDoubleOrNull() ?: currentValue
                 val difference = newValue - currentValue
 
                 if (difference != 0.0 && reconAccount != null) {
-                    Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Current value: ${currentValue.formatWithCommas()} $currencySymbol",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "Difference: ${if (difference > 0) "+" else ""}${difference.formatWithCommas()} $currencySymbol",
+                        text = "Current: ${currentValue.formatWithCommas()} $currencySymbol → Diff: ${if (difference > 0) "+" else ""}${difference.formatWithCommas()} $currencySymbol",
                         style = MaterialTheme.typography.bodySmall,
                         color = if (difference > 0) MaterialTheme.appColors.incomeColor else MaterialTheme.appColors.expenseColor,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             } else {
-                // Normal amount field for regular transactions
-                MooneyTextField(
+                // Normal amount — hero field
+                AmountHeroField(
                     value = amount ?: "",
                     onValueChange = { amount = it },
-                    label = stringResource(Res.string.amount),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
+                    currencySymbol = currencySymbol,
+                    placeholder = "0",
+                    focusRequester = focusRequester
                 )
             }
 
@@ -965,7 +1174,7 @@ fun TransactionBottomSheet(
 
             Spacer(Modifier.height(12.dp))
 
-            // Date selector with navigation arrows
+            // Date selector + Repeat toggle — compact single row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -973,18 +1182,18 @@ fun TransactionBottomSheet(
             ) {
                 // Previous day button
                 IconButton(
-                    onClick = { 
+                    onClick = {
                         selectedDate = selectedDate.minus(1, DateTimeUnit.DAY)
                     },
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                         contentDescription = "Previous day"
                     )
                 }
-                
-                // Date button (expanded to fill remaining space)
+
+                // Date button
                 val dayName = selectedDate.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
                 val dayNumber = selectedDate.dayOfMonth
                 MooneyButton(
@@ -993,29 +1202,72 @@ fun TransactionBottomSheet(
                     modifier = Modifier.weight(1f),
                     variant = ButtonVariant.SECONDARY
                 )
-                
+
                 // Next day button
                 IconButton(
-                    onClick = { 
+                    onClick = {
                         selectedDate = selectedDate.plus(1, DateTimeUnit.DAY)
                     },
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = "Next day"
                     )
                 }
+
+                // Repeat button — opens schedule sheet, "Save" there enables recurring
+                val repeatLabel = if (isRecurringEnabled) {
+                    recurringSchedule.frequency.name.lowercase()
+                        .replaceFirstChar { it.uppercase() }
+                } else {
+                    "Repeat?"
+                }
+                MooneyButton(
+                    text = repeatLabel,
+                    icon = Icons.Outlined.Refresh,
+                    onClick = { showScheduleSheet = true },
+                    modifier = Modifier,
+                    variant = if (isRecurringEnabled) ButtonVariant.PRIMARY else ButtonVariant.SECONDARY
+                )
             }
 
+            } // end scrollable Column
 
+            // Validation
+            val parsedAmt = (amount ?: "").replace(",", "").toDoubleOrNull() ?: 0.0
+            val validation = remember(parsedAmt, selectedAccount, destinationAccount, selectedTransactionType) {
+                validateUseCase(parsedAmt, selectedTransactionType, selectedAccount, destinationAccount)
+            }
 
-            Spacer(Modifier.height(16.dp))
+            // Warning: yellow text centered above CTA
+            if (validation is TransactionValidation.Warning) {
+                Text(
+                    text = validation.message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFD4A017),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                )
+            }
+            // Error: red text centered above disabled CTA (only for business rule errors, not missing selections)
+            if (validation is TransactionValidation.Error && !validation.message.startsWith("Select") && !validation.message.startsWith("Enter")) {
+                Text(
+                    text = validation.message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                )
+            }
 
+            // Pinned button — always visible above keyboard
+            Spacer(Modifier.height(4.dp))
             MooneyButton(
                 text = if (transactionToEdit != null) stringResource(Res.string.update_transaction) else stringResource(Res.string.add_transaction),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                 variant = ButtonVariant.PRIMARY,
+                enabled = validation !is TransactionValidation.Error,
                 onClick = {
                     // Detect if this is a reconciliation transaction
                     val isReconciliation = currentSelectedSubCategory?.id?.contains("reconciliation") == true ||
@@ -1081,15 +1333,34 @@ fun TransactionBottomSheet(
                             date = selectedDate
                         )
                         
+                        val schedule = if (isRecurringEnabled) recurringSchedule else null
                         if (isEditMode) {
-                            onUpdate(transaction)
+                            onUpdate(transaction, schedule)
                         } else {
-                            onAdd(transaction)
+                            onAdd(transaction, schedule)
                         }
                     }
                 }
             )
         }
+    }
+
+    if (showScheduleSheet) {
+        RecurringScheduleSheet(
+            onDismiss = { showScheduleSheet = false },
+            schedule = recurringSchedule,
+            onScheduleSelected = {
+                recurringSchedule = it
+                isRecurringEnabled = true
+                showScheduleSheet = false
+            },
+            onRemove = if (isRecurringEnabled) {
+                {
+                    isRecurringEnabled = false
+                    showScheduleSheet = false
+                }
+            } else null
+        )
     }
 
     if (showCategorySheet) {
@@ -1105,6 +1376,7 @@ fun TransactionBottomSheet(
             onCategorySelected = { category, subCategory ->
                 currentSelectedCategory = category
                 currentSelectedSubCategory = subCategory
+                hasUserChangedCategory = true
                 showCategorySheet = false
             },
             onEditCategories = onEditCategories
@@ -1397,6 +1669,74 @@ data class CalendarData(
     val rows: Int
 )
 
+
+@Composable
+private fun AmountHeroField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    currencySymbol: String,
+    placeholder: String = "0",
+    focusRequester: FocusRequester
+) {
+    val hasValue = value.isNotEmpty()
+
+    val textStyle = MaterialTheme.typography.headlineLarge.copy(
+        fontWeight = FontWeight.Bold,
+        fontSize = 34.sp,
+        lineHeight = 40.sp
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier.width(IntrinsicSize.Max),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(modifier = Modifier.weight(1f, fill = false)) {
+                androidx.compose.foundation.text.BasicTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    textStyle = textStyle.copy(
+                        color = if (hasValue) MaterialTheme.colorScheme.onSurface
+                        else Color.Transparent,
+                        textAlign = TextAlign.End
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    modifier = Modifier.focusRequester(focusRequester),
+                    decorationBox = { innerTextField ->
+                        Box(contentAlignment = Alignment.CenterEnd) {
+                            if (!hasValue) {
+                                Text(
+                                    text = placeholder,
+                                    style = textStyle.copy(
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
+                                        textAlign = TextAlign.End
+                                    )
+                                )
+                            }
+                            innerTextField()
+                        }
+                    }
+                )
+            }
+            if (currencySymbol.isNotEmpty()) {
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = currencySymbol,
+                    style = textStyle.copy(
+                        fontWeight = FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+                    )
+                )
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

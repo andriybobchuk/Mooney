@@ -19,6 +19,7 @@ import com.andriybobchuk.mooney.mooney.presentation.assets.AssetsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.exchange.ExchangeViewModel
 import com.andriybobchuk.mooney.mooney.presentation.goals.GoalsViewModel
+import com.andriybobchuk.mooney.mooney.presentation.recurring.RecurringTransactionsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionViewModel
 import com.andriybobchuk.mooney.mooney.presentation.settings.SettingsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.onboarding.OnboardingViewModel
@@ -149,6 +150,17 @@ val sharedModule = module {
     singleOf(::UpdatePinnedCategoriesUseCase)
     singleOf(::GetPinnedCategoriesUseCase)
 
+    // Validation
+    singleOf(::ValidateTransactionUseCase)
+
+    // Recurring Transactions
+    singleOf(::ProcessRecurringTransactionsUseCase)
+    singleOf(::AcceptPendingTransactionUseCase)
+    singleOf(::GetRecurringTransactionsUseCase)
+    singleOf(::SaveRecurringTransactionUseCase)
+    singleOf(::DeleteRecurringTransactionUseCase)
+    singleOf(::CreateRecurringFromTransactionUseCase)
+
     // Onboarding
     singleOf(::CompleteOnboardingUseCase)
 
@@ -172,4 +184,5 @@ val sharedModule = module {
     viewModelOf(::GoalsViewModel)
     viewModelOf(::SettingsViewModel)
     viewModelOf(::OnboardingViewModel)
+    viewModelOf(::RecurringTransactionsViewModel)
 }

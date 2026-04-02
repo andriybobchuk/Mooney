@@ -124,6 +124,7 @@ fun DevToolsBottomSheet(
                     StatItem("Accounts", s.accountCount)
                     StatItem("Transactions", s.transactionCount)
                     StatItem("Goals", s.goalCount)
+                    StatItem("Recurring", s.recurringCount)
                 }
             }
 
@@ -189,6 +190,15 @@ fun DevToolsBottomSheet(
                     isLoading = false
                 }
             }
+            DevActionRow("Add mock recurring transactions") {
+                scope.launch {
+                    isLoading = true
+                    devToolsManager.populateMockRecurringTransactions()
+                    stats = devToolsManager.getStats()
+                    statusMessage = "Added mock recurring transactions"
+                    isLoading = false
+                }
+            }
 
             Spacer(Modifier.height(12.dp))
 
@@ -232,6 +242,15 @@ fun DevToolsBottomSheet(
                     devToolsManager.clearAllGoals()
                     stats = devToolsManager.getStats()
                     statusMessage = "Goals cleared"
+                    isLoading = false
+                }
+            }
+            DevActionRow("Clear recurring transactions", isDestructive = true) {
+                scope.launch {
+                    isLoading = true
+                    devToolsManager.clearRecurringTransactions()
+                    stats = devToolsManager.getStats()
+                    statusMessage = "Cleared recurring transactions"
                     isLoading = false
                 }
             }

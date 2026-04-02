@@ -1,5 +1,6 @@
 package com.andriybobchuk.mooney.mooney.presentation.settings
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,14 +18,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.andriybobchuk.mooney.core.presentation.Toolbars
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.FeedbackBottomSheet
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import com.andriybobchuk.mooney.core.premium.PaywallSheet
+import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 import com.andriybobchuk.mooney.core.platform.FileHandler
@@ -63,8 +69,12 @@ fun SettingsScreen(
     var deleteCategoryName by remember { mutableStateOf("") }
     var showAssetCategoriesSheet by remember { mutableStateOf(false) }
     var showAddAssetCategorySheet by remember { mutableStateOf(false) }
+    var showFeedbackSheet by remember { mutableStateOf(false) }
     var deleteAssetCategoryId by remember { mutableStateOf<String?>(null) }
     var deleteAssetCategoryName by remember { mutableStateOf("") }
+    var showDefaultExpenseCategorySheet by remember { mutableStateOf(false) }
+    var showDefaultIncomeCategorySheet by remember { mutableStateOf(false) }
+    var showPrimaryAccountSheet by remember { mutableStateOf(false) }
 
     // Handle events from ViewModel
     LaunchedEffect(Unit) {
@@ -934,6 +944,174 @@ fun SettingsScreen(
         }
     }
 
+    // Default expense category bottom sheet
+    if (showDefaultExpenseCategorySheet) {
+        val expenseGenerals = remember(state.allCategories) {
+            state.allCategories.filter { it.isGeneralCategory() && it.type == CategoryType.EXPENSE }
+        }
+        MooneyBottomSheet(onDismissRequest = { showDefaultExpenseCategorySheet = false }) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text("Default Expense Category", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
+                    expenseGenerals.forEach { general ->
+                        val subcategories = state.allCategories.filter { it.parent?.id == general.id }
+                        // General category header (selectable)
+                        item(key = general.id) {
+                            val isSelected = state.defaultExpenseCategoryId == general.id
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                                    .clickable {
+                                        viewModel.onAction(SettingsAction.OnDefaultExpenseCategoryChange(general.id))
+                                        showDefaultExpenseCategorySheet = false
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(general.resolveEmoji(), fontSize = 20.sp, modifier = Modifier.padding(end = 12.dp))
+                                Text(general.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                                Spacer(Modifier.weight(1f))
+                                if (isSelected) { Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.primary, CircleShape)) }
+                            }
+                        }
+                        // Subcategories (indented)
+                        subcategories.forEach { sub ->
+                            item(key = sub.id) {
+                                val isSelected = state.defaultExpenseCategoryId == sub.id
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 32.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                                        .clickable {
+                                            viewModel.onAction(SettingsAction.OnDefaultExpenseCategoryChange(sub.id))
+                                            showDefaultExpenseCategorySheet = false
+                                        }
+                                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(sub.title, style = MaterialTheme.typography.bodyMedium,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                                    Spacer(Modifier.weight(1f))
+                                    if (isSelected) { Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.primary, CircleShape)) }
+                                }
+                            }
+                        }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+        }
+    }
+
+    // Default income category bottom sheet
+    if (showDefaultIncomeCategorySheet) {
+        val incomeGenerals = remember(state.allCategories) {
+            state.allCategories.filter { it.isGeneralCategory() && it.type == CategoryType.INCOME }
+        }
+        MooneyBottomSheet(onDismissRequest = { showDefaultIncomeCategorySheet = false }) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text("Default Income Category", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
+                    incomeGenerals.forEach { general ->
+                        val subcategories = state.allCategories.filter { it.parent?.id == general.id }
+                        item(key = general.id) {
+                            val isSelected = state.defaultIncomeCategoryId == general.id
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                                    .clickable {
+                                        viewModel.onAction(SettingsAction.OnDefaultIncomeCategoryChange(general.id))
+                                        showDefaultIncomeCategorySheet = false
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(general.resolveEmoji(), fontSize = 20.sp, modifier = Modifier.padding(end = 12.dp))
+                                Text(general.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium,
+                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                                Spacer(Modifier.weight(1f))
+                                if (isSelected) { Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.primary, CircleShape)) }
+                            }
+                        }
+                        subcategories.forEach { sub ->
+                            item(key = sub.id) {
+                                val isSelected = state.defaultIncomeCategoryId == sub.id
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 32.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                                        .clickable {
+                                            viewModel.onAction(SettingsAction.OnDefaultIncomeCategoryChange(sub.id))
+                                            showDefaultIncomeCategorySheet = false
+                                        }
+                                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(sub.title, style = MaterialTheme.typography.bodyMedium,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                                    Spacer(Modifier.weight(1f))
+                                    if (isSelected) { Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.primary, CircleShape)) }
+                                }
+                            }
+                        }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+        }
+    }
+
+    // Primary account bottom sheet
+    if (showPrimaryAccountSheet) {
+        MooneyBottomSheet(onDismissRequest = { showPrimaryAccountSheet = false }) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text("Primary Account", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 4.dp))
+                Text(
+                    "This account is pre-selected when adding transactions.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                state.accounts.forEach { account ->
+                    val isSelected = state.primaryAccountId == account.id
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                            .clickable {
+                                viewModel.onAction(SettingsAction.OnPrimaryAccountChange(account.id))
+                                showPrimaryAccountSheet = false
+                            }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(account.emoji, fontSize = 20.sp, modifier = Modifier.padding(end = 12.dp))
+                        Text(
+                            account.title,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(Modifier.weight(1f))
+                        if (isSelected) {
+                            Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
+                        }
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+        }
+    }
+
     if (state.showPaywall) {
         PaywallSheet(
             onDismiss = { viewModel.dismissPaywall() },
@@ -970,6 +1148,21 @@ fun SettingsScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
+                // Premium upsell banner
+                item {
+                    var showPaywallFromBanner by remember { mutableStateOf(false) }
+                    PremiumBanner(
+                        onClick = { showPaywallFromBanner = true }
+                    )
+                    if (showPaywallFromBanner) {
+                        PaywallSheet(
+                            onDismiss = { showPaywallFromBanner = false },
+                            onSubscribe = { showPaywallFromBanner = false },
+                            onRestore = { showPaywallFromBanner = false }
+                        )
+                    }
+                }
+
                 // PREFERENCES section
                 item {
                     SettingsSectionHeader(stringResource(Res.string.preferences))
@@ -984,12 +1177,6 @@ fun SettingsScreen(
                                 ThemeMode.SYSTEM -> stringResource(Res.string.system)
                             },
                             onClick = { showThemeSheet = true }
-                        )
-                        SettingsDivider()
-                        SettingsRow(
-                            title = stringResource(Res.string.default_currency),
-                            value = "${state.defaultCurrency.symbol} ${state.defaultCurrency.name}",
-                            onClick = { showCurrencySheet = true }
                         )
                         SettingsDivider()
                         SettingsRow(
@@ -1013,17 +1200,69 @@ fun SettingsScreen(
                         )
                         SettingsDivider()
                         SettingsRow(
+                            title = stringResource(Res.string.default_currency),
+                            value = "${state.defaultCurrency.symbol} ${state.defaultCurrency.name}",
+                            onClick = { showCurrencySheet = true }
+                        )
+                        SettingsDivider()
+                        SettingsRow(
                             title = stringResource(Res.string.currencies),
                             value = state.userCurrencies.joinToString(", ") { it.code },
                             onClick = { showUserCurrenciesSheet = true }
                         )
-                        SettingsDivider()
+                    }
+                }
+
+                // TRANSACTIONS section
+                item {
+                    SettingsSectionHeader("Transactions")
+                }
+                item {
+                    val defaultExpenseCat = state.allCategories.find { it.id == state.defaultExpenseCategoryId }
+                    val defaultExpenseName = defaultExpenseCat?.let {
+                        "${it.resolveEmoji()} ${it.title}"
+                    } ?: state.defaultExpenseCategoryId
+                    val defaultIncomeCat = state.allCategories.find { it.id == state.defaultIncomeCategoryId }
+                    val defaultIncomeName = defaultIncomeCat?.let {
+                        "${it.resolveEmoji()} ${it.title}"
+                    } ?: state.defaultIncomeCategoryId
+                    val primaryAccountName = state.accounts.find { it.id == state.primaryAccountId }?.let {
+                        "${it.emoji} ${it.title}"
+                    } ?: "None"
+
+                    SettingsGroup {
                         SettingsRow(
-                            title = stringResource(Res.string.categories),
+                            title = "Transaction Categories",
                             value = "${state.allCategories.size}",
                             onClick = { showCategoriesSheet = true }
                         )
                         SettingsDivider()
+                        SettingsRow(
+                            title = "Default Expense",
+                            value = defaultExpenseName,
+                            onClick = { showDefaultExpenseCategorySheet = true }
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            title = "Default Income",
+                            value = defaultIncomeName,
+                            onClick = { showDefaultIncomeCategorySheet = true }
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            title = "Primary Account",
+                            value = primaryAccountName,
+                            onClick = { showPrimaryAccountSheet = true }
+                        )
+                    }
+                }
+
+                // ASSETS section
+                item {
+                    SettingsSectionHeader("Assets")
+                }
+                item {
+                    SettingsGroup {
                         SettingsRow(
                             title = "Asset Categories",
                             value = "${state.assetCategories.size}",
@@ -1077,7 +1316,12 @@ fun SettingsScreen(
                             value = "1.0.0",
                             showChevron = false
                         )
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                        SettingsDivider()
+                        SettingsRow(
+                            title = "Chat with Developer",
+                            onClick = { showFeedbackSheet = true }
+                        )
+                        SettingsDivider()
                         SettingsRow(
                             title = "Privacy Policy",
                             onClick = { uriHandler.openUri("https://andriybobchuk.github.io/Mooney/privacy-policy.html") }
@@ -1088,6 +1332,10 @@ fun SettingsScreen(
                 item { Spacer(modifier = Modifier.height(32.dp)) }
             }
         }
+    }
+
+    if (showFeedbackSheet) {
+        FeedbackBottomSheet(onDismiss = { showFeedbackSheet = false })
     }
 }
 
@@ -1130,7 +1378,13 @@ private fun SettingsRow(
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+        Text(
+            title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1
+        )
+        Spacer(modifier = Modifier.weight(1f))
         if (showLoading) {
             CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
         } else {
@@ -1139,7 +1393,9 @@ private fun SettingsRow(
                     value,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(end = 4.dp)
+                    modifier = Modifier.padding(start = 12.dp, end = 4.dp),
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
             if (showChevron) {
@@ -1177,4 +1433,98 @@ private fun SettingsDivider() {
         color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
         thickness = 0.5.dp
     )
+}
+
+@Composable
+private fun PremiumBanner(onClick: () -> Unit) {
+    val blue = Color(0xFF3562F6)
+    val teal = Color(0xFF4DD0C8)
+
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = Color.Transparent
+    ) {
+        Box {
+            Canvas(modifier = Modifier.matchParentSize()) {
+                val w = size.width
+                val h = size.height
+                // Blue-to-teal diagonal gradient
+                drawRect(
+                    brush = Brush.linearGradient(
+                        colors = listOf(blue, teal),
+                        start = Offset(0f, h),
+                        end = Offset(w, 0f)
+                    )
+                )
+                // Soft white glow top-right for depth
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(Color.White.copy(alpha = 0.15f), Color.Transparent),
+                        center = Offset(w * 0.85f, h * 0.1f),
+                        radius = w * 0.45f
+                    ),
+                    radius = w * 0.45f,
+                    center = Offset(w * 0.85f, h * 0.1f)
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 18.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Mooney",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color.White.copy(alpha = 0.2f)
+                        ) {
+                            Text(
+                                text = "PRO",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = "Unlimited accounts, categories & more",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.85f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color.White
+                ) {
+                    Text(
+                        text = "Upgrade",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = blue,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                    )
+                }
+            }
+        }
+    }
 }

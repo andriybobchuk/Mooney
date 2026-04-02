@@ -1,5 +1,8 @@
 package com.andriybobchuk.mooney.mooney.domain.devtools
 
+import com.andriybobchuk.mooney.core.data.database.PendingTransactionDao
+import com.andriybobchuk.mooney.core.data.database.RecurringTransactionDao
+import com.andriybobchuk.mooney.core.data.database.RecurringTransactionEntity
 import com.andriybobchuk.mooney.mooney.domain.*
 import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Clock
@@ -10,16 +13,20 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 
 class DevToolsManager(
-    private val repository: CoreRepository
+    private val repository: CoreRepository,
+    private val recurringTransactionDao: RecurringTransactionDao,
+    private val pendingTransactionDao: PendingTransactionDao
 ) {
     suspend fun getStats(): DevStats {
         val accounts = repository.getAllAccounts().first().filterNotNull()
         val transactions = repository.getAllTransactions().first().filterNotNull()
         val goals = repository.getAllGoals().first()
+        val recurring = recurringTransactionDao.getAll().first()
         return DevStats(
             accountCount = accounts.size,
             transactionCount = transactions.size,
-            goalCount = goals.size
+            goalCount = goals.size,
+            recurringCount = recurring.size
         )
     }
 
@@ -116,16 +123,66 @@ class DevToolsManager(
         goals.forEach { repository.deleteGoal(it.id) }
     }
 
+    suspend fun clearRecurringTransactions() {
+        recurringTransactionDao.getAll().first().forEach { recurringTransactionDao.delete(it.id) }
+        pendingTransactionDao.getAll().first().forEach { pendingTransactionDao.delete(it.id) }
+    }
+
+    suspend fun populateMockRecurringTransactions() {
+        val accounts = repository.getAllAccounts().first().filterNotNull()
+        val firstAccountId = accounts.firstOrNull()?.id ?: return
+
+        val today = Clock.System.now()
+            .toLocalDateTime(TimeZone.currentSystemDefault()).date
+
+        val recurring = listOf(
+            RecurringTransactionEntity(
+                title = "Rent",
+                subcategoryId = "rent",
+                amount = 3500.0,
+                accountId = firstAccountId,
+                dayOfMonth = 1,
+                frequency = "MONTHLY",
+                createdDate = today.toString(),
+                lastProcessedDate = today.minus(1, DateTimeUnit.MONTH).toString()
+            ),
+            RecurringTransactionEntity(
+                title = "Netflix",
+                subcategoryId = "subscriptions",
+                amount = 49.99,
+                accountId = firstAccountId,
+                dayOfMonth = 15,
+                frequency = "MONTHLY",
+                createdDate = today.toString(),
+                lastProcessedDate = today.minus(1, DateTimeUnit.MONTH).toString()
+            ),
+            RecurringTransactionEntity(
+                title = "Gym",
+                subcategoryId = "sport",
+                amount = 150.0,
+                accountId = firstAccountId,
+                dayOfMonth = 5,
+                frequency = "MONTHLY",
+                createdDate = today.toString(),
+                lastProcessedDate = today.minus(1, DateTimeUnit.MONTH).toString()
+            )
+        )
+
+        recurring.forEach { recurringTransactionDao.upsert(it) }
+    }
+
     suspend fun clearEverything() {
         clearAllTransactions()
         clearAllAccounts()
         clearAllGoals()
+        clearRecurringTransactions()
     }
 
     suspend fun populateEverything() {
         populateMockAccounts()
         populateMockTransactions()
         populateMockGoals()
+        populateMockRecurringTransactions()
     }
 
     private fun LocalDate.withDay(day: Int): LocalDate {
@@ -141,5 +198,6 @@ class DevToolsManager(
 data class DevStats(
     val accountCount: Int,
     val transactionCount: Int,
-    val goalCount: Int
+    val goalCount: Int,
+    val recurringCount: Int = 0
 )

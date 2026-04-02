@@ -1,6 +1,7 @@
 package com.andriybobchuk.mooney.mooney.presentation.settings
 
 import com.andriybobchuk.mooney.core.data.database.AssetCategoryEntity
+import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.UserCurrency
@@ -21,7 +22,11 @@ data class SettingsState(
     val isImporting: Boolean = false,
     val appLanguage: String = "system",
     val showPaywall: Boolean = false,
-    val assetCategories: List<AssetCategoryEntity> = emptyList()
+    val assetCategories: List<AssetCategoryEntity> = emptyList(),
+    val defaultExpenseCategoryId: String = "groceries",
+    val defaultIncomeCategoryId: String = "salary",
+    val accounts: List<Account> = emptyList(),
+    val primaryAccountId: Int? = null
 ) {
     val maxPinnedCategories: Int = 5
     val canAddMorePinned: Boolean = pinnedCategoryIds.size < maxPinnedCategories

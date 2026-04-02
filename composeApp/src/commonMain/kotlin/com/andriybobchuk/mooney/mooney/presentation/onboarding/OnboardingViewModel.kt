@@ -17,19 +17,28 @@ import kotlinx.coroutines.launch
 import kotlin.coroutines.cancellation.CancellationException
 
 enum class OnboardingPage {
-    CURRENCY_PICKER,
+    CURRENCY_SELECTION,
+    BASE_CURRENCY,
     WELCOME
 }
 
 data class OnboardingState(
-    val page: OnboardingPage = OnboardingPage.CURRENCY_PICKER,
-    val selectedCurrency: Currency? = null,
+    val page: OnboardingPage = OnboardingPage.CURRENCY_SELECTION,
+    val selectedCurrencies: Set<Currency> = emptySet(),
+    val baseCurrency: Currency? = null,
     val currencies: List<Currency> = Currency.entries,
     val isLoading: Boolean = false
-)
+) {
+    val maxCurrencies: Int = 6
+    val canContinueToBaseCurrency: Boolean = selectedCurrencies.isNotEmpty()
+    val canGetStarted: Boolean = baseCurrency != null
+}
 
 sealed interface OnboardingAction {
-    data class SelectCurrency(val currency: Currency) : OnboardingAction
+    data class ToggleCurrency(val currency: Currency) : OnboardingAction
+    data class SelectBaseCurrency(val currency: Currency) : OnboardingAction
+    data object ContinueToBaseCurrency : OnboardingAction
+    data object BackToCurrencySelection : OnboardingAction
     data object GetStarted : OnboardingAction
     data object EnterApp : OnboardingAction
 }
@@ -51,8 +60,20 @@ class OnboardingViewModel(
 
     fun onAction(action: OnboardingAction) {
         when (action) {
-            is OnboardingAction.SelectCurrency -> {
-                _state.update { it.copy(selectedCurrency = action.currency) }
+            is OnboardingAction.ToggleCurrency -> toggleCurrency(action.currency)
+            is OnboardingAction.SelectBaseCurrency -> {
+                _state.update { it.copy(baseCurrency = action.currency) }
+            }
+            is OnboardingAction.ContinueToBaseCurrency -> {
+                val selected = _state.value.selectedCurrencies
+                if (selected.isNotEmpty()) {
+                    // Auto-select base currency if only one selected
+                    val autoBase = if (selected.size == 1) selected.first() else _state.value.baseCurrency
+                    _state.update { it.copy(page = OnboardingPage.BASE_CURRENCY, baseCurrency = autoBase) }
+                }
+            }
+            is OnboardingAction.BackToCurrencySelection -> {
+                _state.update { it.copy(page = OnboardingPage.CURRENCY_SELECTION) }
             }
             is OnboardingAction.GetStarted -> completeOnboarding()
             is OnboardingAction.EnterApp -> {
@@ -63,14 +84,31 @@ class OnboardingViewModel(
         }
     }
 
+    private fun toggleCurrency(currency: Currency) {
+        _state.update { state ->
+            val current = state.selectedCurrencies
+            val updated = if (current.contains(currency)) {
+                current - currency
+            } else if (current.size < state.maxCurrencies) {
+                current + currency
+            } else {
+                current // at max
+            }
+            // If base currency was deselected, clear it
+            val newBase = if (state.baseCurrency != null && !updated.contains(state.baseCurrency)) null else state.baseCurrency
+            state.copy(selectedCurrencies = updated, baseCurrency = newBase)
+        }
+    }
+
     private fun completeOnboarding() {
-        val currency = _state.value.selectedCurrency ?: return
+        val base = _state.value.baseCurrency ?: return
+        val selected = _state.value.selectedCurrencies
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
-                completeOnboardingUseCase(currency)
-                GlobalConfig.baseCurrency = currency
-                analyticsTracker.trackEvent(AnalyticsEvent.CompleteOnboarding(currency.name))
+                completeOnboardingUseCase(base, selected.toList())
+                GlobalConfig.baseCurrency = base
+                analyticsTracker.trackEvent(AnalyticsEvent.CompleteOnboarding(base.name))
                 _state.update { it.copy(page = OnboardingPage.WELCOME, isLoading = false) }
             } catch (e: CancellationException) {
                 throw e

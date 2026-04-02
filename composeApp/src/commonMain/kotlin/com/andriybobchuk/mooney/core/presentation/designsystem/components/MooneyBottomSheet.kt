@@ -2,7 +2,6 @@ package com.andriybobchuk.mooney.core.presentation.designsystem.components
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -35,6 +34,7 @@ fun MooneyBottomSheet(
         containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp,
         scrimColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f),
+        contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
         content = content
     )
 }

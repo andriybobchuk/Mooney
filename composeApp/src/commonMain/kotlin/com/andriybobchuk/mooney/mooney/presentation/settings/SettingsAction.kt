@@ -34,6 +34,13 @@ sealed interface SettingsAction {
         val parentId: String?
     ) : SettingsAction
 
+    // Default categories
+    data class OnDefaultExpenseCategoryChange(val categoryId: String) : SettingsAction
+    data class OnDefaultIncomeCategoryChange(val categoryId: String) : SettingsAction
+
+    // Primary account
+    data class OnPrimaryAccountChange(val accountId: Int) : SettingsAction
+
     // Asset Categories
     data class OnDeleteAssetCategory(val categoryId: String) : SettingsAction
     data class OnAddAssetCategory(val title: String, val isLiability: Boolean = false) : SettingsAction

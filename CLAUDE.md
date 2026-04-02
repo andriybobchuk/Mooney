@@ -134,6 +134,25 @@ Database `mooney.db` is at **version 8** with **7 entities**. User has real fina
 
 ---
 
+## Agents (`.claude/agents/`)
+
+Use these agents by spawning them when the task matches. They have Mooney-specific context baked in.
+
+| Agent | When to Use |
+|-------|-------------|
+| **test-writer** | After writing use cases or ViewModels — spawn to write unit tests |
+| **ui-builder** | When building UI from Figma designs or feature specs |
+| **aso** | App Store / Google Play listing optimization, keyword research, screenshot strategy |
+| **product-manager** | Feature prioritization, roadmap decisions, premium conversion strategy |
+| **feedback-synthesizer** | Analyzing app reviews, user feedback, or competitor reviews |
+| **growth-hacker** | User acquisition strategy, viral mechanics, launch planning |
+| **content-creator** | Marketing copy, app store descriptions, social media posts, release notes |
+| **linkedin-creator** | LinkedIn posts for Andriy's personal brand (building in public, KMP expertise) |
+| **legal-compliance** | Privacy policy review, GDPR/CCPA compliance, App Store policy compliance |
+| **reality-checker** | Pre-release quality gate — build verification, code review, regression check |
+
+---
+
 ## Key Files
 
 | File | Purpose |

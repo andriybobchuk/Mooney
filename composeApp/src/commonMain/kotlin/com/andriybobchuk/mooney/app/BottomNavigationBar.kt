@@ -38,7 +38,7 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
         add(Triple(BottomNavigationItem(stringResource(Res.string.nav_assets), Icons.AccountsIcon()), Route.Accounts, 1))
         if (FeatureFlags.exchangeEnabled) add(Triple(BottomNavigationItem(stringResource(Res.string.nav_exchange), Icons.ExchangeIcon()), Route.Exchange, 2))
         add(Triple(BottomNavigationItem(stringResource(Res.string.nav_analytics), Icons.StatsIcon()), Route.Analytics, 3))
-        if (FeatureFlags.goalsEnabled) add(Triple(BottomNavigationItem(stringResource(Res.string.nav_goals), Icons.GoalsIcon()), Route.Goals, 4))
+        // Goals moved to Assets top bar
     }
 
     Column(

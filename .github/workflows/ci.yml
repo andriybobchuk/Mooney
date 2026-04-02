@@ -4,6 +4,9 @@ on:
   push:
     branches: ["*"]
 
+env:
+  SECRETS_PATH: composeApp/src/commonMain/kotlin/com/andriybobchuk/mooney/core/data/Secrets.kt
+
 jobs:
   lint:
     name: Detekt Lint
@@ -15,6 +18,14 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Generate Secrets.kt
+        run: |
+          cat > $SECRETS_PATH <<'KOTLIN'
+          package com.andriybobchuk.mooney.core.data
+          object Secrets {
+              const val EXCHANGE_RATE_API_KEY = "${{ secrets.EXCHANGE_RATE_API_KEY }}"
+          }
+          KOTLIN
       - run: ./gradlew detekt
 
   build:
@@ -28,6 +39,14 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Generate Secrets.kt
+        run: |
+          cat > $SECRETS_PATH <<'KOTLIN'
+          package com.andriybobchuk.mooney.core.data
+          object Secrets {
+              const val EXCHANGE_RATE_API_KEY = "${{ secrets.EXCHANGE_RATE_API_KEY }}"
+          }
+          KOTLIN
       - run: ./gradlew :composeApp:assembleDebug
 
   test:
@@ -41,6 +60,14 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Generate Secrets.kt
+        run: |
+          cat > $SECRETS_PATH <<'KOTLIN'
+          package com.andriybobchuk.mooney.core.data
+          object Secrets {
+              const val EXCHANGE_RATE_API_KEY = "${{ secrets.EXCHANGE_RATE_API_KEY }}"
+          }
+          KOTLIN
       - run: ./gradlew :composeApp:testDebugUnitTest
       - run: ./gradlew koverHtmlReport
         if: always()
@@ -64,6 +91,15 @@ jobs:
           java-version: '17'
 
       - uses: gradle/actions/setup-gradle@v4
+
+      - name: Generate Secrets.kt
+        run: |
+          cat > $SECRETS_PATH <<'KOTLIN'
+          package com.andriybobchuk.mooney.core.data
+          object Secrets {
+              const val EXCHANGE_RATE_API_KEY = "${{ secrets.EXCHANGE_RATE_API_KEY }}"
+          }
+          KOTLIN
 
       - uses: ruby/setup-ruby@v1
         with:

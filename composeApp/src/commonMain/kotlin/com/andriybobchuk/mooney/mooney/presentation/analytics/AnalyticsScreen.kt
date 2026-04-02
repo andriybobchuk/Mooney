@@ -25,10 +25,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Share
@@ -69,7 +67,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.presentation.Toolbars
-import com.andriybobchuk.mooney.core.presentation.designsystem.components.FeedbackBottomSheet
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MeshGradientBackground
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
@@ -100,8 +97,6 @@ fun AnalyticsScreen(
 ) {
     val state by viewModel.state.collectAsState()
     var selectedTimePeriod by remember { mutableStateOf(TimePeriod.SIX_MONTHS) }
-    var showFeedbackSheet by remember { mutableStateOf(false) }
-
     val hasAnyData = state.transactionsForMonth.filterNotNull().isNotEmpty() ||
         state.historicalMetrics.any { it.revenue > 0 || it.taxes > 0 || it.operatingCosts > 0 || it.netIncome != 0.0 }
     val isEmptyState = !hasAnyData && !state.isLoading
@@ -123,11 +118,6 @@ fun AnalyticsScreen(
                 },
                 scrollBehavior = scrollBehavior,
                 actions = listOf(
-                    Toolbars.ToolBarAction(
-                        icon = Icons.Outlined.Email,
-                        contentDescription = stringResource(Res.string.feedback),
-                        onClick = { showFeedbackSheet = true }
-                    ),
                     Toolbars.ToolBarAction(
                         icon = Icons.Outlined.Settings,
                         contentDescription = stringResource(Res.string.settings),
@@ -303,9 +293,6 @@ fun AnalyticsScreen(
         }
     )
 
-    if (showFeedbackSheet) {
-        FeedbackBottomSheet(onDismiss = { showFeedbackSheet = false })
-    }
 }
 
 

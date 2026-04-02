@@ -33,7 +33,9 @@ class DataStorePreferencesRepository(
                 notificationsEnabled = preferences[PreferencesKeys.NOTIFICATIONS_ENABLED] ?: true,
                 version = preferences[PreferencesKeys.PREFERENCES_VERSION] ?: 1,
                 appLanguage = preferences[PreferencesKeys.APP_LANGUAGE] ?: "system",
-                onboardingCompleted = preferences[PreferencesKeys.ONBOARDING_COMPLETED] ?: false
+                onboardingCompleted = preferences[PreferencesKeys.ONBOARDING_COMPLETED] ?: false,
+                defaultExpenseCategory = preferences[PreferencesKeys.DEFAULT_EXPENSE_CATEGORY] ?: "groceries",
+                defaultIncomeCategory = preferences[PreferencesKeys.DEFAULT_INCOME_CATEGORY] ?: "salary"
             )
         }
     }
@@ -71,6 +73,18 @@ class DataStorePreferencesRepository(
     override suspend fun updateNotificationsEnabled(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.NOTIFICATIONS_ENABLED] = enabled
+        }
+    }
+
+    override suspend fun updateDefaultExpenseCategory(categoryId: String) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.DEFAULT_EXPENSE_CATEGORY] = categoryId
+        }
+    }
+
+    override suspend fun updateDefaultIncomeCategory(categoryId: String) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.DEFAULT_INCOME_CATEGORY] = categoryId
         }
     }
 

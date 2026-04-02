@@ -8,10 +8,15 @@ import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.Transaction
 import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
 import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
+import com.andriybobchuk.mooney.core.data.database.PendingTransactionDao
+import com.andriybobchuk.mooney.core.data.database.PendingTransactionEntity
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
 import com.andriybobchuk.mooney.mooney.domain.usecase.settings.GetPinnedCategoriesUseCase
 import com.andriybobchuk.mooney.mooney.domain.AccountWithConversion
 import com.andriybobchuk.mooney.mooney.domain.MonthKey
+import com.andriybobchuk.mooney.mooney.domain.RecurringSchedule
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -33,6 +38,8 @@ data class TransactionState(
     val total: Double = 0.0,
     val totalCurrency: Currency = GlobalConfig.baseCurrency,
     val dailyTotals: Map<Int, Double> = emptyMap(),
+    val pendingTransactions: List<PendingTransactionEntity> = emptyList(),
+    val pendingCount: Int = 0,
     val isLoading: Boolean = false,
     val isError: Boolean = false
 )
@@ -51,6 +58,9 @@ class TransactionViewModel(
     private val getPinnedCategoriesUseCase: GetPinnedCategoriesUseCase,
     private val filterTransactionsByMonthUseCase: FilterTransactionsByMonthUseCase,
     private val calculateDailyTotalsMapUseCase: CalculateDailyTotalsMapUseCase,
+    private val pendingTransactionDao: PendingTransactionDao,
+    private val acceptPendingTransactionUseCase: AcceptPendingTransactionUseCase,
+    private val createRecurringFromTransactionUseCase: CreateRecurringFromTransactionUseCase,
     private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
 
@@ -95,6 +105,13 @@ class TransactionViewModel(
 
     init {
         loadDataForBottomSheet()
+        observePendingTransactions()
+    }
+
+    private fun observePendingTransactions() {
+        pendingTransactionDao.getAllPending().onEach { pending ->
+            _uiState.update { it.copy(pendingTransactions = pending, pendingCount = pending.size) }
+        }.launchIn(viewModelScope)
     }
 
     private fun loadTotal() {
@@ -172,5 +189,49 @@ class TransactionViewModel(
     suspend fun getDailyTotalForMonth(date: kotlinx.datetime.LocalDate): Double {
         val allTransactions = getTransactionsUseCase().first().filterNotNull()
         return calculateDailyTotalUseCase(allTransactions, date)
+    }
+
+    fun acceptPendingTransaction(pending: PendingTransactionEntity) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val account = getAccountsUseCase(pending.accountId) ?: return@launch
+                val category = getCategoriesUseCase(pending.subcategoryId) ?: return@launch
+                acceptPendingTransactionUseCase(pending, account, category)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) { }
+        }
+    }
+
+    fun skipPendingTransaction(pendingId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            pendingTransactionDao.updateStatus(pendingId, "SKIPPED")
+        }
+    }
+
+    fun acceptAllPending() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val pending = _uiState.value.pendingTransactions
+            for (p in pending) {
+                try {
+                    val account = getAccountsUseCase(p.accountId)
+                    val category = getCategoriesUseCase(p.subcategoryId)
+                    if (account != null && category != null) {
+                        acceptPendingTransactionUseCase(p, account, category)
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) { }
+            }
+        }
+    }
+
+    fun createRecurringFromTransaction(
+        transaction: Transaction,
+        schedule: RecurringSchedule
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            createRecurringFromTransactionUseCase(transaction, schedule)
+        }
     }
 }

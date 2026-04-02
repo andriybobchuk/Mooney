@@ -5,9 +5,12 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -17,16 +20,22 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -36,6 +45,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,6 +54,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -68,12 +79,15 @@ import mooney.composeapp.generated.resources.mooney_icon
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.roundToInt
 
+private const val PAGER_PAGE_COUNT = 3 // currency selection, base currency, welcome
+
 @Composable
 fun OnboardingScreen(
     viewModel: OnboardingViewModel,
     onNavigateToMain: () -> Unit
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -83,45 +97,159 @@ fun OnboardingScreen(
         }
     }
 
-    // Controlled fade: entrance + page transitions
-    val contentAlpha = remember { Animatable(0f) }
-    var displayedPage by remember { mutableStateOf(state.page) }
+    val pagerState = rememberPagerState(pageCount = { PAGER_PAGE_COUNT })
 
-    // Initial fade-in
-    LaunchedEffect(Unit) {
-        contentAlpha.animateTo(1f, tween(800, easing = EaseOut))
+    // Sync pager with ViewModel state
+    LaunchedEffect(state.page) {
+        val targetPage = state.page.ordinal
+        if (pagerState.currentPage != targetPage) {
+            pagerState.animateScrollToPage(targetPage)
+        }
     }
 
-    // Page transition: fade out → swap content → fade in
-    LaunchedEffect(state.page) {
-        if (state.page != displayedPage) {
-            contentAlpha.animateTo(0f, tween(400, easing = EaseInOut))
-            displayedPage = state.page
-            contentAlpha.animateTo(1f, tween(600, easing = EaseOut))
+    // Sync ViewModel with pager swipes
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.settledPage }.collect { page ->
+            val targetPage = OnboardingPage.entries[page]
+            if (state.page != targetPage) {
+                when (targetPage) {
+                    OnboardingPage.CURRENCY_SELECTION ->
+                        viewModel.onAction(OnboardingAction.BackToCurrencySelection)
+                    OnboardingPage.BASE_CURRENCY ->
+                        if (state.canContinueToBaseCurrency) {
+                            viewModel.onAction(OnboardingAction.ContinueToBaseCurrency)
+                        } else {
+                            // Can't go forward without currencies — snap back
+                            pagerState.animateScrollToPage(0)
+                        }
+                    OnboardingPage.WELCOME -> {} // Welcome reached via GetStarted only
+                }
+            }
         }
+    }
+
+    // Block swiping forward to welcome page (only reachable via button)
+    // and block swiping forward to base currency without selections
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.targetPage }.collect { target ->
+            if (target == 2 && state.page != OnboardingPage.WELCOME) {
+                // Block swipe to welcome — snap back
+                pagerState.animateScrollToPage(1)
+            }
+            if (target == 1 && !state.canContinueToBaseCurrency) {
+                pagerState.animateScrollToPage(0)
+            }
+        }
+    }
+
+    // Initial fade-in
+    val contentAlpha = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        contentAlpha.animateTo(1f, tween(800, easing = EaseOut))
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
         MeshGradientBackground(prominent = true)
 
-        Box(modifier = Modifier.fillMaxSize().alpha(contentAlpha.value)) {
-            when (displayedPage) {
-                OnboardingPage.CURRENCY_PICKER -> CurrencyPickerContent(
-                    state = state,
-                    onAction = viewModel::onAction
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .alpha(contentAlpha.value)
+        ) {
+            // Segmented progress (only for setup pages, not welcome)
+            val isOnWelcome = pagerState.currentPage == 2 ||
+                (pagerState.currentPage == 1 && pagerState.currentPageOffsetFraction > 0.5f)
+            if (!isOnWelcome) {
+                OnboardingProgressBar(
+                    currentStep = pagerState.currentPage,
+                    totalSteps = 2,
+                    pagerOffset = pagerState.currentPageOffsetFraction
                 )
-                OnboardingPage.WELCOME -> WelcomeContent(
-                    onSwipeUp = { viewModel.onAction(OnboardingAction.EnterApp) }
-                )
+            }
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f),
+                userScrollEnabled = state.page != OnboardingPage.WELCOME // disable swiping on welcome
+            ) { page ->
+                when (page) {
+                    0 -> CurrencySelectionContent(
+                        state = state,
+                        onContinue = {
+                            viewModel.onAction(OnboardingAction.ContinueToBaseCurrency)
+                        },
+                        onToggle = { viewModel.onAction(OnboardingAction.ToggleCurrency(it)) }
+                    )
+                    1 -> BaseCurrencyContent(
+                        state = state,
+                        onSelect = { viewModel.onAction(OnboardingAction.SelectBaseCurrency(it)) },
+                        onGetStarted = { viewModel.onAction(OnboardingAction.GetStarted) }
+                    )
+                    2 -> WelcomeContent(
+                        onSwipeUp = { viewModel.onAction(OnboardingAction.EnterApp) }
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun CurrencyPickerContent(
+private fun OnboardingProgressBar(
+    currentStep: Int,
+    totalSteps: Int,
+    pagerOffset: Float
+) {
+    val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = topInset + 16.dp)
+            .padding(horizontal = 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        repeat(totalSteps) { index ->
+            val fillFraction = when {
+                index < currentStep -> 1f
+                index == currentStep -> (1f + pagerOffset).coerceIn(0f, 1f)
+                index == currentStep + 1 && pagerOffset > 0f -> pagerOffset.coerceIn(0f, 1f)
+                else -> 0f
+            }
+            val animatedFill by animateFloatAsState(
+                targetValue = fillFraction,
+                animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+            )
+            // Soft foreground: onBackground at 55% — visible on both light and dark,
+            // feels integrated with the content rather than fighting for attention
+            val activeColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
+            val inactiveColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.12f)
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(5.dp)
+                    .clip(RoundedCornerShape(2.5.dp))
+            ) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawRect(color = inactiveColor)
+                }
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawRect(
+                        color = activeColor,
+                        size = size.copy(width = size.width * animatedFill)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CurrencySelectionContent(
     state: OnboardingState,
-    onAction: (OnboardingAction) -> Unit
+    onContinue: () -> Unit,
+    onToggle: (Currency) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -129,7 +257,7 @@ private fun CurrencyPickerContent(
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.weight(0.12f))
+        Spacer(modifier = Modifier.weight(0.06f))
 
         Text(
             text = "Welcome to Mooney",
@@ -141,12 +269,12 @@ private fun CurrencyPickerContent(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Choose your primary currency",
+            text = "Choose currencies you use (up to ${state.maxCurrencies})",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
         )
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
@@ -156,10 +284,13 @@ private fun CurrencyPickerContent(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(state.currencies) { currency ->
+                val isSelected = state.selectedCurrencies.contains(currency)
+                val canSelect = isSelected || state.selectedCurrencies.size < state.maxCurrencies
                 CurrencyChip(
                     currency = currency,
-                    selected = currency == state.selectedCurrency,
-                    onClick = { onAction(OnboardingAction.SelectCurrency(currency)) }
+                    selected = isSelected,
+                    enabled = canSelect,
+                    onClick = { onToggle(currency) }
                 )
             }
         }
@@ -167,11 +298,88 @@ private fun CurrencyPickerContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { onAction(OnboardingAction.GetStarted) },
+            onClick = onContinue,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            enabled = state.selectedCurrency != null && !state.isLoading,
+            enabled = state.canContinueToBaseCurrency,
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.inverseSurface,
+                contentColor = MaterialTheme.colorScheme.inverseOnSurface,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        ) {
+            Text(
+                text = "Continue",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+@Composable
+private fun BaseCurrencyContent(
+    state: OnboardingState,
+    onSelect: (Currency) -> Unit,
+    onGetStarted: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.weight(0.06f))
+
+        Text(
+            text = "Primary Currency",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "All totals and analytics will be shown in this currency",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        val selectedList = state.selectedCurrencies.toList()
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(if (selectedList.size <= 3) selectedList.size.coerceAtLeast(1) else 3),
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(selectedList) { currency ->
+                CurrencyChip(
+                    currency = currency,
+                    selected = currency == state.baseCurrency,
+                    enabled = true,
+                    onClick = { onSelect(currency) }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = onGetStarted,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            enabled = state.canGetStarted && !state.isLoading,
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.inverseSurface,
@@ -187,7 +395,7 @@ private fun CurrencyPickerContent(
             )
         }
 
-        Spacer(modifier = Modifier.weight(0.06f))
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }
 
@@ -199,11 +407,9 @@ private fun WelcomeContent(
     val density = LocalDensity.current
     var swiped by remember { mutableStateOf(false) }
 
-    // Swipe-up animation: slide the whole page up + fade out
     val slideOffset = remember { Animatable(0f) }
     val swipeAlpha = remember { Animatable(1f) }
 
-    // Cumulative drag tracking
     var dragAccumulator by remember { mutableFloatStateOf(0f) }
     val swipeThresholdPx = with(density) { 100.dp.toPx() }
 
@@ -220,7 +426,6 @@ private fun WelcomeContent(
                     onVerticalDrag = { _, dragAmount ->
                         if (!swiped && dragAmount < 0) {
                             dragAccumulator += dragAmount
-                            // Live drag feedback — subtle upward pull
                             scope.launch {
                                 slideOffset.snapTo(dragAccumulator * 0.3f)
                                 swipeAlpha.snapTo(
@@ -233,7 +438,6 @@ private fun WelcomeContent(
                         if (!swiped && dragAccumulator < -swipeThresholdPx) {
                             swiped = true
                             scope.launch {
-                                // Animate the rest of the slide out
                                 launch {
                                     slideOffset.animateTo(
                                         -swipeThresholdPx * 4f,
@@ -244,7 +448,6 @@ private fun WelcomeContent(
                                 onSwipeUp()
                             }
                         } else if (!swiped) {
-                            // Snap back
                             scope.launch {
                                 launch { slideOffset.animateTo(0f, tween(300, easing = EaseOut)) }
                                 swipeAlpha.animateTo(1f, tween(300, easing = EaseOut))
@@ -258,7 +461,6 @@ private fun WelcomeContent(
     ) {
         Spacer(modifier = Modifier.weight(0.3f))
 
-        // Icon with mesh-like accent glow
         Box(contentAlignment = Alignment.Center) {
             IconGlow()
             Image(
@@ -316,7 +518,6 @@ private fun IconGlow() {
         val cx = size.width / 2f
         val cy = size.height / 2f
 
-        // Off-center blob top-right
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(accent.copy(alpha = 0.35f), transparent),
@@ -327,7 +528,6 @@ private fun IconGlow() {
             center = Offset(cx + cx * 0.3f, cy - cy * 0.25f)
         )
 
-        // Center warm blob
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(accent.copy(alpha = 0.25f), transparent),
@@ -338,7 +538,6 @@ private fun IconGlow() {
             center = Offset(cx, cy)
         )
 
-        // Off-center blob bottom-left
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(accent.copy(alpha = 0.30f), transparent),
@@ -379,23 +578,28 @@ private fun SwipeUpIndicator() {
 private fun CurrencyChip(
     currency: Currency,
     selected: Boolean,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
     val backgroundColor by animateColorAsState(
         targetValue = if (selected) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = if (enabled) 0.5f else 0.25f),
         animationSpec = tween(250, easing = EaseOut)
     )
-    val textColor = if (selected) MaterialTheme.colorScheme.onPrimary
-    else MaterialTheme.colorScheme.onSurface
+    val textColor = when {
+        selected -> MaterialTheme.colorScheme.onPrimary
+        enabled -> MaterialTheme.colorScheme.onSurface
+        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+    }
     val borderColor by animateColorAsState(
         targetValue = if (selected) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+        else MaterialTheme.colorScheme.outline.copy(alpha = if (enabled) 0.3f else 0.1f),
         animationSpec = tween(250, easing = EaseOut)
     )
 
     Surface(
         onClick = onClick,
+        enabled = enabled,
         modifier = Modifier.height(64.dp),
         shape = RoundedCornerShape(12.dp),
         color = backgroundColor,

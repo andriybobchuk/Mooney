@@ -16,4 +16,6 @@ object PreferencesKeys {
     val ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
     val IS_PREMIUM = booleanPreferencesKey("is_premium")
     val CUSTOM_CATEGORY_COUNT = intPreferencesKey("custom_category_count")
+    val DEFAULT_EXPENSE_CATEGORY = stringPreferencesKey("default_expense_category")
+    val DEFAULT_INCOME_CATEGORY = stringPreferencesKey("default_income_category")
 }

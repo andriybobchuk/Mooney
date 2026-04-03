@@ -12,11 +12,28 @@ platform :ios do
       duration: 1200,
     )
 
+    # Create a temporary keychain for CI so codesign doesn't hang
+    if is_ci
+      create_keychain(
+        name: "ci_keychain",
+        password: "ci_password",
+        default_keychain: true,
+        unlock: true,
+        timeout: 3600,
+        lock_when_sleeps: false,
+      )
+    end
+
     # Fetch signing certificates and profiles
+    keychain_name = is_ci ? "ci_keychain" : nil
+    keychain_password = is_ci ? "ci_password" : nil
+
     match(
       type: "appstore",
       readonly: is_ci,
       api_key: api_key,
+      keychain_name: keychain_name,
+      keychain_password: keychain_password,
     )
 
     # Disable automatic signing for CI
@@ -42,6 +59,7 @@ platform :ios do
       destination: "generic/platform=iOS",
       clean: false,
       export_method: "app-store",
+      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain ci_keychain'",
       export_options: {
         provisioningProfiles: {
           "com.andriybobchuk.mooney" => "match AppStore com.andriybobchuk.mooney",
@@ -54,5 +72,10 @@ platform :ios do
       api_key: api_key,
       skip_waiting_for_build_processing: true,
     )
+
+    # Clean up keychain
+    if is_ci
+      delete_keychain(name: "ci_keychain")
+    end
   end
 end

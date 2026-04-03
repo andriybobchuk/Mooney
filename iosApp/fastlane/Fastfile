@@ -39,6 +39,8 @@ platform :ios do
     build_app(
       project: "iosApp.xcodeproj",
       scheme: "iosApp",
+      destination: "generic/platform=iOS",
+      clean: false,
       export_method: "app-store",
       export_options: {
         provisioningProfiles: {

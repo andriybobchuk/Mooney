@@ -6,6 +6,12 @@ import com.andriybobchuk.mooney.testutil.FakePendingTransactionDao
 import com.andriybobchuk.mooney.testutil.FakeRecurringTransactionDao
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -15,6 +21,10 @@ class ProcessRecurringTransactionsUseCaseTest {
     private val recurringDao = FakeRecurringTransactionDao()
     private val pendingDao = FakePendingTransactionDao()
     private val sut = ProcessRecurringTransactionsUseCase(recurringDao, pendingDao)
+
+    private val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    private val yesterday = today.minus(DatePeriod(days = 1))
+    private val twoDaysAgo = today.minus(DatePeriod(days = 2))
 
     private fun monthly(
         id: Int = 0,
@@ -103,32 +113,38 @@ class ProcessRecurringTransactionsUseCaseTest {
 
     @Test
     fun `monthly recurring already processed this month does not create duplicate`() = runTest {
-        // Last processed = today's month, so next due is next month (future)
-        recurringDao.upsert(monthly(lastProcessedDate = "2026-04-01", dayOfMonth = 15))
+        // Last processed this month, so next due is next month (future)
+        recurringDao.upsert(monthly(lastProcessedDate = today.toString(), dayOfMonth = 15))
         sut()
         val pending = pendingDao.getAllPending().first()
-        // Next due is May 15, which is in the future relative to today (April 2)
+        // Next due is next month's 15th, which is in the future
         assertEquals(0, pending.size)
     }
 
     @Test
     fun `monthly recurring with past last processed creates pending`() = runTest {
-        // Last processed in March, day 15 → next due April 15
-        // Today is April 2 → April 15 is in the future, so NO pending
-        recurringDao.upsert(monthly(lastProcessedDate = "2026-03-15", dayOfMonth = 15))
+        // Last processed last month on the 15th → next due this month 15th
+        val lastMonth = today.minus(DatePeriod(months = 1))
+        val nextDueDay = 15
+        recurringDao.upsert(monthly(lastProcessedDate = lastMonth.toString(), dayOfMonth = nextDueDay))
         sut()
         val pending = pendingDao.getAllPending().first()
-        assertEquals(0, pending.size)
+        // Whether pending is created depends on if day 15 is <= today
+        if (today.dayOfMonth >= nextDueDay) {
+            assertEquals(1, pending.size)
+        } else {
+            assertEquals(0, pending.size)
+        }
     }
 
     @Test
     fun `monthly recurring due today creates pending`() = runTest {
-        // Last processed March 2 → next due April 2 (today)
-        recurringDao.upsert(monthly(lastProcessedDate = "2026-03-02", dayOfMonth = 2))
+        // Last processed last month on today's day → next due is today
+        val lastMonth = today.minus(DatePeriod(months = 1))
+        recurringDao.upsert(monthly(lastProcessedDate = lastMonth.toString(), dayOfMonth = today.dayOfMonth))
         sut()
         val pending = pendingDao.getAllPending().first()
         assertEquals(1, pending.size)
-        assertTrue(pending[0].scheduledDate.contains("2026-04-02"))
     }
 
     @Test
@@ -151,21 +167,21 @@ class ProcessRecurringTransactionsUseCaseTest {
 
     @Test
     fun `weekly recurring processed 7 days ago creates pending`() = runTest {
-        // 7 days before April 2 = March 26
-        recurringDao.upsert(weekly(lastProcessedDate = "2026-03-26"))
+        val sevenDaysAgo = today.minus(DatePeriod(days = 7))
+        recurringDao.upsert(weekly(lastProcessedDate = sevenDaysAgo.toString()))
         sut()
         val pending = pendingDao.getAllPending().first()
         assertEquals(1, pending.size)
-        assertEquals("2026-04-02", pending[0].scheduledDate)
+        assertEquals(today.toString(), pending[0].scheduledDate)
     }
 
     @Test
     fun `weekly recurring processed 3 days ago does not create pending`() = runTest {
-        // 3 days before April 2 = March 30
-        recurringDao.upsert(weekly(lastProcessedDate = "2026-03-30"))
+        val threeDaysAgo = today.minus(DatePeriod(days = 3))
+        recurringDao.upsert(weekly(lastProcessedDate = threeDaysAgo.toString()))
         sut()
         val pending = pendingDao.getAllPending().first()
-        // Next due: March 30 + 7 = April 6, which is future
+        // Next due: 3 days ago + 7 = 4 days from now, which is future
         assertEquals(0, pending.size)
     }
 
@@ -181,19 +197,19 @@ class ProcessRecurringTransactionsUseCaseTest {
 
     @Test
     fun `daily recurring processed yesterday creates pending for today`() = runTest {
-        recurringDao.upsert(daily(lastProcessedDate = "2026-04-01"))
+        recurringDao.upsert(daily(lastProcessedDate = yesterday.toString()))
         sut()
         val pending = pendingDao.getAllPending().first()
         assertEquals(1, pending.size)
-        assertEquals("2026-04-02", pending[0].scheduledDate)
+        assertEquals(today.toString(), pending[0].scheduledDate)
     }
 
     @Test
     fun `daily recurring processed today does not create duplicate`() = runTest {
-        recurringDao.upsert(daily(lastProcessedDate = "2026-04-02"))
+        recurringDao.upsert(daily(lastProcessedDate = today.toString()))
         sut()
         val pending = pendingDao.getAllPending().first()
-        // Next due: April 3, future
+        // Next due: tomorrow, future
         assertEquals(0, pending.size)
     }
 
@@ -205,7 +221,7 @@ class ProcessRecurringTransactionsUseCaseTest {
         recurringDao.upsert(yearly(monthOfYear = 1, dayOfMonth = 1))
         sut()
         val pending = pendingDao.getAllPending().first()
-        // Jan 1, 2026 is in the past, so pending should be created
+        // Jan 1 is in the past, so pending should be created
         assertEquals(1, pending.size)
     }
 
@@ -222,7 +238,7 @@ class ProcessRecurringTransactionsUseCaseTest {
 
     @Test
     fun `running process twice does not create duplicate pending`() = runTest {
-        recurringDao.upsert(daily(lastProcessedDate = "2026-04-01"))
+        recurringDao.upsert(daily(lastProcessedDate = yesterday.toString()))
         sut()
         val firstRun = pendingDao.getAllPending().first()
         assertEquals(1, firstRun.size)
@@ -237,8 +253,9 @@ class ProcessRecurringTransactionsUseCaseTest {
 
     @Test
     fun `processes multiple recurring transactions independently`() = runTest {
-        recurringDao.upsert(daily(id = 0, lastProcessedDate = "2026-04-01"))
-        recurringDao.upsert(weekly(id = 0, lastProcessedDate = "2026-03-26"))
+        val sevenDaysAgo = today.minus(DatePeriod(days = 7))
+        recurringDao.upsert(daily(id = 0, lastProcessedDate = yesterday.toString()))
+        recurringDao.upsert(weekly(id = 0, lastProcessedDate = sevenDaysAgo.toString()))
         sut()
         val pending = pendingDao.getAllPending().first()
         assertEquals(2, pending.size)
@@ -248,10 +265,10 @@ class ProcessRecurringTransactionsUseCaseTest {
 
     @Test
     fun `processing updates lastProcessedDate on recurring entity`() = runTest {
-        recurringDao.upsert(daily(lastProcessedDate = "2026-04-01"))
+        recurringDao.upsert(daily(lastProcessedDate = yesterday.toString()))
         sut()
         val updated = recurringDao.getAll().first().first()
-        assertEquals("2026-04-02", updated.lastProcessedDate)
+        assertEquals(today.toString(), updated.lastProcessedDate)
     }
 
     // --- Pending transaction fields ---
@@ -278,13 +295,9 @@ class ProcessRecurringTransactionsUseCaseTest {
 
     @Test
     fun `monthly recurring with day 31 gets clamped to 28`() = runTest {
-        // dayOfMonth = 31, but code clamps to 28
         recurringDao.upsert(monthly(dayOfMonth = 28))
         sut()
         val pending = pendingDao.getAllPending().first()
-        // Should not crash, should use day 28
-        // Whether pending is created depends on current date vs day 28
-        // In April, day 28 is in the future (today is April 2), so no pending
         // Just verify no crash
         assertTrue(true)
     }

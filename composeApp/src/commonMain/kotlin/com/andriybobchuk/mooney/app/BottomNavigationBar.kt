@@ -34,11 +34,10 @@ import mooney.composeapp.generated.resources.*
 @Composable
 fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int) {
     val allItems = buildList {
-        add(Triple(BottomNavigationItem(stringResource(Res.string.nav_transactions), Icons.TransactionsIcon()), Route.Transactions, 0))
-        add(Triple(BottomNavigationItem(stringResource(Res.string.nav_assets), Icons.AccountsIcon()), Route.Accounts, 1))
-        if (FeatureFlags.exchangeEnabled) add(Triple(BottomNavigationItem(stringResource(Res.string.nav_exchange), Icons.ExchangeIcon()), Route.Exchange, 2))
-        add(Triple(BottomNavigationItem(stringResource(Res.string.nav_analytics), Icons.StatsIcon()), Route.Analytics, 3))
-        // Goals moved to Assets top bar
+        add(Triple(BottomNavigationItem(stringResource(Res.string.nav_transactions), Icons.TransactionsIcon(), Icons.TransactionsFilledIcon()), Route.Transactions, 0))
+        add(Triple(BottomNavigationItem(stringResource(Res.string.nav_assets), Icons.AccountsIcon(), Icons.AccountsFilledIcon()), Route.Accounts, 1))
+        if (FeatureFlags.exchangeEnabled) add(Triple(BottomNavigationItem(stringResource(Res.string.nav_exchange), Icons.TransactionsIcon()), Route.Exchange, 2))
+        add(Triple(BottomNavigationItem(stringResource(Res.string.nav_analytics), Icons.StatsIcon(), Icons.StatsFilledIcon()), Route.Analytics, 3))
     }
 
     Column(
@@ -95,7 +94,7 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
-                            painter = item.icon,
+                            painter = if (isSelected && item.filledIcon != null) item.filledIcon else item.icon,
                             contentDescription = item.title,
                             modifier = Modifier.size(20.dp),
                             tint = color

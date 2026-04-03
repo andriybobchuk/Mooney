@@ -3,6 +3,7 @@ package com.andriybobchuk.mooney.mooney.presentation.transaction
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
+import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.Transaction
@@ -106,6 +107,15 @@ class TransactionViewModel(
     init {
         loadDataForBottomSheet()
         observePendingTransactions()
+        observeBaseCurrencyChanges()
+    }
+
+    private fun observeBaseCurrencyChanges() {
+        GlobalConfig.baseCurrencyFlow.onEach {
+            // Re-trigger total recalculation and account conversion when base currency changes
+            loadTotal()
+            loadDataForBottomSheet()
+        }.launchIn(viewModelScope)
     }
 
     private fun observePendingTransactions() {

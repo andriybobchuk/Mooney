@@ -1,8 +1,7 @@
 package com.andriybobchuk.mooney.core.presentation
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -14,8 +13,10 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 object Toolbars {
@@ -71,9 +72,10 @@ object Toolbars {
                 if (showBackButton) {
                     IconButton(onClick = onBackClick) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "",
-                            tint = MaterialTheme.colorScheme.onBackground
+                            painter = Icons.BackIcon(),
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }
@@ -85,11 +87,20 @@ object Toolbars {
                         onClick = actionIcon.onClick,
                         enabled = actionIcon.enabled,
                     ) {
-                        Icon(
-                            imageVector = actionIcon.icon,
-                            contentDescription = actionIcon.contentDescription,
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
+                        when {
+                            actionIcon.painter != null -> Icon(
+                                painter = actionIcon.painter,
+                                contentDescription = actionIcon.contentDescription,
+                                tint = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            actionIcon.icon != null -> Icon(
+                                imageVector = actionIcon.icon,
+                                contentDescription = actionIcon.contentDescription,
+                                tint = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -97,7 +108,8 @@ object Toolbars {
     }
 
     data class ToolBarAction(
-        val icon: ImageVector,
+        val icon: ImageVector? = null,
+        val painter: Painter? = null,
         val contentDescription: String,
         val onClick: () -> Unit,
         val enabled: Boolean = true

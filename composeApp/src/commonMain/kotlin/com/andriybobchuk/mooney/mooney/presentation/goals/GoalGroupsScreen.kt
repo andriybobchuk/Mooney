@@ -105,7 +105,7 @@ fun GoalGroupsScreen(
                 scrollBehavior = scrollBehavior,
                 actions = listOf(
                     Toolbars.ToolBarAction(
-                        icon = Icons.Outlined.Settings,
+                        painter = com.andriybobchuk.mooney.core.presentation.Icons.SettingsIcon(),
                         contentDescription = "Settings",
                         onClick = onSettingsClick
                     )

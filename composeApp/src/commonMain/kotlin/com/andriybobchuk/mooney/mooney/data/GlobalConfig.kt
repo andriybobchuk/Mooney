@@ -2,11 +2,17 @@ package com.andriybobchuk.mooney.mooney.data
 
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
-import kotlin.concurrent.Volatile
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 object GlobalConfig {
-    @Volatile
-    var baseCurrency = Currency.PLN
+    private val _baseCurrencyFlow = MutableStateFlow(Currency.PLN)
+    val baseCurrencyFlow: StateFlow<Currency> = _baseCurrencyFlow.asStateFlow()
+
+    var baseCurrency: Currency
+        get() = _baseCurrencyFlow.value
+        set(value) { _baseCurrencyFlow.value = value }
 
     val testExchangeRates = ExchangeRates(
         rates = mapOf(

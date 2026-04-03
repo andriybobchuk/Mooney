@@ -1400,10 +1400,10 @@ private fun SettingsRow(
             }
             if (showChevron) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
             }
         }

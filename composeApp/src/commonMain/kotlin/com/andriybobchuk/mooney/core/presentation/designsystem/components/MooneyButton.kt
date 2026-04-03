@@ -186,9 +186,9 @@ private fun ButtonContent(
     size: ButtonSize
 ) {
     val iconSize = when (size) {
-        ButtonSize.SMALL -> 16.dp
-        ButtonSize.MEDIUM -> 20.dp
-        ButtonSize.LARGE -> 24.dp
+        ButtonSize.SMALL -> 14.dp
+        ButtonSize.MEDIUM -> 16.dp
+        ButtonSize.LARGE -> 20.dp
     }
 
     Row(verticalAlignment = Alignment.CenterVertically) {

@@ -84,12 +84,12 @@ fun ExchangeScreen(
                 scrollBehavior = scrollBehavior,
                 actions = listOf(
                     Toolbars.ToolBarAction(
-                        icon = Icons.Outlined.Refresh,
+                        painter = com.andriybobchuk.mooney.core.presentation.Icons.RefreshIcon(),
                         contentDescription = "Refresh Rates",
                         onClick = { viewModel.onAction(ExchangeAction.RefreshRates) }
                     ),
                     Toolbars.ToolBarAction(
-                        icon = Icons.Outlined.Settings,
+                        painter = com.andriybobchuk.mooney.core.presentation.Icons.SettingsIcon(),
                         contentDescription = "Settings",
                         onClick = onSettingsClick
                     )

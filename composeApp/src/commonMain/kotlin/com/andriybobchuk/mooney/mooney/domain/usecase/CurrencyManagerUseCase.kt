@@ -10,7 +10,8 @@ import kotlinx.coroutines.flow.first
 class CurrencyManagerUseCase(
     private val exchangeRateProvider: ExchangeRateProvider
 ) {
-    val baseCurrency = GlobalConfig.baseCurrency
+    // Always read live from GlobalConfig — never cache
+    val baseCurrency: Currency get() = GlobalConfig.baseCurrency
 
     // Cached exchange rates
     private var cachedExchangeRates: ExchangeRates = GlobalConfig.testExchangeRates
@@ -75,4 +76,4 @@ class CurrencyManagerUseCase(
             convertToBaseCurrency(account.amount, account.currency)
         }
     }
-} 
+}

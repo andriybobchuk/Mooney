@@ -9,12 +9,11 @@ import kotlinx.datetime.LocalDate
 class CalculateDailyTotalUseCase(
     private val currencyManagerUseCase: CurrencyManagerUseCase
 ) {
-    private val baseCurrency = GlobalConfig.baseCurrency
-
     operator fun invoke(
         transactions: List<Transaction>,
         date: LocalDate
     ): Double {
+        val baseCurrency = GlobalConfig.baseCurrency
         val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
         return transactions.filter { it.date == date }
             .filter {

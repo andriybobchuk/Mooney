@@ -83,7 +83,11 @@ fun RecurringTransactionsScreen(
                 title = { Text("Recurring Transactions") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            painter = com.andriybobchuk.mooney.core.presentation.Icons.BackIcon(),
+                            contentDescription = "Back",
+                            modifier = Modifier.size(22.dp)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

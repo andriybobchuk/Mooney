@@ -198,9 +198,10 @@ private fun ExportImportButton(
             }
             
             Icon(
-                imageVector = Icons.Default.KeyboardArrowRight,
+                painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
                 contentDescription = null,
-                tint = contentColor.copy(alpha = 0.5f)
+                tint = contentColor.copy(alpha = 0.5f),
+                modifier = androidx.compose.ui.Modifier.size(18.dp)
             )
         }
     }

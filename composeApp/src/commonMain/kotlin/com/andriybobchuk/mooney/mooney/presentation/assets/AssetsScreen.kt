@@ -167,7 +167,7 @@ fun AssetsScreen(
                 } else null,
                 actions = listOf(
                     Toolbars.ToolBarAction(
-                        icon = Icons.Outlined.Settings,
+                        painter = com.andriybobchuk.mooney.core.presentation.Icons.SettingsIcon(),
                         contentDescription = stringResource(Res.string.settings),
                         onClick = onSettingsClick
                     )
@@ -526,10 +526,10 @@ private fun CollapsibleCategoryHeader(
             modifier = Modifier.weight(1f)
         ) {
             Icon(
-                imageVector = Icons.Outlined.KeyboardArrowDown,
+                painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
                 contentDescription = if (isExpanded) "Collapse" else "Expand",
                 modifier = Modifier
-                    .size(24.dp)
+                    .size(20.dp)
                     .rotate(rotationAngle),
                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
@@ -888,10 +888,10 @@ private fun AssetSheet(
         ) {
             Text(selectedCategoryInfo?.title ?: selectedCategoryId, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(18.dp)
             )
         }
 
@@ -910,10 +910,10 @@ private fun AssetSheet(
         ) {
             Text("${selectedCurrency.symbol}  ${selectedCurrency.name}", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(18.dp)
             )
         }
 

@@ -58,6 +58,17 @@ class AssetsViewModel(
 
     private val _uiState = MutableStateFlow(AssetsState())
 
+    init {
+        observeBaseCurrencyChanges()
+    }
+
+    private fun observeBaseCurrencyChanges() {
+        GlobalConfig.baseCurrencyFlow.onEach {
+            // Re-convert all accounts and recalculate net worth when base currency changes
+            observeAssets()
+        }.launchIn(viewModelScope)
+    }
+
     val state = _uiState
         .onStart {
             observeUserCurrencies()

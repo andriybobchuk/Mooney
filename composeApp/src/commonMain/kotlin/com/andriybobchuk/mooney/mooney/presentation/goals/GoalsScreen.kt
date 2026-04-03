@@ -514,7 +514,7 @@ private fun AddEditGoalSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("${selectedCurrency.symbol}  ${selectedCurrency.name}", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                Icon(painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -568,7 +568,7 @@ private fun AddEditGoalSheet(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(selectedAccount?.title ?: "Select account", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                    Icon(painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                 }
             }
 

@@ -21,8 +21,6 @@ captures
 api.properties
 **/Secrets.kt
 
-# Firebase config (iOS)
-**/GoogleService-Info.plist
 
 # Fastlane
 iosApp/fastlane/report.xml

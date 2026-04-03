@@ -119,7 +119,7 @@ fun AnalyticsScreen(
                 scrollBehavior = scrollBehavior,
                 actions = listOf(
                     Toolbars.ToolBarAction(
-                        icon = Icons.Outlined.Settings,
+                        painter = com.andriybobchuk.mooney.core.presentation.Icons.SettingsIcon(),
                         contentDescription = stringResource(Res.string.settings),
                         onClick = onSettingsClick
                     )
@@ -203,30 +203,6 @@ fun AnalyticsScreen(
                             onClick = { viewModel.onMetricCardClicked(metric.title) }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                    }
-                }
-
-                // Partial month note
-                val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-                if (state.selectedMonth.year == now.year && state.selectedMonth.month == now.monthNumber) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 4.dp)
-                            .background(
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                                RoundedCornerShape(12.dp)
-                            )
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("\uD83D\uDCCA", fontSize = 16.sp)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Showing partial data \u2014 month is still in progress",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                     }
                 }
 
@@ -378,7 +354,7 @@ fun MonthPicker(
 
     IconButton(onClick = { showSheet = true }) {
         Icon(
-            Icons.Outlined.DateRange,
+            painter = com.andriybobchuk.mooney.core.presentation.Icons.CalendarIcon(),
             contentDescription = stringResource(Res.string.select_month),
             modifier = Modifier.size(22.dp),
             tint = MaterialTheme.colorScheme.onBackground

@@ -155,8 +155,9 @@ fun TransactionsScreen(
     var preselectedCategory by remember { mutableStateOf<Category?>(null) }
 
     val hasTransactions = transactions.filterNotNull().isNotEmpty()
+    val hasPendingTransactions = state.pendingTransactions.isNotEmpty()
     val hasAccounts = state.accounts.filterNotNull().isNotEmpty()
-    val isEmptyState = !hasTransactions
+    val isEmptyState = !hasTransactions && !hasPendingTransactions
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
@@ -199,12 +200,12 @@ fun TransactionsScreen(
                 },
                 actions = listOf(
                     Toolbars.ToolBarAction(
-                        icon = Icons.Outlined.Refresh,
+                        painter = com.andriybobchuk.mooney.core.presentation.Icons.RefreshIcon(),
                         contentDescription = "Recurring",
                         onClick = onNavigateToRecurring
                     ),
                     Toolbars.ToolBarAction(
-                        icon = Icons.Outlined.Settings,
+                        painter = com.andriybobchuk.mooney.core.presentation.Icons.SettingsIcon(),
                         contentDescription = "Settings",
                         onClick = onSettingsClick
                     )
@@ -1188,8 +1189,9 @@ fun TransactionBottomSheet(
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                        contentDescription = "Previous day"
+                        painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronLeftIcon(),
+                        contentDescription = "Previous day",
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
@@ -1211,8 +1213,9 @@ fun TransactionBottomSheet(
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = "Next day"
+                        painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
+                        contentDescription = "Next day",
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
@@ -1225,7 +1228,7 @@ fun TransactionBottomSheet(
                 }
                 MooneyButton(
                     text = repeatLabel,
-                    icon = Icons.Outlined.Refresh,
+                    iconPainter = com.andriybobchuk.mooney.core.presentation.Icons.RefreshIcon(),
                     onClick = { showScheduleSheet = true },
                     modifier = Modifier,
                     variant = if (isRecurringEnabled) ButtonVariant.PRIMARY else ButtonVariant.SECONDARY
@@ -1770,10 +1773,10 @@ private fun AccountField(
             }
         }
         Icon(
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(18.dp)
         )
     }
 
@@ -2253,8 +2256,10 @@ fun SpendingLineChart(
     
     val viewModel: TransactionViewModel = koinViewModel()
     val previousMonthTotals = remember { mutableStateOf(emptyMap<Int, Double>()) }
+    var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(selectedMonth) {
+        isLoading = true
         try {
             val avgTotals = mutableMapOf<Int, Double>()
             val monthsToAverage = 6
@@ -2283,6 +2288,7 @@ fun SpendingLineChart(
         } catch (e: Exception) {
             previousMonthTotals.value = emptyMap()
         }
+        isLoading = false
     }
     
     Column(modifier = modifier.padding(16.dp)) {
@@ -2342,9 +2348,26 @@ fun SpendingLineChart(
                 )
                 .padding(16.dp)
         ) {
+            if (isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        androidx.compose.material3.CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            } else {
             val currentTotal = dailyTotals.values.sum()
             val previousTotal = previousMonthTotals.value.values.sum()
-            
+
             if (currentTotal == 0.0 && previousTotal == 0.0) {
                 Text(
                     text = "No spending data available",
@@ -2416,6 +2439,7 @@ fun SpendingLineChart(
                     )
                 }
             }
+            } // end else (not loading)
         }
     }
 }

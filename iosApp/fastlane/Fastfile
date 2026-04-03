@@ -19,6 +19,16 @@ platform :ios do
       api_key: api_key,
     )
 
+    # Disable automatic signing for CI
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "iosApp.xcodeproj",
+      team_id: "2GGQ4M8T47",
+      bundle_identifier: "com.andriybobchuk.mooney",
+      profile_name: "match AppStore com.andriybobchuk.mooney",
+      code_sign_identity: "Apple Distribution",
+    )
+
     # Increment build number to current timestamp (always unique)
     increment_build_number(
       build_number: Time.now.strftime("%Y%m%d%H%M"),

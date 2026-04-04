@@ -96,10 +96,12 @@ Database `mooney.db` is at **version 8** with **7 entities**. User has real fina
 
 ## Git Workflow
 
+- **Branching:** `dev` (daily work) → `master` (releases). Pushing to master triggers TestFlight deploy.
+- **ALWAYS push to `dev`** unless explicitly releasing. NEVER push to `master` for regular work.
 - **Commit after every feature or logical piece of work**
 - **NEVER use `git add .`** — always add files explicitly
 - **Single-line commit messages** — concise and descriptive
-- **No AI/Claude mentions** in commit messages
+- **No AI/Claude mentions or Co-Authored-By trailers** in commit messages
 
 ---
 

@@ -99,8 +99,8 @@ android {
         applicationId = "com.andriybobchuk.mooney"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = (findProperty("app.versionCode") as String).toInt()
+        versionName = findProperty("app.version") as String
     }
     packaging {
         resources {

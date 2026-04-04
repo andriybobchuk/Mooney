@@ -12,6 +12,7 @@ globs: "**/*"
 - **ALWAYS push to `dev`** unless explicitly told to release/deploy.
 - **To release:** merge `dev` into `master` and push master. Only do this when the user asks to release.
 - **NEVER push directly to `master`** for regular work — always go through `dev`.
+- **Before every merge to master**, ask the user to bump the version in `gradle.properties` (`app.version` using CalVer `YY.MM.PATCH`). Also update `MARKETING_VERSION` in the Xcode project to match.
 
 ## Commit Rules
 

@@ -3,11 +3,7 @@ package com.andriybobchuk.mooney.mooney.presentation.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.andriybobchuk.mooney.core.data.database.AssetCategoryDao
-import com.andriybobchuk.mooney.core.data.database.AssetCategoryEntity
-import com.andriybobchuk.mooney.core.data.database.CategoryDao
-import com.andriybobchuk.mooney.core.data.database.CategoryEntity
 import com.andriybobchuk.mooney.mooney.domain.Category
-import com.andriybobchuk.mooney.mooney.domain.CoreRepository
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.UserCurrency
 import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
@@ -27,10 +23,6 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.settings.UpdatePinnedCateg
 import com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 import com.andriybobchuk.mooney.mooney.domain.backup.DataExportImportManager
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -54,12 +46,9 @@ class SettingsViewModel(
     private val dataExportImportManager: DataExportImportManager,
     private val getUserCurrenciesUseCase: GetUserCurrenciesUseCase,
     private val updateUserCurrenciesUseCase: UpdateUserCurrenciesUseCase,
-    private val categoryDao: CategoryDao,
     private val assetCategoryDao: AssetCategoryDao,
-    private val repository: CoreRepository,
     private val analyticsTracker: AnalyticsTracker,
     private val premiumManager: PremiumManager,
-    private val dataStore: DataStore<Preferences>,
     private val getAccountsUseCase: GetAccountsUseCase,
     private val setPrimaryAccountUseCase: SetPrimaryAccountUseCase
 ) : ViewModel() {

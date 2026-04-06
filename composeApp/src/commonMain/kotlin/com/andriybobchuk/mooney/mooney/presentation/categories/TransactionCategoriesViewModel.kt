@@ -9,8 +9,10 @@ import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
 import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.core.data.database.CategoryDao
 import com.andriybobchuk.mooney.core.data.database.CategoryEntity
+import com.andriybobchuk.mooney.core.premium.PRODUCT_ID_MONTHLY
 import com.andriybobchuk.mooney.core.premium.PremiumConfig
 import com.andriybobchuk.mooney.core.premium.PremiumManager
+import com.andriybobchuk.mooney.core.premium.PurchaseResult
 import com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.domain.CoreRepository
@@ -25,6 +27,8 @@ import kotlinx.coroutines.launch
 data class TransactionCategoriesState(
     val allCategories: List<Category> = emptyList(),
     val showPaywall: Boolean = false,
+    val isPurchasing: Boolean = false,
+    val purchaseError: String? = null,
     val isLoading: Boolean = true
 )
 
@@ -32,6 +36,8 @@ sealed interface TransactionCategoriesAction {
     data class AddCategory(val title: String, val type: String, val emoji: String?, val parentId: String?) : TransactionCategoriesAction
     data class DeleteCategory(val categoryId: String) : TransactionCategoriesAction
     data object DismissPaywall : TransactionCategoriesAction
+    data object Subscribe : TransactionCategoriesAction
+    data object RestorePurchases : TransactionCategoriesAction
 }
 
 class TransactionCategoriesViewModel(
@@ -67,7 +73,9 @@ class TransactionCategoriesViewModel(
         when (action) {
             is TransactionCategoriesAction.AddCategory -> addCategory(action.title, action.type, action.emoji, action.parentId)
             is TransactionCategoriesAction.DeleteCategory -> deleteCategory(action.categoryId)
-            is TransactionCategoriesAction.DismissPaywall -> _state.update { it.copy(showPaywall = false) }
+            is TransactionCategoriesAction.DismissPaywall -> _state.update { it.copy(showPaywall = false, purchaseError = null) }
+            is TransactionCategoriesAction.Subscribe -> onSubscribe()
+            is TransactionCategoriesAction.RestorePurchases -> onRestorePurchases()
         }
     }
 
@@ -116,6 +124,41 @@ class TransactionCategoriesViewModel(
             analyticsTracker.trackEvent(AnalyticsEvent.DeleteCustomCategory)
             repository.reloadCategories()
             _state.update { it.copy(allCategories = getCategoriesUseCase()) }
+        }
+    }
+
+    private fun onSubscribe() {
+        viewModelScope.launch {
+            _state.update { it.copy(isPurchasing = true, purchaseError = null) }
+            try {
+                when (val result = premiumManager.purchase(PRODUCT_ID_MONTHLY)) {
+                    is PurchaseResult.Success -> _state.update { it.copy(showPaywall = false, isPurchasing = false) }
+                    is PurchaseResult.Cancelled -> _state.update { it.copy(isPurchasing = false) }
+                    is PurchaseResult.Error -> _state.update { it.copy(isPurchasing = false, purchaseError = result.message) }
+                }
+            } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(isPurchasing = false, purchaseError = e.message) }
+            }
+        }
+    }
+
+    private fun onRestorePurchases() {
+        viewModelScope.launch {
+            _state.update { it.copy(isPurchasing = true, purchaseError = null) }
+            try {
+                val restored = premiumManager.restorePurchases()
+                if (restored) {
+                    _state.update { it.copy(showPaywall = false, isPurchasing = false) }
+                } else {
+                    _state.update { it.copy(isPurchasing = false, purchaseError = "No active subscription found") }
+                }
+            } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(isPurchasing = false, purchaseError = e.message) }
+            }
         }
     }
 }

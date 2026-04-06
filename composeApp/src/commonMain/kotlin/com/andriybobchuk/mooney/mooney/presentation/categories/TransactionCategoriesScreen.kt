@@ -64,9 +64,11 @@ fun TransactionCategoriesScreen(
     // Paywall
     if (state.showPaywall) {
         PaywallSheet(
+            isLoading = state.isPurchasing,
+            errorMessage = state.purchaseError,
             onDismiss = { viewModel.onAction(TransactionCategoriesAction.DismissPaywall) },
-            onSubscribe = { viewModel.onAction(TransactionCategoriesAction.DismissPaywall) },
-            onRestore = { viewModel.onAction(TransactionCategoriesAction.DismissPaywall) }
+            onSubscribe = { viewModel.onAction(TransactionCategoriesAction.Subscribe) },
+            onRestore = { viewModel.onAction(TransactionCategoriesAction.RestorePurchases) }
         )
     }
 

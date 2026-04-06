@@ -82,6 +82,7 @@ import com.andriybobchuk.mooney.mooney.domain.formatToShortString
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import com.andriybobchuk.mooney.mooney.presentation.transaction.formatForDisplay
 import org.jetbrains.compose.resources.stringResource
 import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.*
@@ -630,12 +631,36 @@ fun CategoryTransactionsSheet(
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
         } else {
+            val grouped = transactions
+                .groupBy { it.date }
+                .entries
+                .sortedByDescending { it.key }
+
             LazyColumn {
-                items(transactions) { transaction ->
-                    com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionItem(
-                        transaction = transaction,
-                        accounts = emptyList()
-                    )
+                grouped.forEach { (date, txs) ->
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .padding(vertical = 4.dp, horizontal = 14.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.background,
+                                    RoundedCornerShape(50)
+                                )
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = date.formatForDisplay(),
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    items(txs.sortedByDescending { it.id }) { transaction ->
+                        com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionItem(
+                            transaction = transaction,
+                            accounts = emptyList()
+                        )
+                    }
                 }
             }
         }

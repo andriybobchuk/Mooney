@@ -1114,9 +1114,11 @@ fun SettingsScreen(
 
     if (state.showPaywall) {
         PaywallSheet(
+            isLoading = state.isPurchasing,
+            errorMessage = state.purchaseError,
             onDismiss = { viewModel.dismissPaywall() },
-            onSubscribe = { viewModel.dismissPaywall() },
-            onRestore = { viewModel.dismissPaywall() }
+            onSubscribe = { viewModel.onSubscribe() },
+            onRestore = { viewModel.onRestorePurchases() }
         )
     }
 
@@ -1156,9 +1158,11 @@ fun SettingsScreen(
                     )
                     if (showPaywallFromBanner) {
                         PaywallSheet(
+                            isLoading = state.isPurchasing,
+                            errorMessage = state.purchaseError,
                             onDismiss = { showPaywallFromBanner = false },
-                            onSubscribe = { showPaywallFromBanner = false },
-                            onRestore = { showPaywallFromBanner = false }
+                            onSubscribe = { viewModel.onSubscribe() },
+                            onRestore = { viewModel.onRestorePurchases() }
                         )
                     }
                 }

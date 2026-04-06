@@ -171,7 +171,7 @@ val sharedModule = module {
     singleOf(::ThemeManager)
 
     // Premium
-    single { PremiumManager(get()) }
+    single { PremiumManager(get(), get()) }
 
     // Analytics
     singleOf(::DefaultAnalyticsTracker).bind<AnalyticsTracker>()

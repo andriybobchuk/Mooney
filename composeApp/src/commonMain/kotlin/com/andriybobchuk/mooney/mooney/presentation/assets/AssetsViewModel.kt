@@ -11,8 +11,10 @@ import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
 import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.core.data.database.AssetCategoryDao
 import com.andriybobchuk.mooney.core.data.database.AssetCategoryEntity
+import com.andriybobchuk.mooney.core.premium.PRODUCT_ID_MONTHLY
 import com.andriybobchuk.mooney.core.premium.PremiumConfig
 import com.andriybobchuk.mooney.core.premium.PremiumManager
+import com.andriybobchuk.mooney.core.premium.PurchaseResult
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetUserCurrenciesUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.SetPrimaryAccountUseCase
@@ -205,7 +207,42 @@ class AssetsViewModel(
     }
 
     fun dismissPaywall() {
-        _uiState.update { it.copy(showPaywall = false) }
+        _uiState.update { it.copy(showPaywall = false, purchaseError = null) }
+    }
+
+    fun onSubscribe() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isPurchasing = true, purchaseError = null) }
+            try {
+                when (val result = premiumManager.purchase(PRODUCT_ID_MONTHLY)) {
+                    is PurchaseResult.Success -> _uiState.update { it.copy(showPaywall = false, isPurchasing = false) }
+                    is PurchaseResult.Cancelled -> _uiState.update { it.copy(isPurchasing = false) }
+                    is PurchaseResult.Error -> _uiState.update { it.copy(isPurchasing = false, purchaseError = result.message) }
+                }
+            } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isPurchasing = false, purchaseError = e.message) }
+            }
+        }
+    }
+
+    fun onRestorePurchases() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isPurchasing = true, purchaseError = null) }
+            try {
+                val restored = premiumManager.restorePurchases()
+                if (restored) {
+                    _uiState.update { it.copy(showPaywall = false, isPurchasing = false) }
+                } else {
+                    _uiState.update { it.copy(isPurchasing = false, purchaseError = "No active subscription found") }
+                }
+            } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isPurchasing = false, purchaseError = e.message) }
+            }
+        }
     }
 
     fun upsertAsset(
@@ -335,5 +372,7 @@ data class AssetsState(
     val isRefreshingRates: Boolean = false,
     val ratesLastUpdated: Long = 0L,
     val ratesError: String? = null,
-    val showPaywall: Boolean = false
+    val showPaywall: Boolean = false,
+    val isPurchasing: Boolean = false,
+    val purchaseError: String? = null
 )

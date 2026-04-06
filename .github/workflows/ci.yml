@@ -39,7 +39,7 @@ jobs:
 
   deploy-testflight:
     name: Deploy to TestFlight
-    runs-on: macos-15
+    runs-on: macos-26
     needs: check
     if: github.ref == 'refs/heads/master'
     timeout-minutes: 30

@@ -1182,26 +1182,9 @@ fun SettingsScreen(
                             },
                             onClick = { showThemeSheet = true }
                         )
-                        SettingsDivider()
-                        SettingsRow(
-                            title = stringResource(Res.string.language),
-                            value = when (state.appLanguage) {
-                                "uk" -> "Українська"
-                                "ru" -> "Русский"
-                                "pl" -> "Polski"
-                                "de" -> "Deutsch"
-                                "es" -> "Español"
-                                "fr" -> "Français"
-                                "pt" -> "Português"
-                                "it" -> "Italiano"
-                                "tr" -> "Türkçe"
-                                "ja" -> "日本語"
-                                "zh" -> "中文"
-                                "en" -> "English"
-                                else -> "System"
-                            },
-                            onClick = { showLanguageSheet = true }
-                        )
+                        // TODO: Re-enable language selector once translations are verified
+                        // SettingsDivider()
+                        // SettingsRow(title = stringResource(Res.string.language), onClick = { showLanguageSheet = true })
                         SettingsDivider()
                         SettingsRow(
                             title = stringResource(Res.string.default_currency),

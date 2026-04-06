@@ -5,6 +5,7 @@ import com.andriybobchuk.mooney.mooney.domain.RecurringFrequency
 import com.andriybobchuk.mooney.mooney.domain.RecurringSchedule
 import com.andriybobchuk.mooney.mooney.domain.RecurringTransaction
 import com.andriybobchuk.mooney.mooney.domain.usecase.SaveRecurringTransactionUseCase
+import com.andriybobchuk.mooney.testutil.FakePendingTransactionDao
 import com.andriybobchuk.mooney.testutil.FakeRecurringTransactionDao
 import com.andriybobchuk.mooney.testutil.TestFixtures
 import kotlinx.coroutines.flow.first
@@ -19,12 +20,14 @@ import kotlin.test.assertTrue
 class SaveRecurringTransactionUseCaseTest {
 
     private lateinit var recurringDao: FakeRecurringTransactionDao
+    private lateinit var pendingDao: FakePendingTransactionDao
     private lateinit var sut: SaveRecurringTransactionUseCase
 
     @BeforeTest
     fun setup() {
         recurringDao = FakeRecurringTransactionDao()
-        sut = SaveRecurringTransactionUseCase(recurringDao)
+        pendingDao = FakePendingTransactionDao()
+        sut = SaveRecurringTransactionUseCase(recurringDao, pendingDao)
     }
 
     private fun recurringTransaction(
@@ -91,8 +94,8 @@ class SaveRecurringTransactionUseCaseTest {
             )
         )
 
-        // Edit it
-        sut(recurringTransaction(id = 5, title = "Updated"))
+        // Edit title only (same schedule — dayOfMonth must match entity's 10)
+        sut(recurringTransaction(id = 5, title = "Updated", dayOfMonth = 10))
 
         val updated = recurringDao.getById(5)
         assertNotNull(updated)

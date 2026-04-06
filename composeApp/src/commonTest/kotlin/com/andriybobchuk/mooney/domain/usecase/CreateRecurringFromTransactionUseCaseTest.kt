@@ -6,6 +6,7 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.AddTransactionUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.CreateRecurringFromTransactionUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.SaveRecurringTransactionUseCase
 import com.andriybobchuk.mooney.testutil.FakeCoreRepository
+import com.andriybobchuk.mooney.testutil.FakePendingTransactionDao
 import com.andriybobchuk.mooney.testutil.FakeRecurringTransactionDao
 import com.andriybobchuk.mooney.testutil.TestFixtures
 import kotlinx.coroutines.flow.first
@@ -19,14 +20,16 @@ class CreateRecurringFromTransactionUseCaseTest {
 
     private lateinit var repository: FakeCoreRepository
     private lateinit var recurringDao: FakeRecurringTransactionDao
+    private lateinit var pendingDao: FakePendingTransactionDao
     private lateinit var sut: CreateRecurringFromTransactionUseCase
 
     @BeforeTest
     fun setup() {
         repository = FakeCoreRepository()
         recurringDao = FakeRecurringTransactionDao()
+        pendingDao = FakePendingTransactionDao()
         val addTransactionUseCase = AddTransactionUseCase(repository)
-        val saveRecurringUseCase = SaveRecurringTransactionUseCase(recurringDao)
+        val saveRecurringUseCase = SaveRecurringTransactionUseCase(recurringDao, pendingDao)
         sut = CreateRecurringFromTransactionUseCase(addTransactionUseCase, saveRecurringUseCase)
     }
 

@@ -259,9 +259,8 @@ class AssetsViewModel(
             if (id == 0) {
                 val isPremium = premiumManager.getIsPremium()
                 if (!isPremium) {
-                    // Count assets and liabilities separately against the limit
                     val allAccounts = getAccountsUseCase().first().filterNotNull()
-                    val currentCount = allAccounts.count { it.isLiability == isLiability }
+                    val currentCount = allAccounts.size
                     if (currentCount >= PremiumConfig.maxFreeAccounts) {
                         withContext(Dispatchers.Main) {
                             _uiState.update { it.copy(showPaywall = true) }

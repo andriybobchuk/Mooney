@@ -240,6 +240,9 @@ class FakePendingTransactionDao : PendingTransactionDao {
     override suspend fun cleanupOldProcessed(cutoffDate: String) {
         items.value = items.value.filter { it.status == "PENDING" || it.scheduledDate >= cutoffDate }
     }
+    override suspend fun deletePendingByRecurringId(recurringId: Int) {
+        items.value = items.value.filter { !(it.recurringTransactionId == recurringId && it.status == "PENDING") }
+    }
 }
 
 class FakeAssetCategoryDao : AssetCategoryDao {

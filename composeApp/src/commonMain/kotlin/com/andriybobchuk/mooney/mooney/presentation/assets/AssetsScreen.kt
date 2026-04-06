@@ -268,9 +268,11 @@ fun AssetsScreen(
 
     if (state.showPaywall) {
         PaywallSheet(
+            isLoading = state.isPurchasing,
+            errorMessage = state.purchaseError,
             onDismiss = { viewModel.dismissPaywall() },
-            onSubscribe = { viewModel.dismissPaywall() },
-            onRestore = { viewModel.dismissPaywall() }
+            onSubscribe = { viewModel.onSubscribe() },
+            onRestore = { viewModel.onRestorePurchases() }
         )
     }
 }

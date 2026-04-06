@@ -22,6 +22,8 @@ data class SettingsState(
     val isImporting: Boolean = false,
     val appLanguage: String = "system",
     val showPaywall: Boolean = false,
+    val isPurchasing: Boolean = false,
+    val purchaseError: String? = null,
     val assetCategories: List<AssetCategoryEntity> = emptyList(),
     val defaultExpenseCategoryId: String = "groceries",
     val defaultIncomeCategoryId: String = "salary",

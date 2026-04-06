@@ -32,6 +32,7 @@ kover = "0.9.1"
 google-services = "4.4.2"
 firebase-bom = "33.7.0"
 firebase-crashlytics-plugin = "3.0.2"
+billing = "7.1.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -83,6 +84,7 @@ koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
+billing-ktx = { module = "com.android.billingclient:billing-ktx", version.ref = "billing" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

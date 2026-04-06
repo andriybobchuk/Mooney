@@ -12,8 +12,10 @@ import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.UserCurrency
 import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
 import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
+import com.andriybobchuk.mooney.core.premium.PRODUCT_ID_MONTHLY
 import com.andriybobchuk.mooney.core.premium.PremiumConfig
 import com.andriybobchuk.mooney.core.premium.PremiumManager
+import com.andriybobchuk.mooney.core.premium.PurchaseResult
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetAccountsUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetCategoriesUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetUserCurrenciesUseCase
@@ -465,7 +467,42 @@ class SettingsViewModel(
     }
 
     fun dismissPaywall() {
-        _state.update { it.copy(showPaywall = false) }
+        _state.update { it.copy(showPaywall = false, purchaseError = null) }
+    }
+
+    fun onSubscribe() {
+        viewModelScope.launch {
+            _state.update { it.copy(isPurchasing = true, purchaseError = null) }
+            try {
+                when (val result = premiumManager.purchase(PRODUCT_ID_MONTHLY)) {
+                    is PurchaseResult.Success -> _state.update { it.copy(showPaywall = false, isPurchasing = false) }
+                    is PurchaseResult.Cancelled -> _state.update { it.copy(isPurchasing = false) }
+                    is PurchaseResult.Error -> _state.update { it.copy(isPurchasing = false, purchaseError = result.message) }
+                }
+            } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(isPurchasing = false, purchaseError = e.message) }
+            }
+        }
+    }
+
+    fun onRestorePurchases() {
+        viewModelScope.launch {
+            _state.update { it.copy(isPurchasing = true, purchaseError = null) }
+            try {
+                val restored = premiumManager.restorePurchases()
+                if (restored) {
+                    _state.update { it.copy(showPaywall = false, isPurchasing = false) }
+                } else {
+                    _state.update { it.copy(isPurchasing = false, purchaseError = "No active subscription found") }
+                }
+            } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(isPurchasing = false, purchaseError = e.message) }
+            }
+        }
     }
 
     fun clearError() {

@@ -134,6 +134,18 @@ fun NavigationHost() {
         }
     }
 
+    // Sync subscription status on app start
+    val premiumManager: com.andriybobchuk.mooney.core.premium.PremiumManager = koinInject()
+    LaunchedEffect(Unit) {
+        try {
+            premiumManager.syncSubscriptionStatus()
+        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Best-effort — offline cache remains valid
+        }
+    }
+
     // Process recurring transactions on app start
     val processRecurringUseCase: ProcessRecurringTransactionsUseCase = koinInject()
     LaunchedEffect(Unit) {

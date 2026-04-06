@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -37,6 +38,9 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaywallSheet(
+    price: String? = null,
+    isLoading: Boolean = false,
+    errorMessage: String? = null,
     onDismiss: () -> Unit,
     onSubscribe: () -> Unit,
     onRestore: () -> Unit
@@ -98,26 +102,29 @@ fun PaywallSheet(
 
                 // Price
                 Text(
-                    text = "$2.49 / month",
+                    text = price ?: "10 PLN / month",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "or $17.99/year (save 40%)",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium
-                )
-
                 Spacer(modifier = Modifier.height(24.dp))
+
+                if (errorMessage != null) {
+                    Text(
+                        text = errorMessage,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
 
                 // CTA
                 Button(
                     onClick = onSubscribe,
+                    enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -127,16 +134,24 @@ fun PaywallSheet(
                         contentColor = MaterialTheme.colorScheme.inverseOnSurface
                     )
                 ) {
-                    Text(
-                        text = "Start Free Trial",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
-                    )
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.inverseOnSurface,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "Subscribe",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                TextButton(onClick = onRestore) {
+                TextButton(onClick = onRestore, enabled = !isLoading) {
                     Text(
                         text = "Restore purchases",
                         style = MaterialTheme.typography.bodySmall,

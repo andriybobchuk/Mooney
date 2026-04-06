@@ -68,6 +68,7 @@ class TransactionViewModel(
 
     private var observeTransactionsJob: Job? = null
     private var excludeTaxes: Boolean = true
+    private var allPendingTransactions: List<PendingTransactionEntity> = emptyList()
 
     private val _uiState = MutableStateFlow(TransactionState())
     val state = _uiState
@@ -90,6 +91,7 @@ class TransactionViewModel(
     fun onMonthSelected(month: MonthKey) {
         _uiState.update { it.copy(selectedMonth = month) }
         observeTransactions(month)
+        filterPendingByMonth()
     }
 
     private fun observeTransactions(month: MonthKey) {
@@ -117,6 +119,8 @@ class TransactionViewModel(
         preferencesRepository.getUserPreferences().onEach { prefs ->
             excludeTaxes = prefs.excludeTaxesFromTotals
             loadTotal()
+            val transactions = _uiState.value.transactions.filterNotNull()
+            loadDailyTotals(transactions, _uiState.value.selectedMonth)
         }.launchIn(viewModelScope)
     }
 
@@ -130,8 +134,20 @@ class TransactionViewModel(
 
     private fun observePendingTransactions() {
         pendingTransactionDao.getAllPending().onEach { pending ->
-            _uiState.update { it.copy(pendingTransactions = pending, pendingCount = pending.size) }
+            allPendingTransactions = pending
+            filterPendingByMonth()
         }.launchIn(viewModelScope)
+    }
+
+    private fun filterPendingByMonth() {
+        val selectedMonth = _uiState.value.selectedMonth
+        val filtered = allPendingTransactions.filter { p ->
+            try {
+                val date = kotlinx.datetime.LocalDate.parse(p.scheduledDate)
+                date.year == selectedMonth.year && date.monthNumber == selectedMonth.month
+            } catch (_: Exception) { false }
+        }
+        _uiState.update { it.copy(pendingTransactions = filtered, pendingCount = filtered.size) }
     }
 
     private fun loadTotal() {

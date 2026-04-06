@@ -83,11 +83,7 @@ fun PaywallSheet(
                 // Benefits
                 val benefits = listOf(
                     "Unlimited accounts",
-                    "Unlimited custom categories",
-                    "Multi-currency support",
-                    "Advanced analytics & trends",
-                    "Data export & import",
-                    "Priority support"
+                    "Unlimited custom categories"
                 )
                 Column(
                     verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -102,7 +98,7 @@ fun PaywallSheet(
 
                 // Price
                 Text(
-                    text = price ?: "10 PLN / month",
+                    text = price ?: "9,99 PLN / month",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground

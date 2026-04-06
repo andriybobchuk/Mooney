@@ -4,19 +4,20 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import platform.Foundation.NSError
+import platform.Foundation.NSLocale
+import platform.Foundation.NSNumberFormatter
+import platform.Foundation.NSNumberFormatterCurrencyStyle
 import platform.StoreKit.SKPayment
 import platform.StoreKit.SKPaymentQueue
 import platform.StoreKit.SKPaymentTransaction
 import platform.StoreKit.SKPaymentTransactionObserverProtocol
-import platform.StoreKit.SKPaymentTransactionStateFailed
-import platform.StoreKit.SKPaymentTransactionStatePurchased
-import platform.StoreKit.SKPaymentTransactionStateRestored
 import platform.StoreKit.SKProduct
 import platform.StoreKit.SKProductsRequest
 import platform.StoreKit.SKProductsRequestDelegateProtocol
 import platform.StoreKit.SKProductsResponse
 import platform.StoreKit.SKRequest
 import platform.darwin.NSObject
+
 
 class IosBillingManager : BillingManager {
 
@@ -79,10 +80,13 @@ class IosBillingManager : BillingManager {
         cachedProducts = products
 
         return products.map { product ->
-            val skProduct = product as SKProduct
-            val priceString = "${skProduct.price}${skProduct.priceLocale.currencyCode ?: ""}"
+            val formatter = NSNumberFormatter().apply {
+                numberStyle = NSNumberFormatterCurrencyStyle
+                locale = product.priceLocale
+            }
+            val priceString = formatter.stringFromNumber(product.price) ?: "${product.price}"
             BillingProduct(
-                id = skProduct.productIdentifier,
+                id = product.productIdentifier,
                 localizedPrice = priceString
             )
         }
@@ -93,15 +97,11 @@ class IosBillingManager : BillingManager {
             return PurchaseResult.Error("Payments not allowed on this device")
         }
 
-        var product = cachedProducts.firstOrNull {
-            (it as SKProduct).productIdentifier == productId
-        } as? SKProduct
+        var product = cachedProducts.firstOrNull { it.productIdentifier == productId }
 
         if (product == null) {
             fetchProducts()
-            product = cachedProducts.firstOrNull {
-                (it as SKProduct).productIdentifier == productId
-            } as? SKProduct
+            product = cachedProducts.firstOrNull { it.productIdentifier == productId }
         }
 
         if (product == null) {
@@ -123,9 +123,9 @@ class IosBillingManager : BillingManager {
     }
 
     override suspend fun verifySubscription(): Boolean {
-        // On iOS with StoreKit 1, we rely on restore to check entitlements
-        // The transaction observer will update _isSubscribed when restored transactions come in
-        return restorePurchases()
+        // On iOS, don't call restoreCompletedTransactions silently — it prompts for Apple ID.
+        // Rely on the DataStore cache instead. Real verification happens when user taps "Restore".
+        return _isSubscribed.value
     }
 }
 
@@ -143,10 +143,11 @@ private class TransactionObserver(
     ) {
         for (item in updatedTransactions) {
             val transaction = item as? SKPaymentTransaction ?: continue
-            when (transaction.transactionState) {
-                SKPaymentTransactionStatePurchased -> onPurchased(transaction)
-                SKPaymentTransactionStateFailed -> onFailed(transaction)
-                SKPaymentTransactionStateRestored -> onRestored(transaction)
+            @Suppress("REDUNDANT_ELSE_IN_WHEN")
+            when (transaction.transactionState as Long) {
+                1L -> onPurchased(transaction)   // SKPaymentTransactionStatePurchased
+                2L -> onFailed(transaction)      // SKPaymentTransactionStateFailed
+                3L -> onRestored(transaction)    // SKPaymentTransactionStateRestored
                 else -> { /* deferred, purchasing — no action */ }
             }
         }

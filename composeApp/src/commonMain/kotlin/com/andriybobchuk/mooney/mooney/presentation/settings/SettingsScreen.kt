@@ -1261,7 +1261,7 @@ fun SettingsScreen(
                         SettingsDivider()
                         SettingsToggleRow(
                             title = "Exclude Taxes from Totals",
-                            description = "Tax transactions (ZUS, PIT) won't count towards your spending totals",
+                            description = "Tax transactions won't count towards your spending totals",
                             checked = state.excludeTaxesFromTotals,
                             onCheckedChange = { viewModel.onAction(SettingsAction.OnExcludeTaxesToggle(it)) }
                         )
@@ -1441,11 +1441,16 @@ private fun SettingsToggleRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             if (description != null) {
                 Text(
                     description,
@@ -1455,7 +1460,43 @@ private fun SettingsToggleRow(
                 )
             }
         }
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        MooneyToggle(checked = checked, onCheckedChange = onCheckedChange)
+    }
+}
+
+@Composable
+private fun MooneyToggle(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    val trackColor by androidx.compose.animation.animateColorAsState(
+        targetValue = if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+        animationSpec = androidx.compose.animation.core.tween(200)
+    )
+    val thumbOffset by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (checked) 1f else 0f,
+        animationSpec = androidx.compose.animation.core.tween(200)
+    )
+
+    Box(
+        modifier = Modifier
+            .width(44.dp)
+            .height(26.dp)
+            .clip(RoundedCornerShape(13.dp))
+            .background(trackColor)
+            .clickable(
+                indication = null,
+                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+            ) { onCheckedChange(!checked) }
+            .padding(3.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(20.dp)
+                .offset(x = (18.dp * thumbOffset))
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color.White)
+        )
     }
 }
 

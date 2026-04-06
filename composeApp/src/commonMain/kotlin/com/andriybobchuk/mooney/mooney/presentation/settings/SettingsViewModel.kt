@@ -81,7 +81,7 @@ class SettingsViewModel(
                         currentThemeMode = preferences.themeMode,
                         notificationsEnabled = preferences.notificationsEnabled,
                         defaultCurrency = Currency.entries.firstOrNull { c -> c.name == preferences.defaultCurrency }
-                            ?: Currency.PLN,
+                            ?: Currency.USD,
                         appLanguage = preferences.appLanguage,
                         defaultExpenseCategoryId = preferences.defaultExpenseCategory,
                         defaultIncomeCategoryId = preferences.defaultIncomeCategory,

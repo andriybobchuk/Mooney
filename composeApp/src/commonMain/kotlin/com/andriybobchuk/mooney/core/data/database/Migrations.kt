@@ -1,5 +1,6 @@
 package com.andriybobchuk.mooney.core.data.database
 
+import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
@@ -455,5 +456,203 @@ val MIGRATION_13_14 = object : Migration(13, 14) {
             )
         }
     }
+}
+
+/**
+ * Room callback that seeds default data on fresh install (onCreate).
+ * Migrations only run when upgrading an existing DB — a brand new DB at version 14
+ * would have empty categories, asset_categories, and user_currencies tables without this.
+ */
+val SEED_DATABASE_CALLBACK = object : RoomDatabase.Callback() {
+    override fun onCreate(connection: SQLiteConnection) {
+        super.onCreate(connection)
+        seedTransactionCategories(connection)
+        seedAssetCategories(connection)
+    }
+}
+
+/**
+ * Inserts all default transaction categories for fresh installs.
+ * Uses INSERT OR IGNORE so it's safe to call on existing data.
+ *
+ * NOTE: Historical migrations (MIGRATION_8_9 etc.) are NOT updated — they only affect
+ * users upgrading from old versions. This function defines what NEW users get.
+ */
+@Suppress("LongMethod")
+fun seedTransactionCategories(connection: SQLiteConnection) {
+    // ── Top-level types ──
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('expense', 'Expense', 'EXPENSE', '☺️', NULL)")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('income', 'Income', 'INCOME', '\uD83E\uDD72', NULL)")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('transfer', 'Transfer', 'TRANSFER', '↔️', NULL)")
+
+    // ── Transfer ──
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('internal_transfer', 'Internal Transfer', 'TRANSFER', '🔄', 'transfer')")
+
+    // ── EXPENSE: general categories ──
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('groceries', 'Groceries & Household', 'EXPENSE', '🛒', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('beverages', 'Dining & Drinks', 'EXPENSE', '🍽️', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('housing', 'Housing', 'EXPENSE', '🏠', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('transport', 'Transportation', 'EXPENSE', '🚲', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('car', 'Car & Vehicle', 'EXPENSE', '🚗', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('subscriptions', 'Subscriptions', 'EXPENSE', '🎧', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('health', 'Health', 'EXPENSE', '❤️', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('sport', 'Sport', 'EXPENSE', '💪', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('personal_care', 'Personal Care', 'EXPENSE', '✨', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('clothing', 'Clothing', 'EXPENSE', '👕', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('education', 'Education', 'EXPENSE', '🎓', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('joy', 'Entertainment', 'EXPENSE', '🎮', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('gifts', 'Gifts', 'EXPENSE', '🎁', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('kids', 'Kids & Family', 'EXPENSE', '👶', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('pets', 'Pets', 'EXPENSE', '🐾', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('insurance', 'Insurance', 'EXPENSE', '🛡️', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('tax', 'Tax', 'EXPENSE', '🏦', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('business', 'Business Expense', 'EXPENSE', '👨‍💻', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('travelling', 'Travelling', 'EXPENSE', '\uD83C\uDFDD\uFE0F', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('charity', 'Charity & Donations', 'EXPENSE', '💝', 'expense')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('reconciliation', 'Account Reconciliation', 'EXPENSE', '💱', 'expense')")
+
+    // ── EXPENSE: subcategories ──
+
+    // Dining & Drinks
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('eating_out', 'Eating Out', 'EXPENSE', NULL, 'beverages')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('pubs', 'Pubs & Bars', 'EXPENSE', NULL, 'beverages')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('soft_drinks', 'Soft Drinks & Snacks', 'EXPENSE', NULL, 'beverages')")
+
+    // Housing
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('rent', 'Rent', 'EXPENSE', NULL, 'housing')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('mortgage', 'Mortgage', 'EXPENSE', NULL, 'housing')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('utilities', 'Utilities', 'EXPENSE', NULL, 'housing')")
+
+    // Transportation
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('transport_metro', 'Public Transit', 'EXPENSE', NULL, 'transport')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('transport_taxi', 'Taxi & Rideshare', 'EXPENSE', NULL, 'transport')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('transport_bike', 'Bike & Scooter', 'EXPENSE', NULL, 'transport')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('transport_train', 'Train', 'EXPENSE', NULL, 'transport')")
+
+    // Car & Vehicle
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('car_fuel', 'Fuel', 'EXPENSE', NULL, 'car')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('car_parking', 'Parking', 'EXPENSE', NULL, 'car')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('car_maintenance', 'Maintenance & Repairs', 'EXPENSE', NULL, 'car')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('car_wash', 'Car Wash', 'EXPENSE', NULL, 'car')")
+
+    // Subscriptions
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('spotify', 'Music & Streaming', 'EXPENSE', NULL, 'subscriptions')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('internet', 'Phone & Internet', 'EXPENSE', NULL, 'subscriptions')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('apple', 'Cloud & Storage', 'EXPENSE', NULL, 'subscriptions')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('software', 'Software & Apps', 'EXPENSE', NULL, 'subscriptions')")
+
+    // Health
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('health_doctor', 'Doctor', 'EXPENSE', NULL, 'health')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('health_medications', 'Medications', 'EXPENSE', NULL, 'health')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('health_exams', 'Examinations', 'EXPENSE', NULL, 'health')")
+
+    // Sport
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('sport_gym', 'Gym', 'EXPENSE', NULL, 'sport')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('sport_equipment', 'Equipment', 'EXPENSE', NULL, 'sport')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('sport_supplements', 'Supplements', 'EXPENSE', NULL, 'sport')")
+
+    // Personal Care
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('personal_care_haircut', 'Haircut', 'EXPENSE', NULL, 'personal_care')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('personal_care_skincare', 'Skincare & Beauty', 'EXPENSE', NULL, 'personal_care')")
+
+    // Clothing
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('shoes', 'Shoes', 'EXPENSE', NULL, 'clothing')")
+
+    // Education
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('education_tuition', 'Tuition', 'EXPENSE', NULL, 'education')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('education_courses', 'Courses', 'EXPENSE', NULL, 'education')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('books', 'Books', 'EXPENSE', NULL, 'education')")
+
+    // Entertainment (was "Joy")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('joy_purchases', 'Purchases', 'EXPENSE', NULL, 'joy')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('joy_meetups', 'Meetups & Events', 'EXPENSE', NULL, 'joy')")
+
+    // Gifts
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('gifts_family', 'Family', 'EXPENSE', NULL, 'gifts')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('gifts_friends', 'Friends', 'EXPENSE', NULL, 'gifts')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('gifts_girlfriend', 'Partner', 'EXPENSE', NULL, 'gifts')")
+
+    // Kids & Family
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('kids_childcare', 'Childcare', 'EXPENSE', NULL, 'kids')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('kids_school', 'School', 'EXPENSE', NULL, 'kids')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('kids_activities', 'Activities', 'EXPENSE', NULL, 'kids')")
+
+    // Pets
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('pets_vet', 'Vet', 'EXPENSE', NULL, 'pets')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('pets_food', 'Pet Food', 'EXPENSE', NULL, 'pets')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('pets_grooming', 'Grooming', 'EXPENSE', NULL, 'pets')")
+
+    // Insurance
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('insurance_health', 'Health Insurance', 'EXPENSE', NULL, 'insurance')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('insurance_car', 'Car Insurance', 'EXPENSE', NULL, 'insurance')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('insurance_home', 'Home Insurance', 'EXPENSE', NULL, 'insurance')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('insurance_life', 'Life Insurance', 'EXPENSE', NULL, 'insurance')")
+
+    // Tax
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('pit', 'Income Tax', 'EXPENSE', NULL, 'tax')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('zus', 'Social Security', 'EXPENSE', NULL, 'tax')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('gov_fee', 'Government Fee', 'EXPENSE', NULL, 'tax')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('fine', 'Fine', 'EXPENSE', NULL, 'tax')")
+
+    // Business Expense (trimmed — power users can add more)
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('business_equipment', 'Equipment', 'EXPENSE', NULL, 'business')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('business_courses', 'Courses & Training', 'EXPENSE', NULL, 'business')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('business_meetups', 'Networking', 'EXPENSE', NULL, 'business')")
+
+    // Travelling
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('accommodation', 'Accommodation', 'EXPENSE', NULL, 'travelling')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('flights', 'Flights', 'EXPENSE', NULL, 'travelling')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('travelling_transport', 'Local Transport', 'EXPENSE', NULL, 'travelling')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('food_drinks', 'Food & Drinks', 'EXPENSE', NULL, 'travelling')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('tickets', 'Attractions & Tickets', 'EXPENSE', NULL, 'travelling')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('shopping', 'Shopping', 'EXPENSE', NULL, 'travelling')")
+
+    // ── INCOME: general categories ──
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('salary', 'Salary', 'INCOME', '💸', 'income')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('investments', 'Investments', 'INCOME', '📈', 'income')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('business_income', 'Business Income', 'INCOME', '💼', 'income')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('rental_income', 'Rental Income', 'INCOME', '🏠', 'income')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('gifts_received', 'Gifts Received', 'INCOME', '🎁', 'income')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('tax_return', 'Tax Return', 'INCOME', '💸', 'income')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('refund', 'Refund', 'INCOME', '💸', 'income')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('repayment', 'Repayment', 'INCOME', '💸', 'income')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('positive_reconciliation', 'Account Reconciliation', 'INCOME', '💸', 'income')")
+
+    // ── INCOME: subcategories ──
+
+    // Salary
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('primary_job', 'Primary Job', 'INCOME', NULL, 'salary')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('side_income', 'Side Income', 'INCOME', NULL, 'salary')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('freelance', 'Freelance', 'INCOME', NULL, 'salary')")
+
+    // Investments
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('dividends', 'Dividends', 'INCOME', NULL, 'investments')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('interest', 'Interest', 'INCOME', NULL, 'investments')")
+    connection.execSQL("INSERT OR IGNORE INTO categories (id, title, type, emoji, parentId) VALUES ('capital_gains', 'Capital Gains', 'INCOME', NULL, 'investments')")
+}
+
+/**
+ * Inserts all default asset categories (assets + liabilities).
+ * Uses INSERT OR IGNORE so it's safe to call on existing data.
+ */
+fun seedAssetCategories(connection: SQLiteConnection) {
+    // Asset categories
+    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('BANK_ACCOUNT', 'Bank Account', '🏦', 'Traditional bank accounts and deposits', ${0xFF4285F4}, 0, 0)")
+    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('CASH', 'Cash Reserve', '💵', 'Physical cash holdings', ${0xFF34A853}, 1, 0)")
+    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('REAL_ESTATE', 'Real Estate', '🏠', 'Property and real estate investments', ${0xFF795548}, 2, 0)")
+    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('STOCKS', 'Stocks', '📈', 'Stock market investments', ${0xFFE91E63}, 3, 0)")
+    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('BONDS', 'Bonds', '📜', 'Government and corporate bonds', ${0xFF9C27B0}, 4, 0)")
+    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('CRYPTO', 'Cryptocurrency', '₿', 'Digital assets and cryptocurrencies', ${0xFFF57C00}, 5, 0)")
+    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('PRECIOUS_METALS', 'Precious Metals', '🥇', 'Gold, silver, and other precious metals', ${0xFFFFD700}, 6, 0)")
+    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('RETIREMENT', 'Retirement Fund', '🏖️', '401k, IRA, pension funds', ${0xFF00BCD4}, 7, 0)")
+    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('BUSINESS', 'Business Assets', '💼', 'Business ownership and investments', ${0xFF607D8B}, 8, 0)")
+    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('COLLECTIBLES', 'Collectibles', '🎨', 'Art, antiques, and collectible items', ${0xFFFF5722}, 9, 0)")
+    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('OTHER', 'Other Assets', '📦', 'Miscellaneous assets', ${0xFF9E9E9E}, 10, 0)")
+
+    // Liability categories
+    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('MORTGAGE', 'Mortgage', '🏠', '', ${0xFFE53935}, 0, 1)")
+    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('LOAN', 'Loan', '📋', '', ${0xFFFF7043}, 1, 1)")
+    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('CREDIT_CARD', 'Credit Card', '💳', '', ${0xFFAB47BC}, 2, 1)")
+    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('DEBT', 'Debt', '📉', '', ${0xFF78909C}, 3, 1)")
 }
 

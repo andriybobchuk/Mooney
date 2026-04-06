@@ -686,7 +686,7 @@ private fun AssetCard(
 
                     if (asset.originalCurrency != GlobalConfig.baseCurrency) {
                         Text(
-                            text = "≈ ${asset.originalAmount.formatWithCommas()} ${asset.originalCurrency.symbol}",
+                            text = "${asset.originalAmount.formatWithCommas()} ${asset.originalCurrency.symbol}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

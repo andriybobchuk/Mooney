@@ -140,14 +140,9 @@ class SettingsViewModel(
             is SettingsAction.OnExportData -> handleExportData()
             is SettingsAction.OnImportData -> handleImportData(action.jsonData)
             is SettingsAction.OnToggleUserCurrency -> handleToggleUserCurrency(action.currencyCode)
-            is SettingsAction.OnDeleteCategory -> handleDeleteCategory(action.categoryId)
-            is SettingsAction.OnAddCategory -> handleAddCategory(action.title, action.type, action.emoji, action.parentId)
             is SettingsAction.OnDefaultExpenseCategoryChange -> handleDefaultExpenseCategoryChange(action.categoryId)
             is SettingsAction.OnDefaultIncomeCategoryChange -> handleDefaultIncomeCategoryChange(action.categoryId)
             is SettingsAction.OnPrimaryAccountChange -> handlePrimaryAccountChange(action.accountId)
-            is SettingsAction.OnAddAssetCategory -> handleAddAssetCategory(action.title, action.isLiability)
-            is SettingsAction.OnDeleteAssetCategory -> handleDeleteAssetCategory(action.categoryId)
-            is SettingsAction.OnRenameAssetCategory -> handleRenameAssetCategory(action.categoryId, action.newTitle)
             is SettingsAction.OnExcludeTaxesToggle -> handleExcludeTaxesToggle(action.enabled)
             is SettingsAction.OnBackClick -> {}
         }
@@ -397,87 +392,6 @@ class SettingsViewModel(
                 updateUserCurrenciesUseCase.add(UserCurrency(currencyCode, nextOrder))
                 analyticsTracker.trackEvent(AnalyticsEvent.ToggleUserCurrency(currencyCode, enabled = true))
             }
-        }
-    }
-
-    private fun handleAddCategory(title: String, type: String, emoji: String?, parentId: String?) {
-        viewModelScope.launch {
-            // Gate: check custom category limit
-            val isPremium = premiumManager.getIsPremium()
-            if (!isPremium) {
-                val currentCount = dataStore.data.first()[PreferencesKeys.CUSTOM_CATEGORY_COUNT] ?: 0
-                if (currentCount >= PremiumConfig.maxFreeCustomCategories) {
-                    _state.update { it.copy(showPaywall = true) }
-                    return@launch
-                }
-            }
-
-            val id = title.lowercase().replace(" ", "_").replace(Regex("[^a-z0-9_]"), "")
-            // When parentId is null, this is a new general category — parent is the type root
-            val resolvedParentId = parentId ?: type.lowercase()
-            categoryDao.upsert(
-                CategoryEntity(
-                    id = id,
-                    title = title,
-                    type = type,
-                    emoji = emoji,
-                    parentId = resolvedParentId
-                )
-            )
-            // Track custom category count
-            dataStore.edit { prefs ->
-                val current = prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] ?: 0
-                prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] = current + 1
-            }
-            analyticsTracker.trackEvent(AnalyticsEvent.AddCustomCategory(type))
-            repository.reloadCategories()
-            _state.update { it.copy(allCategories = getCategoriesUseCase()) }
-        }
-    }
-
-    private fun handleDeleteCategory(categoryId: String) {
-        viewModelScope.launch {
-            // Delete children first, then the category itself
-            val children = categoryDao.getByParentId(categoryId)
-            children.forEach { categoryDao.delete(it.id) }
-            categoryDao.delete(categoryId)
-            // Decrement custom category count
-            dataStore.edit { prefs ->
-                val current = prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] ?: 0
-                prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] = (current - 1).coerceAtLeast(0)
-            }
-            analyticsTracker.trackEvent(AnalyticsEvent.DeleteCustomCategory)
-            repository.reloadCategories()
-            _state.update { it.copy(allCategories = getCategoriesUseCase()) }
-        }
-    }
-
-    private fun handleAddAssetCategory(title: String, isLiability: Boolean = false) {
-        viewModelScope.launch {
-            val id = title.lowercase().replace(" ", "_").replace(Regex("[^a-z0-9_]"), "")
-            val currentCount = assetCategoryDao.getCount()
-            assetCategoryDao.upsert(
-                AssetCategoryEntity(
-                    id = id,
-                    title = title,
-                    emoji = "📁",
-                    sortOrder = currentCount,
-                    isLiability = isLiability
-                )
-            )
-        }
-    }
-
-    private fun handleDeleteAssetCategory(categoryId: String) {
-        viewModelScope.launch {
-            assetCategoryDao.delete(categoryId)
-        }
-    }
-
-    private fun handleRenameAssetCategory(categoryId: String, newTitle: String) {
-        viewModelScope.launch {
-            val existing = assetCategoryDao.getById(categoryId) ?: return@launch
-            assetCategoryDao.upsert(existing.copy(title = newTitle))
         }
     }
 

@@ -260,6 +260,24 @@ fun NavigationHost() {
                 val viewModel = koinViewModel<SettingsViewModel>()
                 SettingsScreen(
                     viewModel = viewModel,
+                    onBackClick = { navController.navigateUp() },
+                    onNavigateToTransactionCategories = { navController.navigate(Route.TransactionCategories) },
+                    onNavigateToAssetCategories = { navController.navigate(Route.AssetCategories) }
+                )
+            }
+
+            composable<Route.TransactionCategories> {
+                val viewModel = koinViewModel<com.andriybobchuk.mooney.mooney.presentation.categories.TransactionCategoriesViewModel>()
+                com.andriybobchuk.mooney.mooney.presentation.categories.TransactionCategoriesScreen(
+                    viewModel = viewModel,
+                    onBackClick = { navController.navigateUp() }
+                )
+            }
+
+            composable<Route.AssetCategories> {
+                val viewModel = koinViewModel<com.andriybobchuk.mooney.mooney.presentation.categories.AssetCategoriesViewModel>()
+                com.andriybobchuk.mooney.mooney.presentation.categories.AssetCategoriesScreen(
+                    viewModel = viewModel,
                     onBackClick = { navController.navigateUp() }
                 )
             }

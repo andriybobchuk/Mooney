@@ -19,6 +19,8 @@ import com.andriybobchuk.mooney.mooney.presentation.assets.AssetsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.exchange.ExchangeViewModel
 import com.andriybobchuk.mooney.mooney.presentation.goals.GoalsViewModel
+import com.andriybobchuk.mooney.mooney.presentation.categories.AssetCategoriesViewModel
+import com.andriybobchuk.mooney.mooney.presentation.categories.TransactionCategoriesViewModel
 import com.andriybobchuk.mooney.mooney.presentation.recurring.RecurringTransactionsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionViewModel
 import com.andriybobchuk.mooney.mooney.presentation.settings.SettingsViewModel
@@ -185,4 +187,6 @@ val sharedModule = module {
     viewModelOf(::SettingsViewModel)
     viewModelOf(::OnboardingViewModel)
     viewModelOf(::RecurringTransactionsViewModel)
+    viewModelOf(::TransactionCategoriesViewModel)
+    viewModelOf(::AssetCategoriesViewModel)
 }

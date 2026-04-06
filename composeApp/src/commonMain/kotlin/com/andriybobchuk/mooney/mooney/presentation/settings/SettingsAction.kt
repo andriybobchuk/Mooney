@@ -25,15 +25,6 @@ sealed interface SettingsAction {
     // User Currencies
     data class OnToggleUserCurrency(val currencyCode: String) : SettingsAction
 
-    // Categories
-    data class OnDeleteCategory(val categoryId: String) : SettingsAction
-    data class OnAddCategory(
-        val title: String,
-        val type: String,
-        val emoji: String?,
-        val parentId: String?
-    ) : SettingsAction
-
     // Default categories
     data class OnDefaultExpenseCategoryChange(val categoryId: String) : SettingsAction
     data class OnDefaultIncomeCategoryChange(val categoryId: String) : SettingsAction
@@ -41,9 +32,5 @@ sealed interface SettingsAction {
     // Primary account
     data class OnPrimaryAccountChange(val accountId: Int) : SettingsAction
 
-    // Asset Categories
-    data class OnDeleteAssetCategory(val categoryId: String) : SettingsAction
-    data class OnAddAssetCategory(val title: String, val isLiability: Boolean = false) : SettingsAction
-    data class OnRenameAssetCategory(val categoryId: String, val newTitle: String) : SettingsAction
     data class OnExcludeTaxesToggle(val enabled: Boolean) : SettingsAction
 }

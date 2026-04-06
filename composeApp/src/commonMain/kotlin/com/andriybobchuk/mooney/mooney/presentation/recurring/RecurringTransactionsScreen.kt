@@ -25,7 +25,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -179,24 +180,46 @@ fun RecurringTransactionsScreen(
 
     // Delete confirmation
     deletingRecurringId?.let { id ->
-        AlertDialog(
-            onDismissRequest = { deletingRecurringId = null },
-            title = { Text("Delete Recurring Transaction") },
-            text = { Text("This will stop future automatic entries. Existing transactions won't be affected.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.deleteRecurring(id)
-                    deletingRecurringId = null
-                }) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+        MooneyBottomSheet(onDismissRequest = { deletingRecurringId = null }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
+            ) {
+                Text(
+                    text = "Delete Recurring Transaction",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Text(
+                    text = "This will stop future automatic entries. Existing transactions won't be affected.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.errorContainer)
+                        .clickable {
+                            viewModel.deleteRecurring(id)
+                            deletingRecurringId = null
+                        }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Delete",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { deletingRecurringId = null }) {
-                    Text("Cancel")
-                }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
-        )
+        }
     }
 }
 

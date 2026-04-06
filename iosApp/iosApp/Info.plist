@@ -29,9 +29,13 @@
 	</dict>
 	<key>UILaunchScreen</key>
 	<dict/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Mooney needs access to your photo library to attach receipt images to transactions.</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
-		<string>armv7</string>
+		<string>arm64</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>

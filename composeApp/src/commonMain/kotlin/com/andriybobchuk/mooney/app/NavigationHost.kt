@@ -200,7 +200,8 @@ fun NavigationHost() {
                     bottomNavbar = { BottomNavigationBar(navController, 0) },
                     onSettingsClick = { navController.navigate(Route.Settings) },
                     onNavigateToAssets = { navController.navigate(Route.Accounts) { popUpTo(Route.MooneyGraph) } },
-                    onNavigateToRecurring = { navController.navigate(Route.RecurringTransactions) }
+                    onNavigateToRecurring = { navController.navigate(Route.RecurringTransactions) },
+                    onNavigateToTransactionCategories = { navController.navigate(Route.TransactionCategories) }
                 )
             }
             composable<Route.Accounts> {
@@ -209,6 +210,7 @@ fun NavigationHost() {
                     viewModel = viewModel,
                     bottomNavbar = { BottomNavigationBar(navController, 1) },
                     onSettingsClick = { navController.navigate(Route.Settings) },
+                    onNavigateToAssetCategories = { navController.navigate(Route.AssetCategories) },
                     onGoalsClick = if (FeatureFlags.goalsEnabled) {
                         { navController.navigate(Route.Goals) }
                     } else null

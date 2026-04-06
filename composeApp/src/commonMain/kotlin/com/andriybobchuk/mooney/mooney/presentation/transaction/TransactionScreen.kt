@@ -143,6 +143,7 @@ fun TransactionsScreen(
     onSettingsClick: () -> Unit = {},
     onNavigateToAssets: () -> Unit = {},
     onNavigateToRecurring: () -> Unit = {},
+    onNavigateToTransactionCategories: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val transactions = state.transactions
@@ -305,7 +306,7 @@ fun TransactionsScreen(
                         isBottomSheetOpen = false
                         viewModel.upsertTransaction(transaction)
                     },
-                    onEditCategories = onSettingsClick
+                    onEditCategories = onNavigateToTransactionCategories
                 )
             }
 

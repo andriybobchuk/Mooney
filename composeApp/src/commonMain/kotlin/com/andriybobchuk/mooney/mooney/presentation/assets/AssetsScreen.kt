@@ -79,6 +79,7 @@ fun AssetsScreen(
     bottomNavbar: @Composable () -> Unit,
     onSettingsClick: () -> Unit = {},
     onGoalsClick: (() -> Unit)? = null,
+    onNavigateToAssetCategories: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsState()
     val assets = state.assets
@@ -240,7 +241,7 @@ fun AssetsScreen(
                     AssetSheet(
                         editingAsset = editingAsset,
                         assetCategories = state.assetCategories,
-                        onEditCategories = onSettingsClick,
+                        onEditCategories = onNavigateToAssetCategories,
                         onAdd = { title, emoji, amount, currency, categoryId, isLiability ->
                             viewModel.upsertAsset(
                                 editingAsset?.id ?: 0,

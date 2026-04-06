@@ -121,6 +121,7 @@ class AndroidBillingManager(
         }
     }
 
+    @Suppress("ReturnCount")
     override suspend fun purchase(productId: String): PurchaseResult {
         val activity = activityProvider.getActivity()
             ?: return PurchaseResult.Error("No activity available")

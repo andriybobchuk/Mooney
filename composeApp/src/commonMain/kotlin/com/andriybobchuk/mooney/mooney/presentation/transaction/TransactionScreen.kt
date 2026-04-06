@@ -1182,48 +1182,49 @@ fun TransactionBottomSheet(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Previous day button
-                IconButton(
-                    onClick = {
-                        selectedDate = selectedDate.minus(1, DateTimeUnit.DAY)
-                    },
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronLeftIcon(),
-                        contentDescription = "Previous day",
-                        modifier = Modifier.size(20.dp)
+                if (!forceRecurringEnabled) {
+                    // Previous day button
+                    IconButton(
+                        onClick = {
+                            selectedDate = selectedDate.minus(1, DateTimeUnit.DAY)
+                        },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronLeftIcon(),
+                            contentDescription = "Previous day",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    // Date button
+                    val dayName = selectedDate.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
+                    val dayNumber = selectedDate.dayOfMonth
+                    MooneyButton(
+                        text = "$dayName $dayNumber",
+                        onClick = { showDateSheet = true },
+                        modifier = Modifier.weight(1f),
+                        variant = ButtonVariant.SECONDARY
                     )
+
+                    // Next day button
+                    IconButton(
+                        onClick = {
+                            selectedDate = selectedDate.plus(1, DateTimeUnit.DAY)
+                        },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
+                            contentDescription = "Next day",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
 
-                // Date button
-                val dayName = selectedDate.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
-                val dayNumber = selectedDate.dayOfMonth
-                MooneyButton(
-                    text = "$dayName $dayNumber",
-                    onClick = { showDateSheet = true },
-                    modifier = Modifier.weight(1f),
-                    variant = ButtonVariant.SECONDARY
-                )
-
-                // Next day button
-                IconButton(
-                    onClick = {
-                        selectedDate = selectedDate.plus(1, DateTimeUnit.DAY)
-                    },
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
-                        contentDescription = "Next day",
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                // Repeat button — opens schedule sheet, "Save" there enables recurring
+                // Repeat/Schedule button — opens schedule sheet
                 val repeatLabel = if (isRecurringEnabled) {
-                    recurringSchedule.frequency.name.lowercase()
-                        .replaceFirstChar { it.uppercase() }
+                    recurringSchedule.toDisplayString()
                 } else {
                     "Repeat?"
                 }
@@ -1231,7 +1232,7 @@ fun TransactionBottomSheet(
                     text = repeatLabel,
                     iconPainter = com.andriybobchuk.mooney.core.presentation.Icons.RefreshIcon(),
                     onClick = { showScheduleSheet = true },
-                    modifier = Modifier,
+                    modifier = if (forceRecurringEnabled) Modifier.fillMaxWidth() else Modifier,
                     variant = if (isRecurringEnabled) ButtonVariant.PRIMARY else ButtonVariant.SECONDARY
                 )
             }

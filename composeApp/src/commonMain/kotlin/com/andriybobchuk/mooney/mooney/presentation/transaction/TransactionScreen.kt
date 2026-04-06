@@ -1,5 +1,6 @@
 package com.andriybobchuk.mooney.mooney.presentation.transaction
 
+import kotlin.coroutines.cancellation.CancellationException
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -2125,6 +2126,8 @@ fun FrequentCategoriesSection(
             } else {
                 categories
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             frequentCategories = getCategoriesUseCase()
                 .filter { !it.isSubCategory() }

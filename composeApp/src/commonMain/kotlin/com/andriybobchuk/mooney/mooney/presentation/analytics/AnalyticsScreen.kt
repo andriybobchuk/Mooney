@@ -356,7 +356,7 @@ fun MonthPicker(
         Icon(
             painter = com.andriybobchuk.mooney.core.presentation.Icons.CalendarIcon(),
             contentDescription = stringResource(Res.string.select_month),
-            modifier = Modifier.size(22.dp),
+            modifier = Modifier.size(18.dp),
             tint = MaterialTheme.colorScheme.onBackground
         )
     }

@@ -75,7 +75,7 @@ object Toolbars {
                             painter = Icons.BackIcon(),
                             contentDescription = "Back",
                             tint = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
@@ -92,13 +92,13 @@ object Toolbars {
                                 painter = actionIcon.painter,
                                 contentDescription = actionIcon.contentDescription,
                                 tint = MaterialTheme.colorScheme.onBackground,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                             actionIcon.icon != null -> Icon(
                                 imageVector = actionIcon.icon,
                                 contentDescription = actionIcon.contentDescription,
                                 tint = MaterialTheme.colorScheme.onBackground,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }

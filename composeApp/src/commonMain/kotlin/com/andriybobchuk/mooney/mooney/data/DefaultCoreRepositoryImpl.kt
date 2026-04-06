@@ -176,7 +176,7 @@ class DefaultCoreRepositoryImpl(
             getCategoryById(entity.categoryId)
         }.filter { category ->
             // Filter out top-level categories (Income/Expense) as they're too generic
-            category.parent != null || (category.parent == null && category.type != CategoryType.INCOME && category.type != CategoryType.EXPENSE)
+            category.parent != null || (category.type != CategoryType.INCOME && category.type != CategoryType.EXPENSE)
         }
     }
 

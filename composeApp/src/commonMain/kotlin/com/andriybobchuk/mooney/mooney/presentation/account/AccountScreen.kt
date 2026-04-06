@@ -73,18 +73,9 @@ import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.usecase.ReconciliationDifference
-import com.andriybobchuk.mooney.mooney.domain.usecase.CreateReconciliationUseCase
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
-
-data class ReconciliationData(
-    val accountId: Int,
-    val accountTitle: String,
-    val oldAmount: Double,
-    val newAmount: Double,
-    val difference: Double
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,10 +95,16 @@ fun AccountScreen(
     var showSheet by remember { mutableStateOf(false) }
     var editingAccount by remember { mutableStateOf<UiAccount?>(null) }
     
-    // Reconciliation dialog state
-    var showReconciliationDialog by remember { mutableStateOf(false) }
-    var reconciliationData by remember { mutableStateOf<ReconciliationData?>(null) }
-    
+    // Reconciliation from ViewModel state
+    val reconciliationDiff = state.reconciliationDifference
+
+    // Close sheet when ViewModel signals
+    LaunchedEffect(state.shouldCloseSheet) {
+        if (state.shouldCloseSheet) {
+            showSheet = false
+            viewModel.clearSheetCloseFlag()
+        }
+    }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
@@ -188,27 +185,7 @@ fun AccountScreen(
                     AccountSheet(
                         editingAccount = editingAccount,
                         onAdd = { title, emoji, amount, currency ->
-                            // Check if this is an edit and if amount changed
-                            editingAccount?.let { account ->
-                                val difference = amount - account.originalAmount
-                                if (kotlin.math.abs(difference) >= 0.01) {
-                                    reconciliationData = ReconciliationData(
-                                        accountId = account.id,
-                                        accountTitle = title,
-                                        oldAmount = account.originalAmount,
-                                        newAmount = amount,
-                                        difference = difference
-                                    )
-                                }
-                            }
-
                             viewModel.upsertAccount(editingAccount?.id ?: 0, title, emoji, amount, currency)
-                            showSheet = false
-
-                            if (reconciliationData != null) {
-                                showReconciliationDialog = true
-                            }
-
                             editingAccount = null
                         }
                     )
@@ -216,19 +193,11 @@ fun AccountScreen(
             }
             
             // Reconciliation dialog
-            if (showReconciliationDialog && reconciliationData != null) {
+            if (reconciliationDiff != null) {
                 ReconciliationDialog(
-                    data = reconciliationData!!,
-                    onConfirm = {
-                        showReconciliationDialog = false
-                        reconciliationData = null
-                        // TODO: Create reconciliation transaction using CreateReconciliationUseCase
-                        // For now, just dismiss the dialog
-                    },
-                    onDismiss = {
-                        showReconciliationDialog = false
-                        reconciliationData = null
-                    }
+                    data = reconciliationDiff,
+                    onConfirm = { viewModel.confirmReconciliation() },
+                    onDismiss = { viewModel.dismissReconciliation() }
                 )
             }
         }
@@ -237,7 +206,7 @@ fun AccountScreen(
 
 @Composable
 private fun ReconciliationDialog(
-    data: ReconciliationData,
+    data: ReconciliationDifference,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -248,11 +217,11 @@ private fun ReconciliationDialog(
         },
         text = {
             Column {
-                Text("The balance for '${data.accountTitle}' has changed:")
+                Text("The balance for '${data.account.title}' has changed:")
                 Spacer(Modifier.height(8.dp))
-                Text("Previous: ${data.oldAmount.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}")
-                Text("New: ${data.newAmount.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}")
-                Text("Difference: ${data.difference.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}")
+                Text("Previous: ${data.oldAmount.formatWithCommas()} ${data.account.currency.symbol}")
+                Text("New: ${data.newAmount.formatWithCommas()} ${data.account.currency.symbol}")
+                Text("Difference: ${data.formattedDifference}")
                 Spacer(Modifier.height(12.dp))
                 Text(
                     "Would you like to automatically create a reconciliation transaction to explain this change?",

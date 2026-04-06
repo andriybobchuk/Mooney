@@ -1397,7 +1397,7 @@ private fun SettingsRow(
                     value,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 12.dp, end = 4.dp),
+                    modifier = Modifier.widthIn(max = 120.dp).padding(start = 12.dp, end = 4.dp),
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )

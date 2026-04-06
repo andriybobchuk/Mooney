@@ -617,7 +617,7 @@ fun SettingsScreen(
                                         else Color.Transparent
                                     )
                                     .clickable { selectedType = type }
-                                    .padding(vertical = 10.dp),
+                                    .padding(vertical = 12.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -1254,7 +1254,7 @@ fun SettingsScreen(
                         )
                         SettingsDivider()
                         SettingsRow(
-                            title = "Primary Account",
+                            title = "Default Account",
                             value = primaryAccountName,
                             onClick = { showPrimaryAccountSheet = true }
                         )
@@ -1387,13 +1387,13 @@ private fun SettingsRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = !showLoading) { onClick() }
-            .padding(vertical = 10.dp),
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 title,
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1
             )
@@ -1412,7 +1412,7 @@ private fun SettingsRow(
             if (value.isNotEmpty()) {
                 Text(
                     value,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 12.dp, end = 4.dp),
                     maxLines = 1,
@@ -1442,7 +1442,7 @@ private fun SettingsToggleRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onCheckedChange(!checked) }
-            .padding(vertical = 10.dp),
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {

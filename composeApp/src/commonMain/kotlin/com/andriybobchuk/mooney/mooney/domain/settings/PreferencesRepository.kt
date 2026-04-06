@@ -23,6 +23,8 @@ interface PreferencesRepository {
 
     suspend fun updateDefaultIncomeCategory(categoryId: String)
 
+    suspend fun updateExcludeTaxesFromTotals(enabled: Boolean)
+
     suspend fun markOnboardingCompleted()
 
     suspend fun clearPreferences()

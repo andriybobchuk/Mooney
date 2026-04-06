@@ -62,10 +62,12 @@ class TransactionViewModel(
     private val pendingTransactionDao: PendingTransactionDao,
     private val acceptPendingTransactionUseCase: AcceptPendingTransactionUseCase,
     private val createRecurringFromTransactionUseCase: CreateRecurringFromTransactionUseCase,
-    private val analyticsTracker: AnalyticsTracker
+    private val analyticsTracker: AnalyticsTracker,
+    private val preferencesRepository: com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository
 ) : ViewModel() {
 
     private var observeTransactionsJob: Job? = null
+    private var excludeTaxes: Boolean = true
 
     private val _uiState = MutableStateFlow(TransactionState())
     val state = _uiState
@@ -108,6 +110,14 @@ class TransactionViewModel(
         loadDataForBottomSheet()
         observePendingTransactions()
         observeBaseCurrencyChanges()
+        observeTaxPreference()
+    }
+
+    private fun observeTaxPreference() {
+        preferencesRepository.getUserPreferences().onEach { prefs ->
+            excludeTaxes = prefs.excludeTaxesFromTotals
+            loadTotal()
+        }.launchIn(viewModelScope)
     }
 
     private fun observeBaseCurrencyChanges() {
@@ -128,7 +138,8 @@ class TransactionViewModel(
         val result = calculateTransactionTotalUseCase(
             transactions = _uiState.value.transactions,
             selectedCurrency = currencyManagerUseCase.getCurrentCurrency(),
-            baseCurrency = GlobalConfig.baseCurrency
+            baseCurrency = GlobalConfig.baseCurrency,
+            excludeTaxes = excludeTaxes
         )
 
         _uiState.update {
@@ -140,7 +151,7 @@ class TransactionViewModel(
     }
 
     private fun loadDailyTotals(transactions: List<Transaction>, month: MonthKey) {
-        val dailyTotalsMap = calculateDailyTotalsMapUseCase(transactions, month)
+        val dailyTotalsMap = calculateDailyTotalsMapUseCase(transactions, month, excludeTaxes)
         _uiState.update { it.copy(dailyTotals = dailyTotalsMap) }
     }
 

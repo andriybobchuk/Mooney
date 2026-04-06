@@ -18,4 +18,5 @@ object PreferencesKeys {
     val CUSTOM_CATEGORY_COUNT = intPreferencesKey("custom_category_count")
     val DEFAULT_EXPENSE_CATEGORY = stringPreferencesKey("default_expense_category")
     val DEFAULT_INCOME_CATEGORY = stringPreferencesKey("default_income_category")
+    val EXCLUDE_TAXES_FROM_TOTALS = booleanPreferencesKey("exclude_taxes_from_totals")
 }

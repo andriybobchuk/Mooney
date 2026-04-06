@@ -13,7 +13,8 @@ data class UserPreferences(
     val appLanguage: String = "system",
     val onboardingCompleted: Boolean = false,
     val defaultExpenseCategory: String = "groceries",
-    val defaultIncomeCategory: String = "salary"
+    val defaultIncomeCategory: String = "salary",
+    val excludeTaxesFromTotals: Boolean = true
 )
 
 enum class ThemeMode {

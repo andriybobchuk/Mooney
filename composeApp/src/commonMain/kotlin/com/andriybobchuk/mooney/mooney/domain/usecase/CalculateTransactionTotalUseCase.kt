@@ -17,12 +17,13 @@ class CalculateTransactionTotalUseCase(
     operator fun invoke(
         transactions: List<Transaction?>,
         selectedCurrency: Currency,
-        baseCurrency: Currency
+        baseCurrency: Currency,
+        excludeTaxes: Boolean = true
     ): TotalResult {
         val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
         val totalPln = transactions.filterNotNull().filter {
             it.subcategory.type == CategoryType.EXPENSE &&
-                !CalculateTaxesUseCase.isTaxTransaction(it)
+                (!excludeTaxes || !CalculateTaxesUseCase.isTaxTransaction(it))
         }.sumOf {
             exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
         }

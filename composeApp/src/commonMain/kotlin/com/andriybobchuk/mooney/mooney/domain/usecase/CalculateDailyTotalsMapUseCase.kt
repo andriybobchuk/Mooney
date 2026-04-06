@@ -9,7 +9,8 @@ class CalculateDailyTotalsMapUseCase(
 ) {
     operator fun invoke(
         transactions: List<Transaction>,
-        month: MonthKey
+        month: MonthKey,
+        excludeTaxes: Boolean = true
     ): Map<Int, Double> {
         return transactions
             .groupBy { it.date.dayOfMonth }
@@ -17,7 +18,8 @@ class CalculateDailyTotalsMapUseCase(
                 calculateDailyTotalUseCase(
                     dayTransactions,
                     dayTransactions.firstOrNull()?.date
-                        ?: LocalDate(month.year, month.month, 1)
+                        ?: LocalDate(month.year, month.month, 1),
+                    excludeTaxes
                 )
             }
     }

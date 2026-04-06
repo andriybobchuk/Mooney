@@ -35,7 +35,8 @@ class DataStorePreferencesRepository(
                 appLanguage = preferences[PreferencesKeys.APP_LANGUAGE] ?: "system",
                 onboardingCompleted = preferences[PreferencesKeys.ONBOARDING_COMPLETED] ?: false,
                 defaultExpenseCategory = preferences[PreferencesKeys.DEFAULT_EXPENSE_CATEGORY] ?: "groceries",
-                defaultIncomeCategory = preferences[PreferencesKeys.DEFAULT_INCOME_CATEGORY] ?: "salary"
+                defaultIncomeCategory = preferences[PreferencesKeys.DEFAULT_INCOME_CATEGORY] ?: "salary",
+                excludeTaxesFromTotals = preferences[PreferencesKeys.EXCLUDE_TAXES_FROM_TOTALS] ?: true
             )
         }
     }
@@ -85,6 +86,12 @@ class DataStorePreferencesRepository(
     override suspend fun updateDefaultIncomeCategory(categoryId: String) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.DEFAULT_INCOME_CATEGORY] = categoryId
+        }
+    }
+
+    override suspend fun updateExcludeTaxesFromTotals(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.EXCLUDE_TAXES_FROM_TOTALS] = enabled
         }
     }
 

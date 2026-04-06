@@ -138,6 +138,9 @@ interface PendingTransactionDao {
 
     @Query("DELETE FROM pending_transactions WHERE status != 'PENDING' AND scheduledDate < :cutoffDate")
     suspend fun cleanupOldProcessed(cutoffDate: String)
+
+    @Query("DELETE FROM pending_transactions WHERE recurringTransactionId = :recurringId AND status = 'PENDING'")
+    suspend fun deletePendingByRecurringId(recurringId: Int)
 }
 
 @Dao

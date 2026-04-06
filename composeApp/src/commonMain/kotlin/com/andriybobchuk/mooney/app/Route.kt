@@ -31,4 +31,10 @@ sealed interface Route {
     @Serializable
     data object RecurringTransactions : Route
 
+    @Serializable
+    data object TransactionCategories : Route
+
+    @Serializable
+    data object AssetCategories : Route
+
 }

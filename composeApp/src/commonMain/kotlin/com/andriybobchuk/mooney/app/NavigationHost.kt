@@ -1,6 +1,6 @@
 package com.andriybobchuk.mooney.app
 
-
+import kotlin.coroutines.cancellation.CancellationException
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
@@ -129,6 +129,8 @@ fun NavigationHost() {
             analyticsTracker.setUserProperty("theme_mode", prefs.themeMode.name.lowercase())
             analyticsTracker.setUserProperty("app_language", prefs.appLanguage)
             analyticsTracker.setUserProperty("currency_count", currencies.size.toString())
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             // User properties are best-effort — never crash the app for analytics
         }
@@ -139,6 +141,8 @@ fun NavigationHost() {
     LaunchedEffect(Unit) {
         try {
             processRecurringUseCase()
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
             // Best-effort — never crash the app for recurring processing
         }

@@ -509,7 +509,7 @@ private fun CollapsibleCategoryHeader(
     dragModifier: Modifier = Modifier
 ) {
     val rotationAngle by animateFloatAsState(
-        targetValue = if (isExpanded) 0f else -90f,
+        targetValue = if (isExpanded) 90f else 0f,
         label = "arrow rotation"
     )
     

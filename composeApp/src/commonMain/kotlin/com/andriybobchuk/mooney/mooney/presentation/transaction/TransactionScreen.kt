@@ -410,7 +410,7 @@ private fun PendingTransactionItem(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     "↻ ",
-                    fontSize = 16.sp,
+                    fontSize = 24.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 )
                 Text(

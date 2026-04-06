@@ -155,7 +155,8 @@ class AndroidBillingManager(
             )
             .build()
 
-        purchaseDeferred = CompletableDeferred()
+        val deferred = CompletableDeferred<PurchaseResult>()
+        purchaseDeferred = deferred
         val launchResult = billingClient.launchBillingFlow(activity, flowParams)
 
         if (launchResult.responseCode != BillingClient.BillingResponseCode.OK) {
@@ -163,7 +164,7 @@ class AndroidBillingManager(
             return PurchaseResult.Error("Failed to launch billing flow")
         }
 
-        val purchaseResult = purchaseDeferred!!.await()
+        val purchaseResult = deferred.await()
 
         // Acknowledge if successful
         if (purchaseResult is PurchaseResult.Success) {

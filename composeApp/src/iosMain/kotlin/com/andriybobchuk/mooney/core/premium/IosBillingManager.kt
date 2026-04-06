@@ -27,6 +27,7 @@ class IosBillingManager : BillingManager {
     private var purchaseDeferred: CompletableDeferred<PurchaseResult>? = null
     private var restoreDeferred: CompletableDeferred<Boolean>? = null
     private var cachedProducts: List<SKProduct> = emptyList()
+    private var currentProductsDelegate: ProductsRequestDelegate? = null
 
     private val transactionObserver = TransactionObserver(
         onPurchased = { transaction ->
@@ -67,13 +68,19 @@ class IosBillingManager : BillingManager {
     override suspend fun fetchProducts(): List<BillingProduct>? {
         val deferred = CompletableDeferred<List<SKProduct>?>()
 
-        val delegate = ProductsRequestDelegate(
-            onSuccess = { products -> deferred.complete(products) },
-            onFailure = { deferred.complete(null) }
+        currentProductsDelegate = ProductsRequestDelegate(
+            onSuccess = { products ->
+                deferred.complete(products)
+                currentProductsDelegate = null
+            },
+            onFailure = {
+                deferred.complete(null)
+                currentProductsDelegate = null
+            }
         )
 
         val request = SKProductsRequest(productIdentifiers = setOf(PRODUCT_ID_MONTHLY))
-        request.delegate = delegate
+        request.delegate = currentProductsDelegate
         request.start()
 
         val products = deferred.await() ?: return null
@@ -108,18 +115,20 @@ class IosBillingManager : BillingManager {
             return PurchaseResult.Error("Product not found")
         }
 
-        purchaseDeferred = CompletableDeferred()
+        val deferred = CompletableDeferred<PurchaseResult>()
+        purchaseDeferred = deferred
         val payment = SKPayment.paymentWithProduct(product)
         SKPaymentQueue.defaultQueue().addPayment(payment)
 
-        return purchaseDeferred!!.await()
+        return deferred.await()
     }
 
     override suspend fun restorePurchases(): Boolean {
-        restoreDeferred = CompletableDeferred()
+        val deferred = CompletableDeferred<Boolean>()
+        restoreDeferred = deferred
         _isSubscribed.value = false
         SKPaymentQueue.defaultQueue().restoreCompletedTransactions()
-        return restoreDeferred!!.await()
+        return deferred.await()
     }
 
     override suspend fun verifySubscription(): Boolean {

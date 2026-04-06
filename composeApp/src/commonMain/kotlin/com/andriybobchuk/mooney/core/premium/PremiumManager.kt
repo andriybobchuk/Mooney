@@ -19,7 +19,8 @@ class PremiumManager(
     ) { cached, live -> cached || live }
 
     suspend fun getIsPremium(): Boolean {
-        return dataStore.data.firstOrNull()?.get(PreferencesKeys.IS_PREMIUM) ?: false
+        val cached = dataStore.data.firstOrNull()?.get(PreferencesKeys.IS_PREMIUM) ?: false
+        return cached || isPremium.firstOrNull() ?: false
     }
 
     suspend fun syncSubscriptionStatus() {

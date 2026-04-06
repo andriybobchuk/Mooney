@@ -108,9 +108,10 @@ class TransactionCategoriesViewModel(
             val children = categoryDao.getByParentId(categoryId)
             children.forEach { categoryDao.delete(it.id) }
             categoryDao.delete(categoryId)
+            val deletedCount = children.size + 1
             dataStore.edit { prefs ->
                 val current = prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] ?: 0
-                prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] = (current - 1).coerceAtLeast(0)
+                prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] = (current - deletedCount).coerceAtLeast(0)
             }
             analyticsTracker.trackEvent(AnalyticsEvent.DeleteCustomCategory)
             repository.reloadCategories()

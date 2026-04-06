@@ -47,7 +47,7 @@ platform :ios do
     )
 
     # Read version from gradle.properties (single source of truth)
-    gradle_props = File.read("../gradle.properties")
+    gradle_props = File.read("../../gradle.properties")
     app_version = gradle_props.match(/app\.version=(.+)/)[1].strip
 
     # Set marketing version from gradle.properties

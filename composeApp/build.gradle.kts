@@ -124,6 +124,28 @@ android {
     }
 }
 
+// Generate AppVersion.kt from gradle.properties
+val generateVersionFile by tasks.registering {
+    val outputDir = layout.buildDirectory.dir("generated/version/kotlin")
+    val version = findProperty("app.version") as String
+    outputs.dir(outputDir)
+    doLast {
+        val dir = outputDir.get().asFile.resolve("com/andriybobchuk/mooney")
+        dir.mkdirs()
+        dir.resolve("AppVersion.kt").writeText(
+            """
+            package com.andriybobchuk.mooney
+
+            const val APP_VERSION = "$version"
+            """.trimIndent()
+        )
+    }
+}
+
+kotlin.sourceSets.getByName("commonMain") {
+    kotlin.srcDir(generateVersionFile.map { layout.buildDirectory.dir("generated/version/kotlin") })
+}
+
 dependencies {
     implementation(libs.androidx.ui.android)
     implementation(libs.androidx.material3.android)

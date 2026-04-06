@@ -245,12 +245,32 @@ fun AnalyticsScreen(
                         SubcategoryBottomSheet(
                             parentCategory = category,
                             subcategories = state.subcategories,
+                            onSubcategoryClick = { leafCategory ->
+                                viewModel.onLeafCategoryClicked(leafCategory)
+                            },
                             onDismiss = { viewModel.onSubcategorySheetDismissed() }
                         )
                     }
                 }
             }
             
+            // Category Transactions Bottom Sheet
+            if (state.isTransactionsSheetOpen) {
+                state.transactionsSheetCategory?.let { category ->
+                    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+                    MooneyBottomSheet(
+                        onDismissRequest = { viewModel.onTransactionsSheetDismissed() },
+                        sheetState = bottomSheetState
+                    ) {
+                        CategoryTransactionsSheet(
+                            category = category,
+                            transactions = state.transactionsForCategory
+                        )
+                    }
+                }
+            }
+
             // Net Income Chart Bottom Sheet
             if (state.isNetIncomeSheetOpen) {
                 val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -281,12 +301,12 @@ fun CategoryItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(vertical = 6.dp, horizontal = 16.dp),
+            .padding(vertical = 5.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(52.dp)
+                .size(48.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .background(MaterialTheme.appColors.cardBackground),
             contentAlignment = Alignment.Center
@@ -294,12 +314,13 @@ fun CategoryItem(
             Text(topCategorySummary.category.resolveEmoji(), fontSize = 25.sp)
         }
 
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(11.dp))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 topCategorySummary.category.title,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold)
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, fontSize = 15.sp),
+                color = MaterialTheme.colorScheme.onSurface
             )
             if (topCategorySummary.category.isSubCategory()) {
                 Text(
@@ -312,7 +333,7 @@ fun CategoryItem(
         Column(horizontalAlignment = Alignment.End) {
             Text(
                 "${topCategorySummary.amount.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium, fontSize = 14.5.sp),
                 color = if (topCategorySummary.category.type == CategoryType.INCOME) MaterialTheme.appColors.incomeColor else MaterialTheme.appColors.expenseColor
             )
             
@@ -515,6 +536,7 @@ fun EnhancedMetricCard(
 fun SubcategoryBottomSheet(
     parentCategory: com.andriybobchuk.mooney.mooney.domain.Category,
     subcategories: List<TopCategorySummary>,
+    onSubcategoryClick: (com.andriybobchuk.mooney.mooney.domain.Category) -> Unit = {},
     onDismiss: () -> Unit
 ) {
     Column(
@@ -549,14 +571,72 @@ fun SubcategoryBottomSheet(
                 modifier = Modifier.padding(top = 4.dp)
             )
         }
-        
+
         // Subcategories list
         LazyColumn {
             items(subcategories) { subcategory ->
                 CategoryItem(
                     topCategorySummary = subcategory,
-                    onClick = { /* No action needed for subcategories */ }
+                    onClick = { onSubcategoryClick(subcategory.category) }
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun CategoryTransactionsSheet(
+    category: com.andriybobchuk.mooney.mooney.domain.Category,
+    transactions: List<com.andriybobchuk.mooney.mooney.domain.Transaction>
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 32.dp)
+    ) {
+        // Header
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = category.resolveEmoji(),
+                    fontSize = 24.sp,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Text(
+                    text = category.title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            if (category.isSubCategory()) {
+                Text(
+                    text = category.parent?.title ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+        }
+
+        if (transactions.isEmpty()) {
+            Text(
+                text = "No transactions",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+        } else {
+            LazyColumn {
+                items(transactions) { transaction ->
+                    com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionItem(
+                        transaction = transaction,
+                        accounts = emptyList()
+                    )
+                }
             }
         }
     }

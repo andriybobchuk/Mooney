@@ -33,7 +33,10 @@ data class AnalyticsState(
     val categorySheetType: CategorySheetType? = null,
     val isNetIncomeSheetOpen: Boolean = false,
     val isLoading: Boolean = false,
-    val sheetCategories: List<TopCategorySummary> = emptyList()
+    val sheetCategories: List<TopCategorySummary> = emptyList(),
+    val isTransactionsSheetOpen: Boolean = false,
+    val transactionsSheetCategory: Category? = null,
+    val transactionsForCategory: List<Transaction> = emptyList()
 )
 
 class AnalyticsViewModel(
@@ -144,6 +147,28 @@ class AnalyticsViewModel(
                 isSubcategorySheetOpen = false,
                 selectedCategory = null,
                 subcategories = emptyList()
+            )
+        }
+    }
+
+    fun onLeafCategoryClicked(category: Category) {
+        val transactions = _state.value.transactionsForMonth.filterNotNull()
+        val matching = transactions.filter { it.subcategory.id == category.id }
+        _state.update {
+            it.copy(
+                isTransactionsSheetOpen = true,
+                transactionsSheetCategory = category,
+                transactionsForCategory = matching
+            )
+        }
+    }
+
+    fun onTransactionsSheetDismissed() {
+        _state.update {
+            it.copy(
+                isTransactionsSheetOpen = false,
+                transactionsSheetCategory = null,
+                transactionsForCategory = emptyList()
             )
         }
     }

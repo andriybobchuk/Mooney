@@ -1317,7 +1317,7 @@ fun SettingsScreen(
                     SettingsGroup {
                         SettingsRow(
                             title = stringResource(Res.string.version),
-                            value = "1.0.0",
+                            value = com.andriybobchuk.mooney.APP_VERSION,
                             showChevron = false
                         )
                         SettingsDivider()

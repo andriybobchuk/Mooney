@@ -45,4 +45,5 @@ sealed interface SettingsAction {
     data class OnDeleteAssetCategory(val categoryId: String) : SettingsAction
     data class OnAddAssetCategory(val title: String, val isLiability: Boolean = false) : SettingsAction
     data class OnRenameAssetCategory(val categoryId: String, val newTitle: String) : SettingsAction
+    data class OnExcludeTaxesToggle(val enabled: Boolean) : SettingsAction
 }

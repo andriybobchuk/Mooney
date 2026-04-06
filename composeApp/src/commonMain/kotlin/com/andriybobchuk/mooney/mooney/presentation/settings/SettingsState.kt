@@ -24,6 +24,7 @@ data class SettingsState(
     val showPaywall: Boolean = false,
     val isPurchasing: Boolean = false,
     val purchaseError: String? = null,
+    val excludeTaxesFromTotals: Boolean = true,
     val assetCategories: List<AssetCategoryEntity> = emptyList(),
     val defaultExpenseCategoryId: String = "groceries",
     val defaultIncomeCategoryId: String = "salary",

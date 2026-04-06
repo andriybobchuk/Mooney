@@ -96,6 +96,7 @@ class SettingsViewModel(
                         appLanguage = preferences.appLanguage,
                         defaultExpenseCategoryId = preferences.defaultExpenseCategory,
                         defaultIncomeCategoryId = preferences.defaultIncomeCategory,
+                        excludeTaxesFromTotals = preferences.excludeTaxesFromTotals,
                         error = null
                     )
                 }
@@ -147,6 +148,7 @@ class SettingsViewModel(
             is SettingsAction.OnAddAssetCategory -> handleAddAssetCategory(action.title, action.isLiability)
             is SettingsAction.OnDeleteAssetCategory -> handleDeleteAssetCategory(action.categoryId)
             is SettingsAction.OnRenameAssetCategory -> handleRenameAssetCategory(action.categoryId, action.newTitle)
+            is SettingsAction.OnExcludeTaxesToggle -> handleExcludeTaxesToggle(action.enabled)
             is SettingsAction.OnBackClick -> {}
         }
     }
@@ -280,6 +282,19 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 preferencesRepository.updateNotificationsEnabled(enabled)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    private fun handleExcludeTaxesToggle(enabled: Boolean) {
+        viewModelScope.launch {
+            try {
+                preferencesRepository.updateExcludeTaxesFromTotals(enabled)
+                _state.update { it.copy(excludeTaxesFromTotals = enabled) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

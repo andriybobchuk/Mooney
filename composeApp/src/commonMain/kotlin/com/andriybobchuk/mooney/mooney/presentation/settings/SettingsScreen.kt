@@ -1258,6 +1258,13 @@ fun SettingsScreen(
                             value = primaryAccountName,
                             onClick = { showPrimaryAccountSheet = true }
                         )
+                        SettingsDivider()
+                        SettingsToggleRow(
+                            title = "Exclude Taxes from Totals",
+                            description = "Tax transactions (ZUS, PIT) won't count towards your spending totals",
+                            checked = state.excludeTaxesFromTotals,
+                            onCheckedChange = { viewModel.onAction(SettingsAction.OnExcludeTaxesToggle(it)) }
+                        )
                     }
                 }
 
@@ -1370,6 +1377,7 @@ private fun SettingsGroup(content: @Composable ColumnScope.() -> Unit) {
 @Composable
 private fun SettingsRow(
     title: String,
+    description: String? = null,
     value: String = "",
     onClick: () -> Unit = {},
     showChevron: Boolean = true,
@@ -1382,13 +1390,22 @@ private fun SettingsRow(
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            title,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1
-        )
-        Spacer(modifier = Modifier.weight(1f))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
+            )
+            if (description != null) {
+                Text(
+                    description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+        }
         if (showLoading) {
             CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
         } else {
@@ -1417,6 +1434,7 @@ private fun SettingsRow(
 @Composable
 private fun SettingsToggleRow(
     title: String,
+    description: String? = null,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
@@ -1426,7 +1444,17 @@ private fun SettingsToggleRow(
             .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            if (description != null) {
+                Text(
+                    description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+        }
         Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }

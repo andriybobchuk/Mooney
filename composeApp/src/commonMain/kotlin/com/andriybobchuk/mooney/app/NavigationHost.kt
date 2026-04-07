@@ -51,6 +51,7 @@ import kotlinx.coroutines.flow.map
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
+@Suppress("ThrowsCount")
 @Composable
 fun NavigationHost() {
     val getAccountsUseCase: GetAccountsUseCase = koinInject()

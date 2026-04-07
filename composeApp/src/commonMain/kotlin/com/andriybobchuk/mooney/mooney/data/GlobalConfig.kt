@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 object GlobalConfig {
-    private val _baseCurrencyFlow = MutableStateFlow(Currency.PLN)
+    private val _baseCurrencyFlow = MutableStateFlow(Currency.USD)
     val baseCurrencyFlow: StateFlow<Currency> = _baseCurrencyFlow.asStateFlow()
 
     var baseCurrency: Currency

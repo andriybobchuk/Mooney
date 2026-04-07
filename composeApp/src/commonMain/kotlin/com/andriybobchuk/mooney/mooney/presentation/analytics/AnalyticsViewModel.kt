@@ -49,7 +49,7 @@ class AnalyticsViewModel(
     private val getPreviousMonthTransactionsUseCase: GetPreviousMonthTransactionsUseCase,
     private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
-    private val baseCurrency: Currency = GlobalConfig.baseCurrency
+    private var baseCurrency: Currency = GlobalConfig.baseCurrency
 
     private val _state = MutableStateFlow(AnalyticsState())
     val state: StateFlow<AnalyticsState> = _state
@@ -57,6 +57,19 @@ class AnalyticsViewModel(
     init {
         loadMetricsForMonth(_state.value.selectedMonth)
         loadHistoricalData()
+        observeBaseCurrency()
+    }
+
+    private fun observeBaseCurrency() {
+        viewModelScope.launch {
+            GlobalConfig.baseCurrencyFlow.collect { newCurrency ->
+                if (newCurrency != baseCurrency) {
+                    baseCurrency = newCurrency
+                    loadMetricsForMonth(_state.value.selectedMonth)
+                    loadHistoricalData()
+                }
+            }
+        }
     }
 
     fun onMonthSelected(month: MonthKey) {

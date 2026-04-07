@@ -63,7 +63,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -145,11 +145,11 @@ fun TransactionsScreen(
     onNavigateToRecurring: () -> Unit = {},
     onNavigateToTransactionCategories: () -> Unit = {},
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val transactions = state.transactions
     val total = state.total
     val totalCurrency = state.totalCurrency
-    val frequentCategories by viewModel.frequentCategories.collectAsState()
+    val frequentCategories by viewModel.frequentCategories.collectAsStateWithLifecycle()
     // Sheet
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isBottomSheetOpen by remember { mutableStateOf(false) }
@@ -745,6 +745,7 @@ fun TransactionsScreenContent(
             // Real transactions
             items(txList) { tx ->
                 var showActionSheet by remember { mutableStateOf(false) }
+                var showDeleteConfirm by remember { mutableStateOf(false) }
 
                 Box(
                     modifier = Modifier.combinedClickable(
@@ -798,6 +799,49 @@ fun TransactionsScreenContent(
                                     .background(MaterialTheme.colorScheme.errorContainer)
                                     .clickable {
                                         showActionSheet = false
+                                        showDeleteConfirm = true
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    stringResource(Res.string.delete),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
+                }
+
+                if (showDeleteConfirm) {
+                    MooneyBottomSheet(onDismissRequest = { showDeleteConfirm = false }) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 16.dp)
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.delete),
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                            Text(
+                                text = "Delete \"${tx.subcategory.title}\" transaction for ${tx.amount.formatWithCommas()} ${tx.account.currency.symbol}?",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 16.dp)
+                            )
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.errorContainer)
+                                    .clickable {
+                                        showDeleteConfirm = false
                                         onDelete(tx.id)
                                     }
                                     .padding(horizontal = 16.dp, vertical = 14.dp),
@@ -808,6 +852,20 @@ fun TransactionsScreenContent(
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.error
                                 )
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .clickable { showDeleteConfirm = false }
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Cancel", style = MaterialTheme.typography.bodyLarge)
                             }
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -945,7 +1003,7 @@ fun TransactionBottomSheet(
     
     // Load saved default categories from preferences
     val userPrefs by preferencesRepository.getUserPreferences()
-        .collectAsState(initial = com.andriybobchuk.mooney.mooney.domain.settings.UserPreferences())
+        .collectAsStateWithLifecycle(initialValue = com.andriybobchuk.mooney.mooney.domain.settings.UserPreferences())
 
     // Auto-select default categories based on transaction type (uses saved preferences)
     val getDefaultCategoryForType: (CategoryType) -> Category? = { type ->
@@ -1879,7 +1937,13 @@ fun CategorySelectionBottomSheet(
                     fontSize = 20.sp
                 )
                 TextButton(onClick = { onDismiss(); onEditCategories() }) {
-                    Text("Edit")
+                    Icon(
+                        Icons.Outlined.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text("Add Category")
                 }
             }
 

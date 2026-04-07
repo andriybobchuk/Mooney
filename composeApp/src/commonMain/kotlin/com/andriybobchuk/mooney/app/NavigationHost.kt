@@ -65,7 +65,7 @@ fun NavigationHost() {
         val savedCurrency = try {
             Currency.valueOf(prefs.defaultCurrency)
         } catch (_: IllegalArgumentException) {
-            Currency.PLN
+            Currency.USD
         }
         GlobalConfig.baseCurrency = savedCurrency
 
@@ -134,6 +134,8 @@ fun NavigationHost() {
             analyticsTracker.setUserProperty("theme_mode", prefs.themeMode.name.lowercase())
             analyticsTracker.setUserProperty("app_language", prefs.appLanguage)
             analyticsTracker.setUserProperty("currency_count", currencies.size.toString())
+        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+            throw e
         } catch (_: Exception) {
             // User properties are best-effort — never crash the app for analytics
         }
@@ -156,6 +158,8 @@ fun NavigationHost() {
     LaunchedEffect(Unit) {
         try {
             processRecurringUseCase()
+        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+            throw e
         } catch (_: Exception) {
             // Best-effort — never crash the app for recurring processing
         }

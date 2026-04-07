@@ -43,6 +43,7 @@ import com.andriybobchuk.mooney.core.presentation.designsystem.components.Button
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MeshGradientBackground
 import com.andriybobchuk.mooney.core.premium.PaywallSheet
 import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
@@ -81,7 +82,7 @@ fun AssetsScreen(
     onGoalsClick: (() -> Unit)? = null,
     onNavigateToAssetCategories: () -> Unit = {},
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val assets = state.assets
     val totalNetWorth = state.totalNetWorth
 
@@ -952,7 +953,13 @@ private fun AssetSheet(
                 ) {
                     Text(stringResource(Res.string.select_category), style = MaterialTheme.typography.titleLarge)
                     TextButton(onClick = { showCategorySheet = false; onEditCategories() }) {
-                        Text("Edit")
+                        Icon(
+                            Icons.Outlined.Add,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text("Add Category")
                     }
                 }
                 filteredCategories.forEach { category ->

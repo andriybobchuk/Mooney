@@ -14,7 +14,7 @@ data class SettingsState(
     val pinnedCategories: List<Category> = emptyList(),
     val currentThemeMode: ThemeMode = ThemeMode.SYSTEM,
     val notificationsEnabled: Boolean = true,
-    val defaultCurrency: Currency = Currency.PLN,
+    val defaultCurrency: Currency = Currency.USD,
     val availableCurrencies: List<Currency> = Currency.entries,
     val userCurrencies: List<UserCurrency> = emptyList(),
     val error: String? = null,

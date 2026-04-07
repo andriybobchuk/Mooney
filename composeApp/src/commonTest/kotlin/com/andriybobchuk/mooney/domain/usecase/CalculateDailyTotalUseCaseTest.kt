@@ -1,5 +1,7 @@
 package com.andriybobchuk.mooney.domain.usecase
 
+import com.andriybobchuk.mooney.mooney.data.GlobalConfig
+import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.usecase.CalculateDailyTotalUseCase
 import com.andriybobchuk.mooney.testutil.TestFixtures
 import kotlinx.coroutines.test.runTest
@@ -22,6 +24,7 @@ class CalculateDailyTotalUseCaseTest {
 
     @BeforeTest
     fun setup() = runTest {
+        GlobalConfig.baseCurrency = Currency.PLN
         currencyManager.refreshExchangeRates()
         sut = CalculateDailyTotalUseCase(currencyManager)
     }

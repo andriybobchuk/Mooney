@@ -98,7 +98,7 @@ fun PaywallSheet(
 
                 // Price
                 Text(
-                    text = price ?: "9,99 PLN / month",
+                    text = price ?: "Loading...",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground

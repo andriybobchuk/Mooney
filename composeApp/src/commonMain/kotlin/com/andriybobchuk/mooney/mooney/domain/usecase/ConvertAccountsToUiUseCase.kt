@@ -29,8 +29,9 @@ class ConvertAccountsToUiUseCase(
                 )
             } else {
                 account?.let {
-                    val rate = exchangeRates.convert(1.0, account.currency, baseCurrency)
-                    val converted = exchangeRates.convert(account.amount, account.currency, baseCurrency)
+                    val hasRate = exchangeRates.rates.containsKey(account.currency)
+                    val rate = if (hasRate) exchangeRates.convert(1.0, account.currency, baseCurrency) else null
+                    val converted = if (hasRate) exchangeRates.convert(account.amount, account.currency, baseCurrency) else 0.0
                     AccountWithConversion(
                         id = account.id,
                         title = account.title,

@@ -72,6 +72,11 @@ class AnalyticsViewModel(
         }
     }
 
+    fun refresh() {
+        loadMetricsForMonth(_state.value.selectedMonth)
+        loadHistoricalData()
+    }
+
     fun onMonthSelected(month: MonthKey) {
         _state.update { it.copy(selectedMonth = month) }
         loadMetricsForMonth(month)

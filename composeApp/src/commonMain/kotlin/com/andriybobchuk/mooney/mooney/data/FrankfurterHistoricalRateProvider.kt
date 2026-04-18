@@ -17,7 +17,7 @@ class FrankfurterHistoricalRateProvider(
 ) : HistoricalRateProvider {
 
     companion object {
-        private const val BASE_URL = "https://api.frankfurter.app"
+        private const val BASE_URL = "https://api.frankfurter.dev/v1"
     }
 
     override suspend fun getRates(

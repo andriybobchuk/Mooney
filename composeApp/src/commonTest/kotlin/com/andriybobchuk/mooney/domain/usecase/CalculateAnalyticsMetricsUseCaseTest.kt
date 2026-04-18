@@ -38,7 +38,7 @@ class CalculateAnalyticsMetricsUseCaseTest {
 
         assertEquals("Revenue", result[0].title)
         assertEquals("Taxes", result[1].title)
-        assertEquals("Operating Costs", result[2].title)
+        assertEquals("Expenses", result[2].title)
         assertEquals("Net Income", result[3].title)
     }
 

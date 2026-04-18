@@ -194,7 +194,7 @@ class AnalyticsViewModel(
             else -> {
                 val sheetType = when (metricTitle) {
                     "Revenue" -> CategorySheetType.REVENUE
-                    "Operating Costs" -> CategorySheetType.OPERATING_COSTS
+                    "Expenses" -> CategorySheetType.OPERATING_COSTS
                     "Taxes" -> CategorySheetType.TAXES
                     else -> return
                 }

@@ -207,7 +207,7 @@ fun AnalyticsScreen(
                                 when (metric.title) {
                                     "Net Income" -> onNavigateToNetIncome()
                                     "Revenue" -> onNavigateToBreakdown("REVENUE")
-                                    "Operating Costs" -> onNavigateToBreakdown("OPERATING_COSTS")
+                                    "Expenses" -> onNavigateToBreakdown("OPERATING_COSTS")
                                     "Taxes" -> onNavigateToBreakdown("TAXES")
                                 }
                             }
@@ -711,50 +711,11 @@ fun CategoryBreakdownSheet(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val title = when (sheetType) {
-        CategorySheetType.REVENUE -> stringResource(Res.string.revenue_breakdown)
-        CategorySheetType.OPERATING_COSTS -> stringResource(Res.string.operating_costs_breakdown)
-        CategorySheetType.TAXES -> stringResource(Res.string.tax_breakdown)
-    }
-    
-    val emoji = when (sheetType) {
-        CategorySheetType.REVENUE -> "💰"
-        CategorySheetType.OPERATING_COSTS -> "💸"
-        CategorySheetType.TAXES -> "📊"
-    }
-    
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(bottom = 32.dp)
     ) {
-        // Header
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = emoji,
-                    fontSize = 24.sp,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-            Text(
-                text = stringResource(Res.string.tap_category_subcategories),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp)
-            )
-        }
         
         // 6-month trend mini chart
         if (historicalData.isNotEmpty()) {

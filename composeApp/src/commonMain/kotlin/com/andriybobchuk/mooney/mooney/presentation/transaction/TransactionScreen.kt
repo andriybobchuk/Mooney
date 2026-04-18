@@ -2429,6 +2429,7 @@ fun SpendingLineChart(
 
     val getTransactionsUseCase: GetTransactionsUseCase = org.koin.compose.koinInject()
     val calculateDailyTotalsMapUseCase: CalculateDailyTotalsMapUseCase = org.koin.compose.koinInject()
+    val preferencesRepository: com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository = org.koin.compose.koinInject()
 
     val previousMonthTotals = remember { mutableStateOf(emptyMap<Int, Double>()) }
     var avgTotal by remember { mutableStateOf(0.0) }
@@ -2437,6 +2438,8 @@ fun SpendingLineChart(
     LaunchedEffect(selectedMonth) {
         isLoading = true
         try {
+            val prefs = preferencesRepository.getCurrentPreferences()
+            val excludeTaxes = prefs.excludeTaxesFromTotals
             val allTransactions = getTransactionsUseCase().first().filterNotNull()
             val monthsToAverage = 6
             val allMonthTotals = mutableListOf<Map<Int, Double>>()
@@ -2447,12 +2450,26 @@ fun SpendingLineChart(
                 val monthTransactions = allTransactions.filter { tx ->
                     tx.date.year == iterMonth.year && tx.date.monthNumber == iterMonth.month
                 }
-                allMonthTotals.add(calculateDailyTotalsMapUseCase(monthTransactions, iterMonth))
+                allMonthTotals.add(calculateDailyTotalsMapUseCase(monthTransactions, iterMonth, excludeTaxes))
+            }
+
+            // Filter outlier months: exclude months where total is > 2x the median
+            val monthlyTotals = allMonthTotals.map { it.values.sum() }.sorted()
+            val median = if (monthlyTotals.isNotEmpty()) {
+                val mid = monthlyTotals.size / 2
+                if (monthlyTotals.size % 2 == 0) (monthlyTotals[mid - 1] + monthlyTotals[mid]) / 2
+                else monthlyTotals[mid]
+            } else 0.0
+            val outlierThreshold = median * 2.0
+
+            val filteredMonthTotals = allMonthTotals.filter { monthData ->
+                val total = monthData.values.sum()
+                total <= outlierThreshold || median == 0.0
             }
 
             val avgTotals = mutableMapOf<Int, Double>()
             for (day in 1..daysInMonth) {
-                val values = allMonthTotals.mapNotNull { it[day] }.filter { it > 0 }
+                val values = filteredMonthTotals.mapNotNull { it[day] }.filter { it > 0 }
                 avgTotals[day] = if (values.isNotEmpty()) values.average() else 0.0
             }
 

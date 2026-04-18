@@ -75,7 +75,7 @@ class CalculateMonthlyAnalyticsUseCase(
                 when {
                     transaction.subcategory.isGeneralCategory() -> transaction.subcategory
                     transaction.subcategory.isTypeCategory() -> transaction.subcategory
-                    else -> transaction.subcategory.parent!!
+                    else -> transaction.subcategory.parent ?: transaction.subcategory
                 }
             }
             .mapValues { (_, transactions) ->

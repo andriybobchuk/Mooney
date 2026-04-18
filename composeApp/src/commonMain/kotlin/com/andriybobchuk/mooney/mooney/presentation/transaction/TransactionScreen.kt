@@ -4,7 +4,9 @@ import kotlin.coroutines.cancellation.CancellationException
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.rotate
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -103,6 +105,8 @@ import com.andriybobchuk.mooney.mooney.domain.RecurringFrequency
 import com.andriybobchuk.mooney.mooney.domain.RecurringSchedule
 import com.andriybobchuk.mooney.mooney.domain.Transaction
 import com.andriybobchuk.mooney.mooney.presentation.recurring.RecurringScheduleSheet
+import com.andriybobchuk.mooney.mooney.domain.usecase.CalculateDailyTotalsMapUseCase
+import com.andriybobchuk.mooney.mooney.domain.usecase.GetTransactionsUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.TransactionValidation
 import com.andriybobchuk.mooney.mooney.domain.usecase.ValidateTransactionUseCase
 import org.koin.compose.koinInject
@@ -128,6 +132,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+import kotlinx.coroutines.flow.first
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import mooney.composeapp.generated.resources.Res
@@ -292,6 +297,10 @@ fun TransactionsScreen(
                     accounts = state.accounts,
                     categories = state.categories,
                     selectedMonth = state.selectedMonth,
+                    assetCategories = state.assetCategories,
+                    categoryOrder = state.categoryOrder,
+                    expandedCategories = state.expandedCategories,
+                    onToggleAccountCategory = viewModel::toggleAccountCategoryExpansion,
                     preselectedCategory = preselectedCategory,
                     onAdd = { transaction, schedule ->
                         isBottomSheetOpen = false
@@ -508,7 +517,7 @@ fun TransactionsScreenContent(
         derivedStateOf {
             pendingTransactions.groupBy { pending ->
                 try { LocalDate.parse(pending.scheduledDate) } catch (_: Exception) { null }
-            }.filterKeys { it != null }.mapKeys { it.key!! }
+            }.mapNotNull { (key, value) -> key?.let { it to value } }.toMap()
         }
     }
 
@@ -963,6 +972,10 @@ fun TransactionBottomSheet(
     accounts: List<UiAccount?>,
     categories: List<Category>,
     selectedMonth: MonthKey,
+    assetCategories: List<com.andriybobchuk.mooney.core.data.database.AssetCategoryEntity> = emptyList(),
+    categoryOrder: List<String> = emptyList(),
+    expandedCategories: Set<String> = emptySet(),
+    onToggleAccountCategory: (String) -> Unit = {},
     preselectedCategory: Category? = null,
     forceRecurringEnabled: Boolean = false,
     initialRecurringSchedule: RecurringSchedule? = null,
@@ -1187,7 +1200,7 @@ fun TransactionBottomSheet(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
-                AccountField(selectedAccount, accounts.filterNotNull(), { selectedAccount = it })
+                AccountField(selectedAccount, accounts.filterNotNull(), assetCategories, categoryOrder, expandedCategories, onToggleAccountCategory, { selectedAccount = it })
 
                 Spacer(Modifier.height(12.dp))
 
@@ -1198,15 +1211,19 @@ fun TransactionBottomSheet(
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 AccountField(
-                    destinationAccount, 
-                    accounts.filterNotNull().filter { 
-                        accounts.filterNotNull().toAccounts().find { acc -> acc.id == it.id }?.id != selectedAccount?.id 
+                    initialSelectedAccount = destinationAccount,
+                    accounts = accounts.filterNotNull().filter {
+                        accounts.filterNotNull().toAccounts().find { acc -> acc.id == it.id }?.id != selectedAccount?.id
                     },
-                    { destinationAccount = it }
+                    assetCategories = assetCategories,
+                    categoryOrder = categoryOrder,
+                    expandedCategories = expandedCategories,
+                    onToggleCategory = onToggleAccountCategory,
+                    onAccountSelected = { destinationAccount = it }
                 )
             } else {
                 // For expense/income, show single account
-                AccountField(selectedAccount, accounts.filterNotNull(), { selectedAccount = it })
+                AccountField(selectedAccount, accounts.filterNotNull(), assetCategories, categoryOrder, expandedCategories, onToggleAccountCategory, { selectedAccount = it })
             }
 
             Spacer(Modifier.height(12.dp))
@@ -1807,6 +1824,10 @@ private fun AmountHeroField(
 private fun AccountField(
     initialSelectedAccount: Account?,
     accounts: List<UiAccount>,
+    assetCategories: List<com.andriybobchuk.mooney.core.data.database.AssetCategoryEntity>,
+    categoryOrder: List<String>,
+    expandedCategories: Set<String>,
+    onToggleCategory: (String) -> Unit,
     onAccountSelected: (Account) -> Unit
 ) {
     var showAccountSheet by remember { mutableStateOf(false) }
@@ -1854,49 +1875,125 @@ private fun AccountField(
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
-                accounts.toAccounts().forEach { account ->
-                    val isSelected = account.id == initialSelectedAccount?.id
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                if (isSelected) MaterialTheme.colorScheme.primaryContainer
-                                else Color.Transparent
-                            )
-                            .clickable {
-                                onAccountSelected(account)
-                                showAccountSheet = false
-                            }
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = account.title,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "${account.amount.formatWithCommas()} ${account.currency.symbol}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        if (isSelected) {
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .background(MaterialTheme.colorScheme.primary, CircleShape)
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
+                val grouped = remember(accounts) { accounts.groupBy { it.assetCategoryId } }
+                val orderedCategoryIds = remember(categoryOrder, grouped) {
+                    (categoryOrder + grouped.keys.filter { it !in categoryOrder })
+                        .filter { grouped.containsKey(it) }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                LazyColumn {
+                    orderedCategoryIds.forEach { categoryId ->
+                        val categoryAccounts = grouped[categoryId] ?: return@forEach
+                        val categoryInfo = assetCategories.find { it.id == categoryId }
+                        val isExpanded = expandedCategories.contains(categoryId)
+
+                        item(key = "header_$categoryId") {
+                            AccountCategoryHeader(
+                                title = categoryInfo?.title ?: categoryId,
+                                color = categoryInfo?.color ?: 0xFF9E9E9E,
+                                accountCount = categoryAccounts.size,
+                                isExpanded = isExpanded,
+                                onToggle = { onToggleCategory(categoryId) }
+                            )
+                        }
+
+                        if (isExpanded) {
+                            items(
+                                count = categoryAccounts.size,
+                                key = { categoryAccounts[it].id }
+                            ) { index ->
+                                val account = categoryAccounts[index].toAccount()
+                                val isSelected = account.id == initialSelectedAccount?.id
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 28.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(
+                                            if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                                            else Color.Transparent
+                                        )
+                                        .clickable {
+                                            onAccountSelected(account)
+                                            showAccountSheet = false
+                                        }
+                                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = account.title,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "${account.amount.formatWithCommas()} ${account.currency.symbol}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    if (isSelected) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(8.dp)
+                                                .background(MaterialTheme.colorScheme.primary, CircleShape)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    item { Spacer(modifier = Modifier.height(16.dp)) }
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun AccountCategoryHeader(
+    title: String,
+    color: Long,
+    accountCount: Int,
+    isExpanded: Boolean,
+    onToggle: () -> Unit
+) {
+    val rotationAngle by animateFloatAsState(
+        targetValue = if (isExpanded) 90f else 0f,
+        label = "arrow rotation"
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable { onToggle() }
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
+            contentDescription = if (isExpanded) "Collapse" else "Expand",
+            modifier = Modifier
+                .size(20.dp)
+                .rotate(rotationAngle),
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Column {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = "$accountCount account${if (accountCount != 1) "s" else ""}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
         }
     }
 }
@@ -2318,56 +2415,66 @@ fun SpendingLineChart(
 ) {
     val year = selectedMonth.year
     val month = selectedMonth.month
-    
+
     val daysInMonth = remember(year, month) {
         getDaysInMonth(year, month)
     }
-    
-    val viewModel: TransactionViewModel = koinViewModel()
+
+    val today = remember {
+        val now = kotlinx.datetime.Clock.System.now()
+            .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
+        now
+    }
+    val todayDay = if (today.year == year && today.monthNumber == month) today.dayOfMonth else null
+
+    val getTransactionsUseCase: GetTransactionsUseCase = org.koin.compose.koinInject()
+    val calculateDailyTotalsMapUseCase: CalculateDailyTotalsMapUseCase = org.koin.compose.koinInject()
+
     val previousMonthTotals = remember { mutableStateOf(emptyMap<Int, Double>()) }
+    var avgTotal by remember { mutableStateOf(0.0) }
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(selectedMonth) {
         isLoading = true
         try {
-            val avgTotals = mutableMapOf<Int, Double>()
+            val allTransactions = getTransactionsUseCase().first().filterNotNull()
             val monthsToAverage = 6
-            var currentMonth = selectedMonth
-
-            // Collect daily totals for past 6 months
             val allMonthTotals = mutableListOf<Map<Int, Double>>()
-            repeat(monthsToAverage) {
-                currentMonth = currentMonth.previousMonth()
-                val totals = mutableMapOf<Int, Double>()
-                val prevDays = getDaysInMonth(currentMonth.year, currentMonth.month)
-                for (day in 1..prevDays) {
-                    val date = LocalDate(currentMonth.year, currentMonth.month, day)
-                    totals[day] = viewModel.getDailyTotalForMonth(date)
+            var iterMonth = selectedMonth
+
+            repeat(monthsToAverage) { _ ->
+                iterMonth = iterMonth.previousMonth()
+                val monthTransactions = allTransactions.filter { tx ->
+                    tx.date.year == iterMonth.year && tx.date.monthNumber == iterMonth.month
                 }
-                allMonthTotals.add(totals)
+                allMonthTotals.add(calculateDailyTotalsMapUseCase(monthTransactions, iterMonth))
             }
 
-            // Average across months for each day
+            val avgTotals = mutableMapOf<Int, Double>()
             for (day in 1..daysInMonth) {
                 val values = allMonthTotals.mapNotNull { it[day] }.filter { it > 0 }
                 avgTotals[day] = if (values.isNotEmpty()) values.average() else 0.0
             }
 
             previousMonthTotals.value = avgTotals
-        } catch (e: Exception) {
+            avgTotal = avgTotals.values.sum()
+        } catch (_: Exception) {
             previousMonthTotals.value = emptyMap()
+            avgTotal = 0.0
         }
         isLoading = false
     }
-    
-    Column(modifier = modifier.padding(16.dp)) {
+
+    val baseCurrency = com.andriybobchuk.mooney.mooney.data.GlobalConfig.baseCurrency
+
+    Column(modifier = modifier.padding(horizontal = 16.dp)) {
         Text(
             text = stringResource(Res.string.spending_comparison),
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -2385,7 +2492,7 @@ fun SpendingLineChart(
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
-            
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Canvas(modifier = Modifier.size(12.dp, 2.dp)) {
                     drawLine(
@@ -2398,15 +2505,16 @@ fun SpendingLineChart(
                 }
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = stringResource(Res.string.six_month_avg),
+                    text = if (!isLoading && avgTotal > 0)
+                        "${stringResource(Res.string.six_month_avg)} · ${avgTotal.formatToShortString()} ${baseCurrency.symbol}"
+                    else
+                        stringResource(Res.string.six_month_avg),
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
             }
         }
-        
-       // Spacer(modifier = Modifier.height(16.dp))
-        
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -2422,93 +2530,100 @@ fun SpendingLineChart(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        androidx.compose.material3.CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    androidx.compose.material3.CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             } else {
-            val currentTotal = dailyTotals.values.sum()
-            val previousTotal = previousMonthTotals.value.values.sum()
+                val currentTotal = dailyTotals.values.sum()
+                val previousTotal = previousMonthTotals.value.values.sum()
 
-            if (currentTotal == 0.0 && previousTotal == 0.0) {
-                Text(
-                    text = "No spending data available",
-                    modifier = Modifier.align(Alignment.Center),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
-                )
-            } else {
-                val primaryColor = MaterialTheme.colorScheme.primary
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    val maxTotal = maxOf(currentTotal, previousTotal)
-                    
-                    if (maxTotal <= 0) return@Canvas
-                    
-                    val width = size.width
-                    val height = size.height
-                    val dayWidth = width / daysInMonth
-                    
-                    val currentPath = Path()
-                    val previousPath = Path()
-                    
-                    var currentCumulative = 0.0
-                    var previousCumulative = 0.0
-                    var currentStarted = false
-                    var previousStarted = false
-                    
-                    for (day in 1..daysInMonth) {
-                        val x = (day - 1) * dayWidth + dayWidth / 2
-                        
-                        currentCumulative += dailyTotals[day] ?: 0.0
-                        val currentY = height - (currentCumulative / maxTotal) * height * 0.8f
-                        
-                        if (!currentStarted) {
-                            currentPath.moveTo(x, currentY.toFloat())
-                            currentStarted = true
-                        } else {
-                            currentPath.lineTo(x, currentY.toFloat())
-                        }
-                    }
-                    
-                    for (day in 1..daysInMonth) {
-                        val x = (day - 1) * dayWidth + dayWidth / 2
-                        
-                        previousCumulative += previousMonthTotals.value[day] ?: 0.0
-                        val previousY = height - (previousCumulative / maxTotal) * height * 0.8f
-                        
-                        if (!previousStarted) {
-                            previousPath.moveTo(x, previousY.toFloat())
-                            previousStarted = true
-                        } else {
-                            previousPath.lineTo(x, previousY.toFloat())
-                        }
-                    }
-                    
-                    drawPath(
-                        path = currentPath,
-                        color = primaryColor,
-                        style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
+                if (currentTotal == 0.0 && previousTotal == 0.0) {
+                    Text(
+                        text = "No spending data available",
+                        modifier = Modifier.align(Alignment.Center),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
                     )
-                    
-                    drawPath(
-                        path = previousPath,
-                        color = Color.Gray,
-                        style = Stroke(
-                            width = 3.dp.toPx(), 
-                            cap = StrokeCap.Round,
-                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f))
+                } else {
+                    val primaryColor = MaterialTheme.colorScheme.primary
+                    val todayMarkerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val maxTotal = maxOf(currentTotal, previousTotal)
+
+                        if (maxTotal <= 0) return@Canvas
+
+                        val width = size.width
+                        val height = size.height
+                        val dayWidth = width / daysInMonth
+
+                        // Draw today marker
+                        if (todayDay != null) {
+                            val todayX = (todayDay - 1) * dayWidth + dayWidth / 2
+                            drawLine(
+                                color = todayMarkerColor,
+                                start = androidx.compose.ui.geometry.Offset(todayX, 0f),
+                                end = androidx.compose.ui.geometry.Offset(todayX, height),
+                                strokeWidth = 1.dp.toPx()
+                            )
+                        }
+
+                        val currentPath = Path()
+                        val previousPath = Path()
+
+                        var currentCumulative = 0.0
+                        var previousCumulative = 0.0
+                        var currentStarted = false
+                        var previousStarted = false
+
+                        for (day in 1..daysInMonth) {
+                            val x = (day - 1) * dayWidth + dayWidth / 2
+
+                            currentCumulative += dailyTotals[day] ?: 0.0
+                            val currentY = height - (currentCumulative / maxTotal) * height * 0.8f
+
+                            if (!currentStarted) {
+                                currentPath.moveTo(x, currentY.toFloat())
+                                currentStarted = true
+                            } else {
+                                currentPath.lineTo(x, currentY.toFloat())
+                            }
+                        }
+
+                        for (day in 1..daysInMonth) {
+                            val x = (day - 1) * dayWidth + dayWidth / 2
+
+                            previousCumulative += previousMonthTotals.value[day] ?: 0.0
+                            val previousY = height - (previousCumulative / maxTotal) * height * 0.8f
+
+                            if (!previousStarted) {
+                                previousPath.moveTo(x, previousY.toFloat())
+                                previousStarted = true
+                            } else {
+                                previousPath.lineTo(x, previousY.toFloat())
+                            }
+                        }
+
+                        drawPath(
+                            path = currentPath,
+                            color = primaryColor,
+                            style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
                         )
-                    )
+
+                        drawPath(
+                            path = previousPath,
+                            color = Color.Gray,
+                            style = Stroke(
+                                width = 3.dp.toPx(),
+                                cap = StrokeCap.Round,
+                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f))
+                            )
+                        )
+                    }
                 }
             }
-            } // end else (not loading)
         }
     }
 }

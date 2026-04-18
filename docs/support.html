@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mooney - Support</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #3562F6;
+            --bg: #FFFFFF;
+            --surface: #F0F1F3;
+            --text: #111111;
+            --text-secondary: #6B7280;
+            --border: #E5E7EB;
+            --success: #16A34A;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #4DD0C8;
+                --bg: #0D1117;
+                --surface: #1C2025;
+                --text: #F0F0F0;
+                --text-secondary: #9CA3AF;
+                --border: #2D333B;
+                --success: #4ADE80;
+            }
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.7;
+            color: var(--text);
+            background: var(--bg);
+            padding: 0 20px;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 60px 0 80px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 48px;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-top: 40px;
+            margin-bottom: 16px;
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        @media (max-width: 540px) {
+            .card-grid { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 24px;
+            transition: transform 0.15s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-icon {
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+
+        .card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .card p {
+            font-size: 14px;
+            margin-bottom: 0;
+        }
+
+        .faq {
+            margin-top: 24px;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid var(--border);
+            padding: 20px 0;
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+
+        .faq-q {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .faq-a {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 0;
+        }
+
+        .footer {
+            margin-top: 60px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .footer a {
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .footer a:hover {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Support</h1>
+        <p class="subtitle">We're here to help you get the most out of Mooney.</p>
+
+        <div class="card-grid">
+            <a href="mailto:andriybobchuk@gmail.com" class="card" style="text-decoration:none;color:inherit;">
+                <div class="card-icon">&#9993;</div>
+                <h3>Email Us</h3>
+                <p>Get in touch directly at andriybobchuk@gmail.com</p>
+            </a>
+            <a href="https://github.com/andriybobchuk/Mooney/issues" target="_blank" class="card" style="text-decoration:none;color:inherit;">
+                <div class="card-icon">&#128736;</div>
+                <h3>Report a Bug</h3>
+                <p>Found something off? Open an issue on GitHub.</p>
+            </a>
+        </div>
+
+        <h2>Frequently Asked Questions</h2>
+        <div class="faq">
+            <div class="faq-item">
+                <p class="faq-q">Where is my data stored?</p>
+                <p class="faq-a">All your financial data stays on your device. Mooney never uploads your transactions, accounts, or balances to any server.</p>
+            </div>
+            <div class="faq-item">
+                <p class="faq-q">How do I back up my data?</p>
+                <p class="faq-a">Use the export feature in Settings to save your data as a file. You can then store it in your preferred cloud storage or send it via email.</p>
+            </div>
+            <div class="faq-item">
+                <p class="faq-q">Can I use Mooney on multiple devices?</p>
+                <p class="faq-a">Mooney currently stores data locally on each device. Cloud sync between devices is not yet available.</p>
+            </div>
+            <div class="faq-item">
+                <p class="faq-q">How do I restore a purchase?</p>
+                <p class="faq-a">Go to Settings and tap "Restore Purchases". Your subscription status will be synced from the App Store or Google Play.</p>
+            </div>
+            <div class="faq-item">
+                <p class="faq-q">How do I delete my data?</p>
+                <p class="faq-a">Uninstalling the app removes all data from your device. You can also clear app data from your device settings.</p>
+            </div>
+            <div class="faq-item">
+                <p class="faq-q">Which currencies are supported?</p>
+                <p class="faq-a">Mooney supports 150+ currencies with live exchange rates. You can set your base currency in Settings and track accounts in any currency.</p>
+            </div>
+        </div>
+
+        <h2>Get in Touch</h2>
+        <p>Have a question, feature request, or just want to say hi? Reach out and we'll get back to you as soon as possible.</p>
+        <p><a href="mailto:andriybobchuk@gmail.com">andriybobchuk@gmail.com</a></p>
+
+        <div class="footer">
+            <p>&copy; 2026 Andriy Bobchuk &middot; <a href="privacy-policy.html">Privacy Policy</a></p>
+        </div>
+    </div>
+</body>
+</html>

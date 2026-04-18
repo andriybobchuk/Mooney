@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "categories": [
+    {"id":"BANK_ACCOUNT","title":"Bank Account","emoji":"🏦","description":"Traditional bank accounts and deposits","color":4282352116,"sortOrder":0,"isLiability":false},
+    {"id":"CASH","title":"Cash Reserve","emoji":"💵","description":"Physical cash holdings","color":4281559123,"sortOrder":1,"isLiability":false},
+    {"id":"REAL_ESTATE","title":"Real Estate","emoji":"🏠","description":"Property and real estate investments","color":4285887816,"sortOrder":2,"isLiability":false},
+    {"id":"STOCKS","title":"Stocks","emoji":"📈","description":"Stock market investments","color":4293467747,"sortOrder":3,"isLiability":false},
+    {"id":"BONDS","title":"Bonds","emoji":"📜","description":"Government and corporate bonds","color":4288423856,"sortOrder":4,"isLiability":false},
+    {"id":"CRYPTO","title":"Cryptocurrency","emoji":"₿","description":"Digital assets and cryptocurrencies","color":4294539008,"sortOrder":5,"isLiability":false},
+    {"id":"PRECIOUS_METALS","title":"Precious Metals","emoji":"🥇","description":"Gold, silver, and other precious metals","color":4294956800,"sortOrder":6,"isLiability":false},
+    {"id":"RETIREMENT","title":"Retirement Fund","emoji":"🏖️","description":"401k, IRA, pension funds","color":4278228180,"sortOrder":7,"isLiability":false},
+    {"id":"BUSINESS","title":"Business Assets","emoji":"💼","description":"Business ownership and investments","color":4284513848,"sortOrder":8,"isLiability":false},
+    {"id":"COLLECTIBLES","title":"Collectibles","emoji":"🎨","description":"Art, antiques, and collectible items","color":4294924066,"sortOrder":9,"isLiability":false},
+    {"id":"OTHER","title":"Other Assets","emoji":"📦","description":"Miscellaneous assets","color":4288585374,"sortOrder":10,"isLiability":false},
+
+    {"id":"MORTGAGE","title":"Mortgage","emoji":"🏠","description":"","color":4293411637,"sortOrder":0,"isLiability":true},
+    {"id":"LOAN","title":"Loan","emoji":"📋","description":"","color":4294938435,"sortOrder":1,"isLiability":true},
+    {"id":"CREDIT_CARD","title":"Credit Card","emoji":"💳","description":"","color":4289420220,"sortOrder":2,"isLiability":true},
+    {"id":"DEBT","title":"Debt","emoji":"📉","description":"","color":4285887390,"sortOrder":3,"isLiability":true}
+  ]
+}

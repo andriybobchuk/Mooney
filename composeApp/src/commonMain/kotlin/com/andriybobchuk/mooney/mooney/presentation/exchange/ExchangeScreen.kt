@@ -1,7 +1,9 @@
 package com.andriybobchuk.mooney.mooney.presentation.exchange
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -37,7 +39,10 @@ import androidx.compose.ui.graphics.toArgb
 import com.andriybobchuk.mooney.app.appColors
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
+import androidx.compose.ui.graphics.PathEffect
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import com.andriybobchuk.mooney.mooney.domain.Currency
+import com.andriybobchuk.mooney.mooney.domain.HistoricalRate
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import kotlinx.datetime.*
 import org.koin.compose.viewmodel.koinViewModel
@@ -105,6 +110,23 @@ fun ExchangeScreen(
             onAction = viewModel::onAction
         )
     }
+
+    state.alertSheetCurrency?.let { currency ->
+        MooneyBottomSheet(
+            onDismissRequest = { viewModel.onAction(ExchangeAction.CloseAlertSheet) }
+        ) {
+            RateWatchAlertSheet(
+                baseCurrency = state.displayBaseCurrency,
+                targetCurrency = currency,
+                currentRate = state.currentRates[currency] ?: 0.0,
+                existingAlerts = state.activeAlerts,
+                onSave = { targetRate, direction ->
+                    viewModel.onAction(ExchangeAction.SaveAlert(state.displayBaseCurrency, currency, targetRate, direction))
+                },
+                onDelete = { viewModel.onAction(ExchangeAction.DeleteAlert(it)) }
+            )
+        }
+    }
 }
 
 @Composable
@@ -120,34 +142,93 @@ private fun ExchangeScreenContent(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        item { 
+        item {
             Spacer(Modifier.height(8.dp))
         }
-        
+
+        if (state.error != null) {
+            item {
+                Text(
+                    text = state.error,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
+        }
+
         // Historical Chart
         item {
             HistoricalExchangeRateChart(
                 state = state,
                 onTimeRangeToggle = { onAction(ExchangeAction.ToggleTimeRange) },
-                modifier = Modifier.fillMaxWidth().height(220.dp)
+                onTimeRangeSelected = { onAction(ExchangeAction.SelectTimeRange(it)) },
+                modifier = Modifier.fillMaxWidth()
             )
         }
         
-        // Currency Rate Cards
-        items(
-            Currency.entries.filter { it != state.displayBaseCurrency }
-        ) { currency ->
+        // Triggered alert banners
+        if (state.triggeredAlerts.isNotEmpty()) {
+            items(state.triggeredAlerts) { triggered ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "${triggered.alert.fromCurrency.name}→${triggered.alert.toCurrency.name} crossed ${triggered.alert.targetRate}!",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = "Current: ${triggered.currentRate.formatWithCommas()} ${triggered.alert.toCurrency.symbol}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                        }
+                        Text(
+                            text = "✕",
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable { onAction(ExchangeAction.DismissTriggeredAlert(triggered.alert.id)) }
+                                .padding(8.dp),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+        }
+
+        // Currency Rate Cards — filtered to user's currencies
+        val visibleCurrencies = Currency.entries.filter {
+            it != state.displayBaseCurrency &&
+                state.currentRates.containsKey(it) &&
+                (state.userCurrencyCodes.isEmpty() || it.name in state.userCurrencyCodes)
+        }
+        items(visibleCurrencies) { currency ->
+            val historicalRates = state.historicalRates[currency] ?: emptyList()
             CurrencyRateCard(
                 currency = currency,
-                rate = state.currentRates[currency] ?: 0.0,
+                rate = state.currentRates[currency] ?: return@items,
                 baseCurrency = state.displayBaseCurrency,
                 isSelected = currency == state.selectedCurrency,
+                percentile = state.percentiles[currency],
+                historicalRates = historicalRates,
                 color = getCurrencyColor(currency),
-                onClick = { 
+                onClick = {
                     onAction(ExchangeAction.SelectCurrency(
                         if (currency == state.selectedCurrency) null else currency
                     ))
-                }
+                },
+                onLongClick = { onAction(ExchangeAction.OpenAlertSheet(currency)) }
             )
         }
         
@@ -161,8 +242,17 @@ private fun ExchangeScreenContent(
 private fun HistoricalExchangeRateChart(
     state: ExchangeState,
     onTimeRangeToggle: () -> Unit,
+    onTimeRangeSelected: (TimeRange) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+    val cutoffDate = today.minus(state.timeRange.months, DateTimeUnit.MONTH)
+    val chartCurrency = state.selectedCurrency ?: state.historicalRates.keys.firstOrNull()
+    val chartRates = chartCurrency?.let {
+        state.historicalRates[it]?.filter { r -> r.date >= cutoffDate }
+    } ?: emptyList()
+    val currentRate = chartCurrency?.let { state.currentRates[it] }
+
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
@@ -170,247 +260,488 @@ private fun HistoricalExchangeRateChart(
             containerColor = MaterialTheme.appColors.cardBackground
         )
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Historical Rates",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                
-                // Time range selector
-                Card(
-                    modifier = Modifier.clickable { onTimeRangeToggle() },
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                    )
-                ) {
+                Column {
                     Text(
-                        text = state.timeRange.label,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
+                        text = if (chartCurrency != null) "${chartCurrency.name}/${state.displayBaseCurrency.name}" else "Historical Rates",
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
+                    if (currentRate != null && chartCurrency != null) {
+                        Text(
+                            text = "1 ${chartCurrency.symbol} = ${currentRate.formatWithCommas()} ${state.displayBaseCurrency.symbol}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                // Time range buttons
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TimeRange.entries.forEach { range ->
+                        val isSelected = range == state.timeRange
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                    else Color.Transparent
+                                )
+                                .clickable { onTimeRangeSelected(range) }
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = range.label,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                            )
+                        }
+                    }
                 }
             }
-            
-            Spacer(Modifier.height(16.dp))
-            
-            // Chart
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .background(
-                        MaterialTheme.colorScheme.surface,
-                        RoundedCornerShape(12.dp)
-                    )
-                    .padding(16.dp)
-            ) {
-                if (state.historicalRates.isEmpty()) {
-                    Text(
-                        text = "Loading historical data...",
-                        modifier = Modifier.align(Alignment.Center),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray
-                    )
-                } else {
-                    ExchangeRateLineChart(
-                        historicalRates = state.historicalRates,
-                        selectedCurrency = state.selectedCurrency,
-                        timeRange = state.timeRange,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-            
+
             Spacer(Modifier.height(12.dp))
-            
-            // Month labels
-            MonthLabelsRow(timeRange = state.timeRange)
+
+            if (chartRates.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(220.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Tap a currency to see its chart", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                }
+            } else {
+                val minRate = chartRates.minOf { it.rate }
+                val maxRate = chartRates.maxOf { it.rate }
+                val avgRate = chartRates.map { it.rate }.average()
+                val range = maxRate - minRate
+                val padding = if (range == 0.0) maxRate * 0.02 else range * 0.15
+                val yMin = minRate - padding
+                val yMax = maxRate + padding
+                val yRange = yMax - yMin
+
+                // 20-day simple moving average
+                val maWindow = 20
+                val movingAvg = chartRates.mapIndexed { i, _ ->
+                    val start = (i - maWindow + 1).coerceAtLeast(0)
+                    val window = chartRates.subList(start, i + 1)
+                    window.map { it.rate }.average()
+                }
+
+                // Format Y values with appropriate precision
+                fun formatY(v: Double): String {
+                    val rounded = kotlin.math.round(v * 1000) / 1000
+                    return rounded.toString()
+                }
+
+                val gridLines = 6
+                val gridValues = (0..gridLines).map { i -> yMin + (yRange * i / gridLines) }
+
+                val gridColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
+                val labelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+                val lineColor = chartCurrency?.let { getCurrencyColor(it) } ?: MaterialTheme.colorScheme.primary
+                val currentLineColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                val highLineColor = Color(0xFF16A34A).copy(alpha = 0.4f)
+                val lowLineColor = Color(0xFFDC2626).copy(alpha = 0.4f)
+                val avgLineColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                val maColor = Color(0xFFFF9800).copy(alpha = 0.5f)
+
+                // Legend
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    ChartLegendItem("Now", currentLineColor, dashed = true)
+                    ChartLegendItem("High", highLineColor, dashed = true)
+                    ChartLegendItem("Low", lowLineColor, dashed = true)
+                    ChartLegendItem("MA20", maColor, dashed = false)
+                }
+
+                Row(modifier = Modifier.fillMaxWidth().height(240.dp)) {
+                    // Y-axis labels
+                    Column(
+                        modifier = Modifier
+                            .width(44.dp)
+                            .fillMaxHeight()
+                            .padding(end = 4.dp),
+                        verticalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        gridValues.reversed().forEach { value ->
+                            Text(
+                                text = formatY(value),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = labelColor,
+                                fontSize = 8.sp,
+                                maxLines = 1
+                            )
+                        }
+                    }
+
+                    // Chart area
+                    Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            val w = size.width
+                            val h = size.height
+
+                            // Horizontal grid lines
+                            gridValues.forEach { value ->
+                                val y = h - ((value - yMin) / yRange * h).toFloat()
+                                drawLine(
+                                    color = gridColor,
+                                    start = androidx.compose.ui.geometry.Offset(0f, y),
+                                    end = androidx.compose.ui.geometry.Offset(w, y),
+                                    strokeWidth = 1f
+                                )
+                            }
+
+                            // High line
+                            val highY = h - ((maxRate - yMin) / yRange * h).toFloat()
+                            drawLine(
+                                color = highLineColor,
+                                start = androidx.compose.ui.geometry.Offset(0f, highY),
+                                end = androidx.compose.ui.geometry.Offset(w, highY),
+                                strokeWidth = 1.dp.toPx(),
+                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f))
+                            )
+
+                            // Low line
+                            val lowY = h - ((minRate - yMin) / yRange * h).toFloat()
+                            drawLine(
+                                color = lowLineColor,
+                                start = androidx.compose.ui.geometry.Offset(0f, lowY),
+                                end = androidx.compose.ui.geometry.Offset(w, lowY),
+                                strokeWidth = 1.dp.toPx(),
+                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f))
+                            )
+
+                            // Average dashed line
+                            val avgY = h - ((avgRate - yMin) / yRange * h).toFloat()
+                            drawLine(
+                                color = avgLineColor,
+                                start = androidx.compose.ui.geometry.Offset(0f, avgY),
+                                end = androidx.compose.ui.geometry.Offset(w, avgY),
+                                strokeWidth = 1.dp.toPx(),
+                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 4f))
+                            )
+
+                            // Current rate line
+                            if (currentRate != null) {
+                                val currentY = h - ((currentRate - yMin) / yRange * h).toFloat()
+                                drawLine(
+                                    color = currentLineColor,
+                                    start = androidx.compose.ui.geometry.Offset(0f, currentY),
+                                    end = androidx.compose.ui.geometry.Offset(w, currentY),
+                                    strokeWidth = 1.dp.toPx(),
+                                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f))
+                                )
+                            }
+
+                            // 20-day moving average line
+                            if (movingAvg.size >= 2) {
+                                val maPath = Path()
+                                movingAvg.forEachIndexed { i, ma ->
+                                    val x = (i.toFloat() / (movingAvg.size - 1)) * w
+                                    val y = h - ((ma - yMin) / yRange * h).toFloat()
+                                    if (i == 0) maPath.moveTo(x, y) else maPath.lineTo(x, y)
+                                }
+                                drawPath(
+                                    path = maPath,
+                                    color = maColor,
+                                    style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round)
+                                )
+                            }
+
+                            // Rate line (main)
+                            if (chartRates.size >= 2) {
+                                val path = Path()
+                                chartRates.forEachIndexed { i, hr ->
+                                    val x = (i.toFloat() / (chartRates.size - 1)) * w
+                                    val y = h - ((hr.rate - yMin) / yRange * h).toFloat()
+                                    if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                                }
+                                drawPath(
+                                    path = path,
+                                    color = lineColor,
+                                    style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(4.dp))
+
+                // X-axis date labels
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(start = 44.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    val labelCount = if (state.timeRange == TimeRange.ONE_MONTH) 5 else 7
+                    val step = (chartRates.size - 1).coerceAtLeast(1).toFloat() / (labelCount - 1).coerceAtLeast(1)
+                    for (i in 0 until labelCount) {
+                        val idx = (i * step).toInt().coerceAtMost(chartRates.size - 1)
+                        val date = chartRates[idx].date
+                        Text(
+                            text = "${date.dayOfMonth} ${shortMonth(date.monthNumber)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = labelColor,
+                            fontSize = 8.sp
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                // Stats row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    StatChip("Low", formatY(minRate), Color(0xFFDC2626))
+                    StatChip("Avg", formatY(avgRate), MaterialTheme.colorScheme.onSurfaceVariant)
+                    StatChip("High", formatY(maxRate), Color(0xFF16A34A))
+                    if (currentRate != null) {
+                        StatChip("Now", formatY(currentRate), MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun ExchangeRateLineChart(
-    historicalRates: Map<Currency, List<HistoricalRate>>,
-    selectedCurrency: Currency?,
-    timeRange: TimeRange,
-    modifier: Modifier = Modifier
-) {
-    Canvas(modifier = modifier) {
-        val width = size.width
-        val height = size.height
-        
-        // Filter data based on time range
-        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val cutoffDate = today.minus(timeRange.months, DateTimeUnit.MONTH)
-        
-        historicalRates.forEach { (currency, rates) ->
-            val isVisible = selectedCurrency == null || selectedCurrency == currency
-            if (!isVisible) return@forEach
-            
-            val filteredRates = rates.filter { it.date >= cutoffDate }
-            if (filteredRates.isEmpty()) return@forEach
-            
-            val minRate = filteredRates.minOf { it.rate }
-            val maxRate = filteredRates.maxOf { it.rate }
-            val rateRange = maxRate - minRate
-            
-            if (rateRange == 0.0) return@forEach
-            
-            val path = Path()
-            var started = false
-            
-            filteredRates.forEachIndexed { index, rate ->
-                val x = (index.toFloat() / (filteredRates.size - 1).coerceAtLeast(1)) * width
-                val y = height - ((rate.rate - minRate) / rateRange * height * 0.9f).toFloat()
-                
-                if (!started) {
-                    path.moveTo(x, y)
-                    started = true
-                } else {
-                    path.lineTo(x, y)
-                }
-            }
-            
-            drawPath(
-                path = path,
-                color = getCurrencyColor(currency),
-                style = Stroke(
-                    width = if (currency == selectedCurrency) 3.dp.toPx() else 2.dp.toPx(),
-                    cap = StrokeCap.Round
-                ),
-                alpha = if (selectedCurrency == null || selectedCurrency == currency) 1f else 0.3f
+private fun ChartLegendItem(label: String, color: Color, dashed: Boolean = false) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Canvas(modifier = Modifier.size(16.dp, 2.dp)) {
+            drawLine(
+                color = color,
+                start = androidx.compose.ui.geometry.Offset(0f, center.y),
+                end = androidx.compose.ui.geometry.Offset(size.width, center.y),
+                strokeWidth = 2f,
+                pathEffect = if (dashed) PathEffect.dashPathEffect(floatArrayOf(4f, 3f)) else null
             )
         }
+        Spacer(Modifier.width(4.dp))
+        Text(label, style = MaterialTheme.typography.labelSmall, color = color, fontSize = 9.sp)
     }
 }
 
 @Composable
+private fun StatChip(label: String, value: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 9.sp)
+        Text(value, style = MaterialTheme.typography.labelMedium, color = color, fontWeight = FontWeight.SemiBold, fontSize = 11.sp)
+    }
+}
+
+private fun shortMonth(month: Int): String = when (month) {
+    1 -> "Jan"; 2 -> "Feb"; 3 -> "Mar"; 4 -> "Apr"; 5 -> "May"; 6 -> "Jun"
+    7 -> "Jul"; 8 -> "Aug"; 9 -> "Sep"; 10 -> "Oct"; 11 -> "Nov"; 12 -> "Dec"
+    else -> ""
+}
+
+@Composable
+@OptIn(ExperimentalFoundationApi::class)
 private fun CurrencyRateCard(
     currency: Currency,
     rate: Double,
     baseCurrency: Currency,
     isSelected: Boolean,
+    percentile: Int? = null,
+    historicalRates: List<HistoricalRate> = emptyList(),
     color: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onLongClick: () -> Unit = {}
 ) {
+    val minRate = historicalRates.minOfOrNull { it.rate }
+    val maxRate = historicalRates.maxOfOrNull { it.rate }
+    val prevRate = historicalRates.getOrNull(historicalRates.size - 2)?.rate
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) 
-                color.copy(alpha = 0.1f) 
-            else 
+            containerColor = if (isSelected)
+                color.copy(alpha = 0.1f)
+            else
                 MaterialTheme.appColors.cardBackground
         ),
         border = if (isSelected) {
             androidx.compose.foundation.BorderStroke(2.dp, color)
         } else null
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Currency color indicator
-            Box(
-                modifier = Modifier
-                    .size(12.dp)
-                    .background(color, CircleShape)
-            )
-            
-            Spacer(Modifier.width(12.dp))
-            
-            // Currency info
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Left: currency info
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "${currency.symbol} ${currency.name}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                     Text(
-                        text = currency.symbol,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = currency.name,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        text = "1 ${currency.symbol} = ${rate.formatWithCommas()} ${baseCurrency.symbol}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                Text(
-                    text = "1 ${currency.symbol} = ${rate.formatWithCommas()} ${baseCurrency.symbol}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+
+                // Right: rate + change
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = rate.formatWithCommas(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (prevRate != null && prevRate != 0.0) {
+                        val change = ((rate - prevRate) / prevRate * 100)
+                        val changeStr = if (change >= 0) "+%.2f%%".let {
+                            val v = kotlin.math.round(change * 100) / 100
+                            "+${v}%"
+                        } else {
+                            val v = kotlin.math.round(change * 100) / 100
+                            "${v}%"
+                        }
+                        val changeColor = if (change >= 0) Color(0xFF16A34A) else Color(0xFFDC2626)
+                        Text(
+                            text = changeStr,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = changeColor
+                        )
+                    }
+                }
             }
-            
-            // Rate value
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = rate.formatWithCommas(),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = baseCurrency.symbol,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+
+            // Sparkline + range + percentile
+            if (historicalRates.size > 2 && minRate != null && maxRate != null) {
+                Spacer(Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Mini sparkline with month labels
+                    Column(modifier = Modifier.weight(1f)) {
+                        Canvas(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(28.dp)
+                        ) {
+                            val w = size.width
+                            val h = size.height
+                            val range = maxRate - minRate
+                            if (range == 0.0) return@Canvas
+
+                            val path = Path()
+                            historicalRates.forEachIndexed { i, hr ->
+                                val x = (i.toFloat() / (historicalRates.size - 1).coerceAtLeast(1)) * w
+                                val y = h - ((hr.rate - minRate) / range * h * 0.85f).toFloat()
+                                if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                            }
+                            drawPath(
+                                path = path,
+                                color = color,
+                                style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round)
+                            )
+                        }
+                        // Month labels under sparkline
+                        val firstDate = historicalRates.firstOrNull()?.date
+                        val lastDate = historicalRates.lastOrNull()?.date
+                        if (firstDate != null && lastDate != null) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "${shortMonth(firstDate.monthNumber)} ${firstDate.year.toString().takeLast(2)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 8.sp
+                                )
+                                Text(
+                                    text = "${shortMonth(lastDate.monthNumber)} ${lastDate.year.toString().takeLast(2)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 8.sp
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.width(12.dp))
+
+                    // Range + percentile
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "${minRate.formatWithCommas()} – ${maxRate.formatWithCommas()}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 10.sp
+                        )
+                        if (percentile != null) {
+                            Spacer(Modifier.height(2.dp))
+                            PercentileBar(percentile = percentile)
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun MonthLabelsRow(timeRange: TimeRange) {
-    val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-    val monthLabels = generateMonthLabels(today, timeRange.months)
-    
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        monthLabels.forEach { label ->
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Normal
+private fun PercentileBar(percentile: Int) {
+    val barColor = when {
+        percentile >= 67 -> Color(0xFF16A34A)
+        percentile <= 33 -> Color(0xFFDC2626)
+        else -> Color(0xFFFF9800)
+    }
+    val label = when {
+        percentile >= 75 -> "High"
+        percentile >= 50 -> "Above avg"
+        percentile >= 25 -> "Below avg"
+        else -> "Low"
+    }
+
+    Column(horizontalAlignment = Alignment.End) {
+        // Bar
+        Box(
+            modifier = Modifier
+                .width(60.dp)
+                .height(4.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(percentile / 100f)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(barColor)
             )
         }
+        Spacer(Modifier.height(2.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = barColor,
+            fontSize = 9.sp
+        )
     }
-}
-
-private fun generateMonthLabels(currentDate: LocalDate, monthsBack: Int): List<String> {
-    val monthNames = listOf(
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    )
-    
-    val labels = mutableListOf<String>()
-    val startDate = currentDate.minus(monthsBack, DateTimeUnit.MONTH)
-    
-    // Generate month labels from start date to current date
-    for (i in 0..monthsBack) {
-        val date = startDate.plus(i, DateTimeUnit.MONTH)
-        val monthLabel = monthNames[date.monthNumber - 1]
-        labels.add(monthLabel)
-    }
-    
-    return labels
 }
 
 // Helper function to get consistent colors for each currency

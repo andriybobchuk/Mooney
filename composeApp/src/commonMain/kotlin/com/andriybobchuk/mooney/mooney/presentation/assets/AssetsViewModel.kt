@@ -53,7 +53,9 @@ class AssetsViewModel(
     private val getUserCurrenciesUseCase: GetUserCurrenciesUseCase,
     private val assetCategoryDao: AssetCategoryDao,
     private val analyticsTracker: AnalyticsTracker,
-    private val premiumManager: PremiumManager
+    private val premiumManager: PremiumManager,
+    private val loadHistoricalRatesUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.LoadHistoricalRatesUseCase,
+    private val calculateRatePercentileUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.CalculateRatePercentileUseCase
 ) : ViewModel() {
 
     private var observeAccountsJob: Job? = null
@@ -100,6 +102,9 @@ class AssetsViewModel(
         viewModelScope.launch {
             if (shouldRefreshExchangeRatesUseCase(_uiState.value.ratesLastUpdated)) {
                 refreshExchangeRates()
+            } else {
+                // Rates already fresh — load insights with cached rates
+                loadCurrencyInsights(_uiState.value.assets)
             }
         }
     }
@@ -126,7 +131,53 @@ class AssetsViewModel(
                 )
             }
             updateTotalNetWorth()
+            loadCurrencyInsights(uiAssets)
         }.launchIn(viewModelScope)
+    }
+
+    private fun loadCurrencyInsights(assets: List<UiAsset>) {
+        viewModelScope.launch {
+            try {
+                val base = GlobalConfig.baseCurrency
+                val foreignCurrencies = assets
+                    .map { it.originalCurrency }
+                    .filter { it != base }
+                    .distinct()
+                if (foreignCurrencies.isEmpty()) return@launch
+
+                // Compute current rates: "how many base per 1 foreign"
+                val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
+                val currentRatesMap = foreignCurrencies.associateWith { currency ->
+                    exchangeRates.convert(1.0, currency, base)
+                }
+
+                // Load historical (from=base, to=foreign), then invert
+                val rawHistorical = loadHistoricalRatesUseCase(base, foreignCurrencies, months = 6)
+                val invertedHistorical = rawHistorical.mapValues { (_, rates) ->
+                    rates.map { hr ->
+                        com.andriybobchuk.mooney.mooney.domain.HistoricalRate(
+                            hr.date,
+                            if (hr.rate != 0.0) 1.0 / hr.rate else 0.0
+                        )
+                    }
+                }
+
+                // Percentiles
+                val percentiles = foreignCurrencies.associateWith { currency ->
+                    val history = invertedHistorical[currency] ?: return@associateWith 50
+                    val currentRate = currentRatesMap[currency] ?: return@associateWith 50
+                    calculateRatePercentileUseCase(currentRate, history)
+                }
+
+                _uiState.update {
+                    it.copy(
+                        historicalRates = invertedHistorical,
+                        currentRates = currentRatesMap,
+                        percentiles = percentiles
+                    )
+                }
+            } catch (_: Exception) { }
+        }
     }
 
     private fun updateTotalNetWorth() {
@@ -182,16 +233,17 @@ class AssetsViewModel(
             when (val result = currencyManagerUseCase.refreshExchangeRates()) {
                 is Result.Success -> {
                     analyticsTracker.trackEvent(AnalyticsEvent.RefreshExchangeRates)
-                    // Refresh UI assets with new rates using current accounts
                     val currentAccounts = getAccountsUseCase().first()
+                    val uiAssets = convertAccountsToUiUseCase(currentAccounts).filterNotNull()
                     _uiState.update {
                         it.copy(
-                            assets = convertAccountsToUiUseCase(currentAccounts).filterNotNull(),
+                            assets = uiAssets,
                             isRefreshingRates = false,
                             ratesLastUpdated = Clock.System.now().toEpochMilliseconds()
                         )
                     }
                     updateTotalNetWorth()
+                    loadCurrencyInsights(uiAssets)
                 }
                 is Result.Error -> {
                     analyticsTracker.log("Exchange rate refresh failed: ${result.error}")
@@ -373,5 +425,8 @@ data class AssetsState(
     val ratesError: String? = null,
     val showPaywall: Boolean = false,
     val isPurchasing: Boolean = false,
-    val purchaseError: String? = null
+    val purchaseError: String? = null,
+    val historicalRates: Map<Currency, List<com.andriybobchuk.mooney.mooney.domain.HistoricalRate>> = emptyMap(),
+    val percentiles: Map<Currency, Int> = emptyMap(),
+    val currentRates: Map<Currency, Double> = emptyMap()
 )

@@ -9,6 +9,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     ) -> Bool {
         FirebaseApp.configure()
         Analytics.shared.setBridge(bridge: FirebaseAnalyticsBridge())
+        RemoteConfig.shared.setBridge(bridge: RemoteConfigBridge())
         return true
     }
 }

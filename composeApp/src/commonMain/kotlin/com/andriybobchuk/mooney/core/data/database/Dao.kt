@@ -18,6 +18,12 @@ interface TransactionDao {
 
     @Query("SELECT * FROM TransactionEntity WHERE id = :id")
     suspend fun getById(id: Int): TransactionEntity?
+
+    @Query("SELECT COUNT(*) FROM TransactionEntity")
+    suspend fun getCount(): Int
+
+    @Query("UPDATE TransactionEntity SET subcategoryId = :newCategoryId WHERE subcategoryId = :oldCategoryId")
+    suspend fun reassignCategory(oldCategoryId: String, newCategoryId: String)
 }
 
 @Dao
@@ -57,6 +63,9 @@ interface CategoryUsageDao {
 
     @Query("UPDATE category_usage SET usageCount = usageCount + 1, lastUsedDate = :date WHERE categoryId = :categoryId")
     suspend fun incrementUsage(categoryId: String, date: String)
+
+    @Query("DELETE FROM category_usage WHERE categoryId = :categoryId")
+    suspend fun delete(categoryId: String)
 }
 
 @Dao
@@ -111,6 +120,9 @@ interface RecurringTransactionDao {
 
     @Query("UPDATE recurring_transactions SET lastProcessedDate = :date WHERE id = :id")
     suspend fun updateLastProcessedDate(id: Int, date: String)
+
+    @Query("UPDATE recurring_transactions SET subcategoryId = :newCategoryId WHERE subcategoryId = :oldCategoryId")
+    suspend fun reassignCategory(oldCategoryId: String, newCategoryId: String)
 }
 
 @Dao
@@ -141,6 +153,9 @@ interface PendingTransactionDao {
 
     @Query("DELETE FROM pending_transactions WHERE recurringTransactionId = :recurringId AND status = 'PENDING'")
     suspend fun deletePendingByRecurringId(recurringId: Int)
+
+    @Query("UPDATE pending_transactions SET subcategoryId = :newCategoryId WHERE subcategoryId = :oldCategoryId")
+    suspend fun reassignCategory(oldCategoryId: String, newCategoryId: String)
 }
 
 @Dao
@@ -159,6 +174,42 @@ interface CategoryDao {
 
     @Query("DELETE FROM categories WHERE id = :id")
     suspend fun delete(id: String)
+
+    @Query("SELECT id FROM categories")
+    suspend fun getAllIds(): List<String>
+}
+
+@Dao
+interface HistoricalRateDao {
+    @Query("SELECT * FROM historical_rates WHERE fromCurrency = :from AND toCurrency = :to AND date >= :startDate ORDER BY date ASC")
+    suspend fun getRates(from: String, to: String, startDate: String): List<HistoricalRateEntity>
+
+    @Upsert
+    suspend fun upsertAll(rates: List<HistoricalRateEntity>)
+
+    @Query("SELECT MAX(date) FROM historical_rates WHERE fromCurrency = :from AND toCurrency = :to")
+    suspend fun getLatestDate(from: String, to: String): String?
+
+    @Query("DELETE FROM historical_rates WHERE date < :cutoffDate")
+    suspend fun deleteOlderThan(cutoffDate: String)
+}
+
+@Dao
+interface RateWatchAlertDao {
+    @Query("SELECT * FROM rate_watch_alerts WHERE isActive = 1")
+    fun getAllActive(): Flow<List<RateWatchAlertEntity>>
+
+    @Query("SELECT * FROM rate_watch_alerts")
+    fun getAll(): Flow<List<RateWatchAlertEntity>>
+
+    @Upsert
+    suspend fun upsert(alert: RateWatchAlertEntity)
+
+    @Query("DELETE FROM rate_watch_alerts WHERE id = :id")
+    suspend fun delete(id: Int)
+
+    @Query("UPDATE rate_watch_alerts SET isActive = 0 WHERE id = :id")
+    suspend fun deactivate(id: Int)
 }
 
 @Dao

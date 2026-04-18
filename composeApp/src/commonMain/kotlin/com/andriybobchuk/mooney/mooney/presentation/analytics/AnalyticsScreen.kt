@@ -95,6 +95,8 @@ fun AnalyticsScreen(
     bottomNavbar: @Composable () -> Unit,
     onSettingsClick: () -> Unit = {},
     onNavigateToTransactions: () -> Unit = {},
+    onNavigateToBreakdown: (String) -> Unit = {},
+    onNavigateToNetIncome: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var selectedTimePeriod by remember { mutableStateOf(TimePeriod.SIX_MONTHS) }
@@ -201,7 +203,14 @@ fun AnalyticsScreen(
                     state.metrics.forEach { metric ->
                         EnhancedMetricCard(
                             metric = metric,
-                            onClick = { viewModel.onMetricCardClicked(metric.title) }
+                            onClick = {
+                                when (metric.title) {
+                                    "Net Income" -> onNavigateToNetIncome()
+                                    "Revenue" -> onNavigateToBreakdown("REVENUE")
+                                    "Operating Costs" -> onNavigateToBreakdown("OPERATING_COSTS")
+                                    "Taxes" -> onNavigateToBreakdown("TAXES")
+                                }
+                            }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
@@ -211,34 +220,11 @@ fun AnalyticsScreen(
             }
             } // end if (!isEmpty)
 
-            // Category Bottom Sheet
-            if (state.isCategorySheetOpen) {
-                state.categorySheetType?.let { sheetType ->
-                    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-                    
-                    MooneyBottomSheet(
-                        onDismissRequest = { viewModel.onCategorySheetDismissed() },
-                        sheetState = bottomSheetState
-                    ) {
-                        CategoryBreakdownSheet(
-                            sheetType = sheetType,
-                            categories = state.sheetCategories,
-                            historicalData = state.historicalMetrics,
-                            onCategoryClick = { category ->
-                                viewModel.onCategoryClicked(category)
-                                // Don't dismiss category sheet - keep it open behind subcategory sheet
-                            },
-                            onDismiss = { viewModel.onCategorySheetDismissed() }
-                        )
-                    }
-                }
-            }
-            
-            // Subcategory Bottom Sheet
+            // Subcategory Bottom Sheet (used from breakdown screens)
             if (state.isSubcategorySheetOpen) {
                 state.selectedCategory?.let { category ->
                     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-                    
+
                     MooneyBottomSheet(
                         onDismissRequest = { viewModel.onSubcategorySheetDismissed() },
                         sheetState = bottomSheetState
@@ -254,7 +240,7 @@ fun AnalyticsScreen(
                     }
                 }
             }
-            
+
             // Category Transactions Bottom Sheet
             if (state.isTransactionsSheetOpen) {
                 state.transactionsSheetCategory?.let { category ->
@@ -269,22 +255,6 @@ fun AnalyticsScreen(
                             transactions = state.transactionsForCategory
                         )
                     }
-                }
-            }
-
-            // Net Income Chart Bottom Sheet
-            if (state.isNetIncomeSheetOpen) {
-                val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-                
-                MooneyBottomSheet(
-                    onDismissRequest = { viewModel.onNetIncomeSheetDismissed() },
-                    sheetState = bottomSheetState
-                ) {
-                    NetIncomeChartBottomSheet(
-                        historicalData = state.historicalMetrics,
-                        selectedMonth = state.selectedMonth,
-                        onDismiss = { viewModel.onNetIncomeSheetDismissed() }
-                    )
                 }
             }
         }
@@ -738,7 +708,8 @@ fun CategoryBreakdownSheet(
     categories: List<TopCategorySummary>,
     historicalData: List<MonthlyMetricSnapshot> = emptyList(),
     onCategoryClick: (com.andriybobchuk.mooney.mooney.domain.Category) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val title = when (sheetType) {
         CategorySheetType.REVENUE -> stringResource(Res.string.revenue_breakdown)
@@ -753,7 +724,7 @@ fun CategoryBreakdownSheet(
     }
     
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(bottom = 32.dp)
     ) {
@@ -868,7 +839,8 @@ fun CategoryBreakdownSheet(
 fun NetIncomeChartBottomSheet(
     historicalData: List<MonthlyMetricSnapshot>,
     selectedMonth: MonthKey,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val netIncomeData = historicalData.takeLast(6) // Last 6 months
     
@@ -878,7 +850,7 @@ fun NetIncomeChartBottomSheet(
     val projectedProfit = selectedMonthProfit * 6 // Projection based on selected month
     
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(20.dp)
     ) {

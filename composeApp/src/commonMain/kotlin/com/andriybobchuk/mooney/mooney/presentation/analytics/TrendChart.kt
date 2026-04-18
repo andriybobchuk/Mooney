@@ -89,6 +89,7 @@ fun TrendChart(
                 val isSelected = period == selectedPeriod
                 Box(
                     modifier = Modifier
+                        .clip(RoundedCornerShape(18.dp))
                         .clickable { onPeriodSelected(period) }
                         .background(
                             if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent,
@@ -131,6 +132,7 @@ fun TrendChart(
                 val isSelected = snapshot.month == selectedMonth
                 Box(
                     modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
                         .clickable { onMonthSelected(snapshot.month) }
                         .background(
                             if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)

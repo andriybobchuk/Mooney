@@ -182,8 +182,8 @@ fun GoalsScreen(
         )
     }
 
-    if (state.showDeleteDialog && state.goalToDelete != null) {
-        val goalToDelete = state.goalToDelete!!
+    val goalToDelete = state.goalToDelete
+    if (state.showDeleteDialog && goalToDelete != null) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(GoalsAction.HideDeleteDialog) },
             title = { Text("Delete Goal") },

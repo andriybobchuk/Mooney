@@ -4,6 +4,13 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.Tab
@@ -106,6 +113,7 @@ fun AssetsScreen(
     val scope = rememberCoroutineScope()
     var showSheet by remember { mutableStateOf(false) }
     var editingAsset by remember { mutableStateOf<UiAsset?>(null) }
+    var detailAsset by remember { mutableStateOf<UiAsset?>(null) }
     val isEmptyState = assets.isEmpty()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -205,6 +213,15 @@ fun AssetsScreen(
                     it.isLiability == (state.selectedTab == AssetsTab.LIABILITIES)
                 }
 
+                if (state.ratesError != null) {
+                    Text(
+                        text = state.ratesError ?: "",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(paddingValues).padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+                }
+
                 AssetsScreenContent(
                     modifier = Modifier.padding(paddingValues),
                 assets = filteredAssets,
@@ -219,6 +236,10 @@ fun AssetsScreen(
                 baseCurrency = state.totalNetWorthCurrency,
                 totalNetWorth = totalNetWorth,
                 baseNetWorth = if (state.selectedTab == AssetsTab.ASSETS) state.totalAssetsBase else state.totalLiabilitiesBase,
+                historicalRates = state.historicalRates,
+                percentiles = state.percentiles,
+                currentRates = state.currentRates,
+                onAssetClick = { detailAsset = it },
                 onEdit = {
                     editingAsset = it
                     showSheet = true
@@ -268,6 +289,27 @@ fun AssetsScreen(
         }
     )
 
+    // Asset detail sheet
+    detailAsset?.let { asset ->
+        MooneyBottomSheet(
+            onDismissRequest = { detailAsset = null },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ) {
+            AssetDetailSheet(
+                asset = asset,
+                baseCurrency = state.totalNetWorthCurrency,
+                historicalRates = state.historicalRates[asset.originalCurrency] ?: emptyList(),
+                currentRate = state.currentRates[asset.originalCurrency],
+                percentile = state.percentiles[asset.originalCurrency],
+                onEdit = {
+                    detailAsset = null
+                    editingAsset = asset
+                    showSheet = true
+                }
+            )
+        }
+    }
+
     if (state.showPaywall) {
         PaywallSheet(
             isLoading = state.isPurchasing,
@@ -297,6 +339,10 @@ private fun AssetsScreenContent(
     onEdit: (UiAsset) -> Unit,
     onDelete: (UiAsset) -> Unit,
     onSetPrimary: (UiAsset) -> Unit,
+    historicalRates: Map<Currency, List<com.andriybobchuk.mooney.mooney.domain.HistoricalRate>> = emptyMap(),
+    percentiles: Map<Currency, Int> = emptyMap(),
+    currentRates: Map<Currency, Double> = emptyMap(),
+    onAssetClick: (UiAsset) -> Unit = {},
     onToggleCategory: (String) -> Unit,
     onUpdateCategoryOrder: (List<String>) -> Unit = {},
     onAddAsset: () -> Unit = {}
@@ -478,6 +524,11 @@ private fun AssetsScreenContent(
                                     AssetCard(
                                         asset = asset,
                                         percentage = pct,
+                                        baseCurrency = baseCurrency,
+                                        historicalRates = historicalRates[asset.originalCurrency],
+                                        percentile = percentiles[asset.originalCurrency],
+                                        currentRate = currentRates[asset.originalCurrency],
+                                        onClick = { onAssetClick(asset) },
                                         onEdit = onEdit,
                                         onDelete = onDelete,
                                         onSetPrimary = onSetPrimary
@@ -496,6 +547,26 @@ private fun AssetsScreenContent(
         item {
             Spacer(Modifier.height(80.dp)) // Space for FAB
         }
+    }
+}
+
+@Composable
+private fun RateTag(label: String, value: String, symbol: String?, accentColor: androidx.compose.ui.graphics.Color? = null) {
+    val bgColor = accentColor?.copy(alpha = 0.12f) ?: MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+    val textColor = accentColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+    val text = if (label.isNotEmpty()) "$label $value${symbol ?: ""}" else "$value${symbol ?: ""}"
+    Box(
+        modifier = Modifier
+            .background(bgColor, RoundedCornerShape(6.dp))
+            .padding(horizontal = 6.dp, vertical = 3.dp)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            color = textColor,
+            fontSize = 9.sp,
+            fontWeight = if (accentColor != null) FontWeight.Medium else FontWeight.Normal
+        )
     }
 }
 
@@ -578,18 +649,24 @@ private fun CollapsibleCategoryHeader(
 private fun AssetCard(
     asset: UiAsset,
     percentage: Float,
+    baseCurrency: Currency = GlobalConfig.baseCurrency,
+    historicalRates: List<com.andriybobchuk.mooney.mooney.domain.HistoricalRate>? = null,
+    percentile: Int? = null,
+    currentRate: Double? = null,
+    onClick: () -> Unit = {},
     onEdit: (UiAsset) -> Unit,
     onDelete: (UiAsset) -> Unit,
     onSetPrimary: (UiAsset) -> Unit
 ) {
     var showActionSheet by remember { mutableStateOf(false) }
+    val isForeign = asset.originalCurrency != baseCurrency
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .combinedClickable(
-                onClick = { onEdit(asset) },
+                onClick = onClick,
                 onLongClick = { showActionSheet = true }
             ),
         shape = RoundedCornerShape(12.dp),
@@ -599,99 +676,109 @@ private fun AssetCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
-            // Percentage fill — accent color from left to right
+            // Percentage fill background
             if (percentage > 0.001f) {
                 Canvas(modifier = Modifier.matchParentSize()) {
                     drawRect(
                         color = androidx.compose.ui.graphics.Color(0xFF3562F6).copy(alpha = 0.08f),
-                        size = androidx.compose.ui.geometry.Size(
-                            width = size.width * percentage,
-                            height = size.height
-                        )
+                        size = androidx.compose.ui.geometry.Size(width = size.width * percentage, height = size.height)
                     )
                 }
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = asset.title,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        if (asset.originalCurrency != GlobalConfig.baseCurrency) {
-                            Box(
-                                modifier = Modifier
-                                    .border(
-                                        width = 1.dp,
-                                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
-                                        shape = RoundedCornerShape(4.dp)
-                                    )
-                                    .padding(horizontal = 5.dp, vertical = 1.dp)
-                            ) {
-                                Text(
-                                    text = asset.originalCurrency.name,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 9.sp,
-                                    letterSpacing = 0.3.sp
-                                )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    // Left: title + sparkline
+                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                        // Title + currency tag on same line when possible
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = asset.title,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                            if (isForeign) {
+                                Box(modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
+                                    Text(asset.originalCurrency.name, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.sp, letterSpacing = 0.3.sp)
+                                }
+                            }
+                        }
+
+                        // Primary badge on its own line
+                        if (asset.isPrimary) {
+                            Spacer(Modifier.height(3.dp))
+                            Box(modifier = Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
+                                Text(stringResource(Res.string.primary_account).uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontSize = 9.sp, letterSpacing = 0.5.sp)
+                            }
+                        }
+
+                        // Sparkline — 75% width, 6 months, color based on percentile
+                        if (isForeign && historicalRates != null && historicalRates.size > 2) {
+                            Spacer(Modifier.height(4.dp))
+                            val sMin = historicalRates.minOf { it.rate }
+                            val sMax = historicalRates.maxOf { it.rate }
+                            val sparkColor = when {
+                                percentile != null && percentile >= 67 -> androidx.compose.ui.graphics.Color(0xFF16A34A)
+                                percentile != null && percentile <= 33 -> androidx.compose.ui.graphics.Color(0xFFDC2626)
+                                else -> MaterialTheme.colorScheme.primary
+                            }
+                            Canvas(modifier = Modifier.fillMaxWidth(0.75f).height(24.dp)) {
+                                val w = size.width
+                                val h = size.height
+                                val range = sMax - sMin
+                                if (range == 0.0) return@Canvas
+                                val path = Path()
+                                historicalRates.forEachIndexed { i, hr ->
+                                    val x = (i.toFloat() / (historicalRates.size - 1).coerceAtLeast(1)) * w
+                                    val y = h - ((hr.rate - sMin) / range * h * 0.85f).toFloat()
+                                    if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                                }
+                                drawPath(path, sparkColor.copy(alpha = 0.6f), style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round))
                             }
                         }
                     }
-                    if (asset.isPrimary) {
-                        Spacer(modifier = Modifier.height(3.dp))
-                        Box(
-                            modifier = Modifier
-                                .background(
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                    shape = RoundedCornerShape(4.dp)
-                                )
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = stringResource(Res.string.primary_account).uppercase(),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontSize = 9.sp,
-                                letterSpacing = 0.5.sp
-                            )
+
+                    // Right: amounts
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = buildAnnotatedString {
+                                withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) { append("${asset.baseCurrencyAmount.formatWithCommas()} ") }
+                                withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) { append(baseCurrency.symbol) }
+                            },
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (isForeign) {
+                            Text("${asset.originalAmount.formatWithCommas()} ${asset.originalCurrency.symbol}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
 
-                Column(
-                    horizontalAlignment = Alignment.End
-                ) {
-                    Text(
-                        text = buildAnnotatedString {
-                            withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
-                                append("${asset.baseCurrencyAmount.formatWithCommas()} ")
-                            }
-                            withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                                append(GlobalConfig.baseCurrency.symbol)
-                            }
-                        },
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    if (asset.originalCurrency != GlobalConfig.baseCurrency) {
-                        Text(
-                            text = "${asset.originalAmount.formatWithCommas()} ${asset.originalCurrency.symbol}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                // Low / Now (with pctl) / High tags at the bottom
+                if (isForeign && historicalRates != null && historicalRates.size > 2 && currentRate != null) {
+                    val minR = historicalRates.minOf { it.rate }
+                    val maxR = historicalRates.maxOf { it.rate }
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        RateTag("Low", "${minR.formatWithCommas()}${baseCurrency.symbol}", null)
+                        val nowText = if (percentile != null)
+                            "Now ${currentRate.formatWithCommas()}${baseCurrency.symbol} (${percentile}th pctl)"
+                        else
+                            "Now ${currentRate.formatWithCommas()}${baseCurrency.symbol}"
+                        RateTag("", nowText, "")
+                        RateTag("High", "${maxR.formatWithCommas()}${baseCurrency.symbol}", null)
                     }
                 }
             }

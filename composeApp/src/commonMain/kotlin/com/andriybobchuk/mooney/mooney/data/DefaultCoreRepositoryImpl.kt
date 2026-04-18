@@ -64,16 +64,17 @@ class DefaultCoreRepositoryImpl(
 
     override fun getAllTransactions(): Flow<List<Transaction?>> {
         val accountsFlow = getAllAccounts()
-        val categories = getAllCategories()
 
         return transactionDao.getAll().combine(accountsFlow) { transactionEntities, accounts ->
+            val categories = getAllCategories()
             transactionEntities.map { transactionEntity ->
                 val subcategory = categories.find { it.id == transactionEntity.subcategoryId }
                     ?: resolveTransferCategory(transactionEntity.subcategoryId, accounts, categories)
+                    ?: buildFallbackCategory(transactionEntity.subcategoryId, categories)
 
                 val account = accounts.find { it?.id == transactionEntity.accountId }
 
-                if (subcategory != null && account != null) {
+                if (account != null) {
                     transactionEntity.toDomain(subcategory, account)
                 } else {
                     null
@@ -89,12 +90,26 @@ class DefaultCoreRepositoryImpl(
 
         val subcategory = categories.find { it.id == entity.subcategoryId }
             ?: resolveTransferCategory(entity.subcategoryId, accounts, categories)
+            ?: buildFallbackCategory(entity.subcategoryId, categories)
 
         val account = accounts.find { it?.id == entity.accountId }
 
-        return if (subcategory != null && account != null) {
+        return if (account != null) {
             entity.toDomain(subcategory, account)
         } else null
+    }
+
+    private fun buildFallbackCategory(subcategoryId: String, categories: List<Category>): Category {
+        val expenseRoot = categories.find { it.id == "expense" }
+        val incomeRoot = categories.find { it.id == "income" }
+        val parent = expenseRoot ?: incomeRoot
+        return Category(
+            id = subcategoryId,
+            title = "Deleted Category",
+            type = parent?.type ?: CategoryType.EXPENSE,
+            emoji = "❓",
+            parent = parent
+        )
     }
 
     private fun resolveTransferCategory(
@@ -124,16 +139,44 @@ class DefaultCoreRepositoryImpl(
     private var cachedCategoriesById: Map<String, Category> = emptyMap()
 
     init {
+        repairCorruptedCategories()
         reloadCategories()
+    }
+
+    private fun repairCorruptedCategories() {
+        runBlocking(Dispatchers.IO) {
+            val entities = categoryDao.getAll().first()
+            val entitiesById = entities.associateBy { it.id }
+            for (entity in entities) {
+                val pid = entity.parentId ?: continue
+                // Self-referencing: parentId points to itself
+                if (pid == entity.id) {
+                    categoryDao.delete(entity.id)
+                    continue
+                }
+                // Circular: walk the parent chain, detect cycles
+                val visited = mutableSetOf(entity.id)
+                var current: String? = pid
+                var isCycle = false
+                while (current != null) {
+                    if (!visited.add(current)) { isCycle = true; break }
+                    current = entitiesById[current]?.parentId
+                }
+                if (isCycle) {
+                    categoryDao.delete(entity.id)
+                }
+            }
+        }
     }
 
     override fun reloadCategories() {
         val entities = runBlocking(Dispatchers.IO) { categoryDao.getAll().first() }
         val entitiesById = entities.associateBy { it.id }
 
-        fun resolve(entityId: String): Category? {
+        fun resolve(entityId: String, visited: Set<String> = emptySet()): Category? {
+            if (entityId in visited) return null
             val entity = entitiesById[entityId] ?: return null
-            val parent = entity.parentId?.let { resolve(it) }
+            val parent = entity.parentId?.let { resolve(it, visited + entityId) }
             return entity.toDomain(parent)
         }
 

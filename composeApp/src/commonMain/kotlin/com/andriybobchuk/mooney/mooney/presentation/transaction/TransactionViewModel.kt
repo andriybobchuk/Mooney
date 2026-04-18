@@ -21,6 +21,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -41,6 +42,9 @@ data class TransactionState(
     val dailyTotals: Map<Int, Double> = emptyMap(),
     val pendingTransactions: List<PendingTransactionEntity> = emptyList(),
     val pendingCount: Int = 0,
+    val assetCategories: List<com.andriybobchuk.mooney.core.data.database.AssetCategoryEntity> = emptyList(),
+    val categoryOrder: List<String> = emptyList(),
+    val expandedCategories: Set<String> = emptySet(),
     val isLoading: Boolean = false,
     val isError: Boolean = false
 )
@@ -63,7 +67,10 @@ class TransactionViewModel(
     private val acceptPendingTransactionUseCase: AcceptPendingTransactionUseCase,
     private val createRecurringFromTransactionUseCase: CreateRecurringFromTransactionUseCase,
     private val analyticsTracker: AnalyticsTracker,
-    private val preferencesRepository: com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository
+    private val preferencesRepository: com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository,
+    private val assetCategoryDao: com.andriybobchuk.mooney.core.data.database.AssetCategoryDao,
+    private val manageCategoryExpansionUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageCategoryExpansionUseCase,
+    private val manageAssetCategoryOrderUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageAssetCategoryOrderUseCase
 ) : ViewModel() {
 
     private var observeTransactionsJob: Job? = null
@@ -175,22 +182,42 @@ class TransactionViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                getAccountsUseCase().collect { accounts ->
+                combine(
+                    getAccountsUseCase(),
+                    assetCategoryDao.getAll(),
+                    manageAssetCategoryOrderUseCase.getCategoryOrder(),
+                    manageCategoryExpansionUseCase.getExpandedCategories()
+                ) { accounts, assetCategories, categoryOrder, expandedCategories ->
                     val categories = getCategoriesUseCase()
+                    val nonLiabilityAccounts = convertAccountsToUiUseCase(accounts)
+                        .filterNotNull()
+                        .filter { !it.isLiability }
                     _uiState.update {
                         it.copy(
-                            accounts = convertAccountsToUiUseCase(accounts),
+                            accounts = nonLiabilityAccounts,
                             categories = categories,
+                            assetCategories = assetCategories,
+                            categoryOrder = categoryOrder,
+                            expandedCategories = expandedCategories,
                             isLoading = false
                         )
                     }
-                }
+                }.launchIn(this)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 analyticsTracker.recordException(e, "Transactions")
                 _uiState.update { it.copy(isError = true, isLoading = false) }
             }
+        }
+    }
+
+    fun toggleAccountCategoryExpansion(categoryId: String) {
+        viewModelScope.launch {
+            manageCategoryExpansionUseCase.toggleCategoryExpansion(
+                category = categoryId,
+                currentExpanded = _uiState.value.expandedCategories
+            )
         }
     }
 
@@ -236,7 +263,9 @@ class TransactionViewModel(
                 acceptPendingTransactionUseCase(pending, account, category)
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) { }
+            } catch (_: Exception) {
+                _uiState.update { it.copy(isError = true) }
+            }
         }
     }
 
@@ -258,7 +287,9 @@ class TransactionViewModel(
                     }
                 } catch (e: CancellationException) {
                     throw e
-                } catch (_: Exception) { }
+                } catch (_: Exception) {
+                    _uiState.update { it.copy(isError = true) }
+                }
             }
         }
     }

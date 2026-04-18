@@ -257,22 +257,22 @@ fun NavigationHost() {
 
             composable<Route.AnalyticsRevenue> { entry ->
                 val viewModel = entry.sharedKoinViewModel<AnalyticsViewModel>(navController)
-                AnalyticsBreakdownScreen(viewModel = viewModel, type = "REVENUE", onBackClick = { navController.navigateUp() })
+                AnalyticsBreakdownScreen(viewModel = viewModel, type = "REVENUE", onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() })
             }
 
             composable<Route.AnalyticsCosts> { entry ->
                 val viewModel = entry.sharedKoinViewModel<AnalyticsViewModel>(navController)
-                AnalyticsBreakdownScreen(viewModel = viewModel, type = "OPERATING_COSTS", onBackClick = { navController.navigateUp() })
+                AnalyticsBreakdownScreen(viewModel = viewModel, type = "OPERATING_COSTS", onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() })
             }
 
             composable<Route.AnalyticsTaxes> { entry ->
                 val viewModel = entry.sharedKoinViewModel<AnalyticsViewModel>(navController)
-                AnalyticsBreakdownScreen(viewModel = viewModel, type = "TAXES", onBackClick = { navController.navigateUp() })
+                AnalyticsBreakdownScreen(viewModel = viewModel, type = "TAXES", onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() })
             }
 
             composable<Route.AnalyticsNetIncome> { entry ->
                 val viewModel = entry.sharedKoinViewModel<AnalyticsViewModel>(navController)
-                AnalyticsNetIncomeScreen(viewModel = viewModel, onBackClick = { navController.navigateUp() })
+                AnalyticsNetIncomeScreen(viewModel = viewModel, onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() })
             }
 
             if (FeatureFlags.goalsEnabled) {
@@ -280,7 +280,7 @@ fun NavigationHost() {
                     val viewModel = koinViewModel<GoalsViewModel>()
                     GoalsScreen(
                         viewModel = viewModel,
-                        onBackClick = { navController.navigateUp() }
+                        onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
                     )
                 }
             }
@@ -289,7 +289,7 @@ fun NavigationHost() {
                 val viewModel = koinViewModel<RecurringTransactionsViewModel>()
                 RecurringTransactionsScreen(
                     viewModel = viewModel,
-                    onBackClick = { navController.navigateUp() }
+                    onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
                 )
             }
 
@@ -297,7 +297,7 @@ fun NavigationHost() {
                 val viewModel = koinViewModel<SettingsViewModel>()
                 SettingsScreen(
                     viewModel = viewModel,
-                    onBackClick = { navController.navigateUp() },
+                    onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() },
                     onNavigateToTransactionCategories = { navController.navigate(Route.TransactionCategories) },
                     onNavigateToAssetCategories = { navController.navigate(Route.AssetCategories) }
                 )
@@ -307,7 +307,7 @@ fun NavigationHost() {
                 val viewModel = koinViewModel<com.andriybobchuk.mooney.mooney.presentation.categories.TransactionCategoriesViewModel>()
                 com.andriybobchuk.mooney.mooney.presentation.categories.TransactionCategoriesScreen(
                     viewModel = viewModel,
-                    onBackClick = { navController.navigateUp() }
+                    onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
                 )
             }
 
@@ -315,7 +315,7 @@ fun NavigationHost() {
                 val viewModel = koinViewModel<com.andriybobchuk.mooney.mooney.presentation.categories.AssetCategoriesViewModel>()
                 com.andriybobchuk.mooney.mooney.presentation.categories.AssetCategoriesScreen(
                     viewModel = viewModel,
-                    onBackClick = { navController.navigateUp() }
+                    onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
                 )
             }
         }

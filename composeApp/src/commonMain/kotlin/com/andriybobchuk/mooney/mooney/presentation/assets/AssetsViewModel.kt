@@ -77,8 +77,9 @@ class AssetsViewModel(
         .onStart {
             observeUserCurrencies()
             observeAssetCategories()
+            // Refresh rates BEFORE observing assets so conversions use live rates
+            ensureRatesLoaded()
             observeAssets()
-            refreshExchangeRatesOnStart()
         }
         .stateIn(
             viewModelScope,
@@ -98,13 +99,13 @@ class AssetsViewModel(
         }.launchIn(viewModelScope)
     }
 
-    private fun refreshExchangeRatesOnStart() {
-        viewModelScope.launch {
-            if (shouldRefreshExchangeRatesUseCase(_uiState.value.ratesLastUpdated)) {
-                refreshExchangeRates()
-            } else {
-                // Rates already fresh — load insights with cached rates
-                loadCurrencyInsights(_uiState.value.assets)
+    private suspend fun ensureRatesLoaded() {
+        if (shouldRefreshExchangeRatesUseCase(_uiState.value.ratesLastUpdated)) {
+            val result = currencyManagerUseCase.refreshExchangeRates()
+            if (result is Result.Success) {
+                _uiState.update {
+                    it.copy(ratesLastUpdated = kotlinx.datetime.Clock.System.now().toEpochMilliseconds())
+                }
             }
         }
     }

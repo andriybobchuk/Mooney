@@ -407,20 +407,24 @@ class SettingsViewModel(
 
     fun onRestorePurchases() {
         viewModelScope.launch {
-            _state.update { it.copy(isPurchasing = true, purchaseError = null) }
+            _state.update { it.copy(isPurchasing = true, purchaseError = null, restoreMessage = null) }
             try {
                 val restored = premiumManager.restorePurchases()
                 if (restored) {
-                    _state.update { it.copy(showPaywall = false, isPurchasing = false) }
+                    _state.update { it.copy(showPaywall = false, isPurchasing = false, restoreMessage = "Purchases restored successfully") }
                 } else {
-                    _state.update { it.copy(isPurchasing = false, purchaseError = "No active subscription found") }
+                    _state.update { it.copy(isPurchasing = false, purchaseError = "No active subscription found", restoreMessage = "No active subscription found") }
                 }
             } catch (e: kotlin.coroutines.cancellation.CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _state.update { it.copy(isPurchasing = false, purchaseError = e.message) }
+                _state.update { it.copy(isPurchasing = false, purchaseError = e.message, restoreMessage = e.message ?: "Restore failed") }
             }
         }
+    }
+
+    fun clearRestoreMessage() {
+        _state.update { it.copy(restoreMessage = null) }
     }
 
     fun clearError() {

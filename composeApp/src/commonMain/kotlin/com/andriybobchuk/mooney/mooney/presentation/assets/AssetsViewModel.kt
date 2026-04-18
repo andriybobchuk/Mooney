@@ -220,11 +220,6 @@ class AssetsViewModel(
         analyticsTracker.trackEvent(
             AnalyticsEvent.CycleCurrencyDisplay(currencyManagerUseCase.getCurrentCurrency().name)
         )
-        // Recalculate with new currency
-        viewModelScope.launch {
-            val accounts = getAccountsUseCase().first()
-            _uiState.update { it.copy(assets = convertAccountsToUiUseCase(accounts).filterNotNull()) }
-        }
     }
 
     fun refreshExchangeRates() {

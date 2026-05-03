@@ -10,6 +10,7 @@ object FeatureFlags {
 
     const val goalsEnabled = true
     const val exchangeEnabled = false
+    const val assetCurrencyInsights = false
     const val analyticsEnabled = true
     const val exportImportEnabled = true
 }

@@ -3,6 +3,7 @@ package com.andriybobchuk.mooney.mooney.presentation.assets
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
+import com.andriybobchuk.mooney.mooney.domain.FeatureFlags
 import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.AccountWithConversion
 import com.andriybobchuk.mooney.mooney.domain.AssetCategory
@@ -137,6 +138,7 @@ class AssetsViewModel(
     }
 
     private fun loadCurrencyInsights(assets: List<UiAsset>) {
+        if (!FeatureFlags.assetCurrencyInsights) return
         viewModelScope.launch {
             try {
                 val base = GlobalConfig.baseCurrency

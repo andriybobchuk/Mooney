@@ -27,14 +27,31 @@ class LiveExchangeRateProvider(
         }
     }
 
+    // Approximate rates for currencies not covered by ECB/Frankfurter
+    // Updated periodically — good enough for display, not for trading
+    private val fallbackRatesInUsd = mapOf(
+        "UAH" to 41.2,
+        "RUB" to 96.5,
+        "AED" to 3.67
+    )
+
     private fun mapToExchangeRates(response: FrankfurterLatestResponse, baseCurrency: Currency): ExchangeRates {
         val supportedCurrencyRates = mutableMapOf<Currency, Double>()
         supportedCurrencyRates[baseCurrency] = 1.0
 
         Currency.entries.forEach { currency ->
             if (currency != baseCurrency) {
-                response.rates[currency.name]?.let { rate ->
-                    supportedCurrencyRates[currency] = rate
+                val apiRate = response.rates[currency.name]
+                if (apiRate != null) {
+                    supportedCurrencyRates[currency] = apiRate
+                } else {
+                    // Fallback: cross-calculate via USD approximation
+                    val fallback = fallbackRatesInUsd[currency.name]
+                    if (fallback != null) {
+                        val usdRate = if (baseCurrency == Currency.USD) 1.0
+                            else response.rates["USD"] ?: return@forEach
+                        supportedCurrencyRates[currency] = fallback / usdRate
+                    }
                 }
             }
         }

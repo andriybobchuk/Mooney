@@ -3,7 +3,7 @@ package com.andriybobchuk.mooney.mooney.presentation.assets
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
-import com.andriybobchuk.mooney.mooney.domain.FeatureFlags
+import kotlinx.coroutines.flow.map
 import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.AccountWithConversion
 import com.andriybobchuk.mooney.mooney.domain.AssetCategory
@@ -56,7 +56,8 @@ class AssetsViewModel(
     private val analyticsTracker: AnalyticsTracker,
     private val premiumManager: PremiumManager,
     private val loadHistoricalRatesUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.LoadHistoricalRatesUseCase,
-    private val calculateRatePercentileUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.CalculateRatePercentileUseCase
+    private val calculateRatePercentileUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.CalculateRatePercentileUseCase,
+    private val dataStore: androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>
 ) : ViewModel() {
 
     private var observeAccountsJob: Job? = null
@@ -78,6 +79,7 @@ class AssetsViewModel(
         .onStart {
             observeUserCurrencies()
             observeAssetCategories()
+            observeCurrencyInsightsSetting()
             // Refresh rates BEFORE observing assets so conversions use live rates
             ensureRatesLoaded()
             observeAssets()
@@ -91,6 +93,18 @@ class AssetsViewModel(
     private fun observeUserCurrencies() {
         getUserCurrenciesUseCase().onEach { currencies ->
             currencyManagerUseCase.setUserCurrencies(currencies.map { it.code })
+        }.launchIn(viewModelScope)
+    }
+
+    private fun observeCurrencyInsightsSetting() {
+        dataStore.data.map { prefs ->
+            prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.CURRENCY_INSIGHTS_ENABLED] ?: false
+        }.onEach { enabled ->
+            val wasEnabled = _uiState.value.currencyInsightsEnabled
+            _uiState.update { it.copy(currencyInsightsEnabled = enabled) }
+            if (enabled && !wasEnabled) {
+                loadCurrencyInsights(_uiState.value.assets)
+            }
         }.launchIn(viewModelScope)
     }
 
@@ -138,7 +152,7 @@ class AssetsViewModel(
     }
 
     private fun loadCurrencyInsights(assets: List<UiAsset>) {
-        if (!FeatureFlags.assetCurrencyInsights) return
+        if (!_uiState.value.currencyInsightsEnabled) return
         viewModelScope.launch {
             try {
                 val base = GlobalConfig.baseCurrency
@@ -426,5 +440,6 @@ data class AssetsState(
     val purchaseError: String? = null,
     val historicalRates: Map<Currency, List<com.andriybobchuk.mooney.mooney.domain.HistoricalRate>> = emptyMap(),
     val percentiles: Map<Currency, Int> = emptyMap(),
-    val currentRates: Map<Currency, Double> = emptyMap()
+    val currentRates: Map<Currency, Double> = emptyMap(),
+    val currencyInsightsEnabled: Boolean = false
 )

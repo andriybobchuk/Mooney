@@ -30,7 +30,8 @@ data class SettingsState(
     val defaultIncomeCategoryId: String = "salary",
     val accounts: List<Account> = emptyList(),
     val primaryAccountId: Int? = null,
-    val restoreMessage: String? = null
+    val restoreMessage: String? = null,
+    val currencyInsightsEnabled: Boolean = false
 ) {
     val maxPinnedCategories: Int = 5
     val canAddMorePinned: Boolean = pinnedCategoryIds.size < maxPinnedCategories

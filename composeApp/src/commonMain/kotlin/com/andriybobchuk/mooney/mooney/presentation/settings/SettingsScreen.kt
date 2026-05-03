@@ -752,6 +752,21 @@ fun SettingsScreen(
                     }
                 }
 
+                // EARLY ACCESS section
+                item {
+                    SettingsSectionHeader("Early Access")
+                }
+                item {
+                    SettingsGroup {
+                        SettingsToggleRow(
+                            title = "Currency Insights",
+                            description = "Show exchange rate trends on foreign currency accounts",
+                            checked = state.currencyInsightsEnabled,
+                            onCheckedChange = { viewModel.toggleCurrencyInsights(it) }
+                        )
+                    }
+                }
+
                 // DATA section
                 item {
                     SettingsSectionHeader(stringResource(Res.string.data))

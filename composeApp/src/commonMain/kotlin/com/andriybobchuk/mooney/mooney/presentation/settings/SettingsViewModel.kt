@@ -27,10 +27,12 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.datastore.preferences.core.edit
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -50,7 +52,8 @@ class SettingsViewModel(
     private val analyticsTracker: AnalyticsTracker,
     private val premiumManager: PremiumManager,
     private val getAccountsUseCase: GetAccountsUseCase,
-    private val setPrimaryAccountUseCase: SetPrimaryAccountUseCase
+    private val setPrimaryAccountUseCase: SetPrimaryAccountUseCase,
+    private val dataStore: androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsState())
@@ -64,6 +67,15 @@ class SettingsViewModel(
         observeUserCurrencies()
         observeAssetCategories()
         observeAccounts()
+        observeCurrencyInsights()
+    }
+
+    private fun observeCurrencyInsights() {
+        dataStore.data.map { prefs ->
+            prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.CURRENCY_INSIGHTS_ENABLED] ?: false
+        }.onEach { enabled ->
+            _state.update { it.copy(currencyInsightsEnabled = enabled) }
+        }.launchIn(viewModelScope)
     }
 
     private fun observeData() {
@@ -425,6 +437,15 @@ class SettingsViewModel(
 
     fun clearRestoreMessage() {
         _state.update { it.copy(restoreMessage = null) }
+    }
+
+    fun toggleCurrencyInsights(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStore.edit { prefs ->
+                prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.CURRENCY_INSIGHTS_ENABLED] = enabled
+            }
+            _state.update { it.copy(currencyInsightsEnabled = enabled) }
+        }
     }
 
     fun clearError() {

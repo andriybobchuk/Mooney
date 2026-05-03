@@ -10,7 +10,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
-import com.andriybobchuk.mooney.mooney.domain.FeatureFlags
 import kotlinx.datetime.toLocalDateTime
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -241,6 +240,7 @@ fun AssetsScreen(
                 percentiles = state.percentiles,
                 currentRates = state.currentRates,
                 onAssetClick = { detailAsset = it },
+                currencyInsightsEnabled = state.currencyInsightsEnabled,
                 onEdit = {
                     editingAsset = it
                     showSheet = true
@@ -344,6 +344,7 @@ private fun AssetsScreenContent(
     percentiles: Map<Currency, Int> = emptyMap(),
     currentRates: Map<Currency, Double> = emptyMap(),
     onAssetClick: (UiAsset) -> Unit = {},
+    currencyInsightsEnabled: Boolean = false,
     onToggleCategory: (String) -> Unit,
     onUpdateCategoryOrder: (List<String>) -> Unit = {},
     onAddAsset: () -> Unit = {}
@@ -526,10 +527,10 @@ private fun AssetsScreenContent(
                                         asset = asset,
                                         percentage = pct,
                                         baseCurrency = baseCurrency,
-                                        historicalRates = if (FeatureFlags.assetCurrencyInsights) historicalRates[asset.originalCurrency] else null,
-                                        percentile = if (FeatureFlags.assetCurrencyInsights) percentiles[asset.originalCurrency] else null,
-                                        currentRate = if (FeatureFlags.assetCurrencyInsights) currentRates[asset.originalCurrency] else null,
-                                        onClick = { if (FeatureFlags.assetCurrencyInsights) onAssetClick(asset) else onEdit(asset) },
+                                        historicalRates = if (currencyInsightsEnabled) historicalRates[asset.originalCurrency] else null,
+                                        percentile = if (currencyInsightsEnabled) percentiles[asset.originalCurrency] else null,
+                                        currentRate = if (currencyInsightsEnabled) currentRates[asset.originalCurrency] else null,
+                                        onClick = { if (currencyInsightsEnabled) onAssetClick(asset) else onEdit(asset) },
                                         onEdit = onEdit,
                                         onDelete = onDelete,
                                         onSetPrimary = onSetPrimary
@@ -724,7 +725,7 @@ private fun AssetCard(
                         }
 
                         // Sparkline — only in currency insights mode
-                        if (FeatureFlags.assetCurrencyInsights && isForeign && historicalRates != null && historicalRates.size > 2) {
+                        if (isForeign && historicalRates != null && historicalRates.size > 2) {
                             Spacer(Modifier.height(4.dp))
                             val sMin = historicalRates.minOf { it.rate }
                             val sMax = historicalRates.maxOf { it.rate }
@@ -766,7 +767,7 @@ private fun AssetCard(
                 }
 
                 // Low / Now / High tags — only in currency insights mode
-                if (FeatureFlags.assetCurrencyInsights && isForeign && historicalRates != null && historicalRates.size > 2 && currentRate != null) {
+                if (isForeign && historicalRates != null && historicalRates.size > 2 && currentRate != null) {
                     val minR = historicalRates.minOf { it.rate }
                     val maxR = historicalRates.maxOf { it.rate }
                     Row(

@@ -143,6 +143,7 @@ class DefaultCoreRepositoryImpl(
         reloadCategories()
     }
 
+    @Suppress("LoopWithTooManyJumpStatements")
     private fun repairCorruptedCategories() {
         runBlocking(Dispatchers.IO) {
             val entities = categoryDao.getAll().first()

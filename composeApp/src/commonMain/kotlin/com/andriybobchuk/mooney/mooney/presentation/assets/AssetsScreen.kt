@@ -767,7 +767,8 @@ private fun AssetCard(
                 }
 
                 // Low / Now / High tags — only in currency insights mode
-                if (isForeign && historicalRates != null && historicalRates.size > 2 && currentRate != null) {
+                val showRateTags = isForeign && historicalRates != null && historicalRates.size > 2 && currentRate != null
+                if (showRateTags) {
                     val minR = historicalRates.minOf { it.rate }
                     val maxR = historicalRates.maxOf { it.rate }
                     Row(

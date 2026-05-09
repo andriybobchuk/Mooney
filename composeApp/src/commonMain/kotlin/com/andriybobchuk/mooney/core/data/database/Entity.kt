@@ -98,6 +98,25 @@ data class PendingTransactionEntity(
     val createdDate: String // ISO date string - when the pending entry was created
 )
 
+@Entity(tableName = "historical_rates", primaryKeys = ["fromCurrency", "toCurrency", "date"])
+data class HistoricalRateEntity(
+    val fromCurrency: String,
+    val toCurrency: String,
+    val date: String,
+    val rate: Double
+)
+
+@Entity(tableName = "rate_watch_alerts")
+data class RateWatchAlertEntity(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val fromCurrency: String,
+    val toCurrency: String,
+    val targetRate: Double,
+    val direction: String,
+    val isActive: Boolean = true,
+    val createdDate: String
+)
+
 @Entity(tableName = "asset_categories")
 data class AssetCategoryEntity(
     @PrimaryKey val id: String,

@@ -64,6 +64,14 @@ fun SettingsScreen(
     var showLanguageSheet by remember { mutableStateOf(false) }
     var showUserCurrenciesSheet by remember { mutableStateOf(false) }
     var showFeedbackSheet by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
+
+    LaunchedEffect(state.restoreMessage) {
+        state.restoreMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearRestoreMessage()
+        }
+    }
     var showDefaultExpenseCategorySheet by remember { mutableStateOf(false) }
     var showDefaultIncomeCategorySheet by remember { mutableStateOf(false) }
     var showPrimaryAccountSheet by remember { mutableStateOf(false) }
@@ -601,6 +609,7 @@ fun SettingsScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Toolbars.Primary(
                 title = stringResource(Res.string.settings),
@@ -743,6 +752,21 @@ fun SettingsScreen(
                     }
                 }
 
+                // EARLY ACCESS section
+                item {
+                    SettingsSectionHeader("Early Access")
+                }
+                item {
+                    SettingsGroup {
+                        SettingsToggleRow(
+                            title = "Currency Insights",
+                            description = "Show exchange rate trends on foreign currency accounts",
+                            checked = state.currencyInsightsEnabled,
+                            onCheckedChange = { viewModel.toggleCurrencyInsights(it) }
+                        )
+                    }
+                }
+
                 // DATA section
                 item {
                     SettingsSectionHeader(stringResource(Res.string.data))
@@ -797,6 +821,11 @@ fun SettingsScreen(
                         SettingsRow(
                             title = "Privacy Policy",
                             onClick = { uriHandler.openUri("https://andriybobchuk.github.io/Mooney/privacy-policy.html") }
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            title = "Restore Purchases",
+                            onClick = { viewModel.onRestorePurchases() }
                         )
                     }
                 }

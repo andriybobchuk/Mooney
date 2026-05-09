@@ -458,9 +458,34 @@ val MIGRATION_13_14 = object : Migration(13, 14) {
     }
 }
 
+val MIGRATION_14_15 = object : Migration(14, 15) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("""
+            CREATE TABLE IF NOT EXISTS historical_rates (
+                fromCurrency TEXT NOT NULL,
+                toCurrency TEXT NOT NULL,
+                date TEXT NOT NULL,
+                rate REAL NOT NULL,
+                PRIMARY KEY (fromCurrency, toCurrency, date)
+            )
+        """.trimIndent())
+        connection.execSQL("""
+            CREATE TABLE IF NOT EXISTS rate_watch_alerts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                fromCurrency TEXT NOT NULL,
+                toCurrency TEXT NOT NULL,
+                targetRate REAL NOT NULL,
+                direction TEXT NOT NULL,
+                isActive INTEGER NOT NULL DEFAULT 1,
+                createdDate TEXT NOT NULL
+            )
+        """.trimIndent())
+    }
+}
+
 /**
  * Room callback that seeds default data on fresh install (onCreate).
- * Migrations only run when upgrading an existing DB — a brand new DB at version 14
+ * Migrations only run when upgrading an existing DB — a brand new DB at version 15
  * would have empty categories, asset_categories, and user_currencies tables without this.
  */
 val SEED_DATABASE_CALLBACK = object : RoomDatabase.Callback() {

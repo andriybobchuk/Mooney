@@ -65,4 +65,22 @@ sealed interface AnalyticsEvent {
         override val name = "complete_onboarding"
         override val params = mapOf("currency" to currency)
     }
+
+    data class DefaultsVersionApplied(val version: Int, val source: String) : AnalyticsEvent {
+        override val name = "defaults_version_applied"
+        override val params = mapOf("version" to version.toString(), "source" to source)
+    }
+
+    data class CategoryUsageSnapshot(
+        val totalDefaults: Int,
+        val usedDefaults: Int,
+        val unusedDefaults: Int
+    ) : AnalyticsEvent {
+        override val name = "category_usage_snapshot"
+        override val params = mapOf(
+            "total" to totalDefaults.toString(),
+            "used" to usedDefaults.toString(),
+            "unused" to unusedDefaults.toString()
+        )
+    }
 }

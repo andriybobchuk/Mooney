@@ -46,7 +46,11 @@ class TransactionCategoriesViewModel(
     private val getCategoriesUseCase: GetCategoriesUseCase,
     private val premiumManager: PremiumManager,
     private val dataStore: DataStore<Preferences>,
-    private val analyticsTracker: AnalyticsTracker
+    private val analyticsTracker: AnalyticsTracker,
+    private val transactionDao: com.andriybobchuk.mooney.core.data.database.TransactionDao,
+    private val categoryUsageDao: com.andriybobchuk.mooney.core.data.database.CategoryUsageDao,
+    private val recurringTransactionDao: com.andriybobchuk.mooney.core.data.database.RecurringTransactionDao,
+    private val pendingTransactionDao: com.andriybobchuk.mooney.core.data.database.PendingTransactionDao
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TransactionCategoriesState())
@@ -90,7 +94,13 @@ class TransactionCategoriesViewModel(
                 }
             }
 
-            val id = title.lowercase().replace(" ", "_").replace(Regex("[^a-z0-9_]"), "")
+            var id = title.lowercase().replace(" ", "_").replace(Regex("[^a-z0-9_]"), "")
+            val existingIds = categoryDao.getAllIds()
+            if (id in existingIds) {
+                var counter = 2
+                while ("${id}_$counter" in existingIds) counter++
+                id = "${id}_$counter"
+            }
             val resolvedParentId = parentId ?: type.lowercase()
             categoryDao.upsert(
                 CategoryEntity(
@@ -111,15 +121,38 @@ class TransactionCategoriesViewModel(
         }
     }
 
+    companion object {
+        private val ROOT_CATEGORY_IDS = setOf("expense", "income", "transfer")
+    }
+
     private fun deleteCategory(categoryId: String) {
+        if (categoryId in ROOT_CATEGORY_IDS) return
+
         viewModelScope.launch {
+            val category = categoryDao.getById(categoryId) ?: return@launch
             val children = categoryDao.getByParentId(categoryId)
+
+            // Determine reassignment target:
+            // - Subcategory → reassign to its parent (the general category)
+            // - General category → reassign to the root type (expense/income/transfer)
+            val reassignTo = category.parentId ?: categoryId
+            val allIdsToDelete = children.map { it.id } + categoryId
+
+            // Reassign all transactions, recurring, and pending that reference any deleted category
+            for (id in allIdsToDelete) {
+                transactionDao.reassignCategory(id, reassignTo)
+                recurringTransactionDao.reassignCategory(id, reassignTo)
+                pendingTransactionDao.reassignCategory(id, reassignTo)
+                categoryUsageDao.delete(id)
+            }
+
+            // Delete children first, then the category itself
             children.forEach { categoryDao.delete(it.id) }
             categoryDao.delete(categoryId)
-            val deletedCount = children.size + 1
+
             dataStore.edit { prefs ->
                 val current = prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] ?: 0
-                prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] = (current - deletedCount).coerceAtLeast(0)
+                prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] = (current - allIdsToDelete.size).coerceAtLeast(0)
             }
             analyticsTracker.trackEvent(AnalyticsEvent.DeleteCustomCategory)
             repository.reloadCategories()

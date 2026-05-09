@@ -28,6 +28,14 @@ class FakeTransactionDao : TransactionDao {
 
     override suspend fun getById(id: Int): TransactionEntity? =
         transactions.value.find { it.id == id }
+
+    override suspend fun getCount(): Int = transactions.value.size
+
+    override suspend fun reassignCategory(oldCategoryId: String, newCategoryId: String) {
+        transactions.value = transactions.value.map {
+            if (it.subcategoryId == oldCategoryId) it.copy(subcategoryId = newCategoryId) else it
+        }
+    }
 }
 
 class FakeAccountDao : AccountDao {
@@ -85,6 +93,10 @@ class FakeCategoryUsageDao : CategoryUsageDao {
         usages[categoryId]?.let {
             usages[categoryId] = it.copy(usageCount = it.usageCount + 1, lastUsedDate = date)
         }
+    }
+
+    override suspend fun delete(categoryId: String) {
+        usages.remove(categoryId)
     }
 }
 
@@ -163,6 +175,9 @@ class FakeCategoryDao : CategoryDao {
     override suspend fun delete(id: String) {
         categories.value = categories.value.filter { it.id != id }
     }
+
+    override suspend fun getAllIds(): List<String> =
+        categories.value.map { it.id }
 }
 
 class FakeUserCurrencyDao : UserCurrencyDao {
@@ -212,6 +227,12 @@ class FakeRecurringTransactionDao : RecurringTransactionDao {
     override suspend fun updateLastProcessedDate(id: Int, date: String) {
         items.value = items.value.map { if (it.id == id) it.copy(lastProcessedDate = date) else it }
     }
+
+    override suspend fun reassignCategory(oldCategoryId: String, newCategoryId: String) {
+        items.value = items.value.map {
+            if (it.subcategoryId == oldCategoryId) it.copy(subcategoryId = newCategoryId) else it
+        }
+    }
 }
 
 class FakePendingTransactionDao : PendingTransactionDao {
@@ -242,6 +263,12 @@ class FakePendingTransactionDao : PendingTransactionDao {
     }
     override suspend fun deletePendingByRecurringId(recurringId: Int) {
         items.value = items.value.filter { !(it.recurringTransactionId == recurringId && it.status == "PENDING") }
+    }
+
+    override suspend fun reassignCategory(oldCategoryId: String, newCategoryId: String) {
+        items.value = items.value.map {
+            if (it.subcategoryId == oldCategoryId) it.copy(subcategoryId = newCategoryId) else it
+        }
     }
 }
 

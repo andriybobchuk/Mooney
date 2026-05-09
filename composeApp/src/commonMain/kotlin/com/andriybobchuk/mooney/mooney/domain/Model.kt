@@ -81,11 +81,18 @@ data class ExchangeRates(
     val rates: Map<Currency, Double>
 ) {
     fun convert(amount: Double, from: Currency, to: Currency): Double {
-        val fromRate = rates[from] ?: error("Missing rate for $from")
-        val toRate = rates[to] ?: error("Missing rate for $to")
+        if (from == to) return amount
+        val fromRate = rates[from] ?: return amount
+        val toRate = rates[to] ?: return amount
+        if (fromRate == 0.0) return amount
         return amount / fromRate * toRate
     }
 }
+
+data class HistoricalRate(
+    val date: LocalDate,
+    val rate: Double
+)
 
 enum class GoalTrackingType {
     ACCOUNT,

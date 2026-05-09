@@ -43,7 +43,7 @@ class CalculateAnalyticsMetricsUseCase(
                 revenueForSubtitle = currentRevenue
             ),
             buildMetric(
-                title = "Operating Costs",
+                title = "Expenses",
                 current = currentExpenses,
                 previous = previousExpenses,
                 baseCurrency = baseCurrency,

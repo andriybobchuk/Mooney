@@ -4,6 +4,11 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.andriybobchuk.mooney.core.data.HttpClientFactory
 import com.andriybobchuk.mooney.core.data.database.AppDatabase
 import com.andriybobchuk.mooney.core.data.database.MooneyDatabaseFactory
+import com.andriybobchuk.mooney.core.data.category.BundledCategoryProvider
+import com.andriybobchuk.mooney.core.data.category.DefaultCategoryProvider
+import com.andriybobchuk.mooney.core.data.category.RemoteCategoryProvider
+import com.andriybobchuk.mooney.mooney.data.FrankfurterHistoricalRateProvider
+import com.andriybobchuk.mooney.mooney.domain.HistoricalRateProvider
 import com.andriybobchuk.mooney.mooney.data.DefaultCoreRepositoryImpl
 import com.andriybobchuk.mooney.mooney.domain.CoreRepository
 
@@ -61,6 +66,8 @@ val sharedModule = module {
     single { get<AppDatabase>().categoryDao }
     single { get<AppDatabase>().userCurrencyDao }
     single { get<AppDatabase>().assetCategoryDao }
+    single { get<AppDatabase>().historicalRateDao }
+    single { get<AppDatabase>().rateWatchAlertDao }
 
     // Data Export/Import Manager
     single {
@@ -82,23 +89,9 @@ val sharedModule = module {
     single { get<PreferencesDataStoreFactory>().create() }
     singleOf(::DataStorePreferencesRepository).bind<PreferencesRepository>()
 
-    // Feature flags
-    single<Boolean>(qualifier = named("use_live_exchange_rates")) { true }
-
-    // API Key
-    single<String>(qualifier = named("exchangerate_api_key")) { com.andriybobchuk.mooney.core.data.Secrets.EXCHANGE_RATE_API_KEY }
-
-    // Exchange Rate Providers
+    // Exchange Rate Provider (Frankfurter.app — free, no API key)
     single<com.andriybobchuk.mooney.mooney.domain.ExchangeRateProvider> {
-        val useLiveRates = get<Boolean>(named("use_live_exchange_rates"))
-        if (useLiveRates) {
-            com.andriybobchuk.mooney.mooney.data.LiveExchangeRateProvider(
-                httpClient = get(),
-                apiKey = get(named("exchangerate_api_key"))
-            )
-        } else {
-            com.andriybobchuk.mooney.mooney.data.StaticExchangeRateProvider()
-        }
+        com.andriybobchuk.mooney.mooney.data.LiveExchangeRateProvider(httpClient = get())
     }
 
     // Use Cases — existing
@@ -165,6 +158,19 @@ val sharedModule = module {
 
     // Onboarding
     singleOf(::CompleteOnboardingUseCase)
+
+    // Default Category Provider (Remote Config → bundled fallback)
+    singleOf(::BundledCategoryProvider)
+    singleOf(::RemoteCategoryProvider).bind<DefaultCategoryProvider>()
+    singleOf(::SyncDefaultCategoriesUseCase)
+    singleOf(::ReportCategoryUsageUseCase)
+
+    // Historical Rates & Rate Watch
+    singleOf(::FrankfurterHistoricalRateProvider).bind<HistoricalRateProvider>()
+    singleOf(::LoadHistoricalRatesUseCase)
+    singleOf(::CalculateRatePercentileUseCase)
+    singleOf(::CheckRateAlertsUseCase)
+    singleOf(::ManageRateWatchUseCase)
 
     // Dev Tools
     singleOf(::DevToolsManager)

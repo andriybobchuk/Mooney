@@ -1,8 +1,11 @@
 package com.andriybobchuk.mooney.app
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -27,6 +30,9 @@ import com.andriybobchuk.mooney.core.presentation.theme.getColorSchemeForTheme
 import com.andriybobchuk.mooney.mooney.domain.FeatureFlags
 import com.andriybobchuk.mooney.mooney.domain.devtools.DevToolsManager
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
+import androidx.compose.runtime.LaunchedEffect
+import com.andriybobchuk.mooney.mooney.domain.usecase.ReportCategoryUsageUseCase
+import com.andriybobchuk.mooney.mooney.domain.usecase.SyncDefaultCategoriesUseCase
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.koinInject
 
@@ -41,6 +47,13 @@ val MaterialTheme.appColors: AppColorsExtended
 @Composable
 @Preview
 fun App() {
+    val syncDefaults: SyncDefaultCategoriesUseCase = koinInject()
+    val reportUsage: ReportCategoryUsageUseCase = koinInject()
+    LaunchedEffect(Unit) {
+        syncDefaults()
+        reportUsage()
+    }
+
     val themeManager: ThemeManager = koinInject()
     val themeMode by themeManager.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
     val appTheme by themeManager.currentAppTheme.collectAsState(initial = AppTheme.BLUE)
@@ -56,8 +69,17 @@ fun App() {
             colorScheme = colorScheme,
             typography = typography
         ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                NavigationHost()
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Box(
+                    modifier = Modifier
+                        .widthIn(max = 600.dp)
+                        .fillMaxHeight()
+                ) {
+                    NavigationHost()
+                }
 
                 // DEV overlay — only in debug builds
                 if (FeatureFlags.isDebug) {

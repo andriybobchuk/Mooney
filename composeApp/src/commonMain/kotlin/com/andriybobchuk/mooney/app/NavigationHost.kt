@@ -24,6 +24,8 @@ import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.presentation.assets.AssetsScreen
 import com.andriybobchuk.mooney.mooney.presentation.assets.AssetsViewModel
+import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsBreakdownScreen
+import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsNetIncomeScreen
 import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsScreen
 import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.onboarding.OnboardingScreen
@@ -234,15 +236,43 @@ fun NavigationHost() {
             }
 
             composable<Route.Analytics> {
-                val viewModel = koinViewModel<AnalyticsViewModel>()
+                val viewModel = it.sharedKoinViewModel<AnalyticsViewModel>(navController)
                 AnalyticsScreen(
                     viewModel = viewModel,
                     bottomNavbar = { BottomNavigationBar(navController, 3) },
                     onSettingsClick = { navController.navigate(Route.Settings) },
                     onNavigateToTransactions = {
                         navController.navigate(Route.Transactions) { popUpTo(Route.MooneyGraph) }
-                    }
+                    },
+                    onNavigateToBreakdown = { type ->
+                        when (type) {
+                            "REVENUE" -> navController.navigate(Route.AnalyticsRevenue)
+                            "OPERATING_COSTS" -> navController.navigate(Route.AnalyticsCosts)
+                            "TAXES" -> navController.navigate(Route.AnalyticsTaxes)
+                        }
+                    },
+                    onNavigateToNetIncome = { navController.navigate(Route.AnalyticsNetIncome) }
                 )
+            }
+
+            composable<Route.AnalyticsRevenue> { entry ->
+                val viewModel = entry.sharedKoinViewModel<AnalyticsViewModel>(navController)
+                AnalyticsBreakdownScreen(viewModel = viewModel, type = "REVENUE", onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() })
+            }
+
+            composable<Route.AnalyticsCosts> { entry ->
+                val viewModel = entry.sharedKoinViewModel<AnalyticsViewModel>(navController)
+                AnalyticsBreakdownScreen(viewModel = viewModel, type = "OPERATING_COSTS", onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() })
+            }
+
+            composable<Route.AnalyticsTaxes> { entry ->
+                val viewModel = entry.sharedKoinViewModel<AnalyticsViewModel>(navController)
+                AnalyticsBreakdownScreen(viewModel = viewModel, type = "TAXES", onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() })
+            }
+
+            composable<Route.AnalyticsNetIncome> { entry ->
+                val viewModel = entry.sharedKoinViewModel<AnalyticsViewModel>(navController)
+                AnalyticsNetIncomeScreen(viewModel = viewModel, onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() })
             }
 
             if (FeatureFlags.goalsEnabled) {
@@ -250,7 +280,7 @@ fun NavigationHost() {
                     val viewModel = koinViewModel<GoalsViewModel>()
                     GoalsScreen(
                         viewModel = viewModel,
-                        onBackClick = { navController.navigateUp() }
+                        onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
                     )
                 }
             }
@@ -259,7 +289,7 @@ fun NavigationHost() {
                 val viewModel = koinViewModel<RecurringTransactionsViewModel>()
                 RecurringTransactionsScreen(
                     viewModel = viewModel,
-                    onBackClick = { navController.navigateUp() }
+                    onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
                 )
             }
 
@@ -267,7 +297,7 @@ fun NavigationHost() {
                 val viewModel = koinViewModel<SettingsViewModel>()
                 SettingsScreen(
                     viewModel = viewModel,
-                    onBackClick = { navController.navigateUp() },
+                    onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() },
                     onNavigateToTransactionCategories = { navController.navigate(Route.TransactionCategories) },
                     onNavigateToAssetCategories = { navController.navigate(Route.AssetCategories) }
                 )
@@ -277,7 +307,7 @@ fun NavigationHost() {
                 val viewModel = koinViewModel<com.andriybobchuk.mooney.mooney.presentation.categories.TransactionCategoriesViewModel>()
                 com.andriybobchuk.mooney.mooney.presentation.categories.TransactionCategoriesScreen(
                     viewModel = viewModel,
-                    onBackClick = { navController.navigateUp() }
+                    onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
                 )
             }
 
@@ -285,7 +315,7 @@ fun NavigationHost() {
                 val viewModel = koinViewModel<com.andriybobchuk.mooney.mooney.presentation.categories.AssetCategoriesViewModel>()
                 com.andriybobchuk.mooney.mooney.presentation.categories.AssetCategoriesScreen(
                     viewModel = viewModel,
-                    onBackClick = { navController.navigateUp() }
+                    onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
                 )
             }
         }

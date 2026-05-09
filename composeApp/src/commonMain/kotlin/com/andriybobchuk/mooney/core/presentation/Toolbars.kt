@@ -75,7 +75,7 @@ object Toolbars {
                             painter = Icons.BackIcon(),
                             contentDescription = "Back",
                             tint = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(22.dp)
                         )
                     }
                 }

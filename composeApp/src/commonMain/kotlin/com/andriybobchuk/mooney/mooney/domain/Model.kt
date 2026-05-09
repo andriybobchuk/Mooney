@@ -80,6 +80,7 @@ enum class Currency(val symbol: String) {
 data class ExchangeRates(
     val rates: Map<Currency, Double>
 ) {
+    @Suppress("ReturnCount")
     fun convert(amount: Double, from: Currency, to: Currency): Double {
         if (from == to) return amount
         val fromRate = rates[from] ?: return amount

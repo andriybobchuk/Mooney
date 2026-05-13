@@ -70,7 +70,6 @@
 		7555FF72242A565900829871 = {
 			isa = PBXGroup;
 			children = (
-				52234E152F9406BA00082B88 /* RemoteConfigBridge.swift */,
 				AB1DB47929225F7C00F7AF9C /* Configuration */,
 				7555FF7D242A565900829871 /* iosApp */,
 				7555FF7C242A565900829871 /* Products */,
@@ -92,6 +91,7 @@
 				058557BA273AAA24004C7B11 /* Assets.xcassets */,
 				7555FF82242A565900829871 /* ContentView.swift */,
 				52C0DE0F2F8600A000BBBBBB /* FirebaseAnalyticsBridge.swift */,
+				52234E152F9406BA00082B88 /* RemoteConfigBridge.swift */,
 				52C0DE002F8597A000AAAAAA /* GoogleService-Info.plist */,
 				7555FF8C242A565B00829871 /* Info.plist */,
 				52C0DE1F2FA0000000CCCCCC /* PrivacyInfo.xcprivacy */,

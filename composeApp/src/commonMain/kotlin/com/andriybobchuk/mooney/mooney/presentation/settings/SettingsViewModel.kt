@@ -72,6 +72,7 @@ class SettingsViewModel(
         observeAssetCategories()
         observeAccounts()
         observeCurrencyInsights()
+        observeDeveloperOptions()
     }
 
     private fun observeCurrencyInsights() {
@@ -80,6 +81,23 @@ class SettingsViewModel(
         }.onEach { enabled ->
             _state.update { it.copy(currencyInsightsEnabled = enabled) }
         }.launchIn(viewModelScope)
+    }
+
+    private fun observeDeveloperOptions() {
+        dataStore.data.map { prefs ->
+            prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.DEVELOPER_OPTIONS_ENABLED] ?: false
+        }.onEach { enabled ->
+            _state.update { it.copy(developerOptionsEnabled = enabled) }
+        }.launchIn(viewModelScope)
+    }
+
+    fun enableDeveloperOptions() {
+        viewModelScope.launch {
+            dataStore.edit { prefs ->
+                prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.DEVELOPER_OPTIONS_ENABLED] = true
+            }
+            _state.update { it.copy(restoreMessage = "Developer options unlocked") }
+        }
     }
 
     private fun observeData() {

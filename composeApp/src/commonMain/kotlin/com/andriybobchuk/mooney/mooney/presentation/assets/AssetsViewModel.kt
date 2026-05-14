@@ -123,6 +123,9 @@ class AssetsViewModel(
                 }
             }
         }
+        // Clear the initial-load shimmer once the rate attempt has resolved
+        // (success or failure) so we never get stuck shimmering forever.
+        _uiState.update { it.copy(isInitialLoading = false) }
     }
 
     private fun observeAssets() {
@@ -142,6 +145,7 @@ class AssetsViewModel(
                     categoryOrder = categoryOrder,
                     expandedCategories = expandedCategories,
                     hasLiabilities = hasLiabilities,
+                    isInitialLoading = false,
                     // Auto-switch to Assets tab if no liabilities remain
                     selectedTab = if (!hasLiabilities) AssetsTab.ASSETS else it.selectedTab
                 )
@@ -434,6 +438,7 @@ data class AssetsState(
     val isError: Boolean = false,
     val isRefreshingRates: Boolean = false,
     val ratesLastUpdated: Long = 0L,
+    val isInitialLoading: Boolean = true,
     val ratesError: String? = null,
     val showPaywall: Boolean = false,
     val isPurchasing: Boolean = false,

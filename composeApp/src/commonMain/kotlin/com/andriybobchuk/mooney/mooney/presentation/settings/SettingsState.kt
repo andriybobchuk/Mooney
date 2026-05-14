@@ -34,7 +34,8 @@ data class SettingsState(
     val restoreMessage: String? = null,
     val currencyInsightsEnabled: Boolean = false,
     val isUpdatingCategories: Boolean = false,
-    val exchangeRateSource: ExchangeRateSource = ExchangeRateSource.EXTENDED
+    val exchangeRateSource: ExchangeRateSource = ExchangeRateSource.EXTENDED,
+    val developerOptionsEnabled: Boolean = false
 ) {
     val maxPinnedCategories: Int = 5
     val canAddMorePinned: Boolean = pinnedCategoryIds.size < maxPinnedCategories

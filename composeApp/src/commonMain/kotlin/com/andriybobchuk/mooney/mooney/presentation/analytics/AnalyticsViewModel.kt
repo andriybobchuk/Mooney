@@ -36,7 +36,11 @@ data class AnalyticsState(
     val sheetCategories: List<TopCategorySummary> = emptyList(),
     val isTransactionsSheetOpen: Boolean = false,
     val transactionsSheetCategory: Category? = null,
-    val transactionsForCategory: List<Transaction> = emptyList()
+    val transactionsForCategory: List<Transaction> = emptyList(),
+    /** Lifetime view loads lazily — these track its state. */
+    val lifetimeMetrics: List<MonthlyMetricSnapshot> = emptyList(),
+    val isLifetimeLoading: Boolean = false,
+    val lifetimeLoaded: Boolean = false
 )
 
 class AnalyticsViewModel(
@@ -129,12 +133,48 @@ class AnalyticsViewModel(
 
     private fun loadHistoricalData() {
         viewModelScope.launch {
+            // Anchor the trailing-month window to today, NOT the selected month —
+            // otherwise picking February would reframe the panel with February as
+            // "most recent" until the app is restarted.
             val historicalData = loadHistoricalAnalyticsUseCase(
-                currentMonth = _state.value.selectedMonth,
+                currentMonth = MonthKey.current(),
                 baseCurrency = baseCurrency
             )
             _state.update { it.copy(historicalMetrics = historicalData) }
+            // Invalidate lifetime so it gets recomputed on next request
+            // (e.g., after a currency change).
+            _state.update { it.copy(lifetimeLoaded = false, lifetimeMetrics = emptyList()) }
         }
+    }
+
+    fun loadLifetimeData() {
+        if (_state.value.isLifetimeLoading || _state.value.lifetimeLoaded) return
+        viewModelScope.launch {
+            _state.update { it.copy(isLifetimeLoading = true) }
+            try {
+                val data = loadHistoricalAnalyticsUseCase(
+                    currentMonth = MonthKey.current(),
+                    monthCount = LIFETIME_MONTHS,
+                    baseCurrency = baseCurrency
+                )
+                _state.update {
+                    it.copy(
+                        lifetimeMetrics = data,
+                        isLifetimeLoading = false,
+                        lifetimeLoaded = true
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(isLifetimeLoading = false) }
+                analyticsTracker.recordException(e, "Analytics", mapOf("action" to "load_lifetime"))
+            }
+        }
+    }
+
+    private companion object {
+        const val LIFETIME_MONTHS = 60
     }
 
     fun onCategoryClicked(category: Category) {

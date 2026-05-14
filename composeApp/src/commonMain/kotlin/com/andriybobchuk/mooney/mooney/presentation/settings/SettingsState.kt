@@ -5,6 +5,7 @@ import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.UserCurrency
+import com.andriybobchuk.mooney.mooney.domain.settings.ExchangeRateSource
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 
 data class SettingsState(
@@ -32,7 +33,8 @@ data class SettingsState(
     val primaryAccountId: Int? = null,
     val restoreMessage: String? = null,
     val currencyInsightsEnabled: Boolean = false,
-    val isUpdatingCategories: Boolean = false
+    val isUpdatingCategories: Boolean = false,
+    val exchangeRateSource: ExchangeRateSource = ExchangeRateSource.EXTENDED
 ) {
     val maxPinnedCategories: Int = 5
     val canAddMorePinned: Boolean = pinnedCategoryIds.size < maxPinnedCategories

@@ -88,9 +88,15 @@ val sharedModule = module {
     single { get<PreferencesDataStoreFactory>().create() }
     singleOf(::DataStorePreferencesRepository).bind<PreferencesRepository>()
 
-    // Exchange Rate Provider (Frankfurter.app — free, no API key)
+    // Exchange Rate Providers — Switchable picks one based on the user's Settings choice.
+    single { com.andriybobchuk.mooney.mooney.data.LiveExchangeRateProvider(httpClient = get()) }
+    single { com.andriybobchuk.mooney.mooney.data.ExtendedExchangeRateProvider(httpClient = get()) }
     single<com.andriybobchuk.mooney.mooney.domain.ExchangeRateProvider> {
-        com.andriybobchuk.mooney.mooney.data.LiveExchangeRateProvider(httpClient = get())
+        com.andriybobchuk.mooney.mooney.data.SwitchableExchangeRateProvider(
+            extended = get(),
+            historical = get(),
+            dataStore = get()
+        )
     }
 
     // Use Cases — existing

@@ -25,6 +25,8 @@ interface PreferencesRepository {
 
     suspend fun updateExcludeTaxesFromTotals(enabled: Boolean)
 
+    suspend fun updateExchangeRateSource(source: ExchangeRateSource)
+
     suspend fun markOnboardingCompleted()
 
     suspend fun clearPreferences()

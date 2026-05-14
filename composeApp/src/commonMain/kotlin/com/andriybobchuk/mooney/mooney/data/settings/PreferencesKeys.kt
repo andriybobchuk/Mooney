@@ -22,4 +22,5 @@ object PreferencesKeys {
     val CURRENCY_INSIGHTS_ENABLED = booleanPreferencesKey("currency_insights_enabled")
     val DEFAULTS_VERSION = intPreferencesKey("defaults_version")
     val LAST_USAGE_REPORT = stringPreferencesKey("last_category_usage_report")
+    val EXCHANGE_RATE_SOURCE = stringPreferencesKey("exchange_rate_source")
 }

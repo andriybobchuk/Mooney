@@ -32,6 +32,7 @@ import com.andriybobchuk.mooney.core.presentation.designsystem.components.Mooney
 import com.andriybobchuk.mooney.core.premium.PaywallSheet
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.Currency
+import com.andriybobchuk.mooney.mooney.domain.settings.ExchangeRateSource
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 import com.andriybobchuk.mooney.core.platform.FileHandler
 import kotlinx.coroutines.flow.collectLatest
@@ -64,6 +65,7 @@ fun SettingsScreen(
     var showPinnedSheet by remember { mutableStateOf(false) }
     var showLanguageSheet by remember { mutableStateOf(false) }
     var showUserCurrenciesSheet by remember { mutableStateOf(false) }
+    var showExchangeRateSourceSheet by remember { mutableStateOf(false) }
     var showFeedbackSheet by remember { mutableStateOf(false) }
     val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
 
@@ -260,6 +262,70 @@ fun SettingsScreen(
                     }
                 }
                 Spacer(Modifier.height(16.dp))
+            }
+        }
+    }
+
+    // Exchange rate source bottom sheet
+    if (showExchangeRateSourceSheet) {
+        MooneyBottomSheet(onDismissRequest = { showExchangeRateSourceSheet = false }) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(
+                    "Exchange Rate Source",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Text(
+                    "Choose which provider to use for currency conversion",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                ExchangeRateSource.entries.forEach { source ->
+                    val isSelected = state.exchangeRateSource == source
+                    val title = when (source) {
+                        ExchangeRateSource.EXTENDED -> "All currencies"
+                        ExchangeRateSource.HISTORICAL -> "Historical data"
+                    }
+                    val description = when (source) {
+                        ExchangeRateSource.EXTENDED ->
+                            "Supports every currency the app offers (incl. UAH, RUB, AED). No historical charts."
+                        ExchangeRateSource.HISTORICAL ->
+                            "Includes historical rate charts, but only supports major currencies. " +
+                                "Others (UAH, RUB, AED) use approximate hardcoded rates."
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                            .clickable {
+                                viewModel.onAction(SettingsAction.OnExchangeRateSourceChange(source))
+                                showExchangeRateSourceSheet = false
+                            }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                title,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (isSelected) {
+                            Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+                Spacer(Modifier.height(8.dp))
             }
         }
     }
@@ -714,6 +780,15 @@ fun SettingsScreen(
                             title = stringResource(Res.string.currencies),
                             value = state.userCurrencies.joinToString(", ") { it.code },
                             onClick = { showUserCurrenciesSheet = true }
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            title = "Exchange Rate Source",
+                            value = when (state.exchangeRateSource) {
+                                ExchangeRateSource.EXTENDED -> "All currencies"
+                                ExchangeRateSource.HISTORICAL -> "Historical data"
+                            },
+                            onClick = { showExchangeRateSourceSheet = true }
                         )
                     }
                 }

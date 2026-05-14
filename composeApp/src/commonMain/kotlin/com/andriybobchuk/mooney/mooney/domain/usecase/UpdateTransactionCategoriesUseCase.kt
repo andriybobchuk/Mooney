@@ -9,7 +9,6 @@ import com.andriybobchuk.mooney.core.data.database.CategoryDao
 import com.andriybobchuk.mooney.core.data.database.CategoryEntity
 import com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys
 import com.andriybobchuk.mooney.mooney.domain.CoreRepository
-import kotlin.coroutines.cancellation.CancellationException
 
 data class UpdateCategoriesResult(
     val added: Int,
@@ -42,34 +41,32 @@ class UpdateTransactionCategoriesUseCase(
     private val dataStore: DataStore<Preferences>
 ) {
     suspend operator fun invoke(): UpdateCategoriesResult {
-        try {
-            val newSchema = categoryProvider.getTransactionCategories()
+        val newSchema = categoryProvider.getTransactionCategories()
 
-            var added = 0
-            var updated = 0
-            for (newCat in newSchema.categories) {
-                val existing = categoryDao.getById(newCat.id)
-                if (existing == null) {
-                    categoryDao.upsert(newCat.toEntity())
-                    added++
-                } else if (
-                    existing.title != newCat.title ||
-                    existing.emoji != newCat.emoji ||
-                    existing.parentId != newCat.parentId ||
-                    existing.type != newCat.type
-                ) {
-                    categoryDao.upsert(newCat.toEntity())
-                    updated++
-                }
+        var added = 0
+        var updated = 0
+        for (newCat in newSchema.categories) {
+            val existing = categoryDao.getById(newCat.id)
+            if (existing == null) {
+                categoryDao.upsert(newCat.toEntity())
+                added++
+            } else if (existing.hasOutdatedMetadata(newCat)) {
+                categoryDao.upsert(newCat.toEntity())
+                updated++
             }
-
-            dataStore.edit { it[PreferencesKeys.DEFAULTS_VERSION] = newSchema.version }
-            coreRepository.reloadCategories()
-
-            return UpdateCategoriesResult(added, updated)
-        } catch (e: CancellationException) {
-            throw e
         }
+
+        dataStore.edit { it[PreferencesKeys.DEFAULTS_VERSION] = newSchema.version }
+        coreRepository.reloadCategories()
+
+        return UpdateCategoriesResult(added, updated)
+    }
+
+    private fun CategoryEntity.hasOutdatedMetadata(newCat: DefaultTransactionCategory): Boolean {
+        return title != newCat.title ||
+            emoji != newCat.emoji ||
+            parentId != newCat.parentId ||
+            type != newCat.type
     }
 
     private fun DefaultTransactionCategory.toEntity() = CategoryEntity(

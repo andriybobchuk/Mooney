@@ -1,6 +1,7 @@
 package com.andriybobchuk.mooney.mooney.presentation.settings
 
 import com.andriybobchuk.mooney.mooney.domain.Category
+import com.andriybobchuk.mooney.mooney.domain.settings.ExchangeRateSource
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 
 sealed interface SettingsAction {
@@ -33,4 +34,6 @@ sealed interface SettingsAction {
     data class OnPrimaryAccountChange(val accountId: Int) : SettingsAction
 
     data class OnExcludeTaxesToggle(val enabled: Boolean) : SettingsAction
+
+    data class OnExchangeRateSourceChange(val source: ExchangeRateSource) : SettingsAction
 }

@@ -5,7 +5,7 @@ import com.andriybobchuk.mooney.core.presentation.theme.AppTheme
 
 data class UserPreferences(
     val pinnedCategories: List<String> = emptyList(),
-    val defaultCurrency: String = "PLN",
+    val defaultCurrency: String = "USD",
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val appTheme: AppTheme = AppTheme.BLUE,
     val notificationsEnabled: Boolean = true,
@@ -14,13 +14,22 @@ data class UserPreferences(
     val onboardingCompleted: Boolean = false,
     val defaultExpenseCategory: String = "groceries",
     val defaultIncomeCategory: String = "salary",
-    val excludeTaxesFromTotals: Boolean = true
+    val excludeTaxesFromTotals: Boolean = true,
+    val exchangeRateSource: ExchangeRateSource = ExchangeRateSource.EXTENDED
 )
 
 enum class ThemeMode {
     LIGHT,
     DARK,
     SYSTEM
+}
+
+enum class ExchangeRateSource {
+    /** exchangerate-api.com — supports all currencies including UAH/RUB/AED, no historical data. */
+    EXTENDED,
+
+    /** Frankfurter (ECB) — has historical data but only ~30 currencies; rest use approximate fallback rates. */
+    HISTORICAL
 }
 
 data class PinnedCategoryPreference(

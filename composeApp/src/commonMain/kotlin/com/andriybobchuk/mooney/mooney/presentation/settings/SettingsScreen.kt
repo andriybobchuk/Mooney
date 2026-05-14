@@ -32,6 +32,7 @@ import com.andriybobchuk.mooney.core.presentation.designsystem.components.Mooney
 import com.andriybobchuk.mooney.core.premium.PaywallSheet
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.Currency
+import com.andriybobchuk.mooney.mooney.domain.settings.ExchangeRateSource
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 import com.andriybobchuk.mooney.core.platform.FileHandler
 import kotlinx.coroutines.flow.collectLatest
@@ -55,6 +56,7 @@ fun SettingsScreen(
     val coroutineScope = rememberCoroutineScope()
 
     var showImportConfirmDialog by remember { mutableStateOf(false) }
+    var showUpdateCategoriesConfirm by remember { mutableStateOf(false) }
     var importJsonData by remember { mutableStateOf<String?>(null) }
     var importPreview by remember { mutableStateOf<Triple<Int, Int, Int>?>(null) }
 
@@ -63,6 +65,7 @@ fun SettingsScreen(
     var showPinnedSheet by remember { mutableStateOf(false) }
     var showLanguageSheet by remember { mutableStateOf(false) }
     var showUserCurrenciesSheet by remember { mutableStateOf(false) }
+    var showExchangeRateSourceSheet by remember { mutableStateOf(false) }
     var showFeedbackSheet by remember { mutableStateOf(false) }
     val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
 
@@ -159,6 +162,36 @@ fun SettingsScreen(
         )
     }
 
+    // Update Categories confirmation dialog
+    if (showUpdateCategoriesConfirm) {
+        AlertDialog(
+            onDismissRequest = { showUpdateCategoriesConfirm = false },
+            title = { Text("Update Categories") },
+            text = {
+                Column {
+                    Text("Get the latest categories without losing any data:")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("• New categories from the latest version will be added", style = MaterialTheme.typography.bodySmall)
+                    Text("• Existing categories get refreshed titles/emojis", style = MaterialTheme.typography.bodySmall)
+                    Text("• Nothing is ever deleted — your transactions, accounts, and custom categories stay exactly as they are", style = MaterialTheme.typography.bodySmall)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showUpdateCategoriesConfirm = false
+                    viewModel.updateTransactionCategories()
+                }) {
+                    Text("Update")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUpdateCategoriesConfirm = false }) {
+                    Text(stringResource(Res.string.cancel))
+                }
+            }
+        )
+    }
+
     // Theme bottom sheet
     if (showThemeSheet) {
         MooneyBottomSheet(onDismissRequest = { showThemeSheet = false }) {
@@ -229,6 +262,70 @@ fun SettingsScreen(
                     }
                 }
                 Spacer(Modifier.height(16.dp))
+            }
+        }
+    }
+
+    // Exchange rate source bottom sheet
+    if (showExchangeRateSourceSheet) {
+        MooneyBottomSheet(onDismissRequest = { showExchangeRateSourceSheet = false }) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Text(
+                    "Exchange Rate Source",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Text(
+                    "Choose which provider to use for currency conversion",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                ExchangeRateSource.entries.forEach { source ->
+                    val isSelected = state.exchangeRateSource == source
+                    val title = when (source) {
+                        ExchangeRateSource.EXTENDED -> "All currencies"
+                        ExchangeRateSource.HISTORICAL -> "Historical data"
+                    }
+                    val description = when (source) {
+                        ExchangeRateSource.EXTENDED ->
+                            "Supports every currency the app offers (incl. UAH, RUB, AED). No historical charts."
+                        ExchangeRateSource.HISTORICAL ->
+                            "Includes historical rate charts, but only supports major currencies. " +
+                                "Others (UAH, RUB, AED) use approximate hardcoded rates."
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                            .clickable {
+                                viewModel.onAction(SettingsAction.OnExchangeRateSourceChange(source))
+                                showExchangeRateSourceSheet = false
+                            }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                title,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (isSelected) {
+                            Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+                Spacer(Modifier.height(8.dp))
             }
         }
     }
@@ -684,6 +781,15 @@ fun SettingsScreen(
                             value = state.userCurrencies.joinToString(", ") { it.code },
                             onClick = { showUserCurrenciesSheet = true }
                         )
+                        SettingsDivider()
+                        SettingsRow(
+                            title = "Exchange Rate Source",
+                            value = when (state.exchangeRateSource) {
+                                ExchangeRateSource.EXTENDED -> "All currencies"
+                                ExchangeRateSource.HISTORICAL -> "Historical data"
+                            },
+                            onClick = { showExchangeRateSourceSheet = true }
+                        )
                     }
                 }
 
@@ -709,6 +815,12 @@ fun SettingsScreen(
                             title = "Transaction Categories",
                             value = "${state.allCategories.size}",
                             onClick = onNavigateToTransactionCategories
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            title = "Update Categories",
+                            value = if (state.isUpdatingCategories) "Updating…" else "",
+                            onClick = { if (!state.isUpdatingCategories) showUpdateCategoriesConfirm = true }
                         )
                         SettingsDivider()
                         SettingsRow(
@@ -791,7 +903,9 @@ fun SettingsScreen(
                                             }
                                         }
                                         .onFailure { error ->
-                                            // Handle error
+                                            snackbarHostState.showSnackbar(
+                                                error.message ?: "Failed to read file"
+                                            )
                                         }
                                 }
                             },

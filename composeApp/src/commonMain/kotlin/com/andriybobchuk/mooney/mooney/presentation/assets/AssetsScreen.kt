@@ -661,6 +661,7 @@ private fun AssetCard(
     onSetPrimary: (UiAsset) -> Unit
 ) {
     var showActionSheet by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
     val isForeign = asset.originalCurrency != baseCurrency
 
     Card(
@@ -857,7 +858,7 @@ private fun AssetCard(
                         .background(MaterialTheme.colorScheme.errorContainer)
                         .clickable {
                             showActionSheet = false
-                            onDelete(asset)
+                            showDeleteConfirm = true
                         }
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -872,6 +873,27 @@ private fun AssetCard(
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+    }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Delete Account") },
+            text = { Text("Delete \"${asset.title}\"? This cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteConfirm = false
+                    onDelete(asset)
+                }) {
+                    Text(stringResource(Res.string.delete), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text(stringResource(Res.string.cancel))
+                }
+            }
+        )
     }
 }
 

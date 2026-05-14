@@ -17,3 +17,10 @@ data class FrankfurterHistoricalResponse(
     @SerialName("end_date") val endDate: String,
     val rates: Map<String, Map<String, Double>>
 )
+
+@Serializable
+data class ExchangeRateApiResponse(
+    @SerialName("result") val result: String,
+    @SerialName("base_code") val baseCode: String,
+    @SerialName("conversion_rates") val conversionRates: Map<String, Double>
+)

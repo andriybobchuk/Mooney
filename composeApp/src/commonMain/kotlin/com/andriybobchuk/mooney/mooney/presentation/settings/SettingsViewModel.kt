@@ -12,6 +12,7 @@ import com.andriybobchuk.mooney.core.premium.PRODUCT_ID_MONTHLY
 import com.andriybobchuk.mooney.core.premium.PremiumConfig
 import com.andriybobchuk.mooney.core.premium.PremiumManager
 import com.andriybobchuk.mooney.core.premium.PurchaseResult
+import com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetAccountsUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetCategoriesUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetUserCurrenciesUseCase
@@ -20,6 +21,7 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.UpdateUserCurrenciesUseCas
 import com.andriybobchuk.mooney.mooney.domain.usecase.settings.GetPinnedCategoriesUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.settings.GetUserPreferencesUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.settings.UpdatePinnedCategoriesUseCase
+import com.andriybobchuk.mooney.mooney.domain.settings.ExchangeRateSource
 import com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 import com.andriybobchuk.mooney.mooney.domain.backup.DataExportImportManager
@@ -53,6 +55,8 @@ class SettingsViewModel(
     private val premiumManager: PremiumManager,
     private val getAccountsUseCase: GetAccountsUseCase,
     private val setPrimaryAccountUseCase: SetPrimaryAccountUseCase,
+    private val updateTransactionCategoriesUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.UpdateTransactionCategoriesUseCase,
+    private val currencyManagerUseCase: CurrencyManagerUseCase,
     private val dataStore: androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>
 ) : ViewModel() {
 
@@ -98,6 +102,7 @@ class SettingsViewModel(
                         defaultExpenseCategoryId = preferences.defaultExpenseCategory,
                         defaultIncomeCategoryId = preferences.defaultIncomeCategory,
                         excludeTaxesFromTotals = preferences.excludeTaxesFromTotals,
+                        exchangeRateSource = preferences.exchangeRateSource,
                         error = null
                     )
                 }
@@ -145,6 +150,7 @@ class SettingsViewModel(
             is SettingsAction.OnDefaultIncomeCategoryChange -> handleDefaultIncomeCategoryChange(action.categoryId)
             is SettingsAction.OnPrimaryAccountChange -> handlePrimaryAccountChange(action.accountId)
             is SettingsAction.OnExcludeTaxesToggle -> handleExcludeTaxesToggle(action.enabled)
+            is SettingsAction.OnExchangeRateSourceChange -> handleExchangeRateSourceChange(action.source)
             is SettingsAction.OnBackClick -> {}
         }
     }
@@ -278,6 +284,21 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 preferencesRepository.updateNotificationsEnabled(enabled)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
+    private fun handleExchangeRateSourceChange(source: ExchangeRateSource) {
+        viewModelScope.launch {
+            try {
+                preferencesRepository.updateExchangeRateSource(source)
+                _state.update { it.copy(exchangeRateSource = source) }
+                // Refresh now so the new source's rates appear immediately.
+                currencyManagerUseCase.refreshExchangeRates()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -450,5 +471,35 @@ class SettingsViewModel(
 
     fun clearError() {
         _state.update { it.copy(error = null) }
+    }
+
+    fun updateTransactionCategories() {
+        viewModelScope.launch {
+            _state.update { it.copy(isUpdatingCategories = true) }
+            try {
+                val result = updateTransactionCategoriesUseCase()
+                val parts = buildList {
+                    if (result.added > 0) add("${result.added} new")
+                    if (result.updated > 0) add("${result.updated} refreshed")
+                }
+                val message = if (parts.isEmpty()) "Categories are already up to date"
+                else "Categories updated: ${parts.joinToString(", ")}"
+                _state.update {
+                    it.copy(
+                        isUpdatingCategories = false,
+                        restoreMessage = message
+                    )
+                }
+            } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isUpdatingCategories = false,
+                        restoreMessage = "Failed to update categories: ${e.message}"
+                    )
+                }
+            }
+        }
     }
 }

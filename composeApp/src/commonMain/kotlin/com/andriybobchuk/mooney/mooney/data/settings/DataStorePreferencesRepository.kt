@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.andriybobchuk.mooney.core.presentation.theme.AppTheme
+import com.andriybobchuk.mooney.mooney.domain.settings.ExchangeRateSource
 import com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 import com.andriybobchuk.mooney.mooney.domain.settings.UserPreferences
@@ -19,7 +20,7 @@ class DataStorePreferencesRepository(
         return dataStore.data.map { preferences ->
             UserPreferences(
                 pinnedCategories = preferences[PreferencesKeys.PINNED_CATEGORIES]?.toList() ?: emptyList(),
-                defaultCurrency = preferences[PreferencesKeys.DEFAULT_CURRENCY] ?: "PLN",
+                defaultCurrency = preferences[PreferencesKeys.DEFAULT_CURRENCY] ?: "USD",
                 themeMode = ThemeMode.valueOf(
                     preferences[PreferencesKeys.THEME_MODE] ?: ThemeMode.SYSTEM.name
                 ),
@@ -36,7 +37,14 @@ class DataStorePreferencesRepository(
                 onboardingCompleted = preferences[PreferencesKeys.ONBOARDING_COMPLETED] ?: false,
                 defaultExpenseCategory = preferences[PreferencesKeys.DEFAULT_EXPENSE_CATEGORY] ?: "groceries",
                 defaultIncomeCategory = preferences[PreferencesKeys.DEFAULT_INCOME_CATEGORY] ?: "salary",
-                excludeTaxesFromTotals = preferences[PreferencesKeys.EXCLUDE_TAXES_FROM_TOTALS] ?: true
+                excludeTaxesFromTotals = preferences[PreferencesKeys.EXCLUDE_TAXES_FROM_TOTALS] ?: true,
+                exchangeRateSource = try {
+                    ExchangeRateSource.valueOf(
+                        preferences[PreferencesKeys.EXCHANGE_RATE_SOURCE] ?: ExchangeRateSource.EXTENDED.name
+                    )
+                } catch (e: IllegalArgumentException) {
+                    ExchangeRateSource.EXTENDED
+                }
             )
         }
     }
@@ -92,6 +100,12 @@ class DataStorePreferencesRepository(
     override suspend fun updateExcludeTaxesFromTotals(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.EXCLUDE_TAXES_FROM_TOTALS] = enabled
+        }
+    }
+
+    override suspend fun updateExchangeRateSource(source: ExchangeRateSource) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.EXCHANGE_RATE_SOURCE] = source.name
         }
     }
 

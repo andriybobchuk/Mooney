@@ -19,7 +19,6 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.assets.*
 import com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository
 import com.andriybobchuk.mooney.mooney.data.settings.DataStorePreferencesRepository
 import com.andriybobchuk.mooney.core.data.preferences.PreferencesDataStoreFactory
-import com.andriybobchuk.mooney.mooney.presentation.account.AccountViewModel
 import com.andriybobchuk.mooney.mooney.presentation.assets.AssetsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.exchange.ExchangeViewModel
@@ -89,9 +88,15 @@ val sharedModule = module {
     single { get<PreferencesDataStoreFactory>().create() }
     singleOf(::DataStorePreferencesRepository).bind<PreferencesRepository>()
 
-    // Exchange Rate Provider (Frankfurter.app — free, no API key)
+    // Exchange Rate Providers — Switchable picks one based on the user's Settings choice.
+    single { com.andriybobchuk.mooney.mooney.data.LiveExchangeRateProvider(httpClient = get()) }
+    single { com.andriybobchuk.mooney.mooney.data.ExtendedExchangeRateProvider(httpClient = get()) }
     single<com.andriybobchuk.mooney.mooney.domain.ExchangeRateProvider> {
-        com.andriybobchuk.mooney.mooney.data.LiveExchangeRateProvider(httpClient = get())
+        com.andriybobchuk.mooney.mooney.data.SwitchableExchangeRateProvider(
+            extended = get(),
+            historical = get(),
+            dataStore = get()
+        )
     }
 
     // Use Cases — existing
@@ -163,6 +168,7 @@ val sharedModule = module {
     singleOf(::BundledCategoryProvider)
     singleOf(::RemoteCategoryProvider).bind<DefaultCategoryProvider>()
     singleOf(::SyncDefaultCategoriesUseCase)
+    singleOf(::UpdateTransactionCategoriesUseCase)
     singleOf(::ReportCategoryUsageUseCase)
 
     // Historical Rates & Rate Watch
@@ -184,7 +190,6 @@ val sharedModule = module {
     // Analytics
     singleOf(::DefaultAnalyticsTracker).bind<AnalyticsTracker>()
 
-    viewModelOf(::AccountViewModel)
     viewModelOf(::AssetsViewModel)
     viewModelOf(::TransactionViewModel)
     viewModelOf(::AnalyticsViewModel)

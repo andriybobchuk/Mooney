@@ -319,57 +319,6 @@ fun TransactionsScreen(
                 )
             }
 
-            /* Pending transactions not implemented yet
-            if (false && state.showAddTransactionDialog && state.editingPendingTransaction != null) {
-                val pending = state.editingPendingTransaction!!
-                // Create a fake transaction object with pending transaction data for pre-filling
-                val pendingAccount = state.accounts.filterNotNull().find { it.id == pending.accountId }
-                val pendingCategory = state.categories.find { it.id == pending.subcategoryId }
-                
-                val fakeTransactionForEdit = if (pendingAccount != null && pendingCategory != null) {
-                    Transaction(
-                        id = 0, // Temporary ID
-                        amount = pending.amount,
-                        account = Account(
-                            id = pendingAccount.id,
-                            title = pendingAccount.title,
-                            amount = pendingAccount.originalAmount,
-                            currency = pendingAccount.originalCurrency,
-                            emoji = pendingAccount.emoji,
-                            assetCategory = AssetCategory.BANK_ACCOUNT // Default since UiAccount doesn't have this
-                        ),
-                        subcategory = pendingCategory,
-                        date = pending.scheduledDate
-                    )
-                } else null
-                
-                TransactionBottomSheet(
-                    onDismiss = {
-                        // Clear the pending transaction edit state
-                        // viewModel.hideAddTransactionDialog() // Not implemented
-                    },
-                    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-                    transactionToEdit = fakeTransactionForEdit,
-                    accounts = state.accounts,
-                    categories = state.categories,
-                    selectedMonth = state.selectedMonth,
-                    preselectedCategory = null, // Let the transaction data pre-fill everything
-                    onAdd = { transaction ->
-                        // Reject the original pending transaction and add the new modified one
-                        // viewModel.rejectPendingTransaction(pending.id) // Not implemented
-                        viewModel.upsertTransaction(transaction)
-                        // viewModel.hideAddTransactionDialog() // Not implemented
-                    },
-                    onUpdate = { transaction ->
-                        // Treat update same as add for pending transactions
-                        // viewModel.rejectPendingTransaction(pending.id) // Not implemented
-                        viewModel.upsertTransaction(transaction)
-                        // viewModel.hideAddTransactionDialog() // Not implemented
-                    }
-                )
-            }
-            */
-
 }
 
 fun LocalDate.formatForDisplay(): String {

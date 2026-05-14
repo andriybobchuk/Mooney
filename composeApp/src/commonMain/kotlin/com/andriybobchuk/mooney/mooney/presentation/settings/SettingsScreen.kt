@@ -55,6 +55,7 @@ fun SettingsScreen(
     val coroutineScope = rememberCoroutineScope()
 
     var showImportConfirmDialog by remember { mutableStateOf(false) }
+    var showUpdateCategoriesConfirm by remember { mutableStateOf(false) }
     var importJsonData by remember { mutableStateOf<String?>(null) }
     var importPreview by remember { mutableStateOf<Triple<Int, Int, Int>?>(null) }
 
@@ -153,6 +154,36 @@ fun SettingsScreen(
                         importPreview = null
                     }
                 ) {
+                    Text(stringResource(Res.string.cancel))
+                }
+            }
+        )
+    }
+
+    // Update Categories confirmation dialog
+    if (showUpdateCategoriesConfirm) {
+        AlertDialog(
+            onDismissRequest = { showUpdateCategoriesConfirm = false },
+            title = { Text("Update Categories") },
+            text = {
+                Column {
+                    Text("This will update your transaction categories to the latest version:")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("• New categories will be added", style = MaterialTheme.typography.bodySmall)
+                    Text("• Existing transactions will be preserved", style = MaterialTheme.typography.bodySmall)
+                    Text("• Removed categories will be remapped to the closest match", style = MaterialTheme.typography.bodySmall)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showUpdateCategoriesConfirm = false
+                    viewModel.updateTransactionCategories()
+                }) {
+                    Text("Update")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUpdateCategoriesConfirm = false }) {
                     Text(stringResource(Res.string.cancel))
                 }
             }
@@ -712,6 +743,12 @@ fun SettingsScreen(
                         )
                         SettingsDivider()
                         SettingsRow(
+                            title = "Update Categories",
+                            value = if (state.isUpdatingCategories) "Updating…" else "",
+                            onClick = { if (!state.isUpdatingCategories) showUpdateCategoriesConfirm = true }
+                        )
+                        SettingsDivider()
+                        SettingsRow(
                             title = "Default Expense",
                             value = defaultExpenseName,
                             onClick = { showDefaultExpenseCategorySheet = true }
@@ -791,7 +828,9 @@ fun SettingsScreen(
                                             }
                                         }
                                         .onFailure { error ->
-                                            // Handle error
+                                            snackbarHostState.showSnackbar(
+                                                error.message ?: "Failed to read file"
+                                            )
                                         }
                                 }
                             },

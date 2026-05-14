@@ -2,15 +2,34 @@ name: CI
 
 on:
   push:
-    branches: ["*"]
+    branches: [master, dev]
+    paths-ignore:
+      - '.claude/**'
+      - 'docs/**'
+      - '*.md'
+      - '.gitignore'
+      - 'LICENSE'
+  pull_request:
+    branches: [master, dev]
+    paths-ignore:
+      - '.claude/**'
+      - 'docs/**'
+      - '*.md'
+      - '.gitignore'
+      - 'LICENSE'
 
 env:
   SECRETS_PATH: composeApp/src/commonMain/kotlin/com/andriybobchuk/mooney/core/data/Secrets.kt
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:
     name: Lint, Build & Test
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -26,13 +45,11 @@ jobs:
               const val EXCHANGE_RATE_API_KEY = "${{ secrets.EXCHANGE_RATE_API_KEY }}"
           }
           KOTLIN
-      - run: ./gradlew detekt
-      - run: ./gradlew :composeApp:assembleDebug
-      - run: ./gradlew :composeApp:testDebugUnitTest
+      - run: ./gradlew detekt :composeApp:assembleDebug :composeApp:testDebugUnitTest --build-cache
       - run: ./gradlew koverHtmlReport
-        if: always()
+        if: success()
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: success()
         with:
           name: coverage-report
           path: composeApp/build/reports/kover/html/
@@ -41,7 +58,7 @@ jobs:
     name: Deploy to TestFlight
     runs-on: macos-26
     needs: check
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4

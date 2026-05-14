@@ -83,13 +83,6 @@ fun FeedbackBottomSheet(
                 value = "andriybobchuk@gmail.com",
                 onClick = { uriHandler.openUri("mailto:andriybobchuk@gmail.com") }
             )
-            ContactRow(
-                icon = painterResource(Res.drawable.ic_discord),
-                label = "Discord",
-                value = "andriibobchuk",
-                onClick = { }
-            )
-
             Spacer(modifier = Modifier.height(16.dp))
         }
     }

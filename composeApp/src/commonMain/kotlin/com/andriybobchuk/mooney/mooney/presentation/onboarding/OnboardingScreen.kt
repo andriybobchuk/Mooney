@@ -506,6 +506,33 @@ private fun WelcomeContent(
         )
 
         Spacer(modifier = Modifier.weight(0.1f))
+
+        TextButton(
+            onClick = {
+                if (!swiped) {
+                    swiped = true
+                    scope.launch {
+                        launch {
+                            slideOffset.animateTo(
+                                -swipeThresholdPx * 4f,
+                                tween(500, easing = EaseInOut)
+                            )
+                        }
+                        swipeAlpha.animateTo(0f, tween(400, easing = EaseOut))
+                        onSwipeUp()
+                    }
+                }
+            }
+        ) {
+            Text(
+                text = "Continue",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 

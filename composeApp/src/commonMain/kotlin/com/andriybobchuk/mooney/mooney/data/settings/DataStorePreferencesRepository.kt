@@ -19,7 +19,7 @@ class DataStorePreferencesRepository(
         return dataStore.data.map { preferences ->
             UserPreferences(
                 pinnedCategories = preferences[PreferencesKeys.PINNED_CATEGORIES]?.toList() ?: emptyList(),
-                defaultCurrency = preferences[PreferencesKeys.DEFAULT_CURRENCY] ?: "PLN",
+                defaultCurrency = preferences[PreferencesKeys.DEFAULT_CURRENCY] ?: "USD",
                 themeMode = ThemeMode.valueOf(
                     preferences[PreferencesKeys.THEME_MODE] ?: ThemeMode.SYSTEM.name
                 ),

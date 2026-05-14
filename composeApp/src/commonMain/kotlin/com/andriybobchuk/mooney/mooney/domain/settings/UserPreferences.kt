@@ -5,7 +5,7 @@ import com.andriybobchuk.mooney.core.presentation.theme.AppTheme
 
 data class UserPreferences(
     val pinnedCategories: List<String> = emptyList(),
-    val defaultCurrency: String = "PLN",
+    val defaultCurrency: String = "USD",
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val appTheme: AppTheme = AppTheme.BLUE,
     val notificationsEnabled: Boolean = true,

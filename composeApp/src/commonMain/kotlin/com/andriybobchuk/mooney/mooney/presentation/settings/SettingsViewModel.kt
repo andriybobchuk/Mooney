@@ -53,6 +53,7 @@ class SettingsViewModel(
     private val premiumManager: PremiumManager,
     private val getAccountsUseCase: GetAccountsUseCase,
     private val setPrimaryAccountUseCase: SetPrimaryAccountUseCase,
+    private val updateTransactionCategoriesUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.UpdateTransactionCategoriesUseCase,
     private val dataStore: androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>
 ) : ViewModel() {
 
@@ -450,5 +451,37 @@ class SettingsViewModel(
 
     fun clearError() {
         _state.update { it.copy(error = null) }
+    }
+
+    fun updateTransactionCategories() {
+        viewModelScope.launch {
+            _state.update { it.copy(isUpdatingCategories = true) }
+            try {
+                val result = updateTransactionCategoriesUseCase()
+                val parts = buildList {
+                    if (result.added > 0) add("${result.added} added")
+                    if (result.updated > 0) add("${result.updated} updated")
+                    if (result.removed > 0) add("${result.removed} removed")
+                    if (result.remapped > 0) add("${result.remapped} remapped")
+                }
+                val message = if (parts.isEmpty()) "Categories are already up to date"
+                else "Categories updated: ${parts.joinToString(", ")}"
+                _state.update {
+                    it.copy(
+                        isUpdatingCategories = false,
+                        restoreMessage = message
+                    )
+                }
+            } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isUpdatingCategories = false,
+                        restoreMessage = "Failed to update categories: ${e.message}"
+                    )
+                }
+            }
+        }
     }
 }

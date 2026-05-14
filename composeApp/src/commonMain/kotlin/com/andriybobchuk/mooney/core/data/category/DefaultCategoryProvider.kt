@@ -42,6 +42,8 @@ class RemoteCategoryProvider(
             } else {
                 bundled.getTransactionCategories()
             }
+        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+            throw e
         } catch (_: Exception) {
             bundled.getTransactionCategories()
         }
@@ -57,6 +59,8 @@ class RemoteCategoryProvider(
             } else {
                 bundled.getAssetCategories()
             }
+        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+            throw e
         } catch (_: Exception) {
             bundled.getAssetCategories()
         }

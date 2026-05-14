@@ -31,7 +31,8 @@ data class SettingsState(
     val accounts: List<Account> = emptyList(),
     val primaryAccountId: Int? = null,
     val restoreMessage: String? = null,
-    val currencyInsightsEnabled: Boolean = false
+    val currencyInsightsEnabled: Boolean = false,
+    val isUpdatingCategories: Boolean = false
 ) {
     val maxPinnedCategories: Int = 5
     val canAddMorePinned: Boolean = pinnedCategoryIds.size < maxPinnedCategories

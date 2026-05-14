@@ -97,12 +97,20 @@ fun PaywallSheet(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // Price
-                Text(
-                    text = price ?: "Loading...",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                if (price != null) {
+                    Text(
+                        text = price,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                } else {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        strokeWidth = 2.dp
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -120,7 +128,7 @@ fun PaywallSheet(
                 // CTA
                 Button(
                     onClick = onSubscribe,
-                    enabled = !isLoading,
+                    enabled = !isLoading && price != null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),

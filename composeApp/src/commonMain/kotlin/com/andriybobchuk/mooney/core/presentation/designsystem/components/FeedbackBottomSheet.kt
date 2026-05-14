@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.painterResource
 import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.ic_instagram
-import mooney.composeapp.generated.resources.ic_telegram
 import mooney.composeapp.generated.resources.ic_email
 import mooney.composeapp.generated.resources.ic_discord
 
@@ -70,12 +69,6 @@ fun FeedbackBottomSheet(
                 label = "Instagram",
                 value = "@andriybobchuk.bro",
                 onClick = { uriHandler.openUri("https://instagram.com/andriybobchuk.bro") }
-            )
-            ContactRow(
-                icon = painterResource(Res.drawable.ic_telegram),
-                label = "Telegram",
-                value = "@andriybobchuk",
-                onClick = { uriHandler.openUri("https://t.me/andriybobchuk") }
             )
             ContactRow(
                 icon = painterResource(Res.drawable.ic_email),

@@ -23,4 +23,5 @@ object PreferencesKeys {
     val DEFAULTS_VERSION = intPreferencesKey("defaults_version")
     val LAST_USAGE_REPORT = stringPreferencesKey("last_category_usage_report")
     val EXCHANGE_RATE_SOURCE = stringPreferencesKey("exchange_rate_source")
+    val DEVELOPER_OPTIONS_ENABLED = booleanPreferencesKey("developer_options_enabled")
 }

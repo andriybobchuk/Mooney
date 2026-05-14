@@ -22,8 +22,11 @@ class LoadCategoriesForSheetTypeUseCase(
     ): List<TopCategorySummary> {
         val allCategories = repository.getAllCategories()
         val relevantCategories = when (sheetType) {
-            CategorySheetType.REVENUE -> listOf("salary", "tax_return", "refund", "repayment", "positive_reconciliation")
-                .mapNotNull { id -> allCategories.find { it.id == id } }
+            CategorySheetType.REVENUE -> allCategories.filter { category ->
+                category.type == CategoryType.INCOME &&
+                    category.parent?.parent == null &&
+                    category.parent != null
+            }
             CategorySheetType.TAXES -> repository.getSubcategories("tax")
             CategorySheetType.OPERATING_COSTS -> {
                 allCategories.filter { category ->

@@ -67,6 +67,7 @@ fun SettingsScreen(
     var showUserCurrenciesSheet by remember { mutableStateOf(false) }
     var showExchangeRateSourceSheet by remember { mutableStateOf(false) }
     var showFeedbackSheet by remember { mutableStateOf(false) }
+    var versionTapCount by remember { mutableStateOf(0) }
     val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
 
     LaunchedEffect(state.restoreMessage) {
@@ -781,15 +782,6 @@ fun SettingsScreen(
                             value = state.userCurrencies.joinToString(", ") { it.code },
                             onClick = { showUserCurrenciesSheet = true }
                         )
-                        SettingsDivider()
-                        SettingsRow(
-                            title = "Exchange Rate Source",
-                            value = when (state.exchangeRateSource) {
-                                ExchangeRateSource.EXTENDED -> "All currencies"
-                                ExchangeRateSource.HISTORICAL -> "Historical data"
-                            },
-                            onClick = { showExchangeRateSourceSheet = true }
-                        )
                     }
                 }
 
@@ -815,12 +807,6 @@ fun SettingsScreen(
                             title = "Transaction Categories",
                             value = "${state.allCategories.size}",
                             onClick = onNavigateToTransactionCategories
-                        )
-                        SettingsDivider()
-                        SettingsRow(
-                            title = "Update Categories",
-                            value = if (state.isUpdatingCategories) "Updating…" else "",
-                            onClick = { if (!state.isUpdatingCategories) showUpdateCategoriesConfirm = true }
                         )
                         SettingsDivider()
                         SettingsRow(
@@ -864,18 +850,33 @@ fun SettingsScreen(
                     }
                 }
 
-                // EARLY ACCESS section
-                item {
-                    SettingsSectionHeader("Early Access")
-                }
-                item {
-                    SettingsGroup {
-                        SettingsToggleRow(
-                            title = "Currency Insights",
-                            description = "Show exchange rate trends on foreign currency accounts",
-                            checked = state.currencyInsightsEnabled,
-                            onCheckedChange = { viewModel.toggleCurrencyInsights(it) }
-                        )
+                // DEVELOPER OPTIONS section — only visible after 5 taps on Version
+                if (state.developerOptionsEnabled) {
+                    item { SettingsSectionHeader("Developer Options") }
+                    item {
+                        SettingsGroup {
+                            SettingsRow(
+                                title = "Exchange Rate Source",
+                                value = when (state.exchangeRateSource) {
+                                    ExchangeRateSource.EXTENDED -> "All currencies"
+                                    ExchangeRateSource.HISTORICAL -> "Historical data"
+                                },
+                                onClick = { showExchangeRateSourceSheet = true }
+                            )
+                            SettingsDivider()
+                            SettingsRow(
+                                title = "Update Categories",
+                                value = if (state.isUpdatingCategories) "Updating…" else "",
+                                onClick = { if (!state.isUpdatingCategories) showUpdateCategoriesConfirm = true }
+                            )
+                            SettingsDivider()
+                            SettingsToggleRow(
+                                title = "Currency Insights",
+                                description = "Show exchange rate trends on foreign currency accounts",
+                                checked = state.currencyInsightsEnabled,
+                                onCheckedChange = { viewModel.toggleCurrencyInsights(it) }
+                            )
+                        }
                     }
                 }
 
@@ -924,7 +925,16 @@ fun SettingsScreen(
                         SettingsRow(
                             title = stringResource(Res.string.version),
                             value = com.andriybobchuk.mooney.APP_VERSION,
-                            showChevron = false
+                            showChevron = false,
+                            onClick = {
+                                if (!state.developerOptionsEnabled) {
+                                    versionTapCount += 1
+                                    if (versionTapCount >= 5) {
+                                        viewModel.enableDeveloperOptions()
+                                        versionTapCount = 0
+                                    }
+                                }
+                            }
                         )
                         SettingsDivider()
                         SettingsRow(

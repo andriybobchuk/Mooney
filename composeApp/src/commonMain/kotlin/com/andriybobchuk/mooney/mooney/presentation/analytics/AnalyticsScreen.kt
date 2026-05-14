@@ -111,6 +111,10 @@ fun AnalyticsScreen(
     }
 
     var selectedTimePeriod by remember { mutableStateOf(TimePeriod.SIX_MONTHS) }
+
+    LaunchedEffect(selectedTimePeriod) {
+        if (selectedTimePeriod == TimePeriod.LIFETIME) viewModel.loadLifetimeData()
+    }
     val hasAnyData = state.transactionsForMonth.filterNotNull().isNotEmpty() ||
         state.historicalMetrics.any { it.revenue > 0 || it.taxes > 0 || it.operatingCosts > 0 || it.netIncome != 0.0 }
     val isEmptyState = !hasAnyData && !state.isLoading
@@ -201,6 +205,8 @@ fun AnalyticsScreen(
                 // Trend Chart
                 TrendChart(
                     historicalData = state.historicalMetrics,
+                    lifetimeData = state.lifetimeMetrics,
+                    isLifetimeLoading = state.isLifetimeLoading,
                     selectedMonth = state.selectedMonth,
                     onMonthSelected = viewModel::onMonthSelected,
                     selectedPeriod = selectedTimePeriod,

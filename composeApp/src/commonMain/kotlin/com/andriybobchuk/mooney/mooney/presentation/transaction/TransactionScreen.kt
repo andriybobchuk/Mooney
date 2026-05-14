@@ -1108,7 +1108,7 @@ fun TransactionBottomSheet(
                     value = newAccountValue,
                     onValueChange = { newAccountValue = it },
                     currencySymbol = currencySymbol,
-                    placeholder = selectedAccount?.amount?.formatWithCommas() ?: "0",
+                    placeholder = selectedAccount?.amount?.formatWithCommas() ?: "0.00",
                     focusRequester = focusRequester
                 )
 
@@ -1134,7 +1134,7 @@ fun TransactionBottomSheet(
                     value = amount ?: "",
                     onValueChange = { amount = it },
                     currencySymbol = currencySymbol,
-                    placeholder = "0",
+                    placeholder = "0.00",
                     focusRequester = focusRequester
                 )
             }
@@ -1705,10 +1705,31 @@ private fun AmountHeroField(
     value: String,
     onValueChange: (String) -> Unit,
     currencySymbol: String,
-    placeholder: String = "0",
+    placeholder: String = "0.00",
     focusRequester: FocusRequester
 ) {
     val hasValue = value.isNotEmpty()
+
+    // Use TextFieldValue so we can place the caret at the end on first composition
+    // (matters when editing an existing transaction — the field opens with the
+    // current value, and the user expects to append/edit from the end).
+    var textFieldValue by remember {
+        mutableStateOf(
+            androidx.compose.ui.text.input.TextFieldValue(
+                text = value,
+                selection = androidx.compose.ui.text.TextRange(value.length)
+            )
+        )
+    }
+    // Keep the inner state in sync if `value` is reset externally (e.g., parent clears it).
+    androidx.compose.runtime.LaunchedEffect(value) {
+        if (value != textFieldValue.text) {
+            textFieldValue = androidx.compose.ui.text.input.TextFieldValue(
+                text = value,
+                selection = androidx.compose.ui.text.TextRange(value.length)
+            )
+        }
+    }
 
     val textStyle = MaterialTheme.typography.headlineLarge.copy(
         fontWeight = FontWeight.Bold,
@@ -1716,44 +1737,57 @@ private fun AmountHeroField(
         lineHeight = 40.sp
     )
 
+    // Auto-size the visible field by measuring the text width and assigning it
+    // explicitly. This avoids the BasicTextField + Row(IntrinsicSize)/weight
+    // interaction that previously cropped digits as the value grew.
+    val textMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
+    val measured = remember(value, placeholder, textStyle, hasValue) {
+        textMeasurer.measure(
+            text = if (hasValue) value else placeholder,
+            style = textStyle
+        ).size.width
+    }
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val fieldWidth = with(density) { (measured + 2).toDp() }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 16.dp),
         contentAlignment = Alignment.Center
     ) {
-        Row(
-            modifier = Modifier.width(IntrinsicSize.Max),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(modifier = Modifier.weight(1f, fill = false)) {
-                androidx.compose.foundation.text.BasicTextField(
-                    value = value,
-                    onValueChange = onValueChange,
-                    textStyle = textStyle.copy(
-                        color = if (hasValue) MaterialTheme.colorScheme.onSurface
-                        else Color.Transparent,
-                        textAlign = TextAlign.End
-                    ),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    singleLine = true,
-                    modifier = Modifier.focusRequester(focusRequester),
-                    decorationBox = { innerTextField ->
-                        Box(contentAlignment = Alignment.CenterEnd) {
-                            if (!hasValue) {
-                                Text(
-                                    text = placeholder,
-                                    style = textStyle.copy(
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
-                                        textAlign = TextAlign.End
-                                    )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            androidx.compose.foundation.text.BasicTextField(
+                value = textFieldValue,
+                onValueChange = { newValue ->
+                    textFieldValue = newValue
+                    if (newValue.text != value) onValueChange(newValue.text)
+                },
+                textStyle = textStyle.copy(
+                    color = if (hasValue) MaterialTheme.colorScheme.onSurface
+                    else Color.Transparent,
+                    textAlign = TextAlign.End
+                ),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                singleLine = true,
+                modifier = Modifier
+                    .focusRequester(focusRequester)
+                    .width(fieldWidth),
+                decorationBox = { innerTextField ->
+                    Box(contentAlignment = Alignment.CenterEnd) {
+                        if (!hasValue) {
+                            Text(
+                                text = placeholder,
+                                style = textStyle.copy(
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
+                                    textAlign = TextAlign.End
                                 )
-                            }
-                            innerTextField()
+                            )
                         }
+                        innerTextField()
                     }
-                )
-            }
+                }
+            )
             if (currencySymbol.isNotEmpty()) {
                 Spacer(Modifier.width(6.dp))
                 Text(

@@ -1,6 +1,11 @@
 package com.andriybobchuk.mooney.mooney.presentation.assets
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -24,6 +29,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -114,7 +120,9 @@ fun AssetsScreen(
     var showSheet by remember { mutableStateOf(false) }
     var editingAsset by remember { mutableStateOf<UiAsset?>(null) }
     var detailAsset by remember { mutableStateOf<UiAsset?>(null) }
-    val isEmptyState = assets.isEmpty()
+    // Don't treat "still loading" as empty — otherwise we'd flash the empty-state
+    // CTA during the brief network rate fetch on cold start.
+    val isEmptyState = assets.isEmpty() && !state.isInitialLoading
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -222,6 +230,9 @@ fun AssetsScreen(
                     )
                 }
 
+                if (state.isInitialLoading) {
+                    AssetsScreenShimmer(modifier = Modifier.padding(paddingValues))
+                } else
                 AssetsScreenContent(
                     modifier = Modifier.padding(paddingValues),
                 assets = filteredAssets,
@@ -233,7 +244,7 @@ fun AssetsScreen(
                 assetCategories = state.assetCategories,
                 categoryOrder = state.categoryOrder,
                 expandedCategories = state.expandedCategories,
-                baseCurrency = state.totalNetWorthCurrency,
+                baseCurrency = GlobalConfig.baseCurrency,
                 totalNetWorth = totalNetWorth,
                 baseNetWorth = if (state.selectedTab == AssetsTab.ASSETS) state.totalAssetsBase else state.totalLiabilitiesBase,
                 historicalRates = state.historicalRates,
@@ -298,7 +309,7 @@ fun AssetsScreen(
         ) {
             AssetDetailSheet(
                 asset = asset,
-                baseCurrency = state.totalNetWorthCurrency,
+                baseCurrency = GlobalConfig.baseCurrency,
                 historicalRates = state.historicalRates[asset.originalCurrency] ?: emptyList(),
                 currentRate = state.currentRates[asset.originalCurrency],
                 percentile = state.percentiles[asset.originalCurrency],
@@ -318,6 +329,92 @@ fun AssetsScreen(
             onDismiss = { viewModel.dismissPaywall() },
             onSubscribe = { viewModel.onSubscribe() },
             onRestore = { viewModel.onRestorePurchases() }
+        )
+    }
+}
+
+@Composable
+private fun AssetsScreenShimmer(modifier: Modifier = Modifier) {
+    val transition = rememberInfiniteTransition(label = "shimmer")
+    val alpha by transition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.75f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(900),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "shimmerAlpha"
+    )
+    val barColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f * (alpha * 2f).coerceAtMost(1f))
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 10.dp, vertical = 8.dp)
+    ) {
+        // Section header
+        Box(
+            modifier = Modifier
+                .padding(start = 6.dp, top = 8.dp, bottom = 12.dp)
+                .height(14.dp)
+                .width(120.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(barColor)
+        )
+        repeat(5) { idx ->
+            ShimmerAssetCard(
+                barColor = barColor,
+                widthFractionTitle = 0.45f + (idx % 3) * 0.08f,
+                widthFractionAmount = 0.18f + (idx % 2) * 0.06f
+            )
+            Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun ShimmerAssetCard(
+    barColor: Color,
+    widthFractionTitle: Float,
+    widthFractionAmount: Float
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(horizontal = 12.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(38.dp)
+                .clip(CircleShape)
+                .background(barColor)
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(widthFractionTitle)
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(barColor)
+            )
+            Spacer(Modifier.height(6.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.25f)
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(barColor.copy(alpha = barColor.alpha * 0.6f))
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(widthFractionAmount)
+                .height(14.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(barColor)
         )
     }
 }

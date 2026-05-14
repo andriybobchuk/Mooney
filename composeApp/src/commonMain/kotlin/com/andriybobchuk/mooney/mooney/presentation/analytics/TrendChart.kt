@@ -1,5 +1,10 @@
 package com.andriybobchuk.mooney.mooney.presentation.analytics
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,7 +44,8 @@ import kotlin.math.min
 
 enum class TimePeriod(val displayName: String, val months: Int) {
     SIX_MONTHS("6mo", 6),
-    ONE_YEAR("1y", 12)
+    ONE_YEAR("1y", 12),
+    LIFETIME("Lifetime", Int.MAX_VALUE)
 }
 
 @Composable
@@ -49,13 +55,26 @@ fun TrendChart(
     onMonthSelected: (MonthKey) -> Unit,
     modifier: Modifier = Modifier,
     selectedPeriod: TimePeriod = TimePeriod.SIX_MONTHS,
-    onPeriodSelected: (TimePeriod) -> Unit = {}
+    onPeriodSelected: (TimePeriod) -> Unit = {},
+    lifetimeData: List<MonthlyMetricSnapshot> = emptyList(),
+    isLifetimeLoading: Boolean = false
 ) {
-    
-    // Filter data based on selected period
-    val filteredData = historicalData.takeLast(selectedPeriod.months)
-    
-    if (filteredData.isEmpty()) {
+
+    // Filter data based on selected period.
+    // Lifetime: use the lazily-loaded wider dataset, drop empty leading months.
+    // Otherwise: last N months from the standard window.
+    val filteredData = if (selectedPeriod == TimePeriod.LIFETIME) {
+        val firstNonEmpty = lifetimeData.indexOfFirst {
+            it.transactionCount > 0 || it.revenue != 0.0 || it.operatingCosts != 0.0
+        }
+        if (firstNonEmpty == -1) emptyList() else lifetimeData.drop(firstNonEmpty)
+    } else {
+        historicalData.takeLast(selectedPeriod.months)
+    }
+
+    val showLifetimeShimmer = selectedPeriod == TimePeriod.LIFETIME && isLifetimeLoading
+
+    if (filteredData.isEmpty() && !showLifetimeShimmer) {
         Box(
             modifier = modifier
                 .fillMaxWidth()
@@ -110,18 +129,29 @@ fun TrendChart(
             }
         }
         
-        // Chart Canvas
-        Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(180.dp)
-                .align(Alignment.TopCenter)
-                .padding(top = 32.dp)
-        ) {
-            drawTrendChart(filteredData, size.width, size.height)
+        // Chart Canvas (or shimmer while Lifetime is loading)
+        if (showLifetimeShimmer) {
+            LifetimeShimmerChart(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .align(Alignment.TopCenter)
+                    .padding(top = 32.dp)
+            )
+        } else {
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .align(Alignment.TopCenter)
+                    .padding(top = 32.dp)
+            ) {
+                drawTrendChart(filteredData, size.width, size.height)
+            }
         }
         
-        // Month Labels (Clickable)
+        // Month Labels (Clickable) — hidden in Lifetime mode (too many to fit).
+        if (selectedPeriod != TimePeriod.LIFETIME) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -172,7 +202,40 @@ fun TrendChart(
                 }
             }
         }
+        }
         Spacer(modifier = Modifier.height(2.dp))
+    }
+}
+
+@Composable
+private fun LifetimeShimmerChart(modifier: Modifier = Modifier) {
+    val transition = rememberInfiniteTransition(label = "lifetimeShimmer")
+    val alpha by transition.animateFloat(
+        initialValue = 0.25f,
+        targetValue = 0.75f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(900),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "lifetimeShimmerAlpha"
+    )
+    val barColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f * alpha * 2f)
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.Bottom
+    ) {
+        // 16 placeholder bars approximating a multi-year chart
+        val heights = listOf(40, 70, 55, 85, 65, 110, 95, 75, 130, 100, 60, 90, 120, 80, 50, 105)
+        heights.forEach { h ->
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(h.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(barColor)
+            )
+        }
     }
 }
 

@@ -459,10 +459,8 @@ class SettingsViewModel(
             try {
                 val result = updateTransactionCategoriesUseCase()
                 val parts = buildList {
-                    if (result.added > 0) add("${result.added} added")
-                    if (result.updated > 0) add("${result.updated} updated")
-                    if (result.removed > 0) add("${result.removed} removed")
-                    if (result.remapped > 0) add("${result.remapped} remapped")
+                    if (result.added > 0) add("${result.added} new")
+                    if (result.updated > 0) add("${result.updated} refreshed")
                 }
                 val message = if (parts.isEmpty()) "Categories are already up to date"
                 else "Categories updated: ${parts.joinToString(", ")}"

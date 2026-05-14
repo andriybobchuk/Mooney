@@ -167,11 +167,11 @@ fun SettingsScreen(
             title = { Text("Update Categories") },
             text = {
                 Column {
-                    Text("This will update your transaction categories to the latest version:")
+                    Text("Get the latest categories without losing any data:")
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("• New categories will be added", style = MaterialTheme.typography.bodySmall)
-                    Text("• Existing transactions will be preserved", style = MaterialTheme.typography.bodySmall)
-                    Text("• Removed categories will be remapped to the closest match", style = MaterialTheme.typography.bodySmall)
+                    Text("• New categories from the latest version will be added", style = MaterialTheme.typography.bodySmall)
+                    Text("• Existing categories get refreshed titles/emojis", style = MaterialTheme.typography.bodySmall)
+                    Text("• Nothing is ever deleted — your transactions, accounts, and custom categories stay exactly as they are", style = MaterialTheme.typography.bodySmall)
                 }
             },
             confirmButton = {

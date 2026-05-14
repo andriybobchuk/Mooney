@@ -221,8 +221,9 @@ fun TransactionsScreen(
         },
         bottomBar = { bottomNavbar() },
         floatingActionButton = {
+            val hasTransactions = transactions.filterNotNull().isNotEmpty()
             val hasAccounts = state.accounts.filterNotNull().isNotEmpty()
-            if (hasAccounts) {
+            if (hasTransactions && hasAccounts) {
                 FloatingActionButton(
                     onClick = {
                         preselectedCategory = null

@@ -25,8 +25,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import org.koin.compose.koinInject
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -38,7 +42,6 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaywallSheet(
-    price: String? = null,
     isLoading: Boolean = false,
     errorMessage: String? = null,
     onDismiss: () -> Unit,
@@ -46,6 +49,12 @@ fun PaywallSheet(
     onRestore: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    // The paywall self-loads its price from PremiumManager so every call site
+    // gets a working price without having to plumb it through every ViewModel.
+    val premiumManager = koinInject<PremiumManager>()
+    val price by premiumManager.monthlyPriceFlow.collectAsState()
+    LaunchedEffect(Unit) { premiumManager.refreshMonthlyPrice() }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -96,21 +105,18 @@ fun PaywallSheet(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Price
-                if (price != null) {
-                    Text(
-                        text = price,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                } else {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                        strokeWidth = 2.dp
-                    )
-                }
+                // Price — show real value if loaded, otherwise a short placeholder.
+                // We deliberately avoid an indefinite spinner here: Apple's review
+                // flagged "page loaded indefinitely" because the IAP product wasn't
+                // approved yet and the spinner never resolved.
+                // The "/ month" suffix is required by App Store Guideline 3.1.2 —
+                // auto-renewable subscriptions must show duration alongside price.
+                Text(
+                    text = if (price != null) "$price / month" else "—",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -125,10 +131,12 @@ fun PaywallSheet(
                     Spacer(modifier = Modifier.height(12.dp))
                 }
 
-                // CTA
+                // CTA — always enabled (except while purchasing) so reviewers
+                // and users are never stuck if price loading fails. StoreKit
+                // will surface a native error if the product is unavailable.
                 Button(
                     onClick = onSubscribe,
-                    enabled = !isLoading && price != null,
+                    enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -162,6 +170,69 @@ fun PaywallSheet(
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
                     )
                 }
+
+                // App Store Guideline 3.1.2 — auto-renewable subscriptions must
+                // disclose the subscription title, length, and price near the
+                // subscribe button, and link to Terms of Use + Privacy Policy.
+                Spacer(modifier = Modifier.height(8.dp))
+                SubscriptionLegalFooter(price = price)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SubscriptionLegalFooter(price: String?) {
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+    val disclosureColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.45f)
+    val linkColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+    val priceLine = if (price != null) "Mooney Pro · Monthly · $price / month" else "Mooney Pro · Monthly subscription"
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = priceLine,
+            style = MaterialTheme.typography.labelSmall,
+            color = disclosureColor,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = "Auto-renews monthly. Cancel anytime in your App Store account.",
+            style = MaterialTheme.typography.labelSmall,
+            color = disclosureColor,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 8.dp)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            TextButton(
+                onClick = {
+                    uriHandler.openUri("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
+                },
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
+            ) {
+                Text(
+                    text = "Terms of Use",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = linkColor,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+            TextButton(
+                onClick = {
+                    uriHandler.openUri("https://andriybobchuk.github.io/Mooney/privacy-policy.html")
+                },
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
+            ) {
+                Text(
+                    text = "Privacy Policy",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = linkColor,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }

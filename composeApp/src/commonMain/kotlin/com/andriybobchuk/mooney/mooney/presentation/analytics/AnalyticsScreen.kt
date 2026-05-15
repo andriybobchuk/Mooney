@@ -21,12 +21,13 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.DateRange
@@ -191,15 +192,12 @@ fun AnalyticsScreen(
             }
 
             if (!isEmpty) {
-            val scrollState = rememberScrollState()
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background)
                     .padding(paddingValues)
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
-                    .verticalScroll(scrollState)
-                    .fillMaxSize()
             ) {
 
                 // Trend Chart
@@ -269,7 +267,8 @@ fun AnalyticsScreen(
                     ) {
                         CategoryTransactionsSheet(
                             category = category,
-                            transactions = state.transactionsForCategory
+                            transactions = state.transactionsForCategory,
+                            onDismiss = { viewModel.onTransactionsSheetDismissed() }
                         )
                     }
                 }
@@ -575,37 +574,47 @@ fun SubcategoryBottomSheet(
 @Composable
 fun CategoryTransactionsSheet(
     category: com.andriybobchuk.mooney.mooney.domain.Category,
-    transactions: List<com.andriybobchuk.mooney.mooney.domain.Transaction>
+    transactions: List<com.andriybobchuk.mooney.mooney.domain.Transaction>,
+    onDismiss: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 32.dp)
     ) {
-        // Header
-        Column(
+        // Header with close button — sheet covers most of the screen, so the
+        // explicit close gives users a clear way out (swipe-down isn't always
+        // discoverable, especially on iOS).
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = category.resolveEmoji(),
-                    fontSize = 24.sp,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
+            Text(
+                text = category.resolveEmoji(),
+                fontSize = 24.sp,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = category.title,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Medium
                 )
+                if (category.isSubCategory()) {
+                    Text(
+                        text = category.parent?.title ?: "",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-            if (category.isSubCategory()) {
-                Text(
-                    text = category.parent?.title ?: "",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp)
+            androidx.compose.material3.IconButton(onClick = onDismiss) {
+                androidx.compose.material3.Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Filled.Close,
+                    contentDescription = "Close",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -617,32 +626,45 @@ fun CategoryTransactionsSheet(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 20.dp)
             )
-        } else {
-            val grouped = transactions
-                .groupBy { it.date }
-                .entries
-                .sortedByDescending { it.key }
+            return@Column
+        }
 
-            LazyColumn {
-                grouped.forEach { (date, txs) ->
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .padding(vertical = 4.dp, horizontal = 14.dp)
-                                .background(
-                                    MaterialTheme.colorScheme.background,
-                                    RoundedCornerShape(50)
-                                )
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = date.formatForDisplay(),
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                    items(txs.sortedByDescending { it.id }) { transaction ->
+        // Group by subcategory ID. Each group gets a header with name + count +
+        // total; tapping expands it to reveal that group's transactions sorted
+        // by date.
+        val groups: List<Triple<com.andriybobchuk.mooney.mooney.domain.Category, Double, List<com.andriybobchuk.mooney.mooney.domain.Transaction>>> =
+            transactions
+                .groupBy { it.subcategory.id }
+                .map { (_, txs) ->
+                    val first = txs.first().subcategory
+                    Triple(first, txs.sumOf { it.amount }, txs.sortedByDescending { it.date })
+                }
+                .sortedByDescending { it.second }
+
+        // Collapsed by default — except when the category has no subcategory
+        // breakdown (single group), where collapsing the only group would just
+        // hide everything for no reason.
+        val defaultExpanded = groups.size <= 1
+        val expanded = remember(category.id) {
+            androidx.compose.runtime.mutableStateMapOf<String, Boolean>().apply {
+                groups.forEach { (cat, _, _) -> put(cat.id, defaultExpanded) }
+            }
+        }
+
+        LazyColumn {
+            groups.forEach { (subcat, total, txs) ->
+                val isExpanded = expanded[subcat.id] ?: defaultExpanded
+                item("header_${subcat.id}") {
+                    SubcategoryGroupHeader(
+                        subcategory = subcat,
+                        count = txs.size,
+                        total = total,
+                        expanded = isExpanded,
+                        onToggle = { expanded[subcat.id] = !isExpanded }
+                    )
+                }
+                if (isExpanded) {
+                    items(items = txs, key = { tx -> "tx_${subcat.id}_${tx.id}" }) { transaction ->
                         com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionItem(
                             transaction = transaction,
                             accounts = emptyList()
@@ -651,6 +673,61 @@ fun CategoryTransactionsSheet(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SubcategoryGroupHeader(
+    subcategory: com.andriybobchuk.mooney.mooney.domain.Category,
+    count: Int,
+    total: Double,
+    expanded: Boolean,
+    onToggle: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onToggle() }
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = subcategory.resolveEmoji(),
+            fontSize = 18.sp,
+            modifier = Modifier.padding(end = 8.dp)
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = subcategory.title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = if (count == 1) "1 transaction" else "$count transactions",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Text(
+            text = "${total.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = if (subcategory.type == com.andriybobchuk.mooney.mooney.domain.CategoryType.INCOME)
+                MaterialTheme.appColors.incomeColor
+            else
+                MaterialTheme.appColors.expenseColor,
+            modifier = Modifier.padding(end = 8.dp)
+        )
+        androidx.compose.material3.Icon(
+            imageVector = if (expanded)
+                androidx.compose.material.icons.Icons.Filled.KeyboardArrowUp
+            else
+                androidx.compose.material.icons.Icons.Filled.KeyboardArrowDown,
+            contentDescription = if (expanded) "Collapse" else "Expand",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp)
+        )
     }
 }
 
@@ -834,89 +911,25 @@ fun NetIncomeChartBottomSheet(
     ) {
         // (Title is shown by the toolbar — no duplicate header here.)
 
-        // Profit Summary Cards Row
+        // Profit Summary Cards Row — symmetric, design-system-consistent.
+        // Removed the dangling "Based on selected month" subtitle that broke
+        // vertical alignment between the two cards.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Last 6 months card
-            Card(
+            NetIncomeStatCard(
                 modifier = Modifier.weight(1f),
-                colors = androidx.compose.material3.CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                ),
-                shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(
-                    width = 1.dp, 
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                ),
-                elevation = androidx.compose.material3.CardDefaults.cardElevation(
-                    defaultElevation = 0.dp
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = stringResource(Res.string.last_6_months),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    
-                    Text(
-                        text = "${totalProfit.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-            
-            // Next 6 months card  
-            Card(
+                label = stringResource(Res.string.last_6_months),
+                value = totalProfit
+            )
+            NetIncomeStatCard(
                 modifier = Modifier.weight(1f),
-                colors = androidx.compose.material3.CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                ),
-                shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                ),
-                elevation = androidx.compose.material3.CardDefaults.cardElevation(
-                    defaultElevation = 0.dp
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = stringResource(Res.string.next_6_months),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    
-                    Text(
-                        text = "${projectedProfit.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-
-                    Text(
-                        text = stringResource(Res.string.based_on_selected),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
-            }
+                label = stringResource(Res.string.next_6_months),
+                value = projectedProfit
+            )
         }
         
         // Net Income Chart
@@ -924,6 +937,37 @@ fun NetIncomeChartBottomSheet(
             data = netIncomeData,
             modifier = Modifier.padding(bottom = 20.dp)
         )
+    }
+}
+
+@Composable
+private fun NetIncomeStatCard(
+    modifier: Modifier,
+    label: String,
+    value: Double
+) {
+    val accent = if (value >= 0.0) MaterialTheme.appColors.incomeColor else MaterialTheme.appColors.expenseColor
+    com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyCard(
+        modifier = modifier,
+        variant = com.andriybobchuk.mooney.core.presentation.designsystem.components.CardVariant.OUTLINED
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = label.uppercase(),
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "${value.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = accent
+            )
+        }
     }
 }
 

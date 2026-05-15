@@ -5,9 +5,13 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import kotlin.coroutines.cancellation.CancellationException
 
 class PremiumManager(
     private val dataStore: DataStore<Preferences>,
@@ -17,6 +21,10 @@ class PremiumManager(
         dataStore.data.map { it[PreferencesKeys.IS_PREMIUM] ?: false },
         billingManager.isSubscribed
     ) { cached, live -> cached || live }
+
+    private val _monthlyPriceFlow = MutableStateFlow<String?>(null)
+    /** Localized monthly subscription price (e.g. "$2.99"). Null until fetched. */
+    val monthlyPriceFlow: StateFlow<String?> = _monthlyPriceFlow.asStateFlow()
 
     suspend fun getIsPremium(): Boolean {
         val cached = dataStore.data.firstOrNull()?.get(PreferencesKeys.IS_PREMIUM) ?: false
@@ -44,6 +52,23 @@ class PremiumManager(
 
     suspend fun fetchProducts(): List<BillingProduct>? {
         return billingManager.fetchProducts()
+    }
+
+    /**
+     * Pull the monthly-subscription localized price into [monthlyPriceFlow].
+     * Safe to call repeatedly — re-fetches each time. Best-effort: errors and
+     * empty results leave the flow null, which the UI handles gracefully.
+     */
+    suspend fun refreshMonthlyPrice() {
+        try {
+            val products = billingManager.fetchProducts()
+            val monthly = products?.firstOrNull { it.id == PRODUCT_ID_MONTHLY }
+            _monthlyPriceFlow.value = monthly?.localizedPrice
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Leave the price as whatever it was; UI shows "—" as fallback.
+        }
     }
 
     suspend fun setPremium(premium: Boolean) {

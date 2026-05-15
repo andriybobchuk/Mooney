@@ -2,6 +2,8 @@ package com.andriybobchuk.mooney.mooney.presentation.settings
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,6 +32,7 @@ import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.FeedbackBottomSheet
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import com.andriybobchuk.mooney.core.premium.PaywallSheet
+import com.andriybobchuk.mooney.core.premium.isBillingEnabled
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.settings.ExchangeRateSource
@@ -235,7 +238,11 @@ fun SettingsScreen(
     // Currency bottom sheet
     if (showCurrencySheet) {
         MooneyBottomSheet(onDismissRequest = { showCurrencySheet = false }) {
-            Column(modifier = Modifier.padding(20.dp)) {
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
                 Text(stringResource(Res.string.default_currency), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
                 state.availableCurrencies.forEach { currency ->
                     val isSelected = currency == state.defaultCurrency
@@ -735,20 +742,23 @@ fun SettingsScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                // Premium upsell banner
-                item {
-                    var showPaywallFromBanner by remember { mutableStateOf(false) }
-                    PremiumBanner(
-                        onClick = { showPaywallFromBanner = true }
-                    )
-                    if (showPaywallFromBanner) {
-                        PaywallSheet(
-                            isLoading = state.isPurchasing,
-                            errorMessage = state.purchaseError,
-                            onDismiss = { showPaywallFromBanner = false },
-                            onSubscribe = { viewModel.onSubscribe() },
-                            onRestore = { viewModel.onRestorePurchases() }
+                // Premium upsell banner — hidden when the platform doesn't sell
+                // anything (Android ships fully free).
+                if (isBillingEnabled) {
+                    item {
+                        var showPaywallFromBanner by remember { mutableStateOf(false) }
+                        PremiumBanner(
+                            onClick = { showPaywallFromBanner = true }
                         )
+                        if (showPaywallFromBanner) {
+                            PaywallSheet(
+                                isLoading = state.isPurchasing,
+                                errorMessage = state.purchaseError,
+                                onDismiss = { showPaywallFromBanner = false },
+                                onSubscribe = { viewModel.onSubscribe() },
+                                onRestore = { viewModel.onRestorePurchases() }
+                            )
+                        }
                     }
                 }
 

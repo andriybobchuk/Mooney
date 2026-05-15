@@ -100,12 +100,39 @@ android {
         applicationId = "com.andriybobchuk.mooney"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        // Both versions come from gradle.properties so they stay in lock-step
+        // with the iOS MARKETING_VERSION / bundle version.
+        versionCode = (project.findProperty("app.versionCode") as String).toInt()
+        versionName = project.findProperty("app.version") as String
     }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+    // Release signing reads from environment variables (CI) or local.properties
+    // (developer machine). All four envs must be present to enable signed release
+    // builds; otherwise unsigned debug-style builds are still possible.
+    val keystoreFileEnv = System.getenv("MOONEY_KEYSTORE_FILE")
+        ?: project.findProperty("MOONEY_KEYSTORE_FILE") as String?
+    val keystorePasswordEnv = System.getenv("MOONEY_KEYSTORE_PASSWORD")
+        ?: project.findProperty("MOONEY_KEYSTORE_PASSWORD") as String?
+    val keyAliasEnv = System.getenv("MOONEY_KEY_ALIAS")
+        ?: project.findProperty("MOONEY_KEY_ALIAS") as String?
+    val keyPasswordEnv = System.getenv("MOONEY_KEY_PASSWORD")
+        ?: project.findProperty("MOONEY_KEY_PASSWORD") as String?
+    val releaseSigningAvailable = listOf(
+        keystoreFileEnv, keystorePasswordEnv, keyAliasEnv, keyPasswordEnv
+    ).all { !it.isNullOrBlank() }
+
+    signingConfigs {
+        if (releaseSigningAvailable) {
+            create("release") {
+                storeFile = file(keystoreFileEnv!!)
+                storePassword = keystorePasswordEnv
+                keyAlias = keyAliasEnv
+                keyPassword = keyPasswordEnv
+            }
         }
     }
     buildTypes {
@@ -116,6 +143,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (releaseSigningAvailable) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {

@@ -46,7 +46,9 @@ data class TransactionState(
     val categoryOrder: List<String> = emptyList(),
     val expandedCategories: Set<String> = emptySet(),
     val isLoading: Boolean = false,
-    val isError: Boolean = false
+    val isError: Boolean = false,
+    /** True until the first transactions/accounts emission lands. Drives the shimmer. */
+    val isInitialLoading: Boolean = true
 )
 
 @Suppress("LongParameterList")
@@ -108,7 +110,9 @@ class TransactionViewModel(
             .map { transactions -> filterTransactionsByMonthUseCase(transactions, month) }
             .onEach { filteredTransactions ->
                 val sorted = filteredTransactions.sortedByDescending { it.date }
-                _uiState.update { it.copy(transactions = sorted) }
+                // First emission clears the initial-load shimmer; subsequent
+                // emissions just update transactions normally.
+                _uiState.update { it.copy(transactions = sorted, isInitialLoading = false) }
                 loadTotal()
                 loadDailyTotals(filteredTransactions, month)
             }
@@ -199,7 +203,8 @@ class TransactionViewModel(
                             assetCategories = assetCategories,
                             categoryOrder = categoryOrder,
                             expandedCategories = expandedCategories,
-                            isLoading = false
+                            isLoading = false,
+                            isInitialLoading = false
                         )
                     }
                 }.launchIn(this)

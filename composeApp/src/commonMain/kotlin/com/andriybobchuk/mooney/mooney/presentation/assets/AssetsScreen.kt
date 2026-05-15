@@ -80,6 +80,7 @@ import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
+import com.andriybobchuk.mooney.mooney.domain.parseAmountInput
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import mooney.composeapp.generated.resources.Res
@@ -1158,7 +1159,7 @@ private fun AssetSheet(
             modifier = Modifier.fillMaxWidth(),
             variant = ButtonVariant.PRIMARY,
             onClick = {
-                val amt = amount.replace(",", "").toDoubleOrNull() ?: 0.0
+                val amt = amount.parseAmountInput() ?: 0.0
                 onAdd(title, "", amt, selectedCurrency, selectedCategoryId, isLiability)
             },
             enabled = title.isNotBlank() && amount.isNotBlank()

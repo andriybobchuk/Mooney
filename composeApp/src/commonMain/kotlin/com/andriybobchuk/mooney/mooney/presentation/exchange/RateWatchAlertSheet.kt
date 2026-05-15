@@ -20,6 +20,7 @@ import com.andriybobchuk.mooney.mooney.domain.AlertDirection
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.RateWatchAlert
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
+import com.andriybobchuk.mooney.mooney.domain.parseAmountInput
 
 @Composable
 fun RateWatchAlertSheet(
@@ -96,7 +97,7 @@ fun RateWatchAlertSheet(
         // Save button
         Button(
             onClick = {
-                targetRate.toDoubleOrNull()?.let { rate ->
+                targetRate.parseAmountInput()?.let { rate ->
                     onSave(rate, direction)
                 }
             },

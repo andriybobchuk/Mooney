@@ -30,6 +30,42 @@ fun Double.formatToPlainString(): String {
     return "$integerPart.$decimalPart"
 }
 
+/**
+ * Parses user-entered amount strings tolerantly across locales.
+ *
+ * iOS / Android keyboards show different decimal separators based on the device
+ * region — `.` in US English, `,` in PL/UA/RU/DE/FR/etc. Some users also type
+ * thousand separators when copy-pasting. We accept all of:
+ *   "1234"      → 1234.0
+ *   "1234.56"   → 1234.56
+ *   "1234,56"   → 1234.56
+ *   "1,234.56"  → 1234.56     (US thousands)
+ *   "1.234,56"  → 1234.56     (EU thousands)
+ *   "1 234,56"  → 1234.56     (space thousands)
+ *   "-42.5"     → -42.5
+ *
+ * Heuristic: the LAST `.` or `,` in the string is treated as the decimal
+ * separator; every other `.` / `,` / whitespace is treated as a grouping
+ * separator and stripped. Returns null on anything unparseable.
+ */
+fun String.parseAmountInput(): Double? {
+    val cleaned = this.trim().filterNot { it.isWhitespace() }
+    if (cleaned.isEmpty()) return null
+
+    val lastDot = cleaned.lastIndexOf('.')
+    val lastComma = cleaned.lastIndexOf(',')
+    val decimalIdx = maxOf(lastDot, lastComma)
+
+    val normalized = if (decimalIdx < 0) {
+        cleaned  // no decimal separator at all — pure integer
+    } else {
+        val intPart = cleaned.substring(0, decimalIdx).filter { it != '.' && it != ',' }
+        val fracPart = cleaned.substring(decimalIdx + 1)
+        if (intPart.isEmpty()) "0.$fracPart" else "$intPart.$fracPart"
+    }
+    return normalized.toDoubleOrNull()
+}
+
 fun Double.formatToShortString(): String {
     val absValue = kotlin.math.abs(this)
     val sign = if (this < 0) "-" else ""

@@ -226,6 +226,9 @@ fun TransactionsScreen(
             if (hasTransactions && hasAccounts) {
                 FloatingActionButton(
                     onClick = {
+                        // Clear edit context — without this a stale transactionToEdit
+                        // from a previous edit/dismiss can cause "+" to open in edit mode.
+                        transactionToEdit = null
                         preselectedCategory = null
                         isBottomSheetOpen = true
                     },
@@ -271,6 +274,7 @@ fun TransactionsScreen(
                             onDelete = viewModel::deleteTransaction,
                             onDailyTotal = viewModel::getDailyTotal,
                             onAddTransaction = {
+                                transactionToEdit = null
                                 preselectedCategory = null
                                 isBottomSheetOpen = true
                             },
@@ -313,6 +317,7 @@ fun TransactionsScreen(
                     },
                     onUpdate = { transaction, _ ->
                         isBottomSheetOpen = false
+                        transactionToEdit = null
                         viewModel.upsertTransaction(transaction)
                     },
                     onEditCategories = onNavigateToTransactionCategories

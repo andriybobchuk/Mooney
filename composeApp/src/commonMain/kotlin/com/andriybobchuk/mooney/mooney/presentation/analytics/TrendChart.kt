@@ -129,7 +129,13 @@ fun TrendChart(
             }
         }
         
-        // Chart Canvas (or shimmer while Lifetime is loading)
+        // Chart Canvas (or shimmer while Lifetime is loading, or "not enough data" message).
+        // Without a minimum of 2 months that actually have transactions, the trend lines
+        // get drawn through y=0 across the entire chart — which crosses the spike from
+        // the single populated month and produces a confusing diamond/X shape.
+        val monthsWithData = filteredData.count { it.transactionCount > 0 }
+        val notEnoughData = monthsWithData < 2 && !showLifetimeShimmer
+
         if (showLifetimeShimmer) {
             LifetimeShimmerChart(
                 modifier = Modifier
@@ -138,6 +144,23 @@ fun TrendChart(
                     .align(Alignment.TopCenter)
                     .padding(top = 32.dp)
             )
+        } else if (notEnoughData) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .align(Alignment.TopCenter)
+                    .padding(top = 32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Not enough data yet — add more transactions to see trends",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 32.dp)
+                )
+            }
         } else {
             Canvas(
                 modifier = Modifier
@@ -331,16 +354,25 @@ private fun DrawScope.drawMetricLine(
 ) {
     val path = Path()
     val points = mutableListOf<Offset>()
-    
+    // Break the line over months with no transactions — otherwise sparse data
+    // (e.g., one April expense and zeros around it) draws a zigzag through the
+    // y=0 midpoint that looks like a fake diamond.
+    var pendingMove = true
+
     data.forEachIndexed { index, snapshot ->
+        if (snapshot.transactionCount == 0) {
+            pendingMove = true
+            return@forEachIndexed
+        }
         val value = valueExtractor(snapshot)
         val x = padding + (chartWidth * index / (data.size - 1))
         val y = padding + chartHeight - (chartHeight * ((value - minValue) / (maxValue - minValue))).toFloat()
-        
+
         points.add(Offset(x, y))
-        
-        if (index == 0) {
+
+        if (pendingMove) {
             path.moveTo(x, y)
+            pendingMove = false
         } else {
             path.lineTo(x, y)
         }

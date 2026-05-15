@@ -92,7 +92,10 @@ class AssetsViewModel(
 
     private fun observeUserCurrencies() {
         getUserCurrenciesUseCase().onEach { currencies ->
-            currencyManagerUseCase.setUserCurrencies(currencies.map { it.code })
+            val codes = currencies.map { it.code }
+            currencyManagerUseCase.setUserCurrencies(codes)
+            val resolved = codes.mapNotNull { code -> Currency.entries.find { it.name == code } }
+            _uiState.update { it.copy(userCurrencies = resolved) }
         }.launchIn(viewModelScope)
     }
 
@@ -119,9 +122,14 @@ class AssetsViewModel(
             val result = currencyManagerUseCase.refreshExchangeRates()
             if (result is Result.Success) {
                 _uiState.update {
-                    it.copy(ratesLastUpdated = kotlinx.datetime.Clock.System.now().toEpochMilliseconds())
+                    it.copy(
+                        ratesLastUpdated = kotlinx.datetime.Clock.System.now().toEpochMilliseconds(),
+                        exchangeRates = result.data
+                    )
                 }
             }
+        } else {
+            _uiState.update { it.copy(exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()) }
         }
         // Clear the initial-load shimmer once the rate attempt has resolved
         // (success or failure) so we never get stuck shimmering forever.
@@ -446,5 +454,8 @@ data class AssetsState(
     val historicalRates: Map<Currency, List<com.andriybobchuk.mooney.mooney.domain.HistoricalRate>> = emptyMap(),
     val percentiles: Map<Currency, Int> = emptyMap(),
     val currentRates: Map<Currency, Double> = emptyMap(),
-    val currencyInsightsEnabled: Boolean = false
+    val currencyInsightsEnabled: Boolean = false,
+    val userCurrencies: List<Currency> = emptyList(),
+    val exchangeRates: com.andriybobchuk.mooney.mooney.domain.ExchangeRates =
+        com.andriybobchuk.mooney.mooney.domain.ExchangeRates(emptyMap())
 )

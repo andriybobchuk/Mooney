@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -165,7 +166,9 @@ fun TransactionsScreen(
     val hasTransactions = transactions.filterNotNull().isNotEmpty()
     val hasPendingTransactions = state.pendingTransactions.isNotEmpty()
     val hasAccounts = state.accounts.filterNotNull().isNotEmpty()
-    val isEmptyState = !hasTransactions && !hasPendingTransactions
+    // Don't treat "still loading" as empty — otherwise we'd flash the empty-state
+    // CTA for half a second on cold start before the DB query lands.
+    val isEmptyState = !hasTransactions && !hasPendingTransactions && !state.isInitialLoading
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
@@ -256,6 +259,9 @@ fun TransactionsScreen(
                         .padding(paddingValues)
                         .fillMaxSize()
                 ) {
+                    if (state.isInitialLoading) {
+                        TransactionsScreenShimmer(modifier = Modifier.fillMaxSize())
+                    } else
                     TransactionsScreenContent(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -427,6 +433,96 @@ private fun PendingTransactionItem(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun TransactionsScreenShimmer(modifier: Modifier = Modifier) {
+    val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "txShimmer")
+    val alpha by transition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.75f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(900),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "txShimmerAlpha"
+    )
+    val barColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f * (alpha * 2f).coerceAtMost(1f))
+
+    Column(
+        modifier = modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+    ) {
+        // Calendar/heatmap placeholder
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(168.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(barColor)
+        )
+        Spacer(Modifier.height(16.dp))
+
+        // 4 day-group shimmer placeholders
+        repeat(4) { groupIdx ->
+            // Day label
+            Box(
+                modifier = Modifier
+                    .padding(start = 6.dp, top = 6.dp, bottom = 8.dp)
+                    .height(12.dp)
+                    .width((90 + (groupIdx * 12)).dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(barColor)
+            )
+            // 2-3 transaction rows per group, inlined to keep file function count low
+            val rows = if (groupIdx == 0) 3 else 2
+            repeat(rows) { rowIdx ->
+                val titleFraction = 0.40f + (rowIdx % 3) * 0.10f
+                val amountFraction = 0.18f + (rowIdx % 2) * 0.05f
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(horizontal = 12.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(barColor)
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(titleFraction)
+                                .height(13.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(barColor)
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.22f)
+                                .height(10.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(barColor.copy(alpha = barColor.alpha * 0.6f))
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(amountFraction)
+                            .height(13.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(barColor)
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+            }
+            Spacer(Modifier.height(8.dp))
         }
     }
 }

@@ -832,14 +832,8 @@ fun NetIncomeChartBottomSheet(
             .fillMaxWidth()
             .padding(20.dp)
     ) {
-        // Header
-        Text(
-            text = stringResource(Res.string.profit_over_6_months),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-        
+        // (Title is shown by the toolbar — no duplicate header here.)
+
         // Profit Summary Cards Row
         Row(
             modifier = Modifier

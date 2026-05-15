@@ -123,6 +123,7 @@ import androidx.compose.material3.HorizontalDivider
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MeshGradientBackground
 import com.andriybobchuk.mooney.mooney.domain.MonthKey
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
+import com.andriybobchuk.mooney.mooney.domain.parseAmountInput
 import com.andriybobchuk.mooney.mooney.domain.formatToShortString
 import com.andriybobchuk.mooney.mooney.domain.formatToPlainString
 import kotlinx.coroutines.delay
@@ -1120,7 +1121,7 @@ fun TransactionBottomSheet(
                 // Show current account value and calculated difference
                 val reconAccount = selectedAccount
                 val currentValue = reconAccount?.amount ?: 0.0
-                val newValue = newAccountValue.toDoubleOrNull() ?: currentValue
+                val newValue = newAccountValue.parseAmountInput() ?: currentValue
                 val difference = newValue - currentValue
 
                 if (difference != 0.0 && reconAccount != null) {
@@ -1270,7 +1271,7 @@ fun TransactionBottomSheet(
             } // end scrollable Column
 
             // Validation
-            val parsedAmt = (amount ?: "").replace(",", "").toDoubleOrNull() ?: 0.0
+            val parsedAmt = (amount ?: "").parseAmountInput() ?: 0.0
             val validation = remember(parsedAmt, selectedAccount, destinationAccount, selectedTransactionType) {
                 validateUseCase(parsedAmt, selectedTransactionType, selectedAccount, destinationAccount)
             }
@@ -1315,12 +1316,12 @@ fun TransactionBottomSheet(
                     if (isReconciliation && reconAcct != null) {
                         // For reconciliation: use the difference between old and new account values
                         val currentValue = reconAcct.amount
-                        val newValue = newAccountValue.replace(",", "").toDoubleOrNull()
+                        val newValue = newAccountValue.parseAmountInput()
                         parsedAmount = newValue
                         finalAmount = if (newValue != null) kotlin.math.abs(newValue - currentValue) else null
                     } else {
                         // For regular transactions: use the amount field
-                        parsedAmount = amount?.toDoubleOrNull()
+                        parsedAmount = amount?.parseAmountInput()
                         finalAmount = parsedAmount
                     }
                     

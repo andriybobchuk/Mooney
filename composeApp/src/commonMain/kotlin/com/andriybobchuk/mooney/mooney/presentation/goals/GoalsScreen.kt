@@ -80,6 +80,7 @@ import com.andriybobchuk.mooney.mooney.domain.Goal
 import com.andriybobchuk.mooney.mooney.domain.GoalTrackingType
 import com.andriybobchuk.mooney.mooney.domain.GoalWithProgress
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
+import com.andriybobchuk.mooney.mooney.domain.parseAmountInput
 import com.andriybobchuk.mooney.mooney.domain.usecase.GoalCompletionEstimate
 import com.andriybobchuk.mooney.mooney.domain.usecase.MonthProjection
 
@@ -463,7 +464,7 @@ private fun AddEditGoalSheet(
     var showAccountSheet by remember { mutableStateOf(false) }
 
     val isFormValid = title.isNotBlank() &&
-            targetAmount.toDoubleOrNull()?.let { it > 0 } == true &&
+            targetAmount.parseAmountInput()?.let { it > 0 } == true &&
             (trackingType != GoalTrackingType.ACCOUNT || selectedAccountId != null)
 
     MooneyBottomSheet(onDismissRequest = onDismiss) {
@@ -579,7 +580,7 @@ private fun AddEditGoalSheet(
                 text = if (editingGoal != null) "Save" else "Create Goal",
                 variant = ButtonVariant.PRIMARY,
                 onClick = {
-                    val amount = targetAmount.toDoubleOrNull() ?: 0.0
+                    val amount = targetAmount.parseAmountInput() ?: 0.0
                     onSave(title, amount, selectedCurrency, trackingType, selectedAccountId)
                 },
                 enabled = isFormValid,

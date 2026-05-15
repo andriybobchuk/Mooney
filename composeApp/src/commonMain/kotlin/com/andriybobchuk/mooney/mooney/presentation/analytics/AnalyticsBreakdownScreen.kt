@@ -90,7 +90,8 @@ fun AnalyticsBreakdownScreen(
                 ) {
                     CategoryTransactionsSheet(
                         category = category,
-                        transactions = state.transactionsForCategory
+                        transactions = state.transactionsForCategory,
+                        onDismiss = { viewModel.onTransactionsSheetDismissed() }
                     )
                 }
             }

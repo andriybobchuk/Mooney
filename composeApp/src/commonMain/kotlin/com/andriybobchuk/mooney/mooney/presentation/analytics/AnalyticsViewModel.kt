@@ -178,24 +178,20 @@ class AnalyticsViewModel(
     }
 
     fun onCategoryClicked(category: Category) {
-        viewModelScope.launch {
-            val transactions = _state.value.transactionsForMonth.filterNotNull()
-            val previousTransactions = getPreviousMonthTransactionsUseCase(_state.value.selectedMonth)
-
-            val subcategories = calculateSubcategoriesUseCase(category, transactions, baseCurrency, previousTransactions)
-
-            val hasRealSubcategories = subcategories.size > 1 ||
-                (subcategories.size == 1 && subcategories.first().category != category)
-
-            if (hasRealSubcategories) {
-                _state.update {
-                    it.copy(
-                        selectedCategory = category,
-                        subcategories = subcategories,
-                        isSubcategorySheetOpen = true
-                    )
-                }
-            }
+        // Skip the intermediate subcategory sheet — open the transactions list
+        // directly for this category (and all of its subcategories combined).
+        // For categories without subcategories, this is now the only path and
+        // the click is no longer a no-op.
+        val transactions = _state.value.transactionsForMonth.filterNotNull()
+        val matching = transactions.filter { tx ->
+            tx.subcategory.id == category.id || tx.subcategory.parent?.id == category.id
+        }
+        _state.update {
+            it.copy(
+                isTransactionsSheetOpen = true,
+                transactionsSheetCategory = category,
+                transactionsForCategory = matching
+            )
         }
     }
 

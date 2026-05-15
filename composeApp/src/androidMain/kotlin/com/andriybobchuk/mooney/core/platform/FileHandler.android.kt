@@ -55,6 +55,21 @@ actual class FileHandler(private val context: Context) {
         }
     }
     
+    actual suspend fun shareText(text: String): Result<Unit> = withContext(Dispatchers.Main) {
+        try {
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, text)
+            }
+            val chooserIntent = Intent.createChooser(shareIntent, "Share")
+            chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(chooserIntent)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(FileError.SaveFailed(e.message ?: "Failed to share"))
+        }
+    }
+
     actual suspend fun pickAndReadTextFile(): Result<String?> = withContext(Dispatchers.Main) {
         try {
             // Create an intent to pick a file

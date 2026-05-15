@@ -120,6 +120,9 @@ fun AssetsScreen(
     var showSheet by remember { mutableStateOf(false) }
     var editingAsset by remember { mutableStateOf<UiAsset?>(null) }
     var detailAsset by remember { mutableStateOf<UiAsset?>(null) }
+    var showFlexSheet by remember { mutableStateOf(false) }
+    val flexCoroutineScope = rememberCoroutineScope()
+    val fileHandler = org.koin.compose.koinInject<com.andriybobchuk.mooney.core.platform.FileHandler>()
     // Don't treat "still loading" as empty — otherwise we'd flash the empty-state
     // CTA during the brief network rate fetch on cold start.
     val isEmptyState = assets.isEmpty() && !state.isInitialLoading
@@ -133,10 +136,14 @@ fun AssetsScreen(
             Toolbars.Primary(
                 containerColor = Color.Transparent,
                 titleContent = {
+                    @OptIn(ExperimentalFoundationApi::class)
                     Column(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .clickable { viewModel.onNetWorthLabelClick() }
+                            .combinedClickable(
+                                onClick = { viewModel.onNetWorthLabelClick() },
+                                onLongClick = { showFlexSheet = true }
+                            )
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
                         Text(
@@ -329,6 +336,20 @@ fun AssetsScreen(
             onDismiss = { viewModel.dismissPaywall() },
             onSubscribe = { viewModel.onSubscribe() },
             onRestore = { viewModel.onRestorePurchases() }
+        )
+    }
+
+    if (showFlexSheet) {
+        val otherCurrencies = state.userCurrencies.filter { it != GlobalConfig.baseCurrency }
+        NetWorthFlexSheet(
+            totalInBaseCurrency = state.totalAssetsBase - state.totalLiabilitiesBase,
+            baseCurrency = GlobalConfig.baseCurrency,
+            otherCurrencies = otherCurrencies,
+            exchangeRates = state.exchangeRates,
+            onShareClick = { text ->
+                flexCoroutineScope.launch { fileHandler.shareText(text) }
+            },
+            onDismiss = { showFlexSheet = false }
         )
     }
 }

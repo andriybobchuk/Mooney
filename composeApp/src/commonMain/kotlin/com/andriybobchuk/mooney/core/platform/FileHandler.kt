@@ -3,6 +3,7 @@ package com.andriybobchuk.mooney.core.platform
 expect class FileHandler {
     suspend fun saveTextFile(content: String, fileName: String): Result<Unit>
     suspend fun pickAndReadTextFile(): Result<String?>
+    suspend fun shareText(text: String): Result<Unit>
 }
 
 sealed class FileError : Exception() {

@@ -61,7 +61,30 @@ actual class FileHandler {
             }
         }
     
-    actual suspend fun pickAndReadTextFile(): Result<String?> = 
+    actual suspend fun shareText(text: String): Result<Unit> =
+        suspendCancellableCoroutine { continuation ->
+            try {
+                val nsText = NSString.create(string = text)
+                val activityViewController = UIActivityViewController(
+                    activityItems = listOf(nsText),
+                    applicationActivities = null
+                )
+                val rootViewController = UIApplication.sharedApplication.keyWindow?.rootViewController
+                if (rootViewController == null) {
+                    continuation.resume(Result.failure(FileError.SaveFailed("No active window")))
+                    return@suspendCancellableCoroutine
+                }
+                rootViewController.presentViewController(
+                    activityViewController,
+                    animated = true,
+                    completion = { continuation.resume(Result.success(Unit)) }
+                )
+            } catch (e: Exception) {
+                continuation.resume(Result.failure(FileError.SaveFailed(e.message ?: "Failed to share")))
+            }
+        }
+
+    actual suspend fun pickAndReadTextFile(): Result<String?> =
         suspendCancellableCoroutine { continuation ->
             val documentPicker = UIDocumentPickerViewController(
                 forOpeningContentTypes = listOf(UTTypeJSON, UTTypePlainText)

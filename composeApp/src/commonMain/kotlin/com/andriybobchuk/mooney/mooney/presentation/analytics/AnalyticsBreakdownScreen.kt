@@ -91,6 +91,7 @@ fun AnalyticsBreakdownScreen(
                     CategoryTransactionsSheet(
                         category = category,
                         transactions = state.transactionsForCategory,
+                        exchangeRates = state.exchangeRates,
                         onDismiss = { viewModel.onTransactionsSheetDismissed() }
                     )
                 }

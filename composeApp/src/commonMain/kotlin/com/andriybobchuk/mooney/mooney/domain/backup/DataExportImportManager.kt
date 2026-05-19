@@ -52,7 +52,8 @@ class DataExportImportManager(
         val subcategoryId: String,
         val amount: Double,
         val accountId: Int,
-        val date: String
+        val date: String,
+        val destinationAmount: Double? = null
     )
 
     @Serializable
@@ -255,7 +256,7 @@ class DataExportImportManager(
 
             // 5. Transactions
             export.transactions.forEach { tx ->
-                transactionDao.upsert(TransactionEntity(0, tx.subcategoryId, tx.amount, tx.accountId, tx.date))
+                transactionDao.upsert(TransactionEntity(0, tx.subcategoryId, tx.amount, tx.accountId, tx.date, tx.destinationAmount))
                 counts = counts.copy(transactions = counts.transactions + 1)
             }
 
@@ -375,7 +376,7 @@ class DataExportImportManager(
 
     // region Entity to Export mappers
 
-    private fun TransactionEntity.toExport() = TransactionExport(id, subcategoryId, amount, accountId, date)
+    private fun TransactionEntity.toExport() = TransactionExport(id, subcategoryId, amount, accountId, date, destinationAmount)
 
     private fun AccountEntity.toExport() = AccountExport(id, title, amount, currency, emoji, assetCategory, isPrimary, isLiability)
 

@@ -458,6 +458,21 @@ val MIGRATION_13_14 = object : Migration(13, 14) {
     }
 }
 
+/**
+ * Migration from version 15 to 16
+ * Adds destinationAmount column to TransactionEntity for cross-currency transfers.
+ * Nullable — old transfers stay valid; same-currency transfers leave it null.
+ */
+val MIGRATION_15_16 = object : Migration(15, 16) {
+    override fun migrate(connection: SQLiteConnection) {
+        if (!hasColumn(connection, "TransactionEntity", "destinationAmount")) {
+            connection.execSQL(
+                "ALTER TABLE TransactionEntity ADD COLUMN destinationAmount REAL"
+            )
+        }
+    }
+}
+
 val MIGRATION_14_15 = object : Migration(14, 15) {
     override fun migrate(connection: SQLiteConnection) {
         connection.execSQL("""

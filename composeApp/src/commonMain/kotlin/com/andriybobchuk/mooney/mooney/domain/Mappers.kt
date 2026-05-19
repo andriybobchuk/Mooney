@@ -20,5 +20,6 @@ fun Transaction.toEntity(): TransactionEntity = TransactionEntity(
     subcategoryId = subcategory.id,
     amount = amount,
     accountId = account.id,
-    date = date.toString()
+    date = date.toString(),
+    destinationAmount = destinationAmount
 )

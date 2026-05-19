@@ -48,7 +48,9 @@ data class TransactionState(
     val isLoading: Boolean = false,
     val isError: Boolean = false,
     /** True until the first transactions/accounts emission lands. Drives the shimmer. */
-    val isInitialLoading: Boolean = true
+    val isInitialLoading: Boolean = true,
+    /** User-defined order of top-level transaction categories (ID list). Empty = use natural order. */
+    val transactionCategoryOrder: List<String> = emptyList()
 )
 
 @Suppress("LongParameterList")
@@ -71,8 +73,11 @@ class TransactionViewModel(
     private val analyticsTracker: AnalyticsTracker,
     private val preferencesRepository: com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository,
     private val assetCategoryDao: com.andriybobchuk.mooney.core.data.database.AssetCategoryDao,
+    private val categoryDao: com.andriybobchuk.mooney.core.data.database.CategoryDao,
+    private val coreRepository: com.andriybobchuk.mooney.mooney.domain.CoreRepository,
     private val manageCategoryExpansionUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageCategoryExpansionUseCase,
-    private val manageAssetCategoryOrderUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageAssetCategoryOrderUseCase
+    private val manageAssetCategoryOrderUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageAssetCategoryOrderUseCase,
+    private val manageTransactionCategoryOrderUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.ManageTransactionCategoryOrderUseCase
 ) : ViewModel() {
 
     private var observeTransactionsJob: Job? = null
@@ -124,6 +129,19 @@ class TransactionViewModel(
         observePendingTransactions()
         observeBaseCurrencyChanges()
         observeTaxPreference()
+        observeTransactionCategoryOrder()
+    }
+
+    private fun observeTransactionCategoryOrder() {
+        manageTransactionCategoryOrderUseCase.getCategoryOrder().onEach { order ->
+            _uiState.update { it.copy(transactionCategoryOrder = order) }
+        }.launchIn(viewModelScope)
+    }
+
+    fun updateTransactionCategoryOrder(orderedCategoryIds: List<String>) {
+        viewModelScope.launch {
+            manageTransactionCategoryOrderUseCase.saveCategoryOrder(orderedCategoryIds)
+        }
     }
 
     private fun observeTaxPreference() {
@@ -190,8 +208,15 @@ class TransactionViewModel(
                     getAccountsUseCase(),
                     assetCategoryDao.getAll(),
                     manageAssetCategoryOrderUseCase.getCategoryOrder(),
-                    manageCategoryExpansionUseCase.getExpandedCategories()
-                ) { accounts, assetCategories, categoryOrder, expandedCategories ->
+                    manageCategoryExpansionUseCase.getExpandedCategories(),
+                    // Tick when categories change in DB — without this, adding a
+                    // subcategory from the Categories screen didn't refresh the
+                    // transaction sheet's category picker until app restart.
+                    categoryDao.getAll()
+                ) { accounts, assetCategories, categoryOrder, expandedCategories, _ ->
+                    // Rebuild the in-memory category cache before reading from it,
+                    // so the new/renamed subcategory shows up immediately.
+                    coreRepository.reloadCategories()
                     val categories = getCategoriesUseCase()
                     val nonLiabilityAccounts = convertAccountsToUiUseCase(accounts)
                         .filterNotNull()

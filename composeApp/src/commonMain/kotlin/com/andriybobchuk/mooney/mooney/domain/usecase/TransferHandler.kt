@@ -29,41 +29,43 @@ class TransferHandler(
     }
 
     /**
-     * Applies transfer effect: subtract from source, add to destination
+     * Applies transfer effect: subtract from source (in source currency), add to
+     * destination (in destination currency). For cross-currency transfers,
+     * [Transaction.destinationAmount] holds the destination-side amount converted
+     * at the time of transfer. For same-currency transfers it's null and we
+     * use [Transaction.amount] for both sides.
      */
     suspend fun applyTransferEffect(transaction: Transaction) {
         val sourceAccount = repository.getAccountById(transaction.account.id)
-        
+
         // Extract destination account ID from category ID (format: "transfer_to_X")
         val destinationAccountId = transaction.subcategory.id.removePrefix("transfer_to_").toIntOrNull()
         val destinationAccount = destinationAccountId?.let { repository.getAccountById(it) }
-        
+
         if (sourceAccount != null && destinationAccount != null) {
             // Prevent same account transfers (edge case protection)
             if (sourceAccount.id != destinationAccount.id) {
-                // Update source account (subtract)
+                val credit = transaction.destinationAmount ?: transaction.amount
                 repository.upsertAccount(sourceAccount.copy(amount = sourceAccount.amount - transaction.amount))
-                // Update destination account (add)
-                repository.upsertAccount(destinationAccount.copy(amount = destinationAccount.amount + transaction.amount))
+                repository.upsertAccount(destinationAccount.copy(amount = destinationAccount.amount + credit))
             }
             // If same account transfer, do nothing (transaction is still saved but no balance changes)
         }
     }
 
     /**
-     * Reverses transfer effect: add back to source, subtract from destination
+     * Reverses transfer effect using the same per-side amounts that were applied.
      */
     suspend fun reverseTransferEffect(transaction: Transaction) {
         val sourceAccount = repository.getAccountById(transaction.account.id)
         val destinationAccountId = transaction.subcategory.id.removePrefix("transfer_to_").toIntOrNull()
         val destinationAccount = destinationAccountId?.let { repository.getAccountById(it) }
-        
+
         if (sourceAccount != null && destinationAccount != null) {
-            // Prevent same account transfer reversal (edge case protection)
             if (sourceAccount.id != destinationAccount.id) {
-                // Reverse: add back to source, subtract from destination
+                val credit = transaction.destinationAmount ?: transaction.amount
                 repository.upsertAccount(sourceAccount.copy(amount = sourceAccount.amount + transaction.amount))
-                repository.upsertAccount(destinationAccount.copy(amount = destinationAccount.amount - transaction.amount))
+                repository.upsertAccount(destinationAccount.copy(amount = destinationAccount.amount - credit))
             }
         }
     }

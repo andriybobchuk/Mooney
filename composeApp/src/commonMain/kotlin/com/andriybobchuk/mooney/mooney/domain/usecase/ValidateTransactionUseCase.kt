@@ -22,9 +22,9 @@ class ValidateTransactionUseCase {
 
         if (transactionType == CategoryType.TRANSFER) {
             if (destinationAccount == null) return TransactionValidation.Error("Select a destination account")
-            if (sourceAccount.currency != destinationAccount.currency) {
-                return TransactionValidation.Error("Accounts are in different currencies")
-            }
+            // Cross-currency transfers are now allowed — the source amount is
+            // converted to the destination currency using today's exchange rate
+            // (or the user's manual override) and persisted on the transaction.
             if (amount > sourceAccount.amount) {
                 return TransactionValidation.Warning("Balance on ${sourceAccount.title} will go negative")
             }

@@ -37,7 +37,16 @@ data class Transaction(
     val subcategory: Category,
     val amount: Double,
     val account: Account,
-    val date: LocalDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+    val date: LocalDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
+    /**
+     * For cross-currency transfers only: the amount actually credited to the
+     * destination account, in the destination account's currency. Computed at
+     * transfer time using the live exchange rate, then frozen on the
+     * transaction so future edits/reversals stay consistent even after rates
+     * change. Null for non-transfers and for same-currency transfers (where
+     * [amount] applies to both sides).
+     */
+    val destinationAmount: Double? = null
 )
 
 data class Account(

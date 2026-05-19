@@ -31,6 +31,7 @@ import com.andriybobchuk.mooney.mooney.presentation.settings.SettingsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.onboarding.OnboardingViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.qualifier.named
@@ -144,6 +145,7 @@ val sharedModule = module {
     // Asset Use Cases
     singleOf(::ManageAssetCategoryOrderUseCase)
     singleOf(::ManageCategoryExpansionUseCase)
+    singleOf(::ManageTransactionCategoryOrderUseCase)
 
     // Settings Use Cases
     singleOf(::GetUserPreferencesUseCase)
@@ -191,7 +193,34 @@ val sharedModule = module {
     singleOf(::DefaultAnalyticsTracker).bind<AnalyticsTracker>()
 
     viewModelOf(::AssetsViewModel)
-    viewModelOf(::TransactionViewModel)
+    // Manual registration — TransactionViewModel has too many params for `viewModelOf`.
+    viewModel {
+        TransactionViewModel(
+            getTransactionsUseCase = get(),
+            addTransactionUseCase = get(),
+            deleteTransactionUseCase = get(),
+            getAccountsUseCase = get(),
+            getCategoriesUseCase = get(),
+            calculateTransactionTotalUseCase = get(),
+            calculateDailyTotalUseCase = get(),
+            convertAccountsToUiUseCase = get(),
+            currencyManagerUseCase = get(),
+            getPinnedCategoriesUseCase = get(),
+            filterTransactionsByMonthUseCase = get(),
+            calculateDailyTotalsMapUseCase = get(),
+            pendingTransactionDao = get(),
+            acceptPendingTransactionUseCase = get(),
+            createRecurringFromTransactionUseCase = get(),
+            analyticsTracker = get(),
+            preferencesRepository = get(),
+            assetCategoryDao = get(),
+            categoryDao = get(),
+            coreRepository = get(),
+            manageCategoryExpansionUseCase = get(),
+            manageAssetCategoryOrderUseCase = get(),
+            manageTransactionCategoryOrderUseCase = get()
+        )
+    }
     viewModelOf(::AnalyticsViewModel)
     viewModelOf(::ExchangeViewModel)
     viewModelOf(::GoalsViewModel)

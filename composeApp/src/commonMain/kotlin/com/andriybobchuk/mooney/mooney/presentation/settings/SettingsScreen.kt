@@ -707,6 +707,7 @@ fun SettingsScreen(
         PaywallSheet(
             isLoading = state.isPurchasing,
             errorMessage = state.purchaseError,
+            trigger = com.andriybobchuk.mooney.core.premium.PaywallTrigger.SETTINGS_BANNER,
             onDismiss = { viewModel.dismissPaywall() },
             onSubscribe = { viewModel.onSubscribe() },
             onRestore = { viewModel.onRestorePurchases() }
@@ -754,6 +755,7 @@ fun SettingsScreen(
                             PaywallSheet(
                                 isLoading = state.isPurchasing,
                                 errorMessage = state.purchaseError,
+                                trigger = com.andriybobchuk.mooney.core.premium.PaywallTrigger.SETTINGS_BANNER,
                                 onDismiss = { showPaywallFromBanner = false },
                                 onSubscribe = { viewModel.onSubscribe() },
                                 onRestore = { viewModel.onRestorePurchases() }

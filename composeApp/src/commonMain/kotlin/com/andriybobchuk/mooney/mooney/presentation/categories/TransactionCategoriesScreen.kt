@@ -66,6 +66,7 @@ fun TransactionCategoriesScreen(
         PaywallSheet(
             isLoading = state.isPurchasing,
             errorMessage = state.purchaseError,
+            trigger = com.andriybobchuk.mooney.core.premium.PaywallTrigger.CATEGORY_LIMIT,
             onDismiss = { viewModel.onAction(TransactionCategoriesAction.DismissPaywall) },
             onSubscribe = { viewModel.onAction(TransactionCategoriesAction.Subscribe) },
             onRestore = { viewModel.onAction(TransactionCategoriesAction.RestorePurchases) }

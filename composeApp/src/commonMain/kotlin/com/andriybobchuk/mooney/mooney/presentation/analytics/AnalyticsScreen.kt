@@ -268,6 +268,7 @@ fun AnalyticsScreen(
                         CategoryTransactionsSheet(
                             category = category,
                             transactions = state.transactionsForCategory,
+                            exchangeRates = state.exchangeRates,
                             onDismiss = { viewModel.onTransactionsSheetDismissed() }
                         )
                     }
@@ -575,6 +576,7 @@ fun SubcategoryBottomSheet(
 fun CategoryTransactionsSheet(
     category: com.andriybobchuk.mooney.mooney.domain.Category,
     transactions: List<com.andriybobchuk.mooney.mooney.domain.Transaction>,
+    exchangeRates: com.andriybobchuk.mooney.mooney.domain.ExchangeRates,
     onDismiss: () -> Unit = {}
 ) {
     Column(
@@ -632,12 +634,20 @@ fun CategoryTransactionsSheet(
         // Group by subcategory ID. Each group gets a header with name + count +
         // total; tapping expands it to reveal that group's transactions sorted
         // by date.
+        // Convert every transaction's amount to the base currency before
+        // summing — otherwise a USD salary of 6300 + a PLN salary of 100 sums
+        // to 6400 and gets rendered with the base-currency symbol, which is
+        // visibly wrong.
+        val baseCurrency = GlobalConfig.baseCurrency
         val groups: List<Triple<com.andriybobchuk.mooney.mooney.domain.Category, Double, List<com.andriybobchuk.mooney.mooney.domain.Transaction>>> =
             transactions
                 .groupBy { it.subcategory.id }
                 .map { (_, txs) ->
                     val first = txs.first().subcategory
-                    Triple(first, txs.sumOf { it.amount }, txs.sortedByDescending { it.date })
+                    val totalInBase = txs.sumOf {
+                        exchangeRates.convert(it.amount, it.account.currency, baseCurrency)
+                    }
+                    Triple(first, totalInBase, txs.sortedByDescending { it.date })
                 }
                 .sortedByDescending { it.second }
 

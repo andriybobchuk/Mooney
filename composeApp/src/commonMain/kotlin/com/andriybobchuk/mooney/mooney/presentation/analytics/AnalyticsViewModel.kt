@@ -37,6 +37,9 @@ data class AnalyticsState(
     val isTransactionsSheetOpen: Boolean = false,
     val transactionsSheetCategory: Category? = null,
     val transactionsForCategory: List<Transaction> = emptyList(),
+    /** Snapshot of current rates so UI can convert transaction amounts to base currency. */
+    val exchangeRates: com.andriybobchuk.mooney.mooney.domain.ExchangeRates =
+        com.andriybobchuk.mooney.mooney.domain.ExchangeRates(emptyMap()),
     /** Lifetime view loads lazily — these track its state. */
     val lifetimeMetrics: List<MonthlyMetricSnapshot> = emptyList(),
     val isLifetimeLoading: Boolean = false,
@@ -96,11 +99,14 @@ class AnalyticsViewModel(
             try {
                 val analyticsResult = calculateMonthlyAnalyticsUseCase(start, end, baseCurrency)
 
+                val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
+
                 _state.update {
                     it.copy(
                         transactionsForMonth = analyticsResult.transactions,
                         totalRevenuePlnForMonth = analyticsResult.totalRevenue,
                         topCategories = analyticsResult.topCategories,
+                        exchangeRates = exchangeRates,
                         isLoading = false
                     )
                 }
@@ -109,8 +115,6 @@ class AnalyticsViewModel(
                 val previousStart = previousMonth.firstDay()
                 val previousEnd = previousMonth.firstDayOfNextMonth()
                 val previousAnalytics = calculateMonthlyAnalyticsUseCase(previousStart, previousEnd, baseCurrency)
-
-                val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
                 val metrics = calculateAnalyticsMetricsUseCase(
                     currentRevenue = analyticsResult.totalRevenue,
                     currentExpenses = analyticsResult.totalExpenses,

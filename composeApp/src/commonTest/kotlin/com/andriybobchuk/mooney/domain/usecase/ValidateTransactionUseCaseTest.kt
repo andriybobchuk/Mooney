@@ -57,12 +57,15 @@ class ValidateTransactionUseCaseTest {
     }
 
     @Test
-    fun `transfer with different currencies returns error`() {
-        val source = account(currency = Currency.PLN)
-        val dest = account(id = 2, title = "USD Account", currency = Currency.USD)
+    fun `transfer between different currencies is allowed`() {
+        // Cross-currency transfers are now first-class — the source amount is
+        // converted to the destination currency at the rate the user sees (or
+        // overrides) in the transfer form, and both amounts are persisted on
+        // the transaction.
+        val source = account(amount = 500.0, currency = Currency.PLN)
+        val dest = account(id = 2, title = "USD Account", amount = 100.0, currency = Currency.USD)
         val result = sut(100.0, CategoryType.TRANSFER, source, dest)
-        assertIs<TransactionValidation.Error>(result)
-        assertEquals("Accounts are in different currencies", result.message)
+        assertIs<TransactionValidation.Valid>(result)
     }
 
     @Test

@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package com.andriybobchuk.mooney.mooney.presentation.transaction
 
 import kotlin.coroutines.cancellation.CancellationException
@@ -140,6 +142,9 @@ import org.jetbrains.compose.resources.stringResource
 import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.*
 import org.koin.compose.viewmodel.koinViewModel
+import sh.calvin.reorderable.ReorderableCollectionItemScope
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -313,6 +318,8 @@ fun TransactionsScreen(
                     expandedCategories = state.expandedCategories,
                     onToggleAccountCategory = viewModel::toggleAccountCategoryExpansion,
                     preselectedCategory = preselectedCategory,
+                    transactionCategoryOrder = state.transactionCategoryOrder,
+                    onTransactionCategoryReorder = viewModel::updateTransactionCategoryOrder,
                     onAdd = { transaction, schedule ->
                         isBottomSheetOpen = false
                         transactionToEdit = null
@@ -1000,6 +1007,20 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
                     CategoryType.TRANSFER -> MaterialTheme.colorScheme.onSurface // White in dark mode, black in light mode
                 }
             )
+            // Cross-currency transfer: show "→ X DST" under the source amount so
+            // both legs are visible at a glance.
+            if (transaction.subcategory.type == CategoryType.TRANSFER && transaction.destinationAmount != null) {
+                val destinationAccountId = transaction.subcategory.id.removePrefix("transfer_to_").toIntOrNull()
+                val destinationCurrency = accounts.find { it?.id == destinationAccountId }?.let { Currency.valueOf(it.originalCurrency.name) }
+                if (destinationCurrency != null && destinationCurrency != transaction.account.currency) {
+                    Text(
+                        "→ ${transaction.destinationAmount.formatWithCommas()} ${destinationCurrency.symbol}",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    )
+                }
+            }
             Text(
                 transaction.account.title,
                 style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -1030,11 +1051,14 @@ fun TransactionBottomSheet(
     preselectedCategory: Category? = null,
     forceRecurringEnabled: Boolean = false,
     initialRecurringSchedule: RecurringSchedule? = null,
+    transactionCategoryOrder: List<String> = emptyList(),
+    onTransactionCategoryReorder: (List<String>) -> Unit = {},
     onAdd: (Transaction, RecurringSchedule?) -> Unit = { _, _ -> },
     onUpdate: (Transaction, RecurringSchedule?) -> Unit = { _, _ -> },
     onEditCategories: () -> Unit = {},
     validateUseCase: ValidateTransactionUseCase = koinInject(),
     preferencesRepository: com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository = koinInject(),
+    currencyManagerUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase = koinInject(),
 ) {
     val isEditMode = transactionToEdit != null
 
@@ -1053,7 +1077,16 @@ fun TransactionBottomSheet(
     } else null
     
     var destinationAccount by remember { mutableStateOf(initialDestinationAccount) }
-    
+
+    // Cross-currency transfer state.
+    // - destinationAmountText: what's shown in the editable destination-amount field.
+    // - userOverrodeDestination: flips to true the first time the user types in
+    //   the destination field, so we stop auto-recomputing from the source amount
+    //   and respect their manual rate.
+    val initialDestText = transactionToEdit?.destinationAmount?.formatToPlainString() ?: ""
+    var destinationAmountText by remember { mutableStateOf(initialDestText) }
+    var userOverrodeDestination by remember { mutableStateOf(transactionToEdit?.destinationAmount != null) }
+
     // Transaction type state (Expense, Income, or Transfer)
     var selectedTransactionType by remember { 
         mutableStateOf(
@@ -1238,6 +1271,20 @@ fun TransactionBottomSheet(
                     currencySymbol = currencySymbol,
                     placeholder = "0.00",
                     focusRequester = focusRequester
+                )
+                // Cross-currency transfer — editable destination amount.
+                // Auto-fills from today's rate unless the user overrides it
+                // (e.g., to enter the bank's actual real-world rate).
+                CrossCurrencyTransferField(
+                    visible = selectedTransactionType == CategoryType.TRANSFER,
+                    sourceCurrency = selectedAccount?.currency,
+                    destinationCurrency = destinationAccount?.currency,
+                    sourceAmountText = amount,
+                    destinationAmountText = destinationAmountText,
+                    onDestinationAmountChange = { destinationAmountText = it },
+                    userOverrode = userOverrodeDestination,
+                    onUserOverrideChange = { userOverrodeDestination = it },
+                    rates = currencyManagerUseCase.getCurrentExchangeRates()
                 )
             }
 
@@ -1446,6 +1493,21 @@ fun TransactionBottomSheet(
 
                     @Suppress("ComplexCondition")
                     if (isValid && acct != null && fCat != null && fAmt != null) {
+                        // Cross-currency transfer: use the destination-amount the
+                        // user actually saw in the editable field (either today's
+                        // auto-converted rate or their manual override). Falls
+                        // back to a fresh conversion if the field happens to be
+                        // empty for any reason.
+                        val computedDestinationAmount: Double? = if (
+                            selectedTransactionType == CategoryType.TRANSFER &&
+                            destAcct != null &&
+                            destAcct.currency != acct.currency
+                        ) {
+                            destinationAmountText.parseAmountInput()
+                                ?: currencyManagerUseCase.getCurrentExchangeRates()
+                                    .convert(fAmt, acct.currency, destAcct.currency)
+                        } else null
+
                         val transaction = Transaction(
                             id = transactionToEdit?.id ?: 0,
                             amount = fAmt,
@@ -1462,7 +1524,8 @@ fun TransactionBottomSheet(
                             } else {
                                 currentSelectedSubCategory ?: fCat
                             },
-                            date = selectedDate
+                            date = selectedDate,
+                            destinationAmount = computedDestinationAmount
                         )
                         
                         val schedule = if (isRecurringEnabled) recurringSchedule else null
@@ -1505,6 +1568,8 @@ fun TransactionBottomSheet(
             categories = categories,
             initialSelectedCategory = currentSelectedCategory,
             initialSelectedSubCategory = currentSelectedSubCategory,
+            categoryOrder = transactionCategoryOrder,
+            onReorder = onTransactionCategoryReorder,
             onCategorySelected = { category, subCategory ->
                 currentSelectedCategory = category
                 currentSelectedSubCategory = subCategory
@@ -1802,6 +1867,99 @@ data class CalendarData(
 )
 
 
+/**
+ * Editable destination amount for cross-currency transfers. Auto-fills from the
+ * live rate whenever the user hasn't manually overridden it. Once the user
+ * edits the field, we stop overwriting their value.
+ *
+ * Renders nothing unless: visible is true, both currencies known and different.
+ */
+@Composable
+private fun CrossCurrencyTransferField(
+    visible: Boolean,
+    sourceCurrency: Currency?,
+    destinationCurrency: Currency?,
+    sourceAmountText: String?,
+    destinationAmountText: String,
+    onDestinationAmountChange: (String) -> Unit,
+    userOverrode: Boolean,
+    onUserOverrideChange: (Boolean) -> Unit,
+    rates: com.andriybobchuk.mooney.mooney.domain.ExchangeRates
+) {
+    if (!visible) return
+    if (sourceCurrency == null || destinationCurrency == null) return
+    if (sourceCurrency == destinationCurrency) return
+
+    val sourceAmount = sourceAmountText?.parseAmountInput()
+    val perUnit = rates.convert(1.0, sourceCurrency, destinationCurrency)
+
+    // Auto-recompute the destination value while user hasn't typed in it.
+    androidx.compose.runtime.LaunchedEffect(sourceAmountText, sourceCurrency, destinationCurrency, userOverrode) {
+        if (!userOverrode) {
+            val computed = if (sourceAmount != null && sourceAmount > 0.0) {
+                rates.convert(sourceAmount, sourceCurrency, destinationCurrency).formatToPlainString()
+            } else ""
+            if (computed != destinationAmountText) onDestinationAmountChange(computed)
+        }
+    }
+
+    Spacer(modifier = Modifier.height(10.dp))
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .padding(horizontal = 14.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text = "Destination amount (${destinationCurrency.symbol})",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            androidx.compose.foundation.text.BasicTextField(
+                value = destinationAmountText,
+                onValueChange = { newValue ->
+                    onUserOverrideChange(true)
+                    onDestinationAmountChange(newValue)
+                },
+                singleLine = true,
+                textStyle = MaterialTheme.typography.titleMedium.copy(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold
+                ),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = destinationCurrency.symbol,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+            )
+            if (userOverrode) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Reset",
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable {
+                        onUserOverrideChange(false)
+                    }
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        val hintLabel = if (userOverrode) "Custom rate" else "Today's rate"
+        Text(
+            text = "$hintLabel · 1 ${sourceCurrency.symbol} = ${perUnit.formatWithCommas()} ${destinationCurrency.symbol}",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+        )
+    }
+}
+
 @Composable
 private fun AmountHeroField(
     value: String,
@@ -2093,6 +2251,8 @@ fun CategorySelectionBottomSheet(
     initialSelectedCategory: Category?,
     initialSelectedSubCategory: Category?,
     onCategorySelected: (Category, Category?) -> Unit,
+    categoryOrder: List<String> = emptyList(),
+    onReorder: (List<String>) -> Unit = {},
     onEditCategories: () -> Unit = {}
 ) {
     var selectedTabIndex by remember { 
@@ -2162,34 +2322,68 @@ fun CategorySelectionBottomSheet(
 
             Spacer(Modifier.height(16.dp))
 
-            val filteredCategories by remember {
+            // Filtered + ordered list. Categories in `categoryOrder` come first
+            // (in saved order); the rest preserve their natural schema order.
+            val filteredCategories by remember(selectedTabIndex, categories, categoryOrder) {
                 derivedStateOf {
                     val categoryType = if (selectedTabIndex == 0) CategoryType.EXPENSE else CategoryType.INCOME
-                    categories.filter {
-                        it.isGeneralCategory() && it.type == categoryType
-                    }
+                    val pool = categories.filter { it.isGeneralCategory() && it.type == categoryType }
+                    val orderIndex = categoryOrder.withIndex().associate { (i, id) -> id to i }
+                    pool.sortedWith(
+                        compareBy<Category>(
+                            { orderIndex[it.id] ?: Int.MAX_VALUE },
+                            { pool.indexOf(it) }
+                        )
+                    )
+                }
+            }
+
+            // Local mutable list for drag interactions; persists upstream on drop.
+            val orderedIds = remember(filteredCategories) {
+                androidx.compose.runtime.mutableStateListOf<String>().apply {
+                    addAll(filteredCategories.map { it.id })
+                }
+            }
+
+            val lazyListState = androidx.compose.foundation.lazy.rememberLazyListState()
+            val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
+                val fromKey = from.key as? String ?: return@rememberReorderableLazyListState
+                val toKey = to.key as? String ?: return@rememberReorderableLazyListState
+                val fromIdx = orderedIds.indexOf(fromKey)
+                val toIdx = orderedIds.indexOf(toKey)
+                if (fromIdx >= 0 && toIdx >= 0) {
+                    val moved = orderedIds.removeAt(fromIdx)
+                    orderedIds.add(toIdx, moved)
                 }
             }
 
             LazyColumn(
+                state = lazyListState,
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                items(filteredCategories) { category ->
-                    CategoryCard(
-                        category = category,
-                        isSelected = category.id == initialSelectedCategory?.id,
-                        onClick = {
-                            val hasSubCategories = categories.any {
-                                it.isSubCategory() && it.parent?.id == category.id
-                            }
-                            if (hasSubCategories) {
-                                selectedParentCategory = category
-                                showSubCategorySheet = true
-                            } else {
-                                onCategorySelected(category, null)
-                            }
+                items(items = orderedIds, key = { it }) { id ->
+                    val category = filteredCategories.find { it.id == id } ?: return@items
+                    ReorderableItem(reorderableState, key = id) { isDragging ->
+                        val hasSubCategories = categories.any {
+                            it.isSubCategory() && it.parent?.id == category.id
                         }
-                    )
+                        ReorderableCategoryRow(
+                            category = category,
+                            isSelected = category.id == initialSelectedCategory?.id,
+                            isDragging = isDragging,
+                            dragHandleModifier = Modifier.draggableHandle(
+                                onDragStopped = { onReorder(orderedIds.toList()) }
+                            ),
+                            onClick = {
+                                if (hasSubCategories) {
+                                    selectedParentCategory = category
+                                    showSubCategorySheet = true
+                                } else {
+                                    onCategorySelected(category, null)
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -2254,6 +2448,76 @@ fun CategoryCard(
                     .size(8.dp)
                     .background(MaterialTheme.colorScheme.primary, CircleShape)
             )
+        }
+    }
+}
+
+/**
+ * Reorderable variant of [CategoryCard]. Drag handle on the right; tap anywhere
+ * else still selects the category. The handle uses the `draggableHandle` modifier
+ * from sh.calvin.reorderable.
+ */
+@Composable
+private fun ReorderableCollectionItemScope.ReorderableCategoryRow(
+    category: Category,
+    isSelected: Boolean,
+    isDragging: Boolean,
+    dragHandleModifier: Modifier,
+    onClick: () -> Unit
+) {
+    val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+    else MaterialTheme.colorScheme.surfaceVariant
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(containerColor)
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = category.emoji ?: "",
+            fontSize = 22.sp,
+            modifier = Modifier.padding(end = 12.dp)
+        )
+        Text(
+            text = category.title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (isSelected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        if (isSelected) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .background(MaterialTheme.colorScheme.primary, CircleShape)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+        }
+        // Drag handle — three horizontal lines, only this region triggers drag.
+        Box(
+            modifier = dragHandleModifier
+                .size(36.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                repeat(3) {
+                    Box(
+                        modifier = Modifier
+                            .width(16.dp)
+                            .height(2.dp)
+                            .background(
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                RoundedCornerShape(1.dp)
+                            )
+                    )
+                }
+            }
         }
     }
 }

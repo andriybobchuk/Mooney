@@ -36,7 +36,10 @@ data class TransactionEntity(
     val subcategoryId: String,
     val amount: Double,
     val accountId: Int,
-    val date: String
+    val date: String,
+    // For cross-currency transfers: the destination account credit amount.
+    // Null = legacy / same-currency transfer (use `amount` for both sides).
+    val destinationAmount: Double? = null
 )
 
 @Entity(tableName = "category_usage")

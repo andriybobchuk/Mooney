@@ -45,7 +45,8 @@ fun TransactionEntity.toDomain(
     subcategory = subcategory,
     amount = amount,
     account = account,
-    date = LocalDate.parse(date)
+    date = LocalDate.parse(date),
+    destinationAmount = destinationAmount
 )
 
 fun GoalEntity.toDomain(): Goal = Goal(

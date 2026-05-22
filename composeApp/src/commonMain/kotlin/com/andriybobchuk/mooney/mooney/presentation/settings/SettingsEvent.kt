@@ -16,4 +16,7 @@ sealed class SettingsEvent {
     ) : SettingsEvent()
     
     data class ShowError(val message: String) : SettingsEvent()
+
+    /** Dev option — re-runs the onboarding flow to make it testable in dev builds. */
+    data object ReplayOnboarding : SettingsEvent()
 }

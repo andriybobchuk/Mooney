@@ -122,8 +122,11 @@ fun AssetsScreen(
     var editingAsset by remember { mutableStateOf<UiAsset?>(null) }
     var detailAsset by remember { mutableStateOf<UiAsset?>(null) }
     var showFlexSheet by remember { mutableStateOf(false) }
+    var showReviewPrePrompt by remember { mutableStateOf(false) }
+    var showReviewFeedback by remember { mutableStateOf(false) }
     val flexCoroutineScope = rememberCoroutineScope()
     val fileHandler = org.koin.compose.koinInject<com.andriybobchuk.mooney.core.platform.FileHandler>()
+    val requestReviewUseCase = org.koin.compose.koinInject<com.andriybobchuk.mooney.core.review.RequestReviewUseCase>()
     // Don't treat "still loading" as empty — otherwise we'd flash the empty-state
     // CTA during the brief network rate fetch on cold start.
     val isEmptyState = assets.isEmpty() && !state.isInitialLoading
@@ -349,9 +352,41 @@ fun AssetsScreen(
             otherCurrencies = otherCurrencies,
             exchangeRates = state.exchangeRates,
             onShareClick = { text ->
-                flexCoroutineScope.launch { fileHandler.shareText(text) }
+                flexCoroutineScope.launch {
+                    fileHandler.shareText(text)
+                    // Sharing the net-worth flex is the strongest positive signal
+                    // we get — try the review pre-prompt if the user is gated in.
+                    if (requestReviewUseCase.shouldShowPrePrompt()) {
+                        showReviewPrePrompt = true
+                    }
+                }
             },
             onDismiss = { showFlexSheet = false }
+        )
+    }
+
+    if (showReviewPrePrompt) {
+        com.andriybobchuk.mooney.core.review.ReviewPrePromptDialog(
+            onPositive = {
+                showReviewPrePrompt = false
+                flexCoroutineScope.launch { requestReviewUseCase.confirmReviewRequested() }
+            },
+            onNegative = {
+                showReviewPrePrompt = false
+                flexCoroutineScope.launch { requestReviewUseCase.markPromptShown() }
+                showReviewFeedback = true
+            },
+            onDismiss = {
+                showReviewPrePrompt = false
+                flexCoroutineScope.launch { requestReviewUseCase.markPromptShown() }
+            }
+        )
+    }
+
+    if (showReviewFeedback) {
+        com.andriybobchuk.mooney.core.feedback.FeedbackSheet(
+            onDismiss = { showReviewFeedback = false },
+            initialKind = com.andriybobchuk.mooney.mooney.domain.feedback.FeedbackKind.GENERAL
         )
     }
 }

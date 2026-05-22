@@ -49,9 +49,12 @@ val MaterialTheme.appColors: AppColorsExtended
 fun App() {
     val syncDefaults: SyncDefaultCategoriesUseCase = koinInject()
     val reportUsage: ReportCategoryUsageUseCase = koinInject()
+    val requestReview: com.andriybobchuk.mooney.core.review.RequestReviewUseCase = koinInject()
     LaunchedEffect(Unit) {
         syncDefaults()
         reportUsage()
+        // Tracks install date + open count — gates the review prompt later on.
+        requestReview.recordAppOpen()
     }
 
     val themeManager: ThemeManager = koinInject()

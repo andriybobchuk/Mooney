@@ -136,11 +136,16 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.*
+import androidx.compose.foundation.border
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.snapshotFlow
+import androidx.datastore.preferences.core.edit
 import org.koin.compose.viewmodel.koinViewModel
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
@@ -167,6 +172,36 @@ fun TransactionsScreen(
     var isBottomSheetOpen by remember { mutableStateOf(false) }
     var transactionToEdit by remember { mutableStateOf<Transaction?>(null) }
     var preselectedCategory by remember { mutableStateOf<Category?>(null) }
+
+    // Review pre-prompt state (driven by milestone events from the ViewModel).
+    var showReviewPrePrompt by remember { mutableStateOf(false) }
+    var showReviewFeedback by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        viewModel.reviewPrePromptRequests.collect { showReviewPrePrompt = true }
+    }
+    if (showReviewPrePrompt) {
+        com.andriybobchuk.mooney.core.review.ReviewPrePromptDialog(
+            onPositive = {
+                showReviewPrePrompt = false
+                viewModel.onReviewPrePromptPositive()
+            },
+            onNegative = {
+                showReviewPrePrompt = false
+                viewModel.onReviewPrePromptNegative()
+                showReviewFeedback = true
+            },
+            onDismiss = {
+                showReviewPrePrompt = false
+                viewModel.onReviewPrePromptDismissed()
+            }
+        )
+    }
+    if (showReviewFeedback) {
+        com.andriybobchuk.mooney.core.feedback.FeedbackSheet(
+            onDismiss = { showReviewFeedback = false },
+            initialKind = com.andriybobchuk.mooney.mooney.domain.feedback.FeedbackKind.GENERAL
+        )
+    }
 
     val hasTransactions = transactions.filterNotNull().isNotEmpty()
     val hasPendingTransactions = state.pendingTransactions.isNotEmpty()
@@ -1201,8 +1236,12 @@ fun TransactionBottomSheet(
         val focusRequester = remember { FocusRequester() }
         val keyboardController = LocalSoftwareKeyboardController.current
 
+        // Wait for the sheet's slide-in to settle before raising the keyboard.
+        // ModalBottomSheet animates ~300ms; raising the keyboard at 100ms means
+        // the keyboard's own slide-up animation collides with the sheet's,
+        // causing the perceptible jitter when the "+" button is tapped.
         LaunchedEffect(Unit) {
-            delay(100)
+            delay(350)
             focusRequester.requestFocus()
             keyboardController?.show()
         }
@@ -1611,7 +1650,10 @@ fun DateSelectionBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState
     ) {
-        Column(Modifier.padding(20.dp).fillMaxSize()) {
+        // Wrap content rather than fillMaxSize so the sheet sizes to its
+        // intrinsic content height. Previously this was fullscreen even though
+        // the actual controls only need ~40% of the screen.
+        Column(Modifier.padding(20.dp).fillMaxWidth().padding(bottom = 16.dp)) {
             Text(
                 text = stringResource(Res.string.select_date),
                 fontWeight = FontWeight.Medium,
@@ -2711,8 +2753,40 @@ fun TransactionPagerView(
     dailyTotals: Map<Int, Double>,
     modifier: Modifier = Modifier
 ) {
-    val pagerState = rememberPagerState(pageCount = { 2 })
-    
+    val pageCount = 4  // calendar, line chart, currency rates, suggest card
+    val dataStore = org.koin.compose.koinInject<androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>>()
+
+    // Initial page comes from DataStore so we restore the user's last selection
+    // across app launches. We need a NULLABLE produceState here — rememberPagerState
+    // captures initialPage only at first composition, so if produceState started
+    // at 0, the pager would lock at 0 and never honor the saved value once it
+    // arrived. Gating the pager on a non-null resolved value fixes that.
+    val initialPage by produceState<Int?>(initialValue = null, dataStore) {
+        value = try {
+            val prefs = dataStore.data.first()
+            (prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.LAST_WIDGET_PAGE] ?: 0)
+                .coerceIn(0, pageCount - 1)
+        } catch (_: Exception) { 0 }
+    }
+
+    val resolvedInitialPage = initialPage ?: return Spacer(modifier = modifier.height(200.dp))
+
+    val pagerState = rememberPagerState(initialPage = resolvedInitialPage, pageCount = { pageCount })
+
+    // Persist whenever the user swipes to a different page. drop(1) skips the
+    // initial currentPage emission so we don't write the same value we just read.
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }
+            .drop(1)
+            .collect { page ->
+                runCatching {
+                    dataStore.edit { prefs ->
+                        prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.LAST_WIDGET_PAGE] = page
+                    }
+                }
+            }
+    }
+
     Column(modifier = modifier) {
         HorizontalPager(
             state = pagerState,
@@ -2729,30 +2803,190 @@ fun TransactionPagerView(
                     dailyTotals = dailyTotals,
                     modifier = Modifier.fillMaxSize()
                 )
+                2 -> CurrencyRatesWidget(modifier = Modifier.fillMaxSize())
+                3 -> SuggestWidgetCard(modifier = Modifier.fillMaxSize())
             }
         }
-        
-        //Spacer(modifier = Modifier.height(8.dp))
-        
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
         ) {
-            repeat(2) { index ->
+            repeat(pageCount) { index ->
                 Box(
                     modifier = Modifier
                         .size(8.dp)
                         .padding(horizontal = 2.dp)
                         .clip(CircleShape)
                         .background(
-                            if (index == pagerState.currentPage) 
-                                MaterialTheme.colorScheme.primary 
-                            else 
+                            if (index == pagerState.currentPage)
+                                MaterialTheme.colorScheme.primary
+                            else
                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                         )
                 )
             }
         }
+    }
+}
+
+/**
+ * Live exchange-rate snapshot for the user's tracked currencies (excluding the
+ * base). One row per currency showing "1 X = Y BASE", typeset large enough to
+ * read at a glance. Minimal — no card chrome, no background. Useful for users
+ * with foreign-currency accounts who like to time conversions.
+ *
+ * Falls back to the hardcoded approximations from [GlobalConfig] if the network
+ * fetch fails so the widget always renders something rather than a spinner.
+ */
+@Composable
+private fun CurrencyRatesWidget(modifier: Modifier = Modifier) {
+    val exchangeRateProvider: com.andriybobchuk.mooney.mooney.domain.ExchangeRateProvider = org.koin.compose.koinInject()
+    val getUserCurrenciesUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.GetUserCurrenciesUseCase = org.koin.compose.koinInject()
+    val baseCurrency = com.andriybobchuk.mooney.mooney.data.GlobalConfig.baseCurrency
+
+    val userCurrencies by getUserCurrenciesUseCase()
+        .collectAsStateWithLifecycle(initialValue = emptyList())
+
+    var rates by remember { mutableStateOf<Map<com.andriybobchuk.mooney.mooney.domain.Currency, Double>>(emptyMap()) }
+
+    // Re-fetch when base changes; one-shot per change is enough for a glance widget.
+    LaunchedEffect(baseCurrency) {
+        val result = exchangeRateProvider.getExchangeRates(baseCurrency)
+        rates = when (result) {
+            is com.andriybobchuk.mooney.core.domain.Result.Success -> result.data.rates
+            is com.andriybobchuk.mooney.core.domain.Result.Error -> emptyMap()
+        }
+    }
+
+    // Foreign currencies the user actually cares about, in their chosen order.
+    val foreignCodes = userCurrencies
+        .sortedBy { it.sortOrder }
+        .mapNotNull { uc ->
+            runCatching { com.andriybobchuk.mooney.mooney.domain.Currency.valueOf(uc.code) }.getOrNull()
+        }
+        .filter { it != baseCurrency }
+        .take(4)
+
+    Column(
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = "Exchange rates",
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(bottom = 10.dp)
+        )
+
+        if (foreignCodes.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Add more currencies in Settings",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                )
+            }
+        } else {
+            foreignCodes.forEach { currency ->
+                CurrencyRateRow(
+                    from = currency,
+                    base = baseCurrency,
+                    rateToBase = rates[currency]?.let { 1.0 / it }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CurrencyRateRow(
+    from: com.andriybobchuk.mooney.mooney.domain.Currency,
+    base: com.andriybobchuk.mooney.mooney.domain.Currency,
+    rateToBase: Double?
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Compact symbol "chip" — colored text only, no surface behind it.
+        Text(
+            text = from.symbol,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.width(28.dp)
+        )
+        Text(
+            text = "1 ${from.name}",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = if (rateToBase != null && rateToBase.isFinite())
+                "${rateToBase.formatRate()} ${base.symbol}"
+            else "—",
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.onBackground
+        )
+    }
+}
+
+private fun Double.formatRate(): String {
+    // 4 sig figs for tiny rates (0.04123), 2 decimals for normal ones.
+    return when {
+        this >= 100.0 -> ((this * 10).toLong() / 10.0).toString()
+        this >= 1.0 -> ((this * 100).toLong() / 100.0).toString()
+        else -> ((this * 10000).toLong() / 10000.0).toString()
+    }
+}
+
+/**
+ * The last "page" isn't a widget — it's a soft CTA inviting the user to
+ * suggest the next widget. Opens the unified FeedbackSheet pre-selected to
+ * the WIDGET category so responses land in Firestore with no email round-trip.
+ */
+@Composable
+private fun SuggestWidgetCard(modifier: Modifier = Modifier) {
+    var showSheet by remember { mutableStateOf(false) }
+    if (showSheet) {
+        com.andriybobchuk.mooney.core.feedback.FeedbackSheet(
+            onDismiss = { showSheet = false },
+            initialKind = com.andriybobchuk.mooney.mooney.domain.feedback.FeedbackKind.WIDGET
+        )
+    }
+    Column(
+        modifier = modifier
+            .clickable { showSheet = true }
+            .padding(20.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = "💡", fontSize = 28.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Want more widgets?",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Tell me what you'd find useful — I'll build the best ideas in the next release.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        Text(
+            text = "Tap to suggest",
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
 
@@ -2885,11 +3119,7 @@ fun SpendingLineChart(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp)
-                .background(
-                    MaterialTheme.colorScheme.surface,
-                    RoundedCornerShape(12.dp)
-                )
-                .padding(16.dp)
+                .padding(top = 8.dp)
         ) {
             if (isLoading) {
                 Box(

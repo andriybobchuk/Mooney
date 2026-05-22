@@ -24,4 +24,9 @@ object PreferencesKeys {
     val LAST_USAGE_REPORT = stringPreferencesKey("last_category_usage_report")
     val EXCHANGE_RATE_SOURCE = stringPreferencesKey("exchange_rate_source")
     val DEVELOPER_OPTIONS_ENABLED = booleanPreferencesKey("developer_options_enabled")
+    // Review prompt gating
+    val INSTALL_TIMESTAMP = androidx.datastore.preferences.core.longPreferencesKey("install_timestamp")
+    val APP_OPEN_COUNT = intPreferencesKey("app_open_count")
+    val LAST_REVIEW_PROMPT_TIMESTAMP = androidx.datastore.preferences.core.longPreferencesKey("last_review_prompt_timestamp")
+    val LAST_WIDGET_PAGE = intPreferencesKey("last_widget_page")
 }

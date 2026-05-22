@@ -53,7 +53,7 @@ data class TransactionState(
     val transactionCategoryOrder: List<String> = emptyList()
 )
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions")
 class TransactionViewModel(
     private val getTransactionsUseCase: GetTransactionsUseCase,
     private val addTransactionUseCase: AddTransactionUseCase,
@@ -77,7 +77,8 @@ class TransactionViewModel(
     private val coreRepository: com.andriybobchuk.mooney.mooney.domain.CoreRepository,
     private val manageCategoryExpansionUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageCategoryExpansionUseCase,
     private val manageAssetCategoryOrderUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageAssetCategoryOrderUseCase,
-    private val manageTransactionCategoryOrderUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.ManageTransactionCategoryOrderUseCase
+    private val manageTransactionCategoryOrderUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.ManageTransactionCategoryOrderUseCase,
+    private val requestReviewUseCase: com.andriybobchuk.mooney.core.review.RequestReviewUseCase
 ) : ViewModel() {
 
     private var observeTransactionsJob: Job? = null
@@ -102,6 +103,10 @@ class TransactionViewModel(
             emptyList()
         )
 
+    // One-shot signal: emit Unit when the screen should show the review pre-prompt.
+    private val _reviewPrePromptRequests = kotlinx.coroutines.flow.MutableSharedFlow<Unit>()
+    val reviewPrePromptRequests: kotlinx.coroutines.flow.SharedFlow<Unit> = _reviewPrePromptRequests
+
     fun onMonthSelected(month: MonthKey) {
         _uiState.update { it.copy(selectedMonth = month) }
         observeTransactions(month)
@@ -115,9 +120,12 @@ class TransactionViewModel(
             .map { transactions -> filterTransactionsByMonthUseCase(transactions, month) }
             .onEach { filteredTransactions ->
                 val sorted = filteredTransactions.sortedByDescending { it.date }
-                // First emission clears the initial-load shimmer; subsequent
-                // emissions just update transactions normally.
-                _uiState.update { it.copy(transactions = sorted, isInitialLoading = false) }
+                // Don't clear isInitialLoading here. If we do, the screen can briefly
+                // render with transactions=empty + accounts=empty (because accounts
+                // load via a separate flow in loadDataForBottomSheet), which flashes
+                // the "Let's get started" onboarding state. Let loadDataForBottomSheet
+                // own the loading-complete signal once it has both accounts and categories.
+                _uiState.update { it.copy(transactions = sorted) }
                 loadTotal()
                 loadDailyTotals(filteredTransactions, month)
             }
@@ -261,10 +269,48 @@ class TransactionViewModel(
 
     fun upsertTransaction(transaction: Transaction) {
         viewModelScope.launch {
+            val wasEdit = transaction.id != 0
             addTransactionUseCase(transaction)
             observeTransactions(_uiState.value.selectedMonth)
             loadTotal()
+            // Only on creates, never on edits — editing is a maintenance act,
+            // not a positive moment.
+            if (!wasEdit) maybeRequestReviewAfterMilestone()
         }
+    }
+
+    /**
+     * Asks the screen to show the review pre-prompt after a transaction-creation
+     * milestone (10th, 25th, 50th, 100th). Subject to all the gates inside
+     * [requestReviewUseCase] (cooldown, install age, etc.).
+     */
+    private suspend fun maybeRequestReviewAfterMilestone() {
+        try {
+            val total = _uiState.value.transactions.filterNotNull().size
+            if (total in MILESTONES && requestReviewUseCase.shouldShowPrePrompt()) {
+                _reviewPrePromptRequests.emit(Unit)
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // best-effort, never break the user flow
+        }
+    }
+
+    fun onReviewPrePromptPositive() {
+        viewModelScope.launch { requestReviewUseCase.confirmReviewRequested() }
+    }
+
+    fun onReviewPrePromptNegative() {
+        viewModelScope.launch { requestReviewUseCase.markPromptShown() }
+    }
+
+    fun onReviewPrePromptDismissed() {
+        viewModelScope.launch { requestReviewUseCase.markPromptShown() }
+    }
+
+    private companion object {
+        val MILESTONES = setOf(10, 25, 50, 100)
     }
 
     fun deleteTransaction(id: Int) {

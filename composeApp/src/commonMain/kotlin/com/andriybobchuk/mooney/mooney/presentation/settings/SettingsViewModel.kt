@@ -73,6 +73,26 @@ class SettingsViewModel(
         observeAccounts()
         observeCurrencyInsights()
         observeDeveloperOptions()
+        observeDevPremiumFlag()
+    }
+
+    private fun observeDevPremiumFlag() {
+        premiumManager.isPremium.onEach { isPro ->
+            _state.update { it.copy(devForcePremium = isPro) }
+        }.launchIn(viewModelScope)
+    }
+
+    /**
+     * Developer Options shortcut — flips the cached Pro flag locally so the
+     * paywall and gated screens treat the user as if they had a subscription
+     * (or didn't). Doesn't touch any real StoreKit / Play Billing state, so
+     * the next `syncSubscriptionStatus()` will overwrite this if the user
+     * actually has a live subscription. Test-only.
+     */
+    fun setDevPlanPro(pro: Boolean) {
+        viewModelScope.launch {
+            premiumManager.setPremium(pro)
+        }
     }
 
     private fun observeCurrencyInsights() {
@@ -97,6 +117,20 @@ class SettingsViewModel(
                 prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.DEVELOPER_OPTIONS_ENABLED] = true
             }
             _state.update { it.copy(restoreMessage = "Developer options unlocked") }
+        }
+    }
+
+    /**
+     * Resets the onboarding flag and signals the UI to navigate to the
+     * onboarding flow. Lets us re-test the onboarding screens without
+     * reinstalling or wiping all app data. Dev-only.
+     */
+    fun replayOnboarding() {
+        viewModelScope.launch {
+            dataStore.edit { prefs ->
+                prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.ONBOARDING_COMPLETED] = false
+            }
+            _events.emit(SettingsEvent.ReplayOnboarding)
         }
     }
 

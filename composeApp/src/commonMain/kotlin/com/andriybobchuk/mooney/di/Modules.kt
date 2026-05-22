@@ -31,6 +31,8 @@ import com.andriybobchuk.mooney.mooney.presentation.settings.SettingsViewModel
 import com.andriybobchuk.mooney.mooney.presentation.onboarding.OnboardingViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
+import com.andriybobchuk.mooney.core.review.RequestReviewUseCase
+import com.andriybobchuk.mooney.core.review.ReviewPromptManager
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.module.dsl.factoryOf
@@ -89,6 +91,13 @@ val sharedModule = module {
     single { get<PreferencesDataStoreFactory>().create() }
     singleOf(::DataStorePreferencesRepository).bind<PreferencesRepository>()
 
+    // Feedback — writes user-submitted feedback to the `feedback` Firestore
+    // collection via REST. No Swift bridge required; Firestore rules cap writes.
+    single<com.andriybobchuk.mooney.mooney.domain.feedback.FeedbackRepository> {
+        com.andriybobchuk.mooney.mooney.data.feedback.FirestoreFeedbackRepository(httpClient = get())
+    }
+    singleOf(::SubmitFeedbackUseCase)
+
     // Exchange Rate Providers — Switchable picks one based on the user's Settings choice.
     single { com.andriybobchuk.mooney.mooney.data.LiveExchangeRateProvider(httpClient = get()) }
     single { com.andriybobchuk.mooney.mooney.data.ExtendedExchangeRateProvider(httpClient = get()) }
@@ -146,6 +155,8 @@ val sharedModule = module {
     singleOf(::ManageAssetCategoryOrderUseCase)
     singleOf(::ManageCategoryExpansionUseCase)
     singleOf(::ManageTransactionCategoryOrderUseCase)
+    single { ReviewPromptManager() }
+    singleOf(::RequestReviewUseCase)
 
     // Settings Use Cases
     singleOf(::GetUserPreferencesUseCase)
@@ -218,7 +229,8 @@ val sharedModule = module {
             coreRepository = get(),
             manageCategoryExpansionUseCase = get(),
             manageAssetCategoryOrderUseCase = get(),
-            manageTransactionCategoryOrderUseCase = get()
+            manageTransactionCategoryOrderUseCase = get(),
+            requestReviewUseCase = get()
         )
     }
     viewModelOf(::AnalyticsViewModel)

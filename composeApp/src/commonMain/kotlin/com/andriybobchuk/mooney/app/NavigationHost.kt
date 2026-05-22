@@ -180,7 +180,14 @@ fun NavigationHost() {
 
     NavHost(
         navController = navController,
-        startDestination = resolvedStart
+        startDestination = resolvedStart,
+        // Instant tab switches — the default ~300ms fade caused a visible
+        // white flash between bottom-nav destinations. Mooney's screens are
+        // independent enough that animating between them is pure overhead.
+        enterTransition = { androidx.compose.animation.EnterTransition.None },
+        exitTransition = { androidx.compose.animation.ExitTransition.None },
+        popEnterTransition = { androidx.compose.animation.EnterTransition.None },
+        popExitTransition = { androidx.compose.animation.ExitTransition.None }
     ) {
         composable<Route.Onboarding> {
             val viewModel = koinViewModel<OnboardingViewModel>()
@@ -299,7 +306,14 @@ fun NavigationHost() {
                     viewModel = viewModel,
                     onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() },
                     onNavigateToTransactionCategories = { navController.navigate(Route.TransactionCategories) },
-                    onNavigateToAssetCategories = { navController.navigate(Route.AssetCategories) }
+                    onNavigateToAssetCategories = { navController.navigate(Route.AssetCategories) },
+                    onReplayOnboarding = {
+                        // Pop everything down to the onboarding destination so
+                        // finishing it lands you back on the main graph fresh.
+                        navController.navigate(Route.Onboarding) {
+                            popUpTo(Route.MooneyGraph) { inclusive = true }
+                        }
+                    }
                 )
             }
 

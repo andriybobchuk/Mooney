@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.andriybobchuk.mooney.core.presentation.Toolbars
-import com.andriybobchuk.mooney.core.presentation.designsystem.components.FeedbackBottomSheet
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import com.andriybobchuk.mooney.core.premium.PaywallSheet
 import com.andriybobchuk.mooney.core.premium.isBillingEnabled
@@ -51,7 +50,8 @@ fun SettingsScreen(
     viewModel: SettingsViewModel,
     onBackClick: () -> Unit,
     onNavigateToTransactionCategories: () -> Unit = {},
-    onNavigateToAssetCategories: () -> Unit = {}
+    onNavigateToAssetCategories: () -> Unit = {},
+    onReplayOnboarding: () -> Unit = {}
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -71,6 +71,28 @@ fun SettingsScreen(
     var showExchangeRateSourceSheet by remember { mutableStateOf(false) }
     var showFeedbackSheet by remember { mutableStateOf(false) }
     var versionTapCount by remember { mutableStateOf(0) }
+    // Rate Mooney pre-prompt flow.
+    var showRatePrePrompt by remember { mutableStateOf(false) }
+    var showRateFeedback by remember { mutableStateOf(false) }
+    val rateScope = rememberCoroutineScope()
+    val rateReview = org.koin.compose.koinInject<com.andriybobchuk.mooney.core.review.RequestReviewUseCase>()
+    if (showRatePrePrompt) {
+        com.andriybobchuk.mooney.core.review.ReviewPrePromptDialog(
+            onPositive = {
+                showRatePrePrompt = false
+                rateScope.launch { rateReview.confirmReviewRequested() }
+            },
+            onNegative = {
+                showRatePrePrompt = false
+                rateScope.launch { rateReview.markPromptShown() }
+                showRateFeedback = true
+            },
+            onDismiss = {
+                showRatePrePrompt = false
+                rateScope.launch { rateReview.markPromptShown() }
+            }
+        )
+    }
     val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
 
     LaunchedEffect(state.restoreMessage) {
@@ -110,6 +132,9 @@ fun SettingsScreen(
                 }
                 is SettingsEvent.ShowError -> {
                     // Handle error display
+                }
+                is SettingsEvent.ReplayOnboarding -> {
+                    onReplayOnboarding()
                 }
             }
         }
@@ -888,6 +913,18 @@ fun SettingsScreen(
                                 checked = state.currencyInsightsEnabled,
                                 onCheckedChange = { viewModel.toggleCurrencyInsights(it) }
                             )
+                            SettingsDivider()
+                            SettingsRow(
+                                title = "Replay Onboarding",
+                                value = "Reset & view",
+                                onClick = { viewModel.replayOnboarding() }
+                            )
+                            SettingsDivider()
+                            SettingsRow(
+                                title = "Plan",
+                                value = if (state.devForcePremium) "Pro" else "Free",
+                                onClick = { viewModel.setDevPlanPro(!state.devForcePremium) }
+                            )
                         }
                     }
                 }
@@ -955,6 +992,11 @@ fun SettingsScreen(
                         )
                         SettingsDivider()
                         SettingsRow(
+                            title = "Rate Mooney",
+                            onClick = { showRatePrePrompt = true }
+                        )
+                        SettingsDivider()
+                        SettingsRow(
                             title = "Privacy Policy",
                             onClick = { uriHandler.openUri("https://andriybobchuk.github.io/Mooney/privacy-policy.html") }
                         )
@@ -972,7 +1014,16 @@ fun SettingsScreen(
     }
 
     if (showFeedbackSheet) {
-        FeedbackBottomSheet(onDismiss = { showFeedbackSheet = false })
+        com.andriybobchuk.mooney.core.feedback.FeedbackSheet(
+            onDismiss = { showFeedbackSheet = false },
+            initialKind = com.andriybobchuk.mooney.mooney.domain.feedback.FeedbackKind.GENERAL
+        )
+    }
+    if (showRateFeedback) {
+        com.andriybobchuk.mooney.core.feedback.FeedbackSheet(
+            onDismiss = { showRateFeedback = false },
+            initialKind = com.andriybobchuk.mooney.mooney.domain.feedback.FeedbackKind.GENERAL
+        )
     }
 }
 

@@ -45,12 +45,20 @@ class LiveExchangeRateProvider(
                 if (apiRate != null) {
                     supportedCurrencyRates[currency] = apiRate
                 } else {
-                    // Fallback: cross-calculate via USD approximation
+                    // Fallback: cross-calculate via USD approximation.
+                    //
+                    // Frankfurter returns `rates[X]` = "X per 1 BASE". So when base is
+                    // PLN, `response.rates["USD"]` = USD per 1 PLN (e.g. 0.24).
+                    // `fallback` = target per 1 USD (e.g. 41.2 UAH per USD).
+                    // To get target per 1 BASE we MULTIPLY: 0.24 USD/PLN * 41.2 UAH/USD
+                    // = 9.9 UAH/PLN. The previous code divided, which produced rates
+                    // ~170x too high when base was not USD — visible to anyone with
+                    // UAH/RUB/AED accounts on a EUR/PLN base.
                     val fallback = fallbackRatesInUsd[currency.name]
                     if (fallback != null) {
                         val usdRate = if (baseCurrency == Currency.USD) 1.0
                             else response.rates["USD"] ?: return@forEach
-                        supportedCurrencyRates[currency] = fallback / usdRate
+                        supportedCurrencyRates[currency] = fallback * usdRate
                     }
                 }
             }

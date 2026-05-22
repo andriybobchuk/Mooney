@@ -907,46 +907,198 @@ fun NetIncomeChartBottomSheet(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val netIncomeData = historicalData.takeLast(6) // Last 6 months
-    
-    // Calculate total profit and selected month profit for projection
+    val netIncomeData = historicalData.takeLast(6)
+    val selectedSnapshot = historicalData.find { it.month == selectedMonth }
+    val selectedMonthProfit = selectedSnapshot?.netIncome ?: 0.0
+    val selectedMonthRevenue = selectedSnapshot?.revenue ?: 0.0
+
     val totalProfit = netIncomeData.sumOf { it.netIncome }
-    val selectedMonthProfit = historicalData.find { it.month == selectedMonth }?.netIncome ?: 0.0
-    val projectedProfit = selectedMonthProfit * 6 // Projection based on selected month
-    
+    val totalRevenue = netIncomeData.sumOf { it.revenue }
+    val avgProfit = if (netIncomeData.isNotEmpty()) totalProfit / netIncomeData.size else 0.0
+
+    val bestMonth = netIncomeData.maxByOrNull { it.netIncome }
+    val worstMonth = netIncomeData.minByOrNull { it.netIncome }
+    val greenMonths = netIncomeData.count { it.netIncome > 0 }
+    val saveRateCurrent = if (selectedMonthRevenue > 0) (selectedMonthProfit / selectedMonthRevenue) * 100 else null
+    val saveRateAvg = if (totalRevenue > 0) (totalProfit / totalRevenue) * 100 else null
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(20.dp)
+            .padding(horizontal = 20.dp)
+            .padding(top = 8.dp, bottom = 24.dp)
     ) {
-        // (Title is shown by the toolbar — no duplicate header here.)
+        NetIncomeHeroCard(
+            value = selectedMonthProfit,
+            saveRatePercent = saveRateCurrent,
+            monthLabel = selectedMonth.toDisplayString()
+        )
 
-        // Profit Summary Cards Row — symmetric, design-system-consistent.
-        // Removed the dangling "Based on selected month" subtitle that broke
-        // vertical alignment between the two cards.
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Best / worst row.
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             NetIncomeStatCard(
                 modifier = Modifier.weight(1f),
-                label = stringResource(Res.string.last_6_months),
-                value = totalProfit
+                label = "Best month",
+                value = bestMonth?.netIncome ?: 0.0,
+                sublabel = bestMonth?.month?.toShortDisplayString()
             )
             NetIncomeStatCard(
                 modifier = Modifier.weight(1f),
-                label = stringResource(Res.string.next_6_months),
-                value = projectedProfit
+                label = "Worst month",
+                value = worstMonth?.netIncome ?: 0.0,
+                sublabel = worstMonth?.month?.toShortDisplayString()
             )
         }
-        
-        // Net Income Chart
-        NetIncomeChart(
-            data = netIncomeData,
-            modifier = Modifier.padding(bottom = 20.dp)
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 6-month totals row.
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            NetIncomeStatCard(
+                modifier = Modifier.weight(1f),
+                label = "6-month total",
+                value = totalProfit,
+                sublabel = null
+            )
+            NetIncomeStatCard(
+                modifier = Modifier.weight(1f),
+                label = "6-month average",
+                value = avgProfit,
+                sublabel = null
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        NetIncomeInsightStrip(
+            greenMonths = greenMonths,
+            totalMonths = netIncomeData.size,
+            avgSaveRate = saveRateAvg
         )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Bar chart — color-coded positive/negative, far more readable for
+        // net income than the previous line chart.
+        NetIncomeBarChart(
+            data = netIncomeData,
+            selectedMonth = selectedMonth,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+    }
+}
+
+/**
+ * Hero card — selected month's net income with a "save rate" badge. The badge
+ * is the most actionable number on the screen: "you kept X% of what you earned".
+ */
+@Composable
+private fun NetIncomeHeroCard(
+    value: Double,
+    saveRatePercent: Double?,
+    monthLabel: String
+) {
+    val accent = if (value >= 0.0) MaterialTheme.appColors.incomeColor else MaterialTheme.appColors.expenseColor
+    com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyCard(
+        modifier = Modifier.fillMaxWidth(),
+        variant = com.andriybobchuk.mooney.core.presentation.designsystem.components.CardVariant.OUTLINED
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp)
+        ) {
+            Text(
+                text = monthLabel.uppercase(),
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.5.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "${value.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
+                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Black),
+                color = accent
+            )
+            if (saveRatePercent != null) {
+                Spacer(modifier = Modifier.height(6.dp))
+                val badgeText = when {
+                    saveRatePercent >= 0 -> "${saveRatePercent.toInt()}% saved of income"
+                    else -> "${(-saveRatePercent).toInt()}% over income"
+                }
+                val badgeColor = if (saveRatePercent >= 0)
+                    MaterialTheme.appColors.incomeColor
+                else
+                    MaterialTheme.appColors.expenseColor
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(badgeColor.copy(alpha = 0.15f))
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = badgeText,
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = badgeColor
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Small horizontal strip that summarizes two non-obvious insights:
+ * how many of the last N months you finished in the green, and your
+ * average save rate. Designed to fit on one line of compact metadata.
+ */
+@Composable
+private fun NetIncomeInsightStrip(
+    greenMonths: Int,
+    totalMonths: Int,
+    avgSaveRate: Double?
+) {
+    if (totalMonths == 0) return
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(
+                text = "In the green",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "$greenMonths of $totalMonths months",
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        if (avgSaveRate != null) {
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "Avg save rate",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                val rateColor = if (avgSaveRate >= 0)
+                    MaterialTheme.appColors.incomeColor
+                else
+                    MaterialTheme.appColors.expenseColor
+                Text(
+                    text = "${avgSaveRate.toInt()}%",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = rateColor
+                )
+            }
+        }
     }
 }
 
@@ -954,7 +1106,8 @@ fun NetIncomeChartBottomSheet(
 private fun NetIncomeStatCard(
     modifier: Modifier,
     label: String,
-    value: Double
+    value: Double,
+    sublabel: String? = null
 ) {
     val accent = if (value >= 0.0) MaterialTheme.appColors.incomeColor else MaterialTheme.appColors.expenseColor
     com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyCard(
@@ -964,7 +1117,7 @@ private fun NetIncomeStatCard(
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
                 text = label.uppercase(),
@@ -973,154 +1126,126 @@ private fun NetIncomeStatCard(
             )
             Text(
                 text = "${value.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = accent
             )
-        }
-    }
-}
-
-@Composable
-fun NetIncomeChart(
-    data: List<MonthlyMetricSnapshot>,
-    modifier: Modifier = Modifier
-) {
-    if (data.isEmpty()) return
-    
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(280.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(16.dp)
-    ) {
-        // Chart Canvas
-        androidx.compose.foundation.Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-                .align(Alignment.TopCenter)
-        ) {
-            drawNetIncomeChart(data, size.width, size.height)
-        }
-        
-        // Month Labels with Values
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            data.forEach { snapshot ->
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = snapshot.month.toShortDisplayString(),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
-                    )
-                    Text(
-                        text = snapshot.netIncome.formatToShortString(),
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 10.sp,
-                        color = if (snapshot.netIncome >= 0) Color(0xFF4CAF50) else Color(0xFFF44336)
-                    )
-                }
+            if (sublabel != null) {
+                Text(
+                    text = sublabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
 }
 
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawNetIncomeChart(
+/**
+ * Color-coded bar chart for net income across recent months. Green bars for
+ * positive months, red for negative — a glance tells the story. The bar for
+ * the currently selected month gets a subtle accent ring to anchor the user.
+ */
+@Composable
+private fun NetIncomeBarChart(
     data: List<MonthlyMetricSnapshot>,
-    width: Float,
-    height: Float
+    selectedMonth: MonthKey,
+    modifier: Modifier = Modifier
 ) {
-    if (data.size < 2) return
+    if (data.isEmpty()) return
+    val incomeColor = MaterialTheme.appColors.incomeColor
+    val expenseColor = MaterialTheme.appColors.expenseColor
+    val gridColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+    val zeroLineColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
 
-    val padding = 40f
-    val chartWidth = width - (padding * 2)
-    val chartHeight = height - (padding * 2)
-    
-    // Calculate data range for net income only
-    val netIncomes = data.map { it.netIncome }
-    val maxValue = netIncomes.maxOrNull() ?: 0.0
-    val minValue = kotlin.math.min(0.0, netIncomes.minOrNull() ?: 0.0)
-    val valueRange = maxValue - minValue
-    
-    if (valueRange == 0.0) return
-    
-    val netIncomeColor = Color(0xFF2196F3) // Blue color for net income
-    val gridColor = Color.Gray.copy(alpha = 0.2f)
-    
-    // Draw grid lines
-    for (i in 0..4) {
-        val y = padding + (chartHeight * i / 4)
-        drawLine(
-            color = gridColor,
-            start = androidx.compose.ui.geometry.Offset(padding, y),
-            end = androidx.compose.ui.geometry.Offset(padding + chartWidth, y),
-            strokeWidth = 1.dp.toPx()
-        )
-    }
-    
-    // Draw vertical grid lines  
-    for (i in 0..5) {
-        val x = padding + (chartWidth * i / 5)
-        drawLine(
-            color = gridColor,
-            start = androidx.compose.ui.geometry.Offset(x, padding),
-            end = androidx.compose.ui.geometry.Offset(x, padding + chartHeight),
-            strokeWidth = 1.dp.toPx()
-        )
-    }
-    
-    // Draw bold zero line if zero is within range
-    if (minValue <= 0.0 && maxValue >= 0.0) {
-        val zeroY = padding + chartHeight - (chartHeight * ((0.0 - minValue) / (maxValue - minValue))).toFloat()
-        drawLine(
-            color = Color.Black.copy(alpha = 0.6f),
-            start = androidx.compose.ui.geometry.Offset(padding, zeroY),
-            end = androidx.compose.ui.geometry.Offset(padding + chartWidth, zeroY),
-            strokeWidth = 2.dp.toPx()
-        )
-    }
-    
-    // Draw net income line
-    val path = androidx.compose.ui.graphics.Path()
-    val points = mutableListOf<androidx.compose.ui.geometry.Offset>()
-    
-    data.forEachIndexed { index, snapshot ->
-        val value = snapshot.netIncome
-        val x = padding + (chartWidth * index / (data.size - 1))
-        val y = padding + chartHeight - (chartHeight * ((value - minValue) / (maxValue - minValue))).toFloat()
-        
-        points.add(androidx.compose.ui.geometry.Offset(x, y))
-        
-        if (index == 0) {
-            path.moveTo(x, y)
-        } else {
-            path.lineTo(x, y)
+    Column(modifier = modifier.fillMaxWidth()) {
+        androidx.compose.foundation.Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        ) {
+            val maxValue = data.maxOf { it.netIncome }
+            val minValue = kotlin.math.min(0.0, data.minOf { it.netIncome })
+            val range = (maxValue - minValue).takeIf { it > 0 } ?: return@Canvas
+
+            val padding = 8f
+            val w = size.width - padding * 2
+            val h = size.height - padding * 2
+            val zeroY = padding + h - (h * ((0.0 - minValue) / range)).toFloat()
+            val slotWidth = w / data.size
+
+            // Subtle horizontal grid (zero line gets a stronger stroke).
+            for (i in 0..3) {
+                val y = padding + (h * i / 3)
+                drawLine(
+                    color = gridColor,
+                    start = androidx.compose.ui.geometry.Offset(padding, y),
+                    end = androidx.compose.ui.geometry.Offset(padding + w, y),
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
+            drawLine(
+                color = zeroLineColor,
+                start = androidx.compose.ui.geometry.Offset(padding, zeroY),
+                end = androidx.compose.ui.geometry.Offset(padding + w, zeroY),
+                strokeWidth = 1.5.dp.toPx()
+            )
+
+            // Bars
+            data.forEachIndexed { index, snapshot ->
+                val barLeft = padding + slotWidth * index + slotWidth * 0.15f
+                val barWidth = slotWidth * 0.7f
+                val value = snapshot.netIncome
+                val topY = padding + h - (h * ((value - minValue) / range)).toFloat()
+                val barTop = kotlin.math.min(topY, zeroY)
+                val barBottom = kotlin.math.max(topY, zeroY)
+                val color = if (value >= 0) incomeColor else expenseColor
+
+                drawRoundRect(
+                    color = color,
+                    topLeft = androidx.compose.ui.geometry.Offset(barLeft, barTop),
+                    size = androidx.compose.ui.geometry.Size(barWidth, barBottom - barTop),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx(), 4.dp.toPx())
+                )
+
+                // Highlight ring for the selected month.
+                if (snapshot.month == selectedMonth) {
+                    drawRoundRect(
+                        color = color.copy(alpha = 0.35f),
+                        topLeft = androidx.compose.ui.geometry.Offset(barLeft - 3, barTop - 3),
+                        size = androidx.compose.ui.geometry.Size(barWidth + 6, (barBottom - barTop) + 6),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(6.dp.toPx(), 6.dp.toPx()),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
+                    )
+                }
+            }
         }
-    }
-    
-    // Draw the line
-    drawPath(
-        path = path,
-        color = netIncomeColor,
-        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.dp.toPx())
-    )
-    
-    // Draw data points
-    points.forEach { point ->
-        drawCircle(
-            color = netIncomeColor,
-            radius = 4.dp.toPx(),
-            center = point
-        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            data.forEach { snapshot ->
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = snapshot.month.toShortDisplayString(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 10.sp
+                    )
+                    Text(
+                        text = snapshot.netIncome.formatToShortString(),
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                        fontSize = 10.sp,
+                        color = if (snapshot.netIncome >= 0) incomeColor else expenseColor
+                    )
+                }
+            }
+        }
     }
 }

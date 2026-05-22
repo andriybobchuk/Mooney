@@ -35,7 +35,9 @@ data class SettingsState(
     val currencyInsightsEnabled: Boolean = false,
     val isUpdatingCategories: Boolean = false,
     val exchangeRateSource: ExchangeRateSource = ExchangeRateSource.EXTENDED,
-    val developerOptionsEnabled: Boolean = false
+    val developerOptionsEnabled: Boolean = false,
+    /** Local override for Pro plan — used by the Developer Plan toggle. */
+    val devForcePremium: Boolean = false
 ) {
     val maxPinnedCategories: Int = 5
     val canAddMorePinned: Boolean = pinnedCategoryIds.size < maxPinnedCategories

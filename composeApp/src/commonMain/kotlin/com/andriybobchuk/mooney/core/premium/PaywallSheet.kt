@@ -8,6 +8,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -72,13 +76,11 @@ private fun heroFor(trigger: PaywallTrigger): PaywallHero = when (trigger) {
 
 private data class BenefitItem(val emoji: String, val title: String, val subtitle: String)
 
-// Emojis used as visual anchors instead of material-icons-extended to keep the
-// dependency footprint small and match the app's existing emoji-first aesthetic.
+// Be honest — these are literally the only things Pro unlocks today. More may
+// come later; until then, no fake benefits to inflate perceived value.
 private val BENEFITS = listOf(
-    BenefitItem("👛", "All your accounts in one view", "Cards, cash, savings, crypto — no limits"),
-    BenefitItem("🏷️", "Categorize on your terms", "Unlimited custom categories"),
-    BenefitItem("📊", "See where your money actually goes", "Full spending breakdown by category"),
-    BenefitItem("🔒", "Your data stays on your device", "No cloud, no tracking, no ads")
+    BenefitItem("👛", "Unlimited accounts", "Beyond the 20-account free tier"),
+    BenefitItem("🏷️", "Unlimited custom categories", "Beyond the 50-category free tier")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -103,30 +105,53 @@ fun PaywallSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.background,
+        // Tall sheet with rounded top — reads as a clearly modal purchase
+        // surface without taking over the whole screen.
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
-        Box {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.9f)
+        ) {
             PaywallMeshBackground()
+
+            // Close button — top-right within the sheet content area.
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+            ) {
+                androidx.compose.material3.IconButton(onClick = onDismiss) {
+                    androidx.compose.material3.Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Close",
+                        tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f)
+                    )
+                }
+            }
 
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 32.dp),
+                    .fillMaxSize()
+                    .padding(top = 56.dp)
+                    .padding(horizontal = 28.dp)
+                    .padding(bottom = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Headline — bumped to display-sized so it lands within F-pattern
-                // scan before the sub or price.
+                Spacer(modifier = Modifier.weight(0.6f))
+
+                // Headline.
                 Text(
                     text = hero.headline,
-                    fontSize = 28.sp,
+                    fontSize = 30.sp,
                     fontWeight = FontWeight.Bold,
-                    lineHeight = 32.sp,
+                    lineHeight = 34.sp,
                     color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = hero.sub,
@@ -135,31 +160,24 @@ fun PaywallSheet(
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(36.dp))
 
-                // Benefits — outcome-led, four items with category icons.
+                // Benefits — honest, only the two things Pro actually unlocks today.
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     BENEFITS.forEach { benefit -> BenefitRow(benefit) }
                 }
 
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.weight(1f))
 
-                // Price + anchor — "less than a coffee" reframes 9,99 PLN against
-                // a known small purchase to reduce price resistance.
+                // Price — single line, no anchor copy.
                 Text(
                     text = if (price != null) "$price / month" else "—",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Less than a coffee a month",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f)
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -306,46 +324,7 @@ private fun SubscriptionLegalFooter(
 
 @Composable
 private fun PaywallMeshBackground() {
-    val isDark = isSystemInDarkTheme()
-    val accent = MaterialTheme.colorScheme.primary
-    val transparent = Color.Transparent
-
-    val blob1 = if (isDark) accent.copy(alpha = 0.20f) else Color(0xFF7AACF0).copy(alpha = 0.50f)
-    val blob2 = if (isDark) accent.copy(alpha = 0.15f) else Color(0xFF9FC5F5).copy(alpha = 0.40f)
-    val blob3 = if (isDark) accent.copy(alpha = 0.18f) else Color(0xFFB8D5FA).copy(alpha = 0.35f)
-
-    Canvas(modifier = Modifier.fillMaxWidth().height(400.dp)) {
-        val w = size.width
-        val h = size.height
-
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(blob1, transparent),
-                center = Offset(w * 0.1f, h * 0.05f),
-                radius = w * 0.6f
-            ),
-            radius = w * 0.6f,
-            center = Offset(w * 0.1f, h * 0.05f)
-        )
-
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(blob2, transparent),
-                center = Offset(w * 0.85f, h * 0.15f),
-                radius = w * 0.5f
-            ),
-            radius = w * 0.5f,
-            center = Offset(w * 0.85f, h * 0.15f)
-        )
-
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(blob3, transparent),
-                center = Offset(w * 0.5f, h * 0.45f),
-                radius = w * 0.45f
-            ),
-            radius = w * 0.45f,
-            center = Offset(w * 0.5f, h * 0.45f)
-        )
-    }
+    com.andriybobchuk.mooney.core.presentation.designsystem.components.EnhancedMeshBackground(
+        modifier = Modifier.fillMaxSize()
+    )
 }

@@ -159,7 +159,8 @@ class ExchangeViewModel(
             _state.update { it.copy(isRefreshing = true) }
             when (val result = currencyManagerUseCase.refreshExchangeRates()) {
                 is Result.Success -> {
-                    analyticsTracker.trackEvent(AnalyticsEvent.RefreshExchangeRates)
+                    // Breadcrumb for crash diagnosis — not a tracked event.
+                    analyticsTracker.log("Exchange rates refreshed")
                     loadCurrentRates()
                     loadHistoricalRates()
                     _state.update {
@@ -193,7 +194,6 @@ class ExchangeViewModel(
         val nextCurrency = currencies[nextIndex]
 
         _state.update { it.copy(displayBaseCurrency = nextCurrency) }
-        analyticsTracker.trackEvent(AnalyticsEvent.CycleCurrencyDisplay(nextCurrency.name))
         loadCurrentRates()
         loadHistoricalRates()
     }

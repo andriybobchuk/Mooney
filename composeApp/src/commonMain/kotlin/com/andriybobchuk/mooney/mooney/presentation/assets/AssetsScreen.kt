@@ -379,7 +379,8 @@ fun AssetsScreen(
             onDismiss = {
                 showReviewPrePrompt = false
                 flexCoroutineScope.launch { requestReviewUseCase.markPromptShown() }
-            }
+            },
+            source = "networth_share"
         )
     }
 

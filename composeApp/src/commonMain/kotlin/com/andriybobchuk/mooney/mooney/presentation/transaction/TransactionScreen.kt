@@ -193,7 +193,8 @@ fun TransactionsScreen(
             onDismiss = {
                 showReviewPrePrompt = false
                 viewModel.onReviewPrePromptDismissed()
-            }
+            },
+            source = "transaction_milestone"
         )
     }
     if (showReviewFeedback) {

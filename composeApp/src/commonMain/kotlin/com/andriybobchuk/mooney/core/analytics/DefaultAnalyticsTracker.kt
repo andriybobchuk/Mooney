@@ -3,7 +3,14 @@ package com.andriybobchuk.mooney.core.analytics
 class DefaultAnalyticsTracker : AnalyticsTracker {
 
     override fun trackEvent(event: AnalyticsEvent) {
-        runSafely { Analytics.logEvent(event.name, event.params) }
+        runSafely {
+            Analytics.logEvent(event.name, event.params)
+            // Mirror each event into Crashlytics as a breadcrumb so that
+            // crashes carry the trail of recent user actions automatically.
+            // Format keeps the payload readable in the Crashlytics console.
+            val paramSummary = if (event.params.isEmpty()) "" else " " + event.params.entries.joinToString(",") { "${it.key}=${it.value}" }
+            Analytics.log("event:${event.name}$paramSummary")
+        }
     }
 
     override fun trackScreenView(screenName: String) {

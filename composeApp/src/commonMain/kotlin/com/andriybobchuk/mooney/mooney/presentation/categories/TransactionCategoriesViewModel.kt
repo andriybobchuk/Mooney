@@ -89,6 +89,7 @@ class TransactionCategoriesViewModel(
             if (!isPremium) {
                 val currentCount = dataStore.data.first()[PreferencesKeys.CUSTOM_CATEGORY_COUNT] ?: 0
                 if (currentCount >= PremiumConfig.maxFreeCustomCategories) {
+                    analyticsTracker.trackEvent(AnalyticsEvent.FeatureLimitHit("custom_categories"))
                     _state.update { it.copy(showPaywall = true) }
                     return@launch
                 }
@@ -115,7 +116,7 @@ class TransactionCategoriesViewModel(
                 val current = prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] ?: 0
                 prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] = current + 1
             }
-            analyticsTracker.trackEvent(AnalyticsEvent.AddCustomCategory(type))
+            analyticsTracker.trackEvent(AnalyticsEvent.CustomCategoryAdded(type))
             repository.reloadCategories()
             _state.update { it.copy(allCategories = getCategoriesUseCase()) }
         }
@@ -154,7 +155,7 @@ class TransactionCategoriesViewModel(
                 val current = prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] ?: 0
                 prefs[PreferencesKeys.CUSTOM_CATEGORY_COUNT] = (current - allIdsToDelete.size).coerceAtLeast(0)
             }
-            analyticsTracker.trackEvent(AnalyticsEvent.DeleteCustomCategory)
+            analyticsTracker.log("Custom category deleted: $categoryId")
             repository.reloadCategories()
             _state.update { it.copy(allCategories = getCategoriesUseCase()) }
         }

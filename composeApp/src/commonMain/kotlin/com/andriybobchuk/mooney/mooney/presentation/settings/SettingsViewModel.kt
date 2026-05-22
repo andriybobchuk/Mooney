@@ -116,7 +116,21 @@ class SettingsViewModel(
             dataStore.edit { prefs ->
                 prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.DEVELOPER_OPTIONS_ENABLED] = true
             }
+            analyticsTracker.trackEvent(AnalyticsEvent.DeveloperOptionsUnlocked)
             _state.update { it.copy(restoreMessage = "Developer options unlocked") }
+        }
+    }
+
+    /**
+     * Dev-only: throw an unchecked exception so we can verify Crashlytics is
+     * actually receiving and symbolicating crashes end-to-end. The throw
+     * happens off the main thread so iOS doesn't get stuck on the launch
+     * screen if Crashlytics finishes uploading during the crash.
+     */
+    @Suppress("TooGenericExceptionThrown")
+    fun forceTestCrash() {
+        viewModelScope.launch {
+            throw RuntimeException("Mooney dev test crash — Crashlytics wiring check")
         }
     }
 
@@ -212,7 +226,7 @@ class SettingsViewModel(
             try {
                 _state.update { it.copy(isExporting = true, error = null) }
                 val exportData = dataExportImportManager.exportAllData()
-                analyticsTracker.trackEvent(AnalyticsEvent.ExportData)
+                analyticsTracker.trackEvent(AnalyticsEvent.CsvExported)
                 _events.emit(SettingsEvent.ExportReady(exportData))
                 _state.update { it.copy(isExporting = false) }
             } catch (e: CancellationException) {
@@ -261,10 +275,9 @@ class SettingsViewModel(
 
                 when (val result = dataExportImportManager.importData(jsonData, clearExisting = false)) {
                     is DataExportImportManager.ImportResult.Success -> {
-                        analyticsTracker.trackEvent(AnalyticsEvent.ImportData(
+                        analyticsTracker.trackEvent(AnalyticsEvent.CsvImported(
                             success = true,
-                            transactionCount = result.importedTransactions,
-                            accountCount = result.importedAccounts
+                            transactionCount = result.importedTransactions
                         ))
                         _events.emit(SettingsEvent.ImportSuccess(
                             importedTransactions = result.importedTransactions,
@@ -274,8 +287,8 @@ class SettingsViewModel(
                         _state.update { it.copy(isImporting = false) }
                     }
                     is DataExportImportManager.ImportResult.Error -> {
-                        analyticsTracker.trackEvent(AnalyticsEvent.ImportData(
-                            success = false, transactionCount = 0, accountCount = 0
+                        analyticsTracker.trackEvent(AnalyticsEvent.CsvImported(
+                            success = false, transactionCount = 0
                         ))
                         _state.update {
                             it.copy(isImporting = false, error = "Import failed: ${result.message}")
@@ -323,7 +336,9 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 preferencesRepository.updateThemeMode(themeMode)
-                analyticsTracker.trackEvent(AnalyticsEvent.ChangeTheme(themeMode.name))
+                // Theme is tracked as a user property instead of an event —
+                // it shows up in cohort filters but doesn't clutter the event log.
+                analyticsTracker.setUserProperty("theme_mode", themeMode.name.lowercase())
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -394,7 +409,9 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 preferencesRepository.updateAppLanguage(language)
-                analyticsTracker.trackEvent(AnalyticsEvent.ChangeLanguage(language))
+                // Language switches are tracked as a user property only —
+                // we don't need an event per switch.
+                analyticsTracker.setUserProperty("app_language", language)
                 _state.update { it.copy(appLanguage = language) }
             } catch (e: CancellationException) {
                 throw e
@@ -460,11 +477,9 @@ class SettingsViewModel(
             if (exists) {
                 if (current.size <= 1) return@launch
                 updateUserCurrenciesUseCase.remove(currencyCode)
-                analyticsTracker.trackEvent(AnalyticsEvent.ToggleUserCurrency(currencyCode, enabled = false))
             } else {
                 val nextOrder = (current.maxOfOrNull { it.sortOrder } ?: -1) + 1
                 updateUserCurrenciesUseCase.add(UserCurrency(currencyCode, nextOrder))
-                analyticsTracker.trackEvent(AnalyticsEvent.ToggleUserCurrency(currencyCode, enabled = true))
             }
         }
     }

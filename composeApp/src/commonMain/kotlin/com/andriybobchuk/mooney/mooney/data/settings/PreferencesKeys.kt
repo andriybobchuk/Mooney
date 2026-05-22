@@ -29,4 +29,9 @@ object PreferencesKeys {
     val APP_OPEN_COUNT = intPreferencesKey("app_open_count")
     val LAST_REVIEW_PROMPT_TIMESTAMP = androidx.datastore.preferences.core.longPreferencesKey("last_review_prompt_timestamp")
     val LAST_WIDGET_PAGE = intPreferencesKey("last_widget_page")
+    // Analytics — first-time event flags. Each guards a one-shot event so we
+    // can distinguish activation moments (first transaction, first account)
+    // from ongoing engagement in Firebase funnels.
+    val ANALYTICS_FIRST_ACCOUNT_FIRED = booleanPreferencesKey("analytics_first_account_fired")
+    val ANALYTICS_FIRST_TRANSACTION_FIRED = booleanPreferencesKey("analytics_first_transaction_fired")
 }

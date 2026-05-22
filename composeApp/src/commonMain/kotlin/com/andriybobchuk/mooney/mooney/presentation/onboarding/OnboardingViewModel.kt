@@ -108,7 +108,7 @@ class OnboardingViewModel(
             try {
                 completeOnboardingUseCase(base, selected.toList())
                 GlobalConfig.baseCurrency = base
-                analyticsTracker.trackEvent(AnalyticsEvent.CompleteOnboarding(base.name))
+                analyticsTracker.trackEvent(AnalyticsEvent.OnboardingComplete(base.name))
                 _state.update { it.copy(page = OnboardingPage.WELCOME, isLoading = false) }
             } catch (e: CancellationException) {
                 throw e

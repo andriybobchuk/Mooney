@@ -3,6 +3,8 @@ package com.andriybobchuk.mooney.core.premium
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
+import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +18,8 @@ import kotlin.coroutines.cancellation.CancellationException
 
 class PremiumManager(
     private val dataStore: DataStore<Preferences>,
-    private val billingManager: BillingManager
+    private val billingManager: BillingManager,
+    private val analyticsTracker: AnalyticsTracker
 ) {
     // When billing is disabled (Android), every user is treated as premium so
     // no gates ever trigger and no premium UI ever shows.
@@ -46,6 +49,12 @@ class PremiumManager(
     suspend fun purchase(productId: String): PurchaseResult {
         if (!isBillingEnabled) return PurchaseResult.Cancelled
         val result = billingManager.purchase(productId)
+        val status = when (result) {
+            is PurchaseResult.Success -> "success"
+            is PurchaseResult.Cancelled -> "cancelled"
+            is PurchaseResult.Error -> "error"
+        }
+        analyticsTracker.trackEvent(AnalyticsEvent.SubscribeResult(status, productId))
         if (result is PurchaseResult.Success) {
             setPremium(true)
         }
@@ -56,6 +65,7 @@ class PremiumManager(
         if (!isBillingEnabled) return false
         val restored = billingManager.restorePurchases()
         if (restored) setPremium(true)
+        analyticsTracker.trackEvent(AnalyticsEvent.RestorePurchasesTap(success = restored))
         return restored
     }
 

@@ -111,18 +111,35 @@ fun NavigationHost() {
         analyticsTracker.trackScreenView(screenName)
     }
 
-    // Set user properties at app start
+    // Set user properties at app start.
+    // These are user-level cohort dimensions in Firebase Analytics. Pick ones
+    // that change rarely and that you actually want to filter funnels by.
     val getTransactionsUseCase: GetTransactionsUseCase = koinInject()
     val getUserCurrenciesUseCase: GetUserCurrenciesUseCase = koinInject()
     val getUserPreferencesUseCase: GetUserPreferencesUseCase = koinInject()
+    val getGoalsUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.GetGoalsUseCase = koinInject()
+    val premiumManagerProps: com.andriybobchuk.mooney.core.premium.PremiumManager = koinInject()
+    val recurringTransactionDao: com.andriybobchuk.mooney.core.data.database.RecurringTransactionDao = koinInject()
     LaunchedEffect(Unit) {
         try {
             val accounts = getAccountsUseCase().first()
             val transactions = getTransactionsUseCase().first()
             val currencies = getUserCurrenciesUseCase().first()
             val prefs = getUserPreferencesUseCase().first()
+            val goals = getGoalsUseCase().first()
+            val isPro = premiumManagerProps.getIsPremium()
+            val recurringCount = recurringTransactionDao.getAll().first().size
 
-            analyticsTracker.setUserProperty("account_count", accounts.filterNotNull().size.toString())
+            val accountCount = accounts.filterNotNull().size
+            val accountBucket = when {
+                accountCount == 0 -> "0"
+                accountCount <= 2 -> "1-2"
+                accountCount <= 5 -> "3-5"
+                accountCount <= 10 -> "6-10"
+                else -> "11+"
+            }
+            analyticsTracker.setUserProperty("account_count_bucket", accountBucket)
+
             val txCount = transactions.filterNotNull().size
             val bucket = when {
                 txCount == 0 -> "0"
@@ -137,6 +154,9 @@ fun NavigationHost() {
             analyticsTracker.setUserProperty("theme_mode", prefs.themeMode.name.lowercase())
             analyticsTracker.setUserProperty("app_language", prefs.appLanguage)
             analyticsTracker.setUserProperty("currency_count", currencies.size.toString())
+            analyticsTracker.setUserProperty("is_pro", isPro.toString())
+            analyticsTracker.setUserProperty("has_recurring", (recurringCount > 0).toString())
+            analyticsTracker.setUserProperty("has_goals", goals.isNotEmpty().toString())
         } catch (e: kotlin.coroutines.cancellation.CancellationException) {
             throw e
         } catch (_: Exception) {

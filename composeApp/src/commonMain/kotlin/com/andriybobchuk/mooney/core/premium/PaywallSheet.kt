@@ -96,13 +96,37 @@ fun PaywallSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val premiumManager = koinInject<PremiumManager>()
+    val analyticsTracker = koinInject<com.andriybobchuk.mooney.core.analytics.AnalyticsTracker>()
     val price by premiumManager.monthlyPriceFlow.collectAsState()
-    LaunchedEffect(Unit) { premiumManager.refreshMonthlyPrice() }
+    LaunchedEffect(Unit) {
+        premiumManager.refreshMonthlyPrice()
+        // Fires once per paywall mount — trigger label feeds the funnel chart
+        // so we know which entry path actually converts.
+        analyticsTracker.trackEvent(
+            com.andriybobchuk.mooney.core.analytics.AnalyticsEvent.PaywallViewed(trigger.name)
+        )
+    }
 
     val hero = heroFor(trigger)
 
+    val wrappedOnDismiss: () -> Unit = {
+        analyticsTracker.trackEvent(
+            com.andriybobchuk.mooney.core.analytics.AnalyticsEvent.PaywallDismissed(trigger.name)
+        )
+        onDismiss()
+    }
+    val wrappedOnSubscribe: () -> Unit = {
+        analyticsTracker.trackEvent(
+            com.andriybobchuk.mooney.core.analytics.AnalyticsEvent.SubscribeTap(
+                productId = PRODUCT_ID_MONTHLY,
+                trigger = trigger.name
+            )
+        )
+        onSubscribe()
+    }
+
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = wrappedOnDismiss,
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.background,
         // Tall sheet with rounded top — reads as a clearly modal purchase
@@ -122,7 +146,7 @@ fun PaywallSheet(
                     .align(Alignment.TopEnd)
                     .padding(8.dp)
             ) {
-                androidx.compose.material3.IconButton(onClick = onDismiss) {
+                androidx.compose.material3.IconButton(onClick = wrappedOnDismiss) {
                     androidx.compose.material3.Icon(
                         imageVector = Icons.Filled.Close,
                         contentDescription = "Close",
@@ -195,7 +219,7 @@ fun PaywallSheet(
 
                 // CTA — action-positive copy beats the commitment word "Subscribe".
                 Button(
-                    onClick = onSubscribe,
+                    onClick = wrappedOnSubscribe,
                     enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()

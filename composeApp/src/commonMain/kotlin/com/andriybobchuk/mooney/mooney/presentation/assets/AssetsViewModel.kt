@@ -57,7 +57,8 @@ class AssetsViewModel(
     private val premiumManager: PremiumManager,
     private val loadHistoricalRatesUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.LoadHistoricalRatesUseCase,
     private val calculateRatePercentileUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.CalculateRatePercentileUseCase,
-    private val dataStore: androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>
+    private val dataStore: androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>,
+    private val trackFirstEventUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.TrackFirstEventUseCase
 ) : ViewModel() {
 
     private var observeAccountsJob: Job? = null
@@ -246,9 +247,6 @@ class AssetsViewModel(
     fun onNetWorthLabelClick() {
         currencyManagerUseCase.cycleToNextCurrency()
         updateTotalNetWorth()
-        analyticsTracker.trackEvent(
-            AnalyticsEvent.CycleCurrencyDisplay(currencyManagerUseCase.getCurrentCurrency().name)
-        )
     }
 
     fun refreshExchangeRates() {
@@ -256,7 +254,7 @@ class AssetsViewModel(
             _uiState.update { it.copy(isRefreshingRates = true) }
             when (val result = currencyManagerUseCase.refreshExchangeRates()) {
                 is Result.Success -> {
-                    analyticsTracker.trackEvent(AnalyticsEvent.RefreshExchangeRates)
+                    analyticsTracker.log("Exchange rates refreshed (Assets)")
                     val currentAccounts = getAccountsUseCase().first()
                     val uiAssets = convertAccountsToUiUseCase(currentAccounts).filterNotNull()
                     _uiState.update {
@@ -338,6 +336,7 @@ class AssetsViewModel(
                     val allAccounts = getAccountsUseCase().first().filterNotNull()
                     val currentCount = allAccounts.size
                     if (currentCount >= PremiumConfig.maxFreeAccounts) {
+                        analyticsTracker.trackEvent(AnalyticsEvent.FeatureLimitHit("accounts"))
                         withContext(Dispatchers.Main) {
                             _uiState.update { it.copy(showPaywall = true) }
                         }
@@ -369,6 +368,15 @@ class AssetsViewModel(
 
             try {
                 addAccountUseCase(account)
+                if (id == 0) {
+                    analyticsTracker.trackEvent(
+                        AnalyticsEvent.AccountAdded(
+                            currency = currency.name,
+                            isLiability = existingIsLiability
+                        )
+                    )
+                    trackFirstEventUseCase.firstAccount()
+                }
                 // Force immediate recalculation
                 val accounts = getAccountsUseCase().first()
                 withContext(Dispatchers.Main) {

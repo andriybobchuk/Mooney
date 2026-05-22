@@ -135,6 +135,7 @@ class GoalsViewModel(
     ) {
         viewModelScope.launch {
             try {
+                val wasEdit = _uiState.value.editingGoal != null
                 saveGoalUseCase(
                     existingGoal = _uiState.value.editingGoal,
                     title = title,
@@ -143,6 +144,11 @@ class GoalsViewModel(
                     trackingType = trackingType,
                     accountId = accountId
                 )
+                if (!wasEdit) {
+                    analyticsTracker.trackEvent(
+                        com.andriybobchuk.mooney.core.analytics.AnalyticsEvent.GoalAdded(trackingType.name)
+                    )
+                }
                 _uiState.update { it.copy(showAddGoalSheet = false, editingGoal = null) }
             } catch (e: CancellationException) {
                 throw e

@@ -78,7 +78,8 @@ class TransactionViewModel(
     private val manageCategoryExpansionUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageCategoryExpansionUseCase,
     private val manageAssetCategoryOrderUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageAssetCategoryOrderUseCase,
     private val manageTransactionCategoryOrderUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.ManageTransactionCategoryOrderUseCase,
-    private val requestReviewUseCase: com.andriybobchuk.mooney.core.review.RequestReviewUseCase
+    private val requestReviewUseCase: com.andriybobchuk.mooney.core.review.RequestReviewUseCase,
+    private val trackFirstEventUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.TrackFirstEventUseCase
 ) : ViewModel() {
 
     private var observeTransactionsJob: Job? = null
@@ -261,9 +262,6 @@ class TransactionViewModel(
 
     fun onTotalCurrencyClick() {
         currencyManagerUseCase.cycleToNextCurrency()
-        analyticsTracker.trackEvent(
-            AnalyticsEvent.CycleCurrencyDisplay(currencyManagerUseCase.getCurrentCurrency().name)
-        )
         loadTotal()
     }
 
@@ -275,7 +273,16 @@ class TransactionViewModel(
             loadTotal()
             // Only on creates, never on edits — editing is a maintenance act,
             // not a positive moment.
-            if (!wasEdit) maybeRequestReviewAfterMilestone()
+            if (!wasEdit) {
+                analyticsTracker.trackEvent(
+                    AnalyticsEvent.TransactionAdded(
+                        type = transaction.subcategory.type.name,
+                        currency = transaction.account.currency.name
+                    )
+                )
+                trackFirstEventUseCase.firstTransaction()
+                maybeRequestReviewAfterMilestone()
+            }
         }
     }
 
@@ -376,6 +383,9 @@ class TransactionViewModel(
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             createRecurringFromTransactionUseCase(transaction, schedule)
+            analyticsTracker.trackEvent(
+                AnalyticsEvent.RecurringAdded(schedule.frequency.name)
+            )
         }
     }
 }

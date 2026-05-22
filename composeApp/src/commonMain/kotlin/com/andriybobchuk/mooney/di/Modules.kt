@@ -111,6 +111,7 @@ val sharedModule = module {
 
     // Use Cases — existing
     singleOf(::AddTransactionUseCase)
+    singleOf(::TrackFirstEventUseCase)
     singleOf(::DeleteTransactionUseCase)
     singleOf(::GetTransactionsUseCase)
     singleOf(::AddAccountUseCase)
@@ -197,11 +198,11 @@ val sharedModule = module {
     // Theme
     singleOf(::ThemeManager)
 
-    // Premium
-    single { PremiumManager(get(), get()) }
-
-    // Analytics
+    // Analytics — registered before PremiumManager so its `get()` resolves.
     singleOf(::DefaultAnalyticsTracker).bind<AnalyticsTracker>()
+
+    // Premium
+    single { PremiumManager(get(), get(), get()) }
 
     viewModelOf(::AssetsViewModel)
     // Manual registration — TransactionViewModel has too many params for `viewModelOf`.
@@ -230,7 +231,8 @@ val sharedModule = module {
             manageCategoryExpansionUseCase = get(),
             manageAssetCategoryOrderUseCase = get(),
             manageTransactionCategoryOrderUseCase = get(),
-            requestReviewUseCase = get()
+            requestReviewUseCase = get(),
+            trackFirstEventUseCase = get()
         )
     }
     viewModelOf(::AnalyticsViewModel)

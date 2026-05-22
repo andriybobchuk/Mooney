@@ -90,7 +90,8 @@ fun SettingsScreen(
             onDismiss = {
                 showRatePrePrompt = false
                 rateScope.launch { rateReview.markPromptShown() }
-            }
+            },
+            source = "settings_rate_row"
         )
     }
     val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
@@ -925,6 +926,12 @@ fun SettingsScreen(
                                 value = if (state.devForcePremium) "Pro" else "Free",
                                 onClick = { viewModel.setDevPlanPro(!state.devForcePremium) }
                             )
+                            SettingsDivider()
+                            SettingsRow(
+                                title = "Force test crash",
+                                value = "Tap to crash",
+                                onClick = { viewModel.forceTestCrash() }
+                            )
                         }
                     }
                 }
@@ -987,7 +994,7 @@ fun SettingsScreen(
                         )
                         SettingsDivider()
                         SettingsRow(
-                            title = "Chat with Developer",
+                            title = "Share feedback",
                             onClick = { showFeedbackSheet = true }
                         )
                         SettingsDivider()

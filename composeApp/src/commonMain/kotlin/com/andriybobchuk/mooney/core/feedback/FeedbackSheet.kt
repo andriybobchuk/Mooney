@@ -40,6 +40,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
+import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.EnhancedMeshBackground
 import com.andriybobchuk.mooney.mooney.domain.feedback.FeedbackKind
 import com.andriybobchuk.mooney.mooney.domain.usecase.SubmitFeedbackUseCase
@@ -65,6 +67,7 @@ fun FeedbackSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val submitFeedback: SubmitFeedbackUseCase = koinInject()
+    val analyticsTracker: AnalyticsTracker = koinInject()
     val scope = rememberCoroutineScope()
 
     var kind by remember { mutableStateOf(initialKind) }
@@ -114,7 +117,14 @@ fun FeedbackSheet(
                             scope.launch {
                                 val ok = submitFeedback(kind, body)
                                 submitting = false
-                                if (ok) thanksVisible = true else error = true
+                                if (ok) {
+                                    analyticsTracker.trackEvent(
+                                        AnalyticsEvent.FeedbackSubmitted(kind.name)
+                                    )
+                                    thanksVisible = true
+                                } else {
+                                    error = true
+                                }
                             }
                         }
                     )

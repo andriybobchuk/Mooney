@@ -18,13 +18,17 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
+import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.EnhancedMeshBackground
+import org.koin.compose.koinInject
 
 /**
  * Two-step gate before the native review prompt. Same mesh-gradient styling as
@@ -37,11 +41,28 @@ import com.andriybobchuk.mooney.core.presentation.designsystem.components.Enhanc
 fun ReviewPrePromptDialog(
     onPositive: () -> Unit,
     onNegative: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    source: String = "unknown"
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val analyticsTracker: AnalyticsTracker = koinInject()
+    LaunchedEffect(Unit) {
+        analyticsTracker.trackEvent(AnalyticsEvent.ReviewPrepromptShown(source))
+    }
+    val wrappedPositive: () -> Unit = {
+        analyticsTracker.trackEvent(AnalyticsEvent.ReviewPrepromptResponse("positive"))
+        onPositive()
+    }
+    val wrappedNegative: () -> Unit = {
+        analyticsTracker.trackEvent(AnalyticsEvent.ReviewPrepromptResponse("negative"))
+        onNegative()
+    }
+    val wrappedDismiss: () -> Unit = {
+        analyticsTracker.trackEvent(AnalyticsEvent.ReviewPrepromptResponse("dismissed"))
+        onDismiss()
+    }
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = wrappedDismiss,
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.background,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
@@ -80,7 +101,7 @@ fun ReviewPrePromptDialog(
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(
-                    onClick = onPositive,
+                    onClick = wrappedPositive,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
@@ -98,7 +119,7 @@ fun ReviewPrePromptDialog(
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 OutlinedButton(
-                    onClick = onNegative,
+                    onClick = wrappedNegative,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),

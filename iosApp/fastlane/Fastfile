@@ -83,14 +83,17 @@ platform :ios do
       skip_waiting_for_build_processing: true,
     )
 
-    # Upload dSYMs to Crashlytics so crash stack traces are symbolicated.
-    # Without this step, iOS crash reports show raw memory addresses.
-    # The Firebase Swift Package adds the upload-symbols binary to the build
-    # output; the fastlane action finds it via gsp_path's bundle directory.
-    upload_symbols_to_crashlytics(
-      gsp_path: "iosApp/GoogleService-Info.plist",
-      dsym_path: lane_context[SharedValues::DSYM_OUTPUT_PATH],
-    ) if lane_context[SharedValues::DSYM_OUTPUT_PATH]
+    # NOTE: dSYM upload to Crashlytics is intentionally NOT done here.
+    # `upload_symbols_to_crashlytics` can't locate Firebase's upload-symbols
+    # binary when the SDK is installed via SwiftPM (it expects CocoaPods).
+    # Instead, dSYMs reach Firebase via Apple's auto-export: turn on
+    # "Include Bitcode" -> No (it's already off) and let App Store Connect
+    # process the dSYMs; Firebase pulls them via the Apple ID connection in
+    # the Firebase console. If symbols don't appear within a few hours after
+    # a TestFlight build, the manual fallback is:
+    #   bundle exec fastlane run download_dsyms version:LATEST
+    #   bundle exec fastlane run upload_symbols_to_crashlytics gsp_path:iosApp/GoogleService-Info.plist
+    # run locally (where the Firebase SPM checkout is on disk).
 
     # Clean up keychain
     if is_ci

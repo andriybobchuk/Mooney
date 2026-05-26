@@ -51,7 +51,29 @@ expect val platformModule: Module
 val sharedModule = module {
     single { HttpClientFactory.create(get()) }
 
+    // Application-lifetime coroutine scope. Used by the AppDataCache below
+    // to keep its underlying flows alive for the whole process. A
+    // SupervisorJob ensures a single failed child flow doesn't tear down
+    // the whole cache.
+    single<kotlinx.coroutines.CoroutineScope> {
+        kotlinx.coroutines.CoroutineScope(
+            kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default
+        )
+    }
+
     singleOf(::DefaultCoreRepositoryImpl).bind<CoreRepository>()
+
+    // App-wide data snapshot cache. Eager StateFlow over the heavy DAO
+    // flows — every screen reads the latest snapshot from here so tab
+    // switches paint cached data on the first frame instead of flashing
+    // shimmer between identical states.
+    single<com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache> {
+        com.andriybobchuk.mooney.mooney.data.cache.DefaultAppDataCache(
+            getTransactionsUseCase = get(),
+            getAccountsUseCase = get(),
+            appScope = get()
+        )
+    }
 
     single {
         get<MooneyDatabaseFactory>().create()
@@ -232,7 +254,8 @@ val sharedModule = module {
             manageAssetCategoryOrderUseCase = get(),
             manageTransactionCategoryOrderUseCase = get(),
             requestReviewUseCase = get(),
-            trackFirstEventUseCase = get()
+            trackFirstEventUseCase = get(),
+            appDataCache = get()
         )
     }
     viewModelOf(::AnalyticsViewModel)

@@ -58,12 +58,18 @@ class AssetsViewModel(
     private val loadHistoricalRatesUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.LoadHistoricalRatesUseCase,
     private val calculateRatePercentileUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.CalculateRatePercentileUseCase,
     private val dataStore: androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>,
-    private val trackFirstEventUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.TrackFirstEventUseCase
+    private val trackFirstEventUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.TrackFirstEventUseCase,
+    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
 ) : ViewModel() {
 
     private var observeAccountsJob: Job? = null
 
-    private val _uiState = MutableStateFlow(AssetsState())
+    // Seed initial isInitialLoading from the app cache: if the cache is
+    // already warm, we render the previous snapshot's data on first frame
+    // and skip the shimmer altogether. Only a true cold start shows it.
+    private val _uiState = MutableStateFlow(
+        AssetsState(isInitialLoading = !appDataCache.snapshot.value.isReady)
+    )
 
     init {
         observeBaseCurrencyChanges()
@@ -140,7 +146,9 @@ class AssetsViewModel(
     private fun observeAssets() {
         observeAccountsJob?.cancel()
         observeAccountsJob = combine(
-            getAccountsUseCase(),
+            // Accounts come from the shared app cache — pre-warmed at app
+            // start, survives tab switches, no re-query cost.
+            appDataCache.snapshot.map { it.accounts },
             manageAssetCategoryOrderUseCase.getCategoryOrder(),
             manageCategoryExpansionUseCase.getExpandedCategories()
         ) { accounts, categoryOrder, expandedCategories ->

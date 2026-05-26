@@ -1,5 +1,6 @@
 package com.andriybobchuk.mooney.mooney.presentation.analytics
 
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.foundation.background
@@ -118,7 +119,11 @@ fun AnalyticsScreen(
     }
     val hasAnyData = state.transactionsForMonth.filterNotNull().isNotEmpty() ||
         state.historicalMetrics.any { it.revenue > 0 || it.taxes > 0 || it.operatingCosts > 0 || it.netIncome != 0.0 }
-    val isEmptyState = !hasAnyData && !state.isLoading
+    // Don't show the "no analytics yet" empty state while the very first load
+    // is in progress — otherwise the user sees the empty state for a frame
+    // before the data populates. Once isInitialLoading flips to false, the
+    // empty state is the right thing to render if there really is no data.
+    val isEmptyState = !hasAnyData && !state.isLoading && !state.isInitialLoading
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
@@ -191,7 +196,17 @@ fun AnalyticsScreen(
                 }
             }
 
-            if (!isEmpty) {
+            if (!isEmpty && state.isInitialLoading) {
+                // True cold start: real metrics still computing. Render
+                // placeholder cards so the user doesn't see a grid of zeros.
+                AnalyticsScreenShimmer(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                )
+            }
+
+            if (!isEmpty && !state.isInitialLoading) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -1246,6 +1261,52 @@ private fun NetIncomeBarChart(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Cold-start placeholder for the Analytics screen. Same alpha animation as
+ * Assets/Transactions shimmers so the loading feel is consistent across the
+ * app. Shows the rough layout: trend chart band + 3 metric card placeholders.
+ */
+@Composable
+private fun AnalyticsScreenShimmer(modifier: Modifier = Modifier) {
+    val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "analyticsShimmer")
+    val alpha by transition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.75f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(900),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "analyticsShimmerAlpha"
+    )
+    val barColor = MaterialTheme.colorScheme.onSurface.copy(
+        alpha = 0.08f * (alpha * 2f).coerceAtMost(1f)
+    )
+    Column(
+        modifier = modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Trend chart band placeholder.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(barColor)
+        )
+
+        // Metric card placeholders (revenue / expenses / net income).
+        repeat(3) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(72.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(barColor)
+            )
         }
     }
 }

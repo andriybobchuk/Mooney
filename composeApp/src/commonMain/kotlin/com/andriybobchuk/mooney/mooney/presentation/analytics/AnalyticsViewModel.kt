@@ -33,6 +33,12 @@ data class AnalyticsState(
     val categorySheetType: CategorySheetType? = null,
     val isNetIncomeSheetOpen: Boolean = false,
     val isLoading: Boolean = false,
+    /**
+     * True until the first metrics + historical calculation finishes. Drives
+     * the cold-start shimmer so we never render the analytics layout with
+     * placeholder zeros while the real numbers are still being computed.
+     */
+    val isInitialLoading: Boolean = true,
     val sheetCategories: List<TopCategorySummary> = emptyList(),
     val isTransactionsSheetOpen: Boolean = false,
     val transactionsSheetCategory: Category? = null,
@@ -107,7 +113,11 @@ class AnalyticsViewModel(
                         totalRevenuePlnForMonth = analyticsResult.totalRevenue,
                         topCategories = analyticsResult.topCategories,
                         exchangeRates = exchangeRates,
-                        isLoading = false
+                        isLoading = false,
+                        // First-emission lands here — turn off the cold-start
+                        // shimmer. Subsequent month switches reuse this
+                        // already-loaded state.
+                        isInitialLoading = false
                     )
                 }
 

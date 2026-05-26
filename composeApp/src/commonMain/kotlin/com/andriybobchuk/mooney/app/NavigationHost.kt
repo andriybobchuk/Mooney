@@ -59,6 +59,13 @@ fun NavigationHost() {
     val getAccountsUseCase: GetAccountsUseCase = koinInject()
     val analyticsTracker: AnalyticsTracker = koinInject()
     val preferencesRepository: PreferencesRepository = koinInject()
+    // Pre-warm the app-wide data cache as early as possible — touching it here
+    // forces Koin to construct the singleton, which kicks off its eager
+    // SharingStarted.Eagerly collection so the snapshot is populated by the
+    // time the first screen renders. Without this, the cache would lazy-init
+    // on the first screen's first read, giving us back the shimmer flash.
+    @Suppress("UNUSED_VARIABLE")
+    val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache = koinInject()
 
     // Determine start destination based on onboarding state
     var startDestination by remember { mutableStateOf<Route?>(null) }
@@ -227,8 +234,12 @@ fun NavigationHost() {
         navigation<Route.MooneyGraph>(
             startDestination = Route.Transactions
         ) {
-            composable<Route.Transactions> {
-                val viewModel = koinViewModel<TransactionViewModel>()
+            // Bottom-nav tab ViewModels are scoped to the parent MooneyGraph so
+            // they survive tab switching. Without this, each switch recreates
+            // the VM, which flashes shimmer / re-renders empty state for a frame
+            // even though all data is local. Same pattern as Analytics below.
+            composable<Route.Transactions> { entry ->
+                val viewModel = entry.sharedKoinViewModel<TransactionViewModel>(navController)
                 TransactionsScreen(
                     viewModel = viewModel,
                     bottomNavbar = { BottomNavigationBar(navController, 0) },
@@ -238,8 +249,8 @@ fun NavigationHost() {
                     onNavigateToTransactionCategories = { navController.navigate(Route.TransactionCategories) }
                 )
             }
-            composable<Route.Accounts> {
-                val viewModel = koinViewModel<AssetsViewModel>()
+            composable<Route.Accounts> { entry ->
+                val viewModel = entry.sharedKoinViewModel<AssetsViewModel>(navController)
                 AssetsScreen(
                     viewModel = viewModel,
                     bottomNavbar = { BottomNavigationBar(navController, 1) },
@@ -252,8 +263,8 @@ fun NavigationHost() {
             }
 
             if (FeatureFlags.exchangeEnabled) {
-                composable<Route.Exchange> {
-                    val viewModel = koinViewModel<ExchangeViewModel>()
+                composable<Route.Exchange> { entry ->
+                    val viewModel = entry.sharedKoinViewModel<ExchangeViewModel>(navController)
                     ExchangeScreen(
                         viewModel = viewModel,
                         bottomNavbar = { BottomNavigationBar(navController, 2) },

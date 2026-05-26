@@ -220,6 +220,24 @@ fun TransactionCategoriesScreen(
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
+                        // Delete button mirrors the one on subcategories so users can
+                        // remove parent (general) categories too. VM already handles
+                        // reassigning child subcategories + linked transactions to the
+                        // root type when a parent is deleted.
+                        IconButton(
+                            onClick = {
+                                deleteId = category.id
+                                deleteName = category.title
+                            },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Text(
+                                "×",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
 
                     // Subcategories

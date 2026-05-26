@@ -154,10 +154,14 @@ android {
     }
 }
 
-// Generate AppVersion.kt from gradle.properties
+// Generate AppVersion.kt from gradle.properties.
+// `inputs.property("version", version)` is critical: without it the task
+// has no declared inputs, so Gradle marks it UP-TO-DATE forever and the
+// regenerated file silently stays on the old version after a bump.
 val generateVersionFile by tasks.registering {
     val outputDir = layout.buildDirectory.dir("generated/version/kotlin")
     val version = findProperty("app.version") as String
+    inputs.property("version", version)
     outputs.dir(outputDir)
     doLast {
         val dir = outputDir.get().asFile.resolve("com/andriybobchuk/mooney")

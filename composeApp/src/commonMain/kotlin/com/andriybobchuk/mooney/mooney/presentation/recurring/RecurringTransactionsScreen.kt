@@ -159,6 +159,10 @@ fun RecurringTransactionsScreen(
         RecurringTransactionAddSheet(
             accounts = state.accounts,
             categories = state.categories,
+            assetCategories = state.assetCategories,
+            categoryOrder = state.categoryOrder,
+            expandedCategories = state.expandedCategories,
+            onToggleAccountCategory = viewModel::toggleAccountCategoryExpansion,
             selectedMonth = MonthKey.current(),
             editingRecurring = editingRecurring,
             onDismiss = {
@@ -292,6 +296,10 @@ private fun RecurringTransactionItem(
 private fun RecurringTransactionAddSheet(
     accounts: List<com.andriybobchuk.mooney.mooney.domain.AccountWithConversion?>,
     categories: List<com.andriybobchuk.mooney.mooney.domain.Category>,
+    assetCategories: List<com.andriybobchuk.mooney.core.data.database.AssetCategoryEntity>,
+    categoryOrder: List<String>,
+    expandedCategories: Set<String>,
+    onToggleAccountCategory: (String) -> Unit,
     selectedMonth: MonthKey,
     editingRecurring: RecurringTransaction?,
     onDismiss: () -> Unit,
@@ -318,6 +326,12 @@ private fun RecurringTransactionAddSheet(
         transactionToEdit = transactionToEdit,
         accounts = accounts,
         categories = categories,
+        // Pass through so the account picker can render real category titles
+        // and the user can expand/collapse groups (#29).
+        assetCategories = assetCategories,
+        categoryOrder = categoryOrder,
+        expandedCategories = expandedCategories,
+        onToggleAccountCategory = onToggleAccountCategory,
         selectedMonth = selectedMonth,
         forceRecurringEnabled = true,
         initialRecurringSchedule = editingRecurring?.schedule,

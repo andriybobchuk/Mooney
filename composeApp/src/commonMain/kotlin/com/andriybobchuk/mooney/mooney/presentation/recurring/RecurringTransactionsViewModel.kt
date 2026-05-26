@@ -30,7 +30,14 @@ data class RecurringTransactionsState(
     val recurringTransactions: List<RecurringTransaction> = emptyList(),
     val accounts: List<AccountWithConversion?> = emptyList(),
     val categories: List<Category> = emptyList(),
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    // Mirror of the Transactions screen state so the embedded
+    // TransactionBottomSheet renders its account picker with display titles
+    // and a working expand/collapse toggle. Without these the picker fell
+    // back to showing raw `assetCategoryId` enum values like "CHECKING".
+    val assetCategories: List<com.andriybobchuk.mooney.core.data.database.AssetCategoryEntity> = emptyList(),
+    val categoryOrder: List<String> = emptyList(),
+    val expandedCategories: Set<String> = emptySet()
 )
 
 class RecurringTransactionsViewModel(
@@ -40,7 +47,10 @@ class RecurringTransactionsViewModel(
     private val createRecurringFromTransactionUseCase: CreateRecurringFromTransactionUseCase,
     private val getAccountsUseCase: GetAccountsUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
-    private val convertAccountsToUiUseCase: ConvertAccountsToUiUseCase
+    private val convertAccountsToUiUseCase: ConvertAccountsToUiUseCase,
+    private val assetCategoryDao: com.andriybobchuk.mooney.core.data.database.AssetCategoryDao,
+    private val manageAssetCategoryOrderUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageAssetCategoryOrderUseCase,
+    private val manageCategoryExpansionUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageCategoryExpansionUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RecurringTransactionsState())
@@ -55,6 +65,21 @@ class RecurringTransactionsViewModel(
     private fun loadData() {
         getRecurringTransactionsUseCase().onEach { list ->
             _uiState.update { it.copy(recurringTransactions = list) }
+        }.launchIn(viewModelScope)
+
+        // Asset categories / order / expansion state — needed so the embedded
+        // TransactionBottomSheet's account picker renders the same way it does
+        // on the Transactions screen.
+        assetCategoryDao.getAll().onEach { categories ->
+            _uiState.update { it.copy(assetCategories = categories) }
+        }.launchIn(viewModelScope)
+
+        manageAssetCategoryOrderUseCase.getCategoryOrder().onEach { order ->
+            _uiState.update { it.copy(categoryOrder = order) }
+        }.launchIn(viewModelScope)
+
+        manageCategoryExpansionUseCase.getExpandedCategories().onEach { expanded ->
+            _uiState.update { it.copy(expandedCategories = expanded) }
         }.launchIn(viewModelScope)
 
         viewModelScope.launch {
@@ -74,6 +99,15 @@ class RecurringTransactionsViewModel(
             } catch (_: Exception) {
                 _uiState.update { it.copy(isLoading = false) }
             }
+        }
+    }
+
+    fun toggleAccountCategoryExpansion(categoryId: String) {
+        viewModelScope.launch {
+            manageCategoryExpansionUseCase.toggleCategoryExpansion(
+                category = categoryId,
+                currentExpanded = _uiState.value.expandedCategories
+            )
         }
     }
 

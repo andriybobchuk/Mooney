@@ -79,14 +79,29 @@ class TransactionViewModel(
     private val manageAssetCategoryOrderUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageAssetCategoryOrderUseCase,
     private val manageTransactionCategoryOrderUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.ManageTransactionCategoryOrderUseCase,
     private val requestReviewUseCase: com.andriybobchuk.mooney.core.review.RequestReviewUseCase,
-    private val trackFirstEventUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.TrackFirstEventUseCase
+    private val trackFirstEventUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.TrackFirstEventUseCase,
+    // App-scoped cache: reading from here means the snapshot's current value
+    // is already populated by the time this ViewModel is constructed, so the
+    // first state emission carries real data and we never flash an empty
+    // shimmer between screens.
+    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
 ) : ViewModel() {
 
     private var observeTransactionsJob: Job? = null
     private var excludeTaxes: Boolean = true
     private var allPendingTransactions: List<PendingTransactionEntity> = emptyList()
 
-    private val _uiState = MutableStateFlow(TransactionState())
+    // Seed initial state from the app cache so we never start with empty
+    // transactions/accounts on a screen revisit. If the cache hasn't warmed
+    // yet (true cold start), [TransactionState.isInitialLoading] stays true
+    // and the shimmer takes over until the first cache emission lands.
+    private val _uiState = MutableStateFlow(seedFromCache())
+
+    private fun seedFromCache(): TransactionState {
+        val cached = appDataCache.snapshot.value
+        return TransactionState(isInitialLoading = !cached.isReady)
+    }
+
     val state = _uiState
         .onStart {
             observeTransactions(_uiState.value.selectedMonth)
@@ -117,7 +132,13 @@ class TransactionViewModel(
     private fun observeTransactions(month: MonthKey) {
         observeTransactionsJob?.cancel()
 
-        observeTransactionsJob = getTransactionsUseCase()
+        // Read the transactions feed from the app cache instead of going
+        // straight to the repository. The cache's StateFlow always has a
+        // current value, so the first .onEach invocation receives the
+        // already-loaded data immediately — no flash, no shimmer between
+        // visits to this screen.
+        observeTransactionsJob = appDataCache.snapshot
+            .map { it.transactions }
             .map { transactions -> filterTransactionsByMonthUseCase(transactions, month) }
             .onEach { filteredTransactions ->
                 val sorted = filteredTransactions.sortedByDescending { it.date }
@@ -214,7 +235,9 @@ class TransactionViewModel(
             _uiState.update { it.copy(isLoading = true) }
             try {
                 combine(
-                    getAccountsUseCase(),
+                    // Accounts flow comes from the app cache: tab switches
+                    // see the latest snapshot immediately, no re-query.
+                    appDataCache.snapshot.map { it.accounts },
                     assetCategoryDao.getAll(),
                     manageAssetCategoryOrderUseCase.getCategoryOrder(),
                     manageCategoryExpansionUseCase.getExpandedCategories(),

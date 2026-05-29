@@ -1,0 +1,83 @@
+name: Issue Agent
+
+# Fires the moment an issue is opened. Claude triages it and — for low-risk
+# bugs — fixes, verifies against the CI gate, bumps the version, and merges to
+# master, which triggers the existing TestFlight deploy in ci.yml.
+#
+# Required repository secrets:
+#   ANTHROPIC_API_KEY    - billed API key for Claude
+#   RELEASE_PAT          - fine-grained PAT (contents:write, pull-requests:write,
+#                          issues:write). REQUIRED so the push to master made here
+#                          re-triggers ci.yml — pushes made with the default
+#                          GITHUB_TOKEN do NOT trigger other workflows.
+#   EXCHANGE_RATE_API_KEY - already used by ci.yml (Secrets.kt generation)
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Issue number to process"
+        required: true
+
+# One issue at a time — prevents two agents racing on master / version bumps.
+concurrency:
+  group: issue-agent
+  cancel-in-progress: false
+
+jobs:
+  agent:
+    # Skip bot-authored issues and anything explicitly opted out with `no-agent`.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.issue.user.type != 'Bot' &&
+       !contains(github.event.issue.labels.*.name, 'no-agent'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # PAT (not GITHUB_TOKEN) so the master push re-triggers ci.yml's deploy.
+          token: ${{ secrets.RELEASE_PAT }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Generate Secrets.kt
+        run: |
+          cat > composeApp/src/commonMain/kotlin/com/andriybobchuk/mooney/core/data/Secrets.kt <<'KOTLIN'
+          package com.andriybobchuk.mooney.core.data
+          object Secrets {
+              const val EXCHANGE_RATE_API_KEY = "${{ secrets.EXCHANGE_RATE_API_KEY }}"
+              const val FIREBASE_PROJECT_ID = "mooney-39533"
+          }
+          KOTLIN
+
+      - name: Configure git identity
+        run: |
+          git config user.name "mooney-issue-agent"
+          git config user.email "andriybobchuk@gmail.com"
+
+      - name: Run Claude issue agent
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Follow the playbook in .github/issue-agent-prompt.md to the letter.
+            The issue to process is number ${{ github.event.issue.number || github.event.inputs.issue_number }}.
+          # Headless CI run on an ephemeral runner — allow the tools the playbook needs.
+          claude_args: >-
+            --allowedTools "Bash,Edit,Write,Read,Glob,Grep"
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number || github.event.inputs.issue_number }}
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}

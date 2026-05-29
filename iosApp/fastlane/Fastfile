@@ -77,10 +77,21 @@ platform :ios do
       },
     )
 
+    # "What to Test" notes for TestFlight. The issue agent writes a one-line
+    # changelog to fastlane/changelog.txt describing the fix it shipped; fall
+    # back to a generic line for manual releases that don't set it.
+    changelog_path = "fastlane/changelog.txt"
+    test_notes = if File.exist?(changelog_path) && !File.read(changelog_path).strip.empty?
+      File.read(changelog_path).strip
+    else
+      "Bug fixes and improvements."
+    end
+
     # Upload to TestFlight
     upload_to_testflight(
       api_key: api_key,
       skip_waiting_for_build_processing: true,
+      changelog: test_notes,
     )
 
     # NOTE: dSYM upload to Crashlytics is intentionally NOT done here.

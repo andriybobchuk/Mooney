@@ -60,17 +60,17 @@ class AnalyticsViewModel(
     private val loadHistoricalAnalyticsUseCase: LoadHistoricalAnalyticsUseCase,
     private val loadCategoriesForSheetTypeUseCase: LoadCategoriesForSheetTypeUseCase,
     private val getPreviousMonthTransactionsUseCase: GetPreviousMonthTransactionsUseCase,
-    private val analyticsTracker: AnalyticsTracker,
-    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
+    private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
     private var baseCurrency: Currency = GlobalConfig.baseCurrency
 
-    // Seed isInitialLoading from the warm cache. On a warm tab-switch the
-    // cache already has data and the computed metrics will land within ms,
-    // so there's no reason to show the shimmer.
-    private val _state = MutableStateFlow(
-        AnalyticsState(isInitialLoading = !appDataCache.snapshot.value.isReady)
-    )
+    // Note: do NOT seed isInitialLoading from the cache. Cache warmth only
+    // means raw transactions/accounts are loaded — analytics still needs to
+    // recompute its derived metrics (revenue/expense/categories per month),
+    // and rendering the screen with empty `metrics` while that runs would
+    // look like a flash of zeros. Keep `isInitialLoading = true` until the
+    // first loadMetricsForMonth() actually finishes.
+    private val _state = MutableStateFlow(AnalyticsState())
     val state: StateFlow<AnalyticsState> = _state
 
     init {

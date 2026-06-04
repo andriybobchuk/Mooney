@@ -1,1 +1,1 @@
-Fixed flicker when switching tabs — every screen now reads from a shared in-memory cache so cached data appears instantly.
+Smoother loading on every tab — the Analytics screen no longer briefly shows empty metrics on first visit.

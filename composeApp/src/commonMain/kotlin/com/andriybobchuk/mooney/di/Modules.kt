@@ -63,14 +63,22 @@ val sharedModule = module {
 
     singleOf(::DefaultCoreRepositoryImpl).bind<CoreRepository>()
 
-    // App-wide data snapshot cache. Eager StateFlow over the heavy DAO
-    // flows — every screen reads the latest snapshot from here so tab
+    // App-wide data snapshot cache. Eager StateFlow over every reactive data
+    // source — every screen reads the latest snapshot from here so tab
     // switches paint cached data on the first frame instead of flashing
-    // shimmer between identical states.
+    // shimmer or empty-state placeholders between identical states.
     single<com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache> {
         com.andriybobchuk.mooney.mooney.data.cache.DefaultAppDataCache(
             getTransactionsUseCase = get(),
             getAccountsUseCase = get(),
+            getGoalsUseCase = get(),
+            getRecurringTransactionsUseCase = get(),
+            getUserCurrenciesUseCase = get(),
+            getCategoriesUseCase = get(),
+            coreRepository = get(),
+            categoryDao = get(),
+            assetCategoryDao = get(),
+            pendingTransactionDao = get(),
             appScope = get()
         )
     }

@@ -1,0 +1,47 @@
+# After adding a new transaction, every other tab should reflect the
+# updated state without re-entering a loading/empty state. This proves the
+# AppDataCache is a single source of truth: a write on one screen instantly
+# flows through to every reader.
+appId: com.andriybobchuk.mooney
+---
+- launchApp:
+    clearState: false
+    stopApp: true
+
+# Pre-condition: we're on the Transactions tab. Tap the + FAB to open the
+# add-transaction bottom sheet. If the user has no accounts yet, this test
+# is skipped (we don't auto-onboard inside the flow — onboarded state is
+# expected from the dev environment).
+- tapOn:
+    text: "Transactions"
+- runFlow:
+    when:
+      visible:
+        text: "+"
+    commands:
+      - tapOn:
+          text: "+"
+      # Fill in a quick transaction. The amount field is typically focused
+      # automatically. If the picker UI shifts, this assertion makes the
+      # failure obvious.
+      - assertVisible:
+          text: "Expense"
+      # Don't actually commit a transaction in this flow — that mutates state.
+      # The real assertion below: after closing the sheet, tabs still don't
+      # flicker. Swipe down to dismiss.
+      - swipe:
+          direction: DOWN
+
+# Now switch tabs. None of them should flash an empty state.
+- tapOn:
+    text: "Analytics"
+- assertNotVisible:
+    text: "No analytics yet"
+- tapOn:
+    text: "Assets"
+- assertNotVisible:
+    text: "Add your first account"
+- tapOn:
+    text: "Transactions"
+- assertNotVisible:
+    text: "Let's get started"

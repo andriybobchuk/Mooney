@@ -1,0 +1,21 @@
+# Cold start: app launches, the FIRST visible tab (Transactions) must NEVER
+# flash "Let's get started" / "No transactions yet" before data arrives.
+# Either real content or a shimmer is acceptable on the first frame; the
+# empty-state placeholder is NOT.
+appId: com.andriybobchuk.mooney
+---
+- launchApp:
+    clearState: false   # use whatever state the device has — typically pre-onboarded
+    stopApp: true
+# Give the bottom nav a moment to render. If the cache is warm (almost always),
+# transaction content appears immediately. We assert the bottom nav exists.
+- assertVisible:
+    text: "Transactions"
+    timeout: 5000
+# The empty-state copy must NOT be visible — content (header / list) should be
+# there instead. This catches regressions where a screen renders empty-state
+# placeholder during initial load.
+- assertNotVisible:
+    text: "Let's get started"
+- assertNotVisible:
+    text: "Add your first account"

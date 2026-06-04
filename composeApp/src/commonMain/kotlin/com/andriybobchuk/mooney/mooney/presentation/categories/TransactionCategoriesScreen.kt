@@ -138,6 +138,20 @@ fun TransactionCategoriesScreen(
             )
         }
     ) { paddingValues ->
+        if (state.isInitialLoading) {
+            // Cold start (rare here — usually entered with warm cache); render
+            // a tiny spinner rather than letting the screen flash blank.
+            Box(
+                modifier = Modifier.fillMaxSize().padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.material3.CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.primary,
+                    strokeWidth = 2.dp
+                )
+            }
+            return@Scaffold
+        }
         val generalCategories = remember(state.allCategories) {
             state.allCategories.filter { it.isGeneralCategory() }
         }

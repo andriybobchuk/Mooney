@@ -1,5 +1,6 @@
 package com.andriybobchuk.mooney.mooney.presentation.recurring
 
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -106,7 +107,11 @@ fun RecurringTransactionsScreen(
             }
         }
     ) { paddingValues ->
-        if (state.recurringTransactions.isEmpty()) {
+        if (state.isInitialLoading) {
+            // Cold start: row-shaped placeholders. Same shimmer cadence as the
+            // other tabs so the loading feel is consistent across the app.
+            RecurringTransactionsShimmer(modifier = Modifier.padding(paddingValues))
+        } else if (state.recurringTransactions.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -606,6 +611,40 @@ private fun MonthChips(
                     selectedContainerColor = MaterialTheme.colorScheme.primary,
                     selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                 )
+            )
+        }
+    }
+}
+
+/** Cold-start placeholder for the recurring-transactions list. */
+@Composable
+private fun RecurringTransactionsShimmer(modifier: Modifier = Modifier) {
+    val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "recShimmer")
+    val alpha by transition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.75f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(900),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "recShimmerAlpha"
+    )
+    val barColor = MaterialTheme.colorScheme.onSurface.copy(
+        alpha = 0.08f * (alpha * 2f).coerceAtMost(1f)
+    )
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)
+    ) {
+        repeat(4) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(72.dp)
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                    .background(barColor)
             )
         }
     }

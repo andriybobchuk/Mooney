@@ -31,6 +31,12 @@ data class RecurringTransactionsState(
     val accounts: List<AccountWithConversion?> = emptyList(),
     val categories: List<Category> = emptyList(),
     val isLoading: Boolean = false,
+    /**
+     * True until the AppDataCache has emitted its first snapshot. Gates both
+     * the shimmer skeleton and the empty-state placeholder so neither flashes
+     * during the brief window between VM construction and first emission.
+     */
+    val isInitialLoading: Boolean = true,
     // Mirror of the Transactions screen state so the embedded
     // TransactionBottomSheet renders its account picker with display titles
     // and a working expand/collapse toggle. Without these the picker fell
@@ -41,37 +47,44 @@ data class RecurringTransactionsState(
 )
 
 class RecurringTransactionsViewModel(
-    private val getRecurringTransactionsUseCase: GetRecurringTransactionsUseCase,
     private val saveRecurringTransactionUseCase: SaveRecurringTransactionUseCase,
     private val deleteRecurringTransactionUseCase: DeleteRecurringTransactionUseCase,
     private val createRecurringFromTransactionUseCase: CreateRecurringFromTransactionUseCase,
-    private val getAccountsUseCase: GetAccountsUseCase,
-    private val getCategoriesUseCase: GetCategoriesUseCase,
     private val convertAccountsToUiUseCase: ConvertAccountsToUiUseCase,
-    private val assetCategoryDao: com.andriybobchuk.mooney.core.data.database.AssetCategoryDao,
     private val manageAssetCategoryOrderUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageAssetCategoryOrderUseCase,
-    private val manageCategoryExpansionUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageCategoryExpansionUseCase
+    private val manageCategoryExpansionUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageCategoryExpansionUseCase,
+    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(RecurringTransactionsState())
+    // Seed initial state from the cache; subsequent updates flow through
+    // observeFromCache().
+    private val _uiState = MutableStateFlow(
+        RecurringTransactionsState(isInitialLoading = !appDataCache.snapshot.value.isReady)
+    )
     val state = _uiState
-        .onStart { loadData() }
+        .onStart { observeFromCache() }
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000L),
             _uiState.value
         )
 
-    private fun loadData() {
-        getRecurringTransactionsUseCase().onEach { list ->
-            _uiState.update { it.copy(recurringTransactions = list) }
-        }.launchIn(viewModelScope)
-
-        // Asset categories / order / expansion state — needed so the embedded
-        // TransactionBottomSheet's account picker renders the same way it does
-        // on the Transactions screen.
-        assetCategoryDao.getAll().onEach { categories ->
-            _uiState.update { it.copy(assetCategories = categories) }
+    private fun observeFromCache() {
+        // Everything we need lives in the app cache except the category-order
+        // and expansion preferences (which are persisted in DataStore, not Room),
+        // so wire those separately.
+        appDataCache.snapshot.onEach { snapshot ->
+            if (!snapshot.isReady) return@onEach
+            _uiState.update {
+                it.copy(
+                    recurringTransactions = snapshot.recurringTransactions,
+                    accounts = convertAccountsToUiUseCase(snapshot.accounts),
+                    categories = snapshot.categories,
+                    assetCategories = snapshot.assetCategories,
+                    isLoading = false,
+                    isInitialLoading = false
+                )
+            }
         }.launchIn(viewModelScope)
 
         manageAssetCategoryOrderUseCase.getCategoryOrder().onEach { order ->
@@ -81,25 +94,6 @@ class RecurringTransactionsViewModel(
         manageCategoryExpansionUseCase.getExpandedCategories().onEach { expanded ->
             _uiState.update { it.copy(expandedCategories = expanded) }
         }.launchIn(viewModelScope)
-
-        viewModelScope.launch {
-            try {
-                getAccountsUseCase().collect { accounts ->
-                    val categories = getCategoriesUseCase()
-                    _uiState.update {
-                        it.copy(
-                            accounts = convertAccountsToUiUseCase(accounts),
-                            categories = categories,
-                            isLoading = false
-                        )
-                    }
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                _uiState.update { it.copy(isLoading = false) }
-            }
-        }
     }
 
     fun toggleAccountCategoryExpansion(categoryId: String) {

@@ -1,0 +1,45 @@
+# Tab navigation must NEVER flash an empty-state placeholder. After visiting
+# every tab once, switching back to any of them shows cached content
+# immediately — no "No goals yet", "No analytics yet", "No transactions yet"
+# placeholders during the brief loading window.
+appId: com.andriybobchuk.mooney
+---
+- launchApp:
+    clearState: false
+    stopApp: true
+
+# Cycle through every visible bottom-nav tab once to warm each VM's state.
+- assertVisible:
+    text: "Transactions"
+- tapOn:
+    text: "Assets"
+- assertVisible:
+    text: "Assets"
+- tapOn:
+    text: "Analytics"
+- assertVisible:
+    text: "Analytics"
+- tapOn:
+    text: "Transactions"
+- assertVisible:
+    text: "Transactions"
+
+# Now switch tabs rapidly. None of these empty-state placeholders should ever
+# appear because the cache holds the data and the VMs are scoped to the
+# parent nav graph. If any of these flashes, the cache-first pattern broke.
+- tapOn:
+    text: "Assets"
+- assertNotVisible:
+    text: "No assets yet"
+- assertNotVisible:
+    text: "Add your first account"
+
+- tapOn:
+    text: "Analytics"
+- assertNotVisible:
+    text: "No analytics yet"
+
+- tapOn:
+    text: "Transactions"
+- assertNotVisible:
+    text: "Let's get started"

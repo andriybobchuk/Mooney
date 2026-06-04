@@ -57,10 +57,16 @@ class SettingsViewModel(
     private val setPrimaryAccountUseCase: SetPrimaryAccountUseCase,
     private val updateTransactionCategoriesUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.UpdateTransactionCategoriesUseCase,
     private val currencyManagerUseCase: CurrencyManagerUseCase,
-    private val dataStore: androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>
+    private val dataStore: androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>,
+    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(SettingsState())
+    // Seed `isLoading` from the app cache so opening Settings while the cache
+    // is warm (the usual case — you reach Settings from a tab, the tabs have
+    // already warmed the cache) skips the cold-start spinner entirely.
+    private val _state = MutableStateFlow(
+        SettingsState(isLoading = !appDataCache.snapshot.value.isReady)
+    )
     val state: StateFlow<SettingsState> = _state.asStateFlow()
 
     private val _events = MutableSharedFlow<SettingsEvent>()
@@ -188,16 +194,16 @@ class SettingsViewModel(
     }
 
     private fun observeAssetCategories() {
-        assetCategoryDao.getAll().onEach { categories ->
+        // Read from the app cache instead of opening another Room subscription.
+        appDataCache.snapshot.map { it.assetCategories }.onEach { categories ->
             _state.update { it.copy(assetCategories = categories) }
         }.launchIn(viewModelScope)
     }
 
     private fun observeAccounts() {
-        getAccountsUseCase().onEach { accounts ->
-            val nonNull = accounts.filterNotNull()
-            val primary = nonNull.find { it.isPrimary }
-            _state.update { it.copy(accounts = nonNull, primaryAccountId = primary?.id) }
+        appDataCache.snapshot.map { it.accounts }.onEach { accounts ->
+            val primary = accounts.find { it.isPrimary }
+            _state.update { it.copy(accounts = accounts, primaryAccountId = primary?.id) }
         }.launchIn(viewModelScope)
     }
 

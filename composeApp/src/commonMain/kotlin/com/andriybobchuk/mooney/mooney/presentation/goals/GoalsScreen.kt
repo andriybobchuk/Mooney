@@ -1,5 +1,6 @@
 package com.andriybobchuk.mooney.mooney.presentation.goals
 
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -121,7 +122,9 @@ fun GoalsScreen(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            if (state.goals.isEmpty() && !state.isLoading) {
+            if (state.isInitialLoading) {
+                GoalsScreenShimmer(modifier = Modifier.padding(paddingValues))
+            } else if (state.goals.isEmpty() && !state.isLoading && !state.isInitialLoading) {
                 MeshGradientBackground()
                 Column(
                     modifier = Modifier
@@ -657,6 +660,44 @@ private fun AddEditGoalSheet(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Cold-start placeholder. Three stacked card-shaped boxes that fade with the
+ * same animation curve used elsewhere in the app, so loading states feel
+ * consistent across screens.
+ */
+@Composable
+private fun GoalsScreenShimmer(modifier: Modifier = Modifier) {
+    val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "goalsShimmer")
+    val alpha by transition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.75f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(900),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "goalsShimmerAlpha"
+    )
+    val barColor = MaterialTheme.colorScheme.onSurface.copy(
+        alpha = 0.08f * (alpha * 2f).coerceAtMost(1f)
+    )
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        repeat(3) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(96.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(barColor)
+            )
         }
     }
 }

@@ -1,1 +1,1 @@
-Bug fixes and improvements.
+Fixed flicker when switching tabs — every screen now reads from a shared in-memory cache so cached data appears instantly.

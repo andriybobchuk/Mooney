@@ -1,0 +1,25 @@
+# Maestro test configuration for Mooney
+#
+# Maestro is a YAML-based mobile UI testing framework. These flows assert the
+# user-observable contract of the cache-first / shimmer / empty-state pattern:
+#
+#  1. Cold start shows a shimmer (or spinner) — never an empty-state placeholder.
+#  2. Tab switching paints cached content on the first frame — no shimmer flash,
+#     no empty-state flash between tabs the user has already visited.
+#  3. After data is added (e.g. a transaction), every other screen reflects it
+#     without re-entering a loading state.
+#
+# To run locally:
+#   brew install maestro
+#   maestro test .maestro/
+#
+# Run a single flow:
+#   maestro test .maestro/tabs-no-flicker.yaml
+#
+# The Android app id is read from gradle.properties.
+
+executionOrder:
+  flowsOrder:
+    - cold-start.yaml
+    - tabs-no-flicker.yaml
+    - add-transaction-no-reload.yaml

@@ -12,7 +12,11 @@ import kotlinx.coroutines.launch
 
 data class AssetCategoriesState(
     val assetCategories: List<AssetCategoryEntity> = emptyList(),
-    val isLoading: Boolean = true
+    /**
+     * `true` until the AppDataCache has emitted; gates the shimmer and prevents
+     * an empty-state flash before the first emission lands.
+     */
+    val isInitialLoading: Boolean = true
 )
 
 sealed interface AssetCategoriesAction {
@@ -22,26 +26,38 @@ sealed interface AssetCategoriesAction {
 }
 
 class AssetCategoriesViewModel(
-    private val assetCategoryDao: AssetCategoryDao
+    private val assetCategoryDao: AssetCategoryDao,
+    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(AssetCategoriesState())
+    private val _state = MutableStateFlow(
+        AssetCategoriesState(isInitialLoading = !appDataCache.snapshot.value.isReady)
+    )
     val state: StateFlow<AssetCategoriesState> = _state
 
     init {
-        observeCategories()
+        observeCategoriesFromCache()
     }
 
-    private fun observeCategories() {
+    private fun observeCategoriesFromCache() {
         viewModelScope.launch {
             try {
-                assetCategoryDao.getAll().collect { categories ->
-                    _state.update { it.copy(assetCategories = categories, isLoading = false) }
+                // Asset categories live in the app cache snapshot; reading from
+                // it means screen-entry paints the previous list on the first
+                // frame instead of running a fresh DAO query.
+                appDataCache.snapshot.collect { snapshot ->
+                    if (!snapshot.isReady) return@collect
+                    _state.update {
+                        it.copy(
+                            assetCategories = snapshot.assetCategories,
+                            isInitialLoading = false
+                        )
+                    }
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
-                _state.update { it.copy(isLoading = false) }
+                _state.update { it.copy(isInitialLoading = false) }
             }
         }
     }

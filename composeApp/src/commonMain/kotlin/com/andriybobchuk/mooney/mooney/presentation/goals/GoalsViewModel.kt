@@ -15,7 +15,8 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.GetAccountsUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.SaveGoalUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -26,6 +27,12 @@ data class GoalsState(
     val goals: List<GoalWithProgress> = emptyList(),
     val accounts: List<Account> = emptyList(),
     val isLoading: Boolean = false,
+    /**
+     * Stays `true` until the AppDataCache has emitted its first snapshot —
+     * the only window where the user could see a flashed empty state before
+     * data arrives. Drives both the shimmer and the empty-state gate.
+     */
+    val isInitialLoading: Boolean = true,
     val showAddGoalSheet: Boolean = false,
     val editingGoal: Goal? = null,
     val showDeleteDialog: Boolean = false,
@@ -49,25 +56,49 @@ sealed interface GoalsAction {
 }
 
 class GoalsViewModel(
-    private val getGoalsUseCase: GetGoalsUseCase,
     private val saveGoalUseCase: SaveGoalUseCase,
     private val deleteGoalUseCase: DeleteGoalUseCase,
     private val enrichGoalsWithProgressUseCase: EnrichGoalsWithProgressUseCase,
-    private val getAccountsUseCase: GetAccountsUseCase,
-    private val analyticsTracker: AnalyticsTracker
+    private val analyticsTracker: AnalyticsTracker,
+    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(GoalsState())
+    // Seed isInitialLoading from the cache so first-frame already knows
+    // whether shimmer or content is appropriate.
+    private val _uiState = MutableStateFlow(
+        GoalsState(isInitialLoading = !appDataCache.snapshot.value.isReady)
+    )
     val state = _uiState
-        .onStart {
-            loadGoals()
-            loadAccounts()
-        }
+        .onStart { observeFromCache() }
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000L),
             _uiState.value
         )
+
+    private fun observeFromCache() {
+        // Goals + accounts come from the singleton app cache, so tab switches
+        // and re-entries paint the previous snapshot on the very first frame.
+        appDataCache.snapshot.onEach { snapshot ->
+            if (!snapshot.isReady) return@onEach
+            try {
+                val enriched = enrichGoalsWithProgressUseCase(snapshot.goals)
+                _uiState.update {
+                    it.copy(
+                        goals = enriched,
+                        accounts = snapshot.accounts,
+                        isLoading = false,
+                        isInitialLoading = false
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                analyticsTracker.recordException(e, "Goals")
+                _uiState.update { it.copy(isLoading = false, isInitialLoading = false) }
+            }
+        }.launchIn(viewModelScope)
+    }
 
     fun onAction(action: GoalsAction) {
         when (action) {
@@ -91,38 +122,6 @@ class GoalsViewModel(
                 action.title, action.targetAmount, action.currency,
                 action.trackingType, action.accountId
             )
-        }
-    }
-
-    private fun loadGoals() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            try {
-                getGoalsUseCase().collect { goals ->
-                    val goalsWithProgress = enrichGoalsWithProgressUseCase(goals)
-                    _uiState.update {
-                        it.copy(goals = goalsWithProgress, isLoading = false)
-                    }
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                analyticsTracker.recordException(e, "Goals")
-                _uiState.update { it.copy(isLoading = false) }
-            }
-        }
-    }
-
-    private fun loadAccounts() {
-        viewModelScope.launch {
-            try {
-                val accounts = getAccountsUseCase().first().filterNotNull()
-                _uiState.update { it.copy(accounts = accounts) }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                analyticsTracker.recordException(e, "Goals")
-            }
         }
     }
 

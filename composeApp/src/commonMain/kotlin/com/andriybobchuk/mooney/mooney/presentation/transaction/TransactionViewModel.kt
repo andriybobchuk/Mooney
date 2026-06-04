@@ -192,7 +192,10 @@ class TransactionViewModel(
     }
 
     private fun observePendingTransactions() {
-        pendingTransactionDao.getAllPending().onEach { pending ->
+        // Pending transactions live in the app cache too; reading from there
+        // means we share one DAO subscription with every screen instead of
+        // each VM opening its own.
+        appDataCache.snapshot.map { it.pendingTransactions }.onEach { pending ->
             allPendingTransactions = pending
             filterPendingByMonth()
         }.launchIn(viewModelScope)
@@ -235,29 +238,23 @@ class TransactionViewModel(
             _uiState.update { it.copy(isLoading = true) }
             try {
                 combine(
-                    // Accounts flow comes from the app cache: tab switches
-                    // see the latest snapshot immediately, no re-query.
-                    appDataCache.snapshot.map { it.accounts },
-                    assetCategoryDao.getAll(),
+                    // Everything that lives in the app cache is read from one
+                    // pre-warmed snapshot — accounts, categories, asset
+                    // categories all in a single emission. Tab switches see
+                    // the latest data on the first frame, no re-query.
+                    appDataCache.snapshot,
                     manageAssetCategoryOrderUseCase.getCategoryOrder(),
-                    manageCategoryExpansionUseCase.getExpandedCategories(),
-                    // Tick when categories change in DB — without this, adding a
-                    // subcategory from the Categories screen didn't refresh the
-                    // transaction sheet's category picker until app restart.
-                    categoryDao.getAll()
-                ) { accounts, assetCategories, categoryOrder, expandedCategories, _ ->
-                    // Rebuild the in-memory category cache before reading from it,
-                    // so the new/renamed subcategory shows up immediately.
-                    coreRepository.reloadCategories()
-                    val categories = getCategoriesUseCase()
-                    val nonLiabilityAccounts = convertAccountsToUiUseCase(accounts)
+                    manageCategoryExpansionUseCase.getExpandedCategories()
+                ) { snapshot, categoryOrder, expandedCategories ->
+                    if (!snapshot.isReady) return@combine
+                    val nonLiabilityAccounts = convertAccountsToUiUseCase(snapshot.accounts)
                         .filterNotNull()
                         .filter { !it.isLiability }
                     _uiState.update {
                         it.copy(
                             accounts = nonLiabilityAccounts,
-                            categories = categories,
-                            assetCategories = assetCategories,
+                            categories = snapshot.categories,
+                            assetCategories = snapshot.assetCategories,
                             categoryOrder = categoryOrder,
                             expandedCategories = expandedCategories,
                             isLoading = false,
@@ -357,7 +354,9 @@ class TransactionViewModel(
     }
 
     suspend fun getDailyTotalForMonth(date: kotlinx.datetime.LocalDate): Double {
-        val allTransactions = getTransactionsUseCase().first().filterNotNull()
+        // Read from the warm cache instead of subscribing to the DAO Flow
+        // for one snapshot. Avoids a redundant subscription tear-down.
+        val allTransactions = appDataCache.snapshot.value.transactions
         return calculateDailyTotalUseCase(allTransactions, date)
     }
 

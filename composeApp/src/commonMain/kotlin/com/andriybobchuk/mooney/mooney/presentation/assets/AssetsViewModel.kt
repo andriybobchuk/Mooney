@@ -119,7 +119,9 @@ class AssetsViewModel(
     }
 
     private fun observeAssetCategories() {
-        assetCategoryDao.getAll().onEach { categories ->
+        // Read asset categories from the app cache — one shared subscription
+        // for the whole app instead of a per-VM DAO query.
+        appDataCache.snapshot.map { it.assetCategories }.onEach { categories ->
             _uiState.update { it.copy(assetCategories = categories) }
         }.launchIn(viewModelScope)
     }

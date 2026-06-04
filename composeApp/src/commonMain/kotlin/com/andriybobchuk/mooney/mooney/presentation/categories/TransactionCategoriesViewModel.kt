@@ -29,7 +29,10 @@ data class TransactionCategoriesState(
     val showPaywall: Boolean = false,
     val isPurchasing: Boolean = false,
     val purchaseError: String? = null,
-    val isLoading: Boolean = true
+    /**
+     * True until the AppDataCache emits; gates the shimmer / empty placeholder.
+     */
+    val isInitialLoading: Boolean = true
 )
 
 sealed interface TransactionCategoriesAction {
@@ -50,25 +53,39 @@ class TransactionCategoriesViewModel(
     private val transactionDao: com.andriybobchuk.mooney.core.data.database.TransactionDao,
     private val categoryUsageDao: com.andriybobchuk.mooney.core.data.database.CategoryUsageDao,
     private val recurringTransactionDao: com.andriybobchuk.mooney.core.data.database.RecurringTransactionDao,
-    private val pendingTransactionDao: com.andriybobchuk.mooney.core.data.database.PendingTransactionDao
+    private val pendingTransactionDao: com.andriybobchuk.mooney.core.data.database.PendingTransactionDao,
+    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(TransactionCategoriesState())
+    private val _state = MutableStateFlow(
+        TransactionCategoriesState(isInitialLoading = !appDataCache.snapshot.value.isReady)
+    )
     val state: StateFlow<TransactionCategoriesState> = _state
 
     init {
-        loadCategories()
+        observeCategoriesFromCache()
     }
 
-    private fun loadCategories() {
+    private fun observeCategoriesFromCache() {
         viewModelScope.launch {
             try {
-                val categories = getCategoriesUseCase()
-                _state.update { it.copy(allCategories = categories, isLoading = false) }
+                // Categories live in the app cache. Reading from it gives us
+                // (a) cache-first paint on screen entry and (b) automatic
+                // updates when categories are added/deleted/renamed anywhere
+                // else in the app — no manual reload needed.
+                appDataCache.snapshot.collect { snapshot ->
+                    if (!snapshot.isReady) return@collect
+                    _state.update {
+                        it.copy(
+                            allCategories = snapshot.categories,
+                            isInitialLoading = false
+                        )
+                    }
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
-                _state.update { it.copy(isLoading = false) }
+                _state.update { it.copy(isInitialLoading = false) }
             }
         }
     }

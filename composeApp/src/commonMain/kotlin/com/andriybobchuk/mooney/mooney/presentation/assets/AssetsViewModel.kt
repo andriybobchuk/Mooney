@@ -98,7 +98,8 @@ class AssetsViewModel(
         )
 
     private fun observeUserCurrencies() {
-        getUserCurrenciesUseCase().onEach { currencies ->
+        // Pulled from the app cache so we share one subscription across the app.
+        appDataCache.snapshot.map { it.userCurrencies }.onEach { currencies ->
             val codes = currencies.map { it.code }
             currencyManagerUseCase.setUserCurrencies(codes)
             val resolved = codes.mapNotNull { code -> Currency.entries.find { it.name == code } }

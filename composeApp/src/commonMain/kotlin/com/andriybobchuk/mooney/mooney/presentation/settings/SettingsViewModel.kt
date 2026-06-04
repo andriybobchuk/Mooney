@@ -188,7 +188,8 @@ class SettingsViewModel(
     }
 
     private fun observeUserCurrencies() {
-        getUserCurrenciesUseCase().onEach { currencies ->
+        // Cache provides user-currency list; one source of truth.
+        appDataCache.snapshot.map { it.userCurrencies }.onEach { currencies ->
             _state.update { it.copy(userCurrencies = currencies) }
         }.launchIn(viewModelScope)
     }

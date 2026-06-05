@@ -16,6 +16,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -73,6 +74,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.mutableFloatStateOf
@@ -130,6 +132,7 @@ import com.andriybobchuk.mooney.mooney.domain.parseAmountInput
 import com.andriybobchuk.mooney.mooney.domain.formatToShortString
 import com.andriybobchuk.mooney.mooney.domain.formatToPlainString
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -161,6 +164,8 @@ fun TransactionsScreen(
     onNavigateToAssets: () -> Unit = {},
     onNavigateToRecurring: () -> Unit = {},
     onNavigateToTransactionCategories: () -> Unit = {},
+    onNavigateToExchange: () -> Unit = {},
+    onNavigateToGoals: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val transactions = state.transactions
@@ -245,17 +250,15 @@ fun TransactionsScreen(
                 },
                 scrollBehavior = scrollBehavior,
                 customContent = {
-                    MonthPicker(
+                    // New compact selector: ◀ [ Mar ▾ ] ▶. The pill opens a
+                    // year/month picker sheet. Replaces the old calendar icon.
+                    MonthSelectorBar(
                         selectedMonth = state.selectedMonth,
                         onMonthSelected = viewModel::onMonthSelected,
                     )
                 },
                 actions = listOf(
-                    Toolbars.ToolBarAction(
-                        painter = com.andriybobchuk.mooney.core.presentation.Icons.RefreshIcon(),
-                        contentDescription = "Recurring",
-                        onClick = onNavigateToRecurring
-                    ),
+                    // Recurring moved to the quick-actions chip row below.
                     Toolbars.ToolBarAction(
                         painter = com.andriybobchuk.mooney.core.presentation.Icons.SettingsIcon(),
                         contentDescription = "Settings",
@@ -300,6 +303,18 @@ fun TransactionsScreen(
                         .padding(paddingValues)
                         .fillMaxSize()
                 ) {
+                    // Quick-action chips replace the old toolbar icons and the
+                    // hidden Exchange/Goals destinations behind the bottom nav.
+                    // Hidden during cold-start shimmer to avoid double-loading
+                    // visual noise.
+                    if (!state.isInitialLoading) {
+                        QuickActionChipsRow(
+                            onRecurringClick = onNavigateToRecurring,
+                            onExchangeClick = onNavigateToExchange,
+                            onGoalsClick = onNavigateToGoals,
+                            onCategoriesClick = onNavigateToTransactionCategories
+                        )
+                    }
                     if (state.isInitialLoading) {
                         TransactionsScreenShimmer(modifier = Modifier.fillMaxSize())
                     } else
@@ -624,10 +639,41 @@ fun TransactionsScreenContent(
 
     val isEmpty = sortedGroups.isEmpty() && pendingTransactions.isEmpty()
 
+    // Track item indices per-date so a click on the calendar heatmap can
+    // animate-scroll the list straight to that day (#30). The +1 accounts for
+    // the leading TransactionPagerView item; the loop adds 1 for each
+    // sticky header plus one per child row (real tx + pending).
+    val dateToIndex by remember(allDates, sortedGroups, pendingGrouped) {
+        derivedStateOf {
+            val map = mutableMapOf<LocalDate, Int>()
+            var index = 1  // index 0 is TransactionPagerView
+            allDates.forEach { date ->
+                map[date] = index
+                val txCount = sortedGroups.firstOrNull { it.first == date }?.second?.size ?: 0
+                val pendingCount = pendingGrouped[date]?.size ?: 0
+                index += 1 + txCount + pendingCount  // header + items
+            }
+            map
+        }
+    }
+
+    val lazyListState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    val onDayClick: (LocalDate) -> Unit = { date ->
+        // If the day has transactions, scroll to its header. If not, scroll to
+        // the nearest date with entries (the first allDates entry whose date
+        // is <= the tapped day).
+        val target = dateToIndex[date] ?: allDates.firstOrNull { it <= date }?.let { dateToIndex[it] }
+        if (target != null) {
+            coroutineScope.launch { lazyListState.animateScrollToItem(target) }
+        }
+    }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .background(if (isEmpty) Color.Transparent else MaterialTheme.colorScheme.background),
+        state = lazyListState,
         userScrollEnabled = !isEmpty
     ) {
         if (sortedGroups.isNotEmpty() || pendingTransactions.isNotEmpty()) {
@@ -636,6 +682,7 @@ fun TransactionsScreenContent(
                 TransactionPagerView(
                     selectedMonth = selectedMonth,
                     dailyTotals = dailyTotals,
+                    onDayClick = onDayClick,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                 )
             }
@@ -2752,7 +2799,8 @@ fun FrequentCategoriesSection(
 fun TransactionPagerView(
     selectedMonth: MonthKey,
     dailyTotals: Map<Int, Double>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onDayClick: (LocalDate) -> Unit = {}
 ) {
     val pageCount = 4  // calendar, line chart, currency rates, suggest card
     val dataStore = org.koin.compose.koinInject<androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>>()
@@ -2796,6 +2844,7 @@ fun TransactionPagerView(
             when (page) {
                 0 -> SpendingCalendarView(
                     selectedMonth = selectedMonth,
+                    onDayClick = onDayClick,
                     dailyTotals = dailyTotals,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -3229,7 +3278,8 @@ fun SpendingLineChart(
 fun SpendingCalendarView(
     selectedMonth: MonthKey,
     dailyTotals: Map<Int, Double>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onDayClick: (LocalDate) -> Unit = {}
 ) {
     val year = selectedMonth.year
     val month = selectedMonth.month
@@ -3332,11 +3382,15 @@ fun SpendingCalendarView(
                         if (day in 1..calendarData.daysInMonth) {
                             val amount = dailyTotals[day] ?: 0.0
                             val intensity = if (maxAmount > 0) (amount / maxAmount).coerceAtMost(1.0) else 0.0
-                            
+
+                            // Cell becomes clickable so the user can jump the
+                            // transactions list straight to this day's entries
+                            // (#30).
                             Card(
                                 modifier = Modifier
                                     .aspectRatio(1.5f)
-                                    .fillMaxSize(),
+                                    .fillMaxSize()
+                                    .clickable { onDayClick(LocalDate(year, month, day)) },
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surface.copy(
                                         alpha = 0.3f + (intensity.toFloat() * 0.7f)
@@ -3506,6 +3560,325 @@ fun TransactionTypeSwitch(
                 )
             }
         }
+    }
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Top-bar tweaks: month selector with arrows + dropdown pill, quick-action
+// chips row, year/month picker sheet. All scoped to the Transactions screen
+// — the older inline MonthPicker still serves the Analytics screen.
+// ──────────────────────────────────────────────────────────────────────────
+
+/**
+ * Horizontal row of quick-action chips shown directly below the top bar.
+ * Provides one-tap access to the auxiliary screens previously buried behind
+ * toolbar icons or the bottom nav (Recurring, Exchange, Goals, Categories).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun QuickActionChipsRow(
+    onRecurringClick: () -> Unit,
+    onExchangeClick: () -> Unit,
+    onGoalsClick: () -> Unit,
+    onCategoriesClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    androidx.compose.foundation.lazy.LazyRow(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        contentPadding = PaddingValues(horizontal = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item {
+            QuickActionChip(
+                label = "Recurring",
+                icon = com.andriybobchuk.mooney.core.presentation.Icons.RecurringIcon(),
+                onClick = onRecurringClick
+            )
+        }
+        item {
+            QuickActionChip(
+                label = "Exchange",
+                icon = com.andriybobchuk.mooney.core.presentation.Icons.ExchangeIcon(),
+                onClick = onExchangeClick
+            )
+        }
+        item {
+            QuickActionChip(
+                label = "Goals",
+                icon = com.andriybobchuk.mooney.core.presentation.Icons.GoalsIcon(),
+                onClick = onGoalsClick
+            )
+        }
+        item {
+            QuickActionChip(
+                label = "Categories",
+                icon = com.andriybobchuk.mooney.core.presentation.Icons.CategoriesIcon(),
+                onClick = onCategoriesClick
+            )
+        }
+    }
+}
+
+/** Single chip — leading icon comes from a project SVG (Painter). */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun QuickActionChip(
+    label: String,
+    onClick: () -> Unit,
+    icon: androidx.compose.ui.graphics.painter.Painter
+) {
+    androidx.compose.material3.AssistChip(
+        onClick = onClick,
+        label = {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        },
+        leadingIcon = {
+            Icon(
+                painter = icon,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+        },
+        shape = RoundedCornerShape(50),
+        colors = androidx.compose.material3.AssistChipDefaults.assistChipColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+        ),
+        border = null
+    )
+}
+
+/**
+ * Month selector replacing the old calendar icon in the top bar.
+ * Layout: ◀  [ Mar ▾ ]  ▶
+ *  - The left arrow steps one month back.
+ *  - The center pill shows the current month and opens the year/month sheet.
+ *  - The right arrow steps one month forward.
+ *
+ * Forward stepping past the current month is disabled (Mooney has no
+ * meaningful future-month data — the calendar widget doesn't render days
+ * past today).
+ */
+@Composable
+private fun MonthSelectorBar(
+    selectedMonth: MonthKey,
+    onMonthSelected: (MonthKey) -> Unit
+) {
+    val currentMonth = remember { MonthKey.current() }
+    val canGoForward = remember(selectedMonth, currentMonth) {
+        selectedMonth.year < currentMonth.year ||
+            (selectedMonth.year == currentMonth.year && selectedMonth.month < currentMonth.month)
+    }
+    var showSheet by remember { mutableStateOf(false) }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        MonthStepperButton(
+            onClick = { onMonthSelected(selectedMonth.previousMonth()) },
+            painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronLeftIcon(),
+            contentDescription = "Previous month",
+            enabled = true
+        )
+
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(50))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                .clickable { showSheet = true }
+                .padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = selectedMonth.toShortDisplayString(),
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(
+                imageVector = androidx.compose.material.icons.Icons.Outlined.KeyboardArrowDown,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        }
+
+        MonthStepperButton(
+            onClick = { if (canGoForward) onMonthSelected(selectedMonth.nextMonth()) },
+            painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
+            contentDescription = "Next month",
+            enabled = canGoForward
+        )
+    }
+
+    if (showSheet) {
+        YearMonthPickerSheet(
+            initialMonth = selectedMonth,
+            currentMonth = currentMonth,
+            onPick = { picked ->
+                onMonthSelected(picked)
+                showSheet = false
+            },
+            onDismiss = { showSheet = false }
+        )
+    }
+}
+
+@Composable
+private fun MonthStepperButton(
+    onClick: () -> Unit,
+    painter: androidx.compose.ui.graphics.painter.Painter,
+    contentDescription: String,
+    enabled: Boolean
+) {
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = if (enabled) 0.6f else 0.25f))
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painter,
+            contentDescription = contentDescription,
+            modifier = Modifier.size(16.dp),
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.35f)
+        )
+    }
+}
+
+/**
+ * Bottom sheet for picking any year + month. Year nav row at top, 3×4 month
+ * grid below. Selected month is filled inverse-surface; months in the future
+ * (after [currentMonth]) are rendered disabled.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun YearMonthPickerSheet(
+    initialMonth: MonthKey,
+    currentMonth: MonthKey,
+    onPick: (MonthKey) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var year by remember { mutableStateOf(initialMonth.year) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    androidx.compose.material3.ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.background,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        dragHandle = null
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+        ) {
+            // Year navigation row.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                MonthStepperButton(
+                    onClick = { year-- },
+                    painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronLeftIcon(),
+                    contentDescription = "Previous year",
+                    enabled = true
+                )
+                Text(
+                    text = year.toString(),
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                MonthStepperButton(
+                    onClick = { year++ },
+                    painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
+                    contentDescription = "Next year",
+                    // Don't navigate past the current year — no data lives in
+                    // the future and the months would all be disabled anyway.
+                    enabled = year < currentMonth.year
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // 3-column grid of months.
+            val monthLabels = listOf(
+                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+            )
+            for (row in 0 until 4) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    for (col in 0 until 3) {
+                        val monthIndex = row * 3 + col
+                        val monthNumber = monthIndex + 1
+                        val isSelected = year == initialMonth.year && monthNumber == initialMonth.month
+                        val isFuture = year > currentMonth.year ||
+                            (year == currentMonth.year && monthNumber > currentMonth.month)
+
+                        MonthGridCell(
+                            label = monthLabels[monthIndex],
+                            isSelected = isSelected,
+                            isDisabled = isFuture,
+                            onClick = {
+                                if (!isFuture) onPick(MonthKey(year, monthNumber))
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun MonthGridCell(
+    label: String,
+    isSelected: Boolean,
+    isDisabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val bg = when {
+        isSelected -> MaterialTheme.colorScheme.inverseSurface
+        else -> Color.Transparent
+    }
+    val fg = when {
+        isSelected -> MaterialTheme.colorScheme.inverseOnSurface
+        isDisabled -> MaterialTheme.colorScheme.onBackground.copy(alpha = 0.25f)
+        else -> MaterialTheme.colorScheme.onBackground
+    }
+    Box(
+        modifier = modifier
+            .height(56.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(bg)
+            .clickable(enabled = !isDisabled, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+            color = fg
+        )
     }
 }
 

@@ -1,1 +1,1 @@
-Analytics chart zero-line is now clearly visible in dark mode.
+New top bar on Transactions: quick-action chips for Recurring, Exchange, Goals, Categories; a cleaner month selector with arrows and a dropdown sheet. Tap a day in the spending heatmap to scroll the list straight to that date.

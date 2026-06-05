@@ -24,6 +24,12 @@ data class MonthKey(val year: Int, val month: Int) {
         return MonthKey(prevYear, prevMonth)
     }
 
+    fun nextMonth(): MonthKey {
+        val newMonth = if (month == 12) 1 else month + 1
+        val newYear = if (month == 12) year + 1 else year
+        return MonthKey(newYear, newMonth)
+    }
+
     fun monthsAgo(count: Int): MonthKey {
         var result = this
         repeat(count) {

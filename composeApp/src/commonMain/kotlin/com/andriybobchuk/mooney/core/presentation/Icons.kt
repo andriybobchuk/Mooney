@@ -3,8 +3,10 @@ package com.andriybobchuk.mooney.core.presentation
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.painter.Painter
 import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.exchange
 import mooney.composeapp.generated.resources.goals
 import mooney.composeapp.generated.resources.ic_back
+import mooney.composeapp.generated.resources.ic_categories
 import mooney.composeapp.generated.resources.ic_calendar
 import mooney.composeapp.generated.resources.ic_chevron_left
 import mooney.composeapp.generated.resources.ic_chevron_right
@@ -65,4 +67,10 @@ object Icons {
 
     @Composable
     fun GoalsIcon(): Painter = painterResource(Res.drawable.goals)
+
+    @Composable
+    fun ExchangeIcon(): Painter = painterResource(Res.drawable.exchange)
+
+    @Composable
+    fun CategoriesIcon(): Painter = painterResource(Res.drawable.ic_categories)
 }

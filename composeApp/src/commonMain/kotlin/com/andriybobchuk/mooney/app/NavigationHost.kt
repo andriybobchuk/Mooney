@@ -246,7 +246,9 @@ fun NavigationHost() {
                     onSettingsClick = { navController.navigate(Route.Settings) },
                     onNavigateToAssets = { navController.navigate(Route.Accounts) { popUpTo(Route.MooneyGraph) } },
                     onNavigateToRecurring = { navController.navigate(Route.RecurringTransactions) },
-                    onNavigateToTransactionCategories = { navController.navigate(Route.TransactionCategories) }
+                    onNavigateToTransactionCategories = { navController.navigate(Route.TransactionCategories) },
+                    onNavigateToExchange = { navController.navigate(Route.Exchange) },
+                    onNavigateToGoals = { navController.navigate(Route.Goals) }
                 )
             }
             composable<Route.Accounts> { entry ->
@@ -262,15 +264,16 @@ fun NavigationHost() {
                 )
             }
 
-            if (FeatureFlags.exchangeEnabled) {
-                composable<Route.Exchange> { entry ->
-                    val viewModel = entry.sharedKoinViewModel<ExchangeViewModel>(navController)
-                    ExchangeScreen(
-                        viewModel = viewModel,
-                        bottomNavbar = { BottomNavigationBar(navController, 2) },
-                        onSettingsClick = { navController.navigate(Route.Settings) }
-                    )
-                }
+            // Exchange route is registered unconditionally so the Quick-Actions
+            // chip on the Transactions screen can route here even when the
+            // bottom-nav tab itself is hidden by the feature flag.
+            composable<Route.Exchange> { entry ->
+                val viewModel = entry.sharedKoinViewModel<ExchangeViewModel>(navController)
+                ExchangeScreen(
+                    viewModel = viewModel,
+                    bottomNavbar = { BottomNavigationBar(navController, 2) },
+                    onSettingsClick = { navController.navigate(Route.Settings) }
+                )
             }
 
             composable<Route.Analytics> {

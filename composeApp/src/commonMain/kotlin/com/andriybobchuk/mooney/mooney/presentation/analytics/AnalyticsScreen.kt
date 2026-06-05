@@ -1171,7 +1171,15 @@ private fun NetIncomeBarChart(
     val incomeColor = MaterialTheme.appColors.incomeColor
     val expenseColor = MaterialTheme.appColors.expenseColor
     val gridColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-    val zeroLineColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+    // Zero line needs to read as a clear baseline against bars in either
+    // theme. In dark mode the chart sits on a dark surface and `onSurface`
+    // at 0.45 alpha washed out to faint gray — bump it and stroke harder
+    // in dark mode specifically.
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val zeroLineColor = MaterialTheme.colorScheme.onSurface.copy(
+        alpha = if (isDark) 0.75f else 0.55f
+    )
+    val zeroLineWidth = if (isDark) 2.dp else 1.5.dp
 
     Column(modifier = modifier.fillMaxWidth()) {
         androidx.compose.foundation.Canvas(
@@ -1203,7 +1211,7 @@ private fun NetIncomeBarChart(
                 color = zeroLineColor,
                 start = androidx.compose.ui.geometry.Offset(padding, zeroY),
                 end = androidx.compose.ui.geometry.Offset(padding + w, zeroY),
-                strokeWidth = 1.5.dp.toPx()
+                strokeWidth = zeroLineWidth.toPx()
             )
 
             // Bars

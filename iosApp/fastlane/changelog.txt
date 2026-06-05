@@ -1,1 +1,1 @@
-Smoother loading on every tab — the Analytics screen no longer briefly shows empty metrics on first visit.
+Analytics chart zero-line is now clearly visible in dark mode.

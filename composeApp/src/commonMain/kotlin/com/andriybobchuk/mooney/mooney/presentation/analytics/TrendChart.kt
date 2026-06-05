@@ -162,6 +162,13 @@ fun TrendChart(
                 )
             }
         } else {
+            // Resolve theme-aware colors here so the DrawScope helpers below
+            // don't need MaterialTheme access. Zero line was hardcoded to
+            // semi-transparent black, which is invisible in dark mode.
+            val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+            val zeroLineColor = MaterialTheme.colorScheme.onSurface.copy(
+                alpha = if (isDark) 0.75f else 0.55f
+            )
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -169,7 +176,7 @@ fun TrendChart(
                     .align(Alignment.TopCenter)
                     .padding(top = 32.dp)
             ) {
-                drawTrendChart(filteredData, size.width, size.height)
+                drawTrendChart(filteredData, size.width, size.height, zeroLineColor)
             }
         }
         
@@ -265,22 +272,23 @@ private fun LifetimeShimmerChart(modifier: Modifier = Modifier) {
 private fun DrawScope.drawTrendChart(
     data: List<MonthlyMetricSnapshot>,
     width: Float,
-    height: Float
+    height: Float,
+    zeroLineColor: Color
 ) {
     if (data.size < 2) return
 
     val padding = 40f
     val chartWidth = width - (padding * 2)
     val chartHeight = height - (padding * 2)
-    
+
     // Calculate data ranges
     val allValues = data.flatMap { listOf(it.revenue, it.taxes, it.operatingCosts, it.netIncome) }
     val maxValue = allValues.maxOrNull() ?: 0.0
     val minValue = min(0.0, allValues.minOrNull() ?: 0.0)
     val valueRange = maxValue - minValue
-    
+
     if (valueRange == 0.0) return
-    
+
     // Colors for each metric
     val colors = listOf(
         Color(0xFF4CAF50), // Revenue - Green
@@ -288,9 +296,9 @@ private fun DrawScope.drawTrendChart(
         Color(0xFFF44336), // Operating Costs - Red
         Color(0xFF2196F3)  // Net Income - Blue
     )
-    
+
     // Draw grid lines
-    drawGridLines(padding, chartWidth, chartHeight, maxValue, minValue)
+    drawGridLines(padding, chartWidth, chartHeight, maxValue, minValue, zeroLineColor)
     
     // Draw trend lines for each metric
     drawMetricLine(data, { it.revenue }, colors[0], padding, chartWidth, chartHeight, maxValue, minValue)
@@ -304,10 +312,11 @@ private fun DrawScope.drawGridLines(
     chartWidth: Float,
     chartHeight: Float,
     maxValue: Double,
-    minValue: Double
+    minValue: Double,
+    zeroLineColor: Color
 ) {
     val gridColor = Color.Gray.copy(alpha = 0.2f)
-    
+
     // Horizontal grid lines
     for (i in 0..4) {
         val y = padding + (chartHeight * i / 4)
@@ -318,7 +327,7 @@ private fun DrawScope.drawGridLines(
             strokeWidth = 1.dp.toPx()
         )
     }
-    
+
     // Vertical grid lines
     for (i in 0..5) {
         val x = padding + (chartWidth * i / 5)
@@ -329,15 +338,17 @@ private fun DrawScope.drawGridLines(
             strokeWidth = 1.dp.toPx()
         )
     }
-    
-    // Draw bold zero line if zero is within the value range
+
+    // Bold zero line — theme-aware color so it stays visible against both
+    // the light surface and the dark surface. Hardcoded black was invisible
+    // in dark mode against the dark background.
     if (minValue <= 0.0 && maxValue >= 0.0) {
         val zeroY = padding + chartHeight - (chartHeight * ((0.0 - minValue) / (maxValue - minValue))).toFloat()
         drawLine(
-            color = Color.Black.copy(alpha = 0.5f),
+            color = zeroLineColor,
             start = Offset(padding, zeroY),
             end = Offset(padding + chartWidth, zeroY),
-            strokeWidth = 1.dp.toPx()
+            strokeWidth = 1.5.dp.toPx()
         )
     }
 }

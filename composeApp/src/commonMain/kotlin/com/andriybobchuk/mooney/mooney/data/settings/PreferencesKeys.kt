@@ -29,6 +29,13 @@ object PreferencesKeys {
     val APP_OPEN_COUNT = intPreferencesKey("app_open_count")
     val LAST_REVIEW_PROMPT_TIMESTAMP = androidx.datastore.preferences.core.longPreferencesKey("last_review_prompt_timestamp")
     val LAST_WIDGET_PAGE = intPreferencesKey("last_widget_page")
+    /**
+     * Off by default — when off, the Transactions screen renders only the
+     * spending-calendar widget (no pager, no dots indicator). Turning it on
+     * (via Developer Options) restores the multi-page widget pager with
+     * spending trends, currency rates and the suggest-a-widget card.
+     */
+    val WIDGET_PAGER_ENABLED = booleanPreferencesKey("widget_pager_enabled")
     // Analytics — first-time event flags. Each guards a one-shot event so we
     // can distinguish activation moments (first transaction, first account)
     // from ongoing engagement in Firebase funnels.

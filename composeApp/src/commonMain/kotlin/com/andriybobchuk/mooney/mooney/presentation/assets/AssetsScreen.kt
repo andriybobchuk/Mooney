@@ -127,9 +127,12 @@ fun AssetsScreen(
     val flexCoroutineScope = rememberCoroutineScope()
     val fileHandler = org.koin.compose.koinInject<com.andriybobchuk.mooney.core.platform.FileHandler>()
     val requestReviewUseCase = org.koin.compose.koinInject<com.andriybobchuk.mooney.core.review.RequestReviewUseCase>()
+    // Wrapped shimmer flag — guarantees a visible loading state on cold start
+    // even when the cache resolves within a frame.
+    val showShimmer by com.andriybobchuk.mooney.core.presentation.rememberMinDisplayShimmer(state.isInitialLoading)
     // Don't treat "still loading" as empty — otherwise we'd flash the empty-state
     // CTA during the brief network rate fetch on cold start.
-    val isEmptyState = assets.isEmpty() && !state.isInitialLoading
+    val isEmptyState = assets.isEmpty() && !showShimmer
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -241,7 +244,7 @@ fun AssetsScreen(
                     )
                 }
 
-                if (state.isInitialLoading) {
+                if (showShimmer) {
                     AssetsScreenShimmer(modifier = Modifier.padding(paddingValues))
                 } else
                 AssetsScreenContent(

@@ -1,1 +1,1 @@
-New top bar on Transactions: quick-action chips for Recurring, Exchange, Goals, Categories; a cleaner month selector with arrows and a dropdown sheet. Tap a day in the spending heatmap to scroll the list straight to that date.
+Cleaner Transactions screen: the month picker now sits below the top bar with a clearer "Spent in March" label, the widgets panel is replaced by a single spending calendar (no more page slider), and the cold-start loading state now actually shows the shimmer.

@@ -37,7 +37,9 @@ data class SettingsState(
     val exchangeRateSource: ExchangeRateSource = ExchangeRateSource.EXTENDED,
     val developerOptionsEnabled: Boolean = false,
     /** Local override for Pro plan — used by the Developer Plan toggle. */
-    val devForcePremium: Boolean = false
+    val devForcePremium: Boolean = false,
+    /** Dev opt-in: when true, the Transactions screen shows the multi-widget pager again. */
+    val widgetPagerEnabled: Boolean = false
 ) {
     val maxPinnedCategories: Int = 5
     val canAddMorePinned: Boolean = pinnedCategoryIds.size < maxPinnedCategories

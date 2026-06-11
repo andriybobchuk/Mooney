@@ -132,6 +132,7 @@ import com.andriybobchuk.mooney.mooney.domain.parseAmountInput
 import com.andriybobchuk.mooney.mooney.domain.formatToShortString
 import com.andriybobchuk.mooney.mooney.domain.formatToPlainString
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
@@ -172,6 +173,18 @@ fun TransactionsScreen(
     val total = state.total
     val totalCurrency = state.totalCurrency
     val frequentCategories by viewModel.frequentCategories.collectAsStateWithLifecycle()
+
+    // Dev-only widget pager flag. Default false so production users see only
+    // the spending calendar — no pager, no dots indicator stealing space.
+    val transactionsDataStore = org.koin.compose.koinInject<androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>>()
+    val widgetPagerEnabled by transactionsDataStore.data
+        .map { it[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.WIDGET_PAGER_ENABLED] ?: false }
+        .collectAsStateWithLifecycle(initialValue = false)
+
+    // Cold-start shimmer can vanish in well under a frame if the cache emits
+    // fast — wrap the flag to guarantee a visible minimum duration so the
+    // user actually sees the loading state.
+    val showShimmer by com.andriybobchuk.mooney.core.presentation.rememberMinDisplayShimmer(state.isInitialLoading)
     // Sheet
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var isBottomSheetOpen by remember { mutableStateOf(false) }
@@ -214,7 +227,9 @@ fun TransactionsScreen(
     val hasAccounts = state.accounts.filterNotNull().isNotEmpty()
     // Don't treat "still loading" as empty — otherwise we'd flash the empty-state
     // CTA for half a second on cold start before the DB query lands.
-    val isEmptyState = !hasTransactions && !hasPendingTransactions && !state.isInitialLoading
+    // Gated on showShimmer (not the raw flag) so an instantly-resolved cache
+    // can't paint the empty-state CTA while the shimmer is still required.
+    val isEmptyState = !hasTransactions && !hasPendingTransactions && !showShimmer
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
@@ -224,39 +239,23 @@ fun TransactionsScreen(
             Toolbars.Primary(
                 containerColor = Color.Transparent,
                 titleContent = {
-                    Column(
+                    // Title is just the amount now. The "Spent in <month>"
+                    // text moved down into the MonthSelectorBar pill below
+                    // the toolbar so the date is closer to the chip row.
+                    Text(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
                             .clickable { viewModel.onTotalCurrencyClick() }
-                            .padding(horizontal = 4.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = "${total.formatWithCommas()} ${totalCurrency.symbol}",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp
-                            ),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Text(
-                            text = "Spent in ${state.selectedMonth.toDisplayString().substringBeforeLast(' ')}",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Normal,
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
-                            )
-                        )
-                    }
-                },
-                scrollBehavior = scrollBehavior,
-                customContent = {
-                    // New compact selector: ◀ [ Mar ▾ ] ▶. The pill opens a
-                    // year/month picker sheet. Replaces the old calendar icon.
-                    MonthSelectorBar(
-                        selectedMonth = state.selectedMonth,
-                        onMonthSelected = viewModel::onMonthSelected,
+                            .padding(horizontal = 4.dp, vertical = 2.dp),
+                        text = "${total.formatWithCommas()} ${totalCurrency.symbol}",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 },
+                scrollBehavior = scrollBehavior,
                 actions = listOf(
                     // Recurring moved to the quick-actions chip row below.
                     Toolbars.ToolBarAction(
@@ -303,11 +302,19 @@ fun TransactionsScreen(
                         .padding(paddingValues)
                         .fillMaxSize()
                 ) {
-                    // Quick-action chips replace the old toolbar icons and the
-                    // hidden Exchange/Goals destinations behind the bottom nav.
-                    // Hidden during cold-start shimmer to avoid double-loading
-                    // visual noise.
-                    if (!state.isInitialLoading) {
+                    // Month selector moved out of the toolbar to sit just above
+                    // the chip row — same visual band as the chips, closer to
+                    // the data, and the toolbar reads as just "amount + actions".
+                    if (!showShimmer) {
+                        MonthSelectorBar(
+                            selectedMonth = state.selectedMonth,
+                            onMonthSelected = viewModel::onMonthSelected,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                        )
+                        // Quick-action chips replace the old toolbar icons and
+                        // the hidden Exchange/Goals destinations behind the
+                        // bottom nav. Hidden during cold-start shimmer to
+                        // avoid double-loading visual noise.
                         QuickActionChipsRow(
                             onRecurringClick = onNavigateToRecurring,
                             onExchangeClick = onNavigateToExchange,
@@ -315,7 +322,7 @@ fun TransactionsScreen(
                             onCategoriesClick = onNavigateToTransactionCategories
                         )
                     }
-                    if (state.isInitialLoading) {
+                    if (showShimmer) {
                         TransactionsScreenShimmer(modifier = Modifier.fillMaxSize())
                     } else
                     TransactionsScreenContent(
@@ -346,6 +353,7 @@ fun TransactionsScreen(
                             categories = state.categories,
                             onAcceptPending = viewModel::acceptPendingTransaction,
                             onSkipPending = viewModel::skipPendingTransaction,
+                            showAllWidgets = widgetPagerEnabled,
                         )
             }
             }
@@ -606,6 +614,7 @@ fun TransactionsScreenContent(
     categories: List<Category> = emptyList(),
     onAcceptPending: (PendingTransactionEntity) -> Unit = {},
     onSkipPending: (Int) -> Unit = {},
+    showAllWidgets: Boolean = false,
 ) {
     // Group and sort transactions by date (descending), then by ID (most recent first)
     val grouped by remember(transactions) {
@@ -683,6 +692,7 @@ fun TransactionsScreenContent(
                     selectedMonth = selectedMonth,
                     dailyTotals = dailyTotals,
                     onDayClick = onDayClick,
+                    showAllWidgets = showAllWidgets,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                 )
             }
@@ -2800,8 +2810,27 @@ fun TransactionPagerView(
     selectedMonth: MonthKey,
     dailyTotals: Map<Int, Double>,
     modifier: Modifier = Modifier,
-    onDayClick: (LocalDate) -> Unit = {}
+    onDayClick: (LocalDate) -> Unit = {},
+    /**
+     * When false (the production default), only the spending-calendar widget
+     * is rendered — no pager, no dots indicator, no extra widgets. The other
+     * widgets (line chart, currency rates, suggest card) are dev-only and
+     * gated behind the Developer Options "Transactions Widget Pager" toggle.
+     */
+    showAllWidgets: Boolean = false
 ) {
+    // Calendar-only path: render the heatmap directly, save the dots-indicator
+    // vertical space, and skip all the pager wiring.
+    if (!showAllWidgets) {
+        SpendingCalendarView(
+            selectedMonth = selectedMonth,
+            dailyTotals = dailyTotals,
+            modifier = modifier.fillMaxWidth().height(200.dp),
+            onDayClick = onDayClick
+        )
+        return
+    }
+
     val pageCount = 4  // calendar, line chart, currency rates, suggest card
     val dataStore = org.koin.compose.koinInject<androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>>()
 
@@ -3639,10 +3668,12 @@ private fun QuickActionChip(
             )
         },
         leadingIcon = {
+            // Sized to roughly match the chip label cap-height so the icon
+            // reads as part of the text rather than overpowering it.
             Icon(
                 painter = icon,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(14.dp),
                 tint = MaterialTheme.colorScheme.onSurface
             )
         },
@@ -3668,7 +3699,8 @@ private fun QuickActionChip(
 @Composable
 private fun MonthSelectorBar(
     selectedMonth: MonthKey,
-    onMonthSelected: (MonthKey) -> Unit
+    onMonthSelected: (MonthKey) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val currentMonth = remember { MonthKey.current() }
     val canGoForward = remember(selectedMonth, currentMonth) {
@@ -3676,8 +3708,14 @@ private fun MonthSelectorBar(
             (selectedMonth.year == currentMonth.year && selectedMonth.month < currentMonth.month)
     }
     var showSheet by remember { mutableStateOf(false) }
+    val monthName = remember(selectedMonth) {
+        // Full month name without the year — the pill reads "Spent in March"
+        // rather than "Mar" once we hoist it out of the cramped toolbar.
+        selectedMonth.toDisplayString().substringBeforeLast(' ')
+    }
 
     Row(
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -3696,11 +3734,21 @@ private fun MonthSelectorBar(
                 .padding(horizontal = 14.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = selectedMonth.toShortDisplayString(),
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            // "Spent in <Month>" — month bolded, prefix regular weight.
+            // Two stacked Texts in a Row keeps the import surface tiny and
+            // avoids pulling in the AnnotatedString span builders.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Spent in ",
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Normal),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = monthName,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
             Spacer(modifier = Modifier.width(4.dp))
             Icon(
                 imageVector = androidx.compose.material.icons.Icons.Outlined.KeyboardArrowDown,

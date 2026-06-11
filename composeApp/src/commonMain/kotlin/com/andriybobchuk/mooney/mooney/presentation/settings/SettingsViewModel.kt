@@ -78,6 +78,7 @@ class SettingsViewModel(
         observeAssetCategories()
         observeAccounts()
         observeCurrencyInsights()
+        observeWidgetPager()
         observeDeveloperOptions()
         observeDevPremiumFlag()
     }
@@ -106,6 +107,14 @@ class SettingsViewModel(
             prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.CURRENCY_INSIGHTS_ENABLED] ?: false
         }.onEach { enabled ->
             _state.update { it.copy(currencyInsightsEnabled = enabled) }
+        }.launchIn(viewModelScope)
+    }
+
+    private fun observeWidgetPager() {
+        dataStore.data.map { prefs ->
+            prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.WIDGET_PAGER_ENABLED] ?: false
+        }.onEach { enabled ->
+            _state.update { it.copy(widgetPagerEnabled = enabled) }
         }.launchIn(viewModelScope)
     }
 
@@ -540,6 +549,15 @@ class SettingsViewModel(
                 prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.CURRENCY_INSIGHTS_ENABLED] = enabled
             }
             _state.update { it.copy(currencyInsightsEnabled = enabled) }
+        }
+    }
+
+    fun toggleWidgetPager(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStore.edit { prefs ->
+                prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.WIDGET_PAGER_ENABLED] = enabled
+            }
+            _state.update { it.copy(widgetPagerEnabled = enabled) }
         }
     }
 

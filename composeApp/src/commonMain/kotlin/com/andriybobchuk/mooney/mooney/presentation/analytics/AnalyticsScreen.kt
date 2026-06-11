@@ -119,11 +119,14 @@ fun AnalyticsScreen(
     }
     val hasAnyData = state.transactionsForMonth.filterNotNull().isNotEmpty() ||
         state.historicalMetrics.any { it.revenue > 0 || it.taxes > 0 || it.operatingCosts > 0 || it.netIncome != 0.0 }
+    // Wrapped flag ensures the shimmer is actually visible on cold start
+    // even when the underlying load races to completion within a frame.
+    val showShimmer by com.andriybobchuk.mooney.core.presentation.rememberMinDisplayShimmer(state.isInitialLoading)
     // Don't show the "no analytics yet" empty state while the very first load
     // is in progress — otherwise the user sees the empty state for a frame
-    // before the data populates. Once isInitialLoading flips to false, the
-    // empty state is the right thing to render if there really is no data.
-    val isEmptyState = !hasAnyData && !state.isLoading && !state.isInitialLoading
+    // before the data populates. Once showShimmer flips to false, the empty
+    // state is the right thing to render if there really is no data.
+    val isEmptyState = !hasAnyData && !state.isLoading && !showShimmer
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
@@ -196,7 +199,7 @@ fun AnalyticsScreen(
                 }
             }
 
-            if (!isEmpty && state.isInitialLoading) {
+            if (!isEmpty && showShimmer) {
                 // True cold start: real metrics still computing. Render
                 // placeholder cards so the user doesn't see a grid of zeros.
                 AnalyticsScreenShimmer(
@@ -206,7 +209,7 @@ fun AnalyticsScreen(
                 )
             }
 
-            if (!isEmpty && !state.isInitialLoading) {
+            if (!isEmpty && !showShimmer) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()

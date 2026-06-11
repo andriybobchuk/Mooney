@@ -915,6 +915,13 @@ fun SettingsScreen(
                                 onCheckedChange = { viewModel.toggleCurrencyInsights(it) }
                             )
                             SettingsDivider()
+                            SettingsToggleRow(
+                                title = "Transactions Widget Pager",
+                                description = "Show the multi-widget pager (spending trend, currency rates, suggest) under the spending calendar",
+                                checked = state.widgetPagerEnabled,
+                                onCheckedChange = { viewModel.toggleWidgetPager(it) }
+                            )
+                            SettingsDivider()
                             SettingsRow(
                                 title = "Replay Onboarding",
                                 value = "Reset & view",

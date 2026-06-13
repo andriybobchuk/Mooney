@@ -477,6 +477,12 @@
     <!-- Wskaźnik -->
     <string name="pct_of_revenue">%1$s%% przychodu</string>
 
+    <!-- Streszczenie -->
+    <string name="recurring_summary_monthly">Powtarza się co miesiąc, dzień %1$d</string>
+    <string name="recurring_summary_weekly">Powtarza się co tydzień</string>
+    <string name="recurring_summary_yearly">Powtarza się co rok, miesiąc %1$d, dzień %2$d</string>
+    <string name="recurring_summary_daily">Powtarza się codziennie</string>
+
     <!-- Harmonogram cykliczny -->
     <string name="no_recurring_yet">Brak transakcji cyklicznych</string>
     <string name="recurring_empty_hint">Stuknij +, aby utworzyć transakcję cykliczną, która będzie automatycznie generować wpisy.</string>

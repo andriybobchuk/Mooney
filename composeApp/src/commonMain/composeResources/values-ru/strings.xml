@@ -477,6 +477,12 @@
     <!-- Метрика -->
     <string name="pct_of_revenue">%1$s%% дохода</string>
 
+    <!-- Краткое описание -->
+    <string name="recurring_summary_monthly">Повторяется ежемесячно, день %1$d</string>
+    <string name="recurring_summary_weekly">Повторяется еженедельно</string>
+    <string name="recurring_summary_yearly">Повторяется ежегодно, месяц %1$d, день %2$d</string>
+    <string name="recurring_summary_daily">Повторяется ежедневно</string>
+
     <!-- Расписание -->
     <string name="no_recurring_yet">Нет повторяющихся транзакций</string>
     <string name="recurring_empty_hint">Нажмите +, чтобы создать повторяющуюся транзакцию — записи будут создаваться автоматически.</string>

@@ -75,6 +75,10 @@ import mooney.composeapp.generated.resources.month_label
 import mooney.composeapp.generated.resources.monthly_label
 import mooney.composeapp.generated.resources.no_recurring_yet
 import mooney.composeapp.generated.resources.recurring_empty_hint
+import mooney.composeapp.generated.resources.recurring_summary_daily
+import mooney.composeapp.generated.resources.recurring_summary_monthly
+import mooney.composeapp.generated.resources.recurring_summary_weekly
+import mooney.composeapp.generated.resources.recurring_summary_yearly
 import mooney.composeapp.generated.resources.recurring_transactions_title
 import mooney.composeapp.generated.resources.remove
 import mooney.composeapp.generated.resources.repeat_on
@@ -502,10 +506,10 @@ fun RecurringScheduleSheet(
 
             // Preview of what will happen
             val summaryText = when (frequency) {
-                RecurringFrequency.MONTHLY -> "Next transaction on the ${com.andriybobchuk.mooney.mooney.domain.RecurringSchedule(frequency, dayOfMonth).toDisplayString().removePrefix("Monthly on the ")} of every month"
-                RecurringFrequency.WEEKLY -> "Next transaction every ${listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday").getOrElse(weekDay) { "Monday" }}"
-                RecurringFrequency.YEARLY -> "Next transaction on ${listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec").getOrElse(monthOfYear - 1) { "Jan" }} $dayOfMonth every year"
-                RecurringFrequency.DAILY -> "Next transaction every day"
+                RecurringFrequency.MONTHLY -> stringResource(Res.string.recurring_summary_monthly, dayOfMonth)
+                RecurringFrequency.WEEKLY -> stringResource(Res.string.recurring_summary_weekly)
+                RecurringFrequency.YEARLY -> stringResource(Res.string.recurring_summary_yearly, monthOfYear, dayOfMonth)
+                RecurringFrequency.DAILY -> stringResource(Res.string.recurring_summary_daily)
             }
             Text(
                 summaryText,

@@ -477,6 +477,12 @@
     <!-- 指标 -->
     <string name="pct_of_revenue">%1$s%% 收入</string>
 
+    <!-- 摘要 -->
+    <string name="recurring_summary_monthly">每月重复，日 %1$d</string>
+    <string name="recurring_summary_weekly">每周重复</string>
+    <string name="recurring_summary_yearly">每年重复，月 %1$d，日 %2$d</string>
+    <string name="recurring_summary_daily">每天重复</string>
+
     <!-- 排程 -->
     <string name="no_recurring_yet">尚无周期性交易</string>
     <string name="recurring_empty_hint">点按 + 创建周期性交易，系统将按计划自动生成记录。</string>

@@ -477,6 +477,12 @@
     <!-- Kennzahl -->
     <string name="pct_of_revenue">%1$s%% des Umsatzes</string>
 
+    <!-- Zusammenfassung -->
+    <string name="recurring_summary_monthly">Wiederholt sich monatlich am Tag %1$d</string>
+    <string name="recurring_summary_weekly">Wiederholt sich wöchentlich</string>
+    <string name="recurring_summary_yearly">Wiederholt sich jährlich, Monat %1$d, Tag %2$d</string>
+    <string name="recurring_summary_daily">Wiederholt sich täglich</string>
+
     <!-- Zeitplan -->
     <string name="no_recurring_yet">Noch keine wiederkehrenden Transaktionen</string>
     <string name="recurring_empty_hint">Tippen Sie auf +, um eine wiederkehrende Transaktion zu erstellen, die Einträge automatisch nach Zeitplan generiert.</string>

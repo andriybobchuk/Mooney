@@ -257,7 +257,7 @@ fun TransactionsScreen(
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = "Spent in ${state.selectedMonth.toDisplayString().substringBeforeLast(' ')}",
+                            text = stringResource(Res.string.spent_in, state.selectedMonth.toDisplayString().substringBeforeLast(' ')),
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Normal,

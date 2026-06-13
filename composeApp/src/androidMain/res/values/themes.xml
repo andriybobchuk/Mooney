@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+        Splash theme — referenced from AndroidManifest activity.
+        Extending Theme.SplashScreen makes installSplashScreen() use these
+        attributes. windowSplashScreenBackground is what the user sees while
+        Application + first frame load; matches the app's light background so
+        the handoff into Compose doesn't flash.
+    -->
+    <style name="Theme.Mooney.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.Mooney</item>
+    </style>
+
+    <!-- Post-splash theme. NoActionBar + transparent system bars; Compose
+         draws the actual app UI. -->
+    <style name="Theme.Mooney" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+
+</resources>

@@ -20,6 +20,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.andriybobchuk.mooney.core.data.preferences.StartupPrefs
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.presentation.assets.AssetsScreen
@@ -37,6 +38,7 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.GetTransactionsUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.ProcessRecurringTransactionsUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetUserCurrenciesUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.settings.GetUserPreferencesUseCase
+import androidx.datastore.preferences.core.edit
 import kotlinx.coroutines.flow.first
 import com.andriybobchuk.mooney.mooney.presentation.exchange.ExchangeScreen
 import com.andriybobchuk.mooney.mooney.presentation.exchange.ExchangeViewModel
@@ -53,6 +55,8 @@ import kotlinx.coroutines.flow.map
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
+private const val SECONDARY_WORK_DELAY_MS = 1500L
+
 @Suppress("ThrowsCount")
 @Composable
 fun NavigationHost() {
@@ -67,11 +71,32 @@ fun NavigationHost() {
     @Suppress("UNUSED_VARIABLE")
     val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache = koinInject()
 
-    // Determine start destination based on onboarding state
-    var startDestination by remember { mutableStateOf<Route?>(null) }
+    // Sync-readable mirror — lets the first frame pick a start destination
+    // and the right base currency without waiting on DataStore. Returns null
+    // only on the very first launch after install/upgrade; the LaunchedEffect
+    // below backfills the mirror and corrects the destination if needed.
+    val startupPrefs: StartupPrefs = koinInject()
+    val cachedOnboardingCompleted = remember { startupPrefs.getOnboardingCompleted() }
+    remember {
+        startupPrefs.getDefaultCurrency()?.let { code ->
+            try {
+                GlobalConfig.baseCurrency = Currency.valueOf(code)
+            } catch (_: IllegalArgumentException) { /* keep default */ }
+        }
+        Unit
+    }
+
+    var startDestination by remember {
+        mutableStateOf<Route?>(
+            when (cachedOnboardingCompleted) {
+                true -> Route.MooneyGraph
+                false -> Route.Onboarding
+                null -> null
+            }
+        )
+    }
     LaunchedEffect(Unit) {
         val prefs = preferencesRepository.getCurrentPreferences()
-        // Set GlobalConfig.baseCurrency from saved preferences
         val savedCurrency = try {
             Currency.valueOf(prefs.defaultCurrency)
         } catch (_: IllegalArgumentException) {
@@ -80,15 +105,15 @@ fun NavigationHost() {
         GlobalConfig.baseCurrency = savedCurrency
 
         if (prefs.onboardingCompleted) {
-            startDestination = Route.MooneyGraph
+            if (startDestination != Route.MooneyGraph) startDestination = Route.MooneyGraph
         } else {
             // Existing user with accounts — silently mark onboarding complete
             val accounts = getAccountsUseCase().first()
             if (accounts.filterNotNull().isNotEmpty()) {
                 preferencesRepository.markOnboardingCompleted()
-                startDestination = Route.MooneyGraph
+                if (startDestination != Route.MooneyGraph) startDestination = Route.MooneyGraph
             } else {
-                startDestination = Route.Onboarding
+                if (startDestination != Route.Onboarding) startDestination = Route.Onboarding
             }
         }
     }
@@ -109,13 +134,46 @@ fun NavigationHost() {
 
     val navController = rememberNavController()
 
-    // Track screen views
+    // Track screen views. Also doubles as our tap-count signal: each navigation
+    // change counts as a meaningful tap for interstitial eligibility. The
+    // trigger moment is now entering the Analytics tab (NOT Transactions —
+    // returning to home should feel calm). Analytics is a "decision moment"
+    // where a brief ad break is more tolerable. AdEligibilityUseCase still
+    // enforces the cooldown / tap threshold / once-per-session cap.
     val currentBackStackEntry by navController.currentBackStackEntryFlow
         .collectAsStateWithLifecycle(initialValue = null)
+    val interstitialEligibility: com.andriybobchuk.mooney.core.ads.AdEligibilityUseCase = koinInject()
+    var navTapCount by remember { mutableStateOf(0) }
+    // Counts Analytics screen visits this session. The FIRST visit per
+    // session is allowed to fire an interstitial (unlike Transactions,
+    // Analytics is a deliberate destination, not a "just opened the app"
+    // moment).
+    var analyticsVisitCount by remember { mutableStateOf(0) }
+    // sessionCount is set further down (inside the ads-init LaunchedEffect)
+    // — read whatever value it currently has when an interstitial trigger
+    // moment fires.
+    val sessionCountForInterstitial = remember { mutableStateOf(0) }
     LaunchedEffect(currentBackStackEntry) {
         val route = currentBackStackEntry?.destination?.route ?: return@LaunchedEffect
         val screenName = route.substringAfterLast(".")
         analyticsTracker.trackScreenView(screenName)
+        navTapCount += 1
+        if (screenName == "Analytics") {
+            analyticsVisitCount += 1
+            if (interstitialEligibility.isEligible(
+                    placement = com.andriybobchuk.mooney.core.ads.AdPlacement.INTERSTITIAL_RETURN_TO_TRANSACTIONS,
+                    sessionTapCount = navTapCount,
+                    sessionCount = sessionCountForInterstitial.value
+                )
+            ) {
+                val shown = com.andriybobchuk.mooney.core.ads.Ads.showInterstitialIfReady()
+                if (shown) {
+                    interstitialEligibility.markShown(
+                        com.andriybobchuk.mooney.core.ads.AdPlacement.INTERSTITIAL_RETURN_TO_TRANSACTIONS
+                    )
+                }
+            }
+        }
     }
 
     // Set user properties at app start.
@@ -128,6 +186,10 @@ fun NavigationHost() {
     val premiumManagerProps: com.andriybobchuk.mooney.core.premium.PremiumManager = koinInject()
     val recurringTransactionDao: com.andriybobchuk.mooney.core.data.database.RecurringTransactionDao = koinInject()
     LaunchedEffect(Unit) {
+        // Best-effort telemetry — deliberately delayed so it doesn't compete
+        // with the first interactive frame. 1.5s is comfortably after any
+        // realistic cold-start.
+        kotlinx.coroutines.delay(SECONDARY_WORK_DELAY_MS)
         try {
             val accounts = getAccountsUseCase().first()
             val transactions = getTransactionsUseCase().first()
@@ -171,9 +233,11 @@ fun NavigationHost() {
         }
     }
 
-    // Sync subscription status on app start
+    // Sync subscription status on app start — deferred so StoreKit/Billing
+    // IPC doesn't fight the first interactive frame.
     val premiumManager: com.andriybobchuk.mooney.core.premium.PremiumManager = koinInject()
     LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(SECONDARY_WORK_DELAY_MS)
         try {
             premiumManager.syncSubscriptionStatus()
         } catch (e: kotlin.coroutines.cancellation.CancellationException) {
@@ -183,9 +247,10 @@ fun NavigationHost() {
         }
     }
 
-    // Process recurring transactions on app start
+    // Process recurring transactions on app start — also deferred.
     val processRecurringUseCase: ProcessRecurringTransactionsUseCase = koinInject()
     LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(SECONDARY_WORK_DELAY_MS)
         try {
             processRecurringUseCase()
         } catch (e: kotlin.coroutines.cancellation.CancellationException) {
@@ -205,6 +270,47 @@ fun NavigationHost() {
         }
     }
 
+    // Ads — session counter + preload. Read APP_OPEN_COUNT once, increment,
+    // persist. Drives the eligibility grace window (first 3 sessions = no
+    // ads). Preload interstitial + rewarded in parallel so they're warm by
+    // the time any eligible placement asks to show one.
+    val dataStore: androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences> = koinInject()
+    var sessionCount by remember { mutableStateOf(0) }
+    LaunchedEffect(Unit) {
+        try {
+            val current = dataStore.data.first()[
+                com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.APP_OPEN_COUNT
+            ] ?: 0
+            val next = current + 1
+            dataStore.edit { prefs ->
+                prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.APP_OPEN_COUNT] = next
+            }
+            sessionCount = next
+            sessionCountForInterstitial.value = next
+            // Eagerly load both ad formats so the first eligible UI moment
+            // doesn't have to wait on the network. Both are cheap no-ops
+            // when the bridge isn't wired (Android, or pre-SDK iOS builds).
+            kotlinx.coroutines.delay(SECONDARY_WORK_DELAY_MS)
+            com.andriybobchuk.mooney.core.ads.Ads.preloadInterstitial(
+                com.andriybobchuk.mooney.core.ads.AdUnitIds.interstitial
+            )
+            com.andriybobchuk.mooney.core.ads.Ads.preloadRewarded(
+                com.andriybobchuk.mooney.core.ads.AdUnitIds.rewarded
+            )
+        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Best-effort — no ads if the count fails to read/write.
+        }
+    }
+
+    androidx.compose.runtime.CompositionLocalProvider(
+        com.andriybobchuk.mooney.core.ads.LocalAdSession provides
+            com.andriybobchuk.mooney.core.ads.AdSession(
+                sessionCount = sessionCount,
+                tapCount = 0 // banner placements don't care; only interstitials do
+            )
+    ) {
     NavHost(
         navController = navController,
         startDestination = resolvedStart,
@@ -246,8 +352,7 @@ fun NavigationHost() {
                     onSettingsClick = { navController.navigate(Route.Settings) },
                     onNavigateToAssets = { navController.navigate(Route.Accounts) { popUpTo(Route.MooneyGraph) } },
                     onNavigateToRecurring = { navController.navigate(Route.RecurringTransactions) },
-                    onNavigateToTransactionCategories = { navController.navigate(Route.TransactionCategories) },
-                    onNavigateToExchange = { navController.navigate(Route.Exchange) },
+                    onNavigateToTransactionCategories = { navController.navigate(Route.Categories) },
                     onNavigateToGoals = { navController.navigate(Route.Goals) }
                 )
             }
@@ -257,7 +362,7 @@ fun NavigationHost() {
                     viewModel = viewModel,
                     bottomNavbar = { BottomNavigationBar(navController, 1) },
                     onSettingsClick = { navController.navigate(Route.Settings) },
-                    onNavigateToAssetCategories = { navController.navigate(Route.AssetCategories) },
+                    onNavigateToAssetCategories = { navController.navigate(Route.Categories) },
                     onGoalsClick = if (FeatureFlags.goalsEnabled) {
                         { navController.navigate(Route.Goals) }
                     } else null
@@ -292,7 +397,8 @@ fun NavigationHost() {
                             "TAXES" -> navController.navigate(Route.AnalyticsTaxes)
                         }
                     },
-                    onNavigateToNetIncome = { navController.navigate(Route.AnalyticsNetIncome) }
+                    onNavigateToNetIncome = { navController.navigate(Route.AnalyticsNetIncome) },
+                    onNavigateToNetWorth = { navController.navigate(Route.NetWorthDetail) }
                 )
             }
 
@@ -316,6 +422,14 @@ fun NavigationHost() {
                 AnalyticsNetIncomeScreen(viewModel = viewModel, onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() })
             }
 
+            composable<Route.NetWorthDetail> { entry ->
+                val viewModel = entry.sharedKoinViewModel<AnalyticsViewModel>(navController)
+                com.andriybobchuk.mooney.mooney.presentation.analytics.NetWorthDetailScreen(
+                    viewModel = viewModel,
+                    onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
+                )
+            }
+
             if (FeatureFlags.goalsEnabled) {
                 composable<Route.Goals> {
                     val viewModel = koinViewModel<GoalsViewModel>()
@@ -334,20 +448,23 @@ fun NavigationHost() {
                 )
             }
 
-            composable<Route.Settings> {
-                val viewModel = koinViewModel<SettingsViewModel>()
+            composable<Route.Settings> { entry ->
+                // Scoped to MooneyGraph so the VM survives tab switching, just
+                // like the other primary tabs.
+                val viewModel = entry.sharedKoinViewModel<SettingsViewModel>(navController)
                 SettingsScreen(
                     viewModel = viewModel,
                     onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() },
-                    onNavigateToTransactionCategories = { navController.navigate(Route.TransactionCategories) },
-                    onNavigateToAssetCategories = { navController.navigate(Route.AssetCategories) },
+                    onNavigateToTransactionCategories = { navController.navigate(Route.Categories) },
+                    onNavigateToAssetCategories = { navController.navigate(Route.Categories) },
                     onReplayOnboarding = {
                         // Pop everything down to the onboarding destination so
                         // finishing it lands you back on the main graph fresh.
                         navController.navigate(Route.Onboarding) {
                             popUpTo(Route.MooneyGraph) { inclusive = true }
                         }
-                    }
+                    },
+                    bottomNavbar = { BottomNavigationBar(navController, 4) }
                 )
             }
 
@@ -366,8 +483,22 @@ fun NavigationHost() {
                     onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
                 )
             }
+
+            // Unified categories — one screen with tabbed Transactions/Assets.
+            // Both ViewModels are pulled at this point so each tab is fully
+            // wired without needing to round-trip through the old routes.
+            composable<Route.Categories> {
+                val txViewModel = koinViewModel<com.andriybobchuk.mooney.mooney.presentation.categories.TransactionCategoriesViewModel>()
+                val assetViewModel = koinViewModel<com.andriybobchuk.mooney.mooney.presentation.categories.AssetCategoriesViewModel>()
+                com.andriybobchuk.mooney.mooney.presentation.categories.CategoriesScreen(
+                    transactionViewModel = txViewModel,
+                    assetViewModel = assetViewModel,
+                    onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
+                )
+            }
         }
     }
+    } // closes LocalAdSession CompositionLocalProvider
 
 }
 

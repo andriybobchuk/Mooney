@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches the light theme `background` color (AppDesignSystem.Colors.background.light)
+         so the system splash → Compose first-frame transition has no visible flash. -->
+    <color name="splash_background">#FFFFFF</color>
+</resources>

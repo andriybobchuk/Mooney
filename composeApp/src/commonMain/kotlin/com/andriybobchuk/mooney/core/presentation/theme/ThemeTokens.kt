@@ -103,7 +103,9 @@ val LightAppColors = AppColorsExtended(
     cardBackground = Color(0xFFF0F1F3),
     pillBackground = Color(0xFFF0F1F3),
     pillBackgroundSecondary = Color(0xFFE8EDFE),
-    transactionIcon = Color(0xFFF0F1F3),
+    // Quieter than the cardBackground so the emoji reads as the primary
+    // element on the row and the square fades into the surface.
+    transactionIcon = Color(0xFFF7F7F8),
     accent = Color(0xFF3562F6),
     accentContainer = Color(0xFFE8EDFE),
 )
@@ -114,7 +116,8 @@ val DarkAppColors = AppColorsExtended(
     cardBackground = Color(0xFF1C2025),
     pillBackground = Color(0xFF1C2025),
     pillBackgroundSecondary = Color(0xFF1A3A37),
-    transactionIcon = Color(0xFF1C2025),
+    // A hair lighter than the cardBackground for a soft, premium contrast.
+    transactionIcon = Color(0xFF242529),
     accent = Color(0xFF4DD0C8),
     accentContainer = Color(0xFF1A3A37),
 )

@@ -258,6 +258,42 @@ fun DevToolsBottomSheet(
             Spacer(Modifier.height(20.dp))
 
             Text(
+                "Ads",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            // End-to-end smoke tests: bypass the eligibility/frequency gate
+            // entirely so we can confirm Kotlin → Swift bridge → AdMob SDK →
+            // presented UIViewController works. In production these flows are
+            // gated by [AdEligibilityUseCase].
+            DevActionRow("Preload interstitial") {
+                com.andriybobchuk.mooney.core.ads.Ads.preloadInterstitial(
+                    com.andriybobchuk.mooney.core.ads.AdUnitIds.interstitial
+                )
+                statusMessage = "Interstitial preload requested — wait ~2s, then 'Show'"
+            }
+            DevActionRow("Show interstitial (if preloaded)") {
+                val shown = com.andriybobchuk.mooney.core.ads.Ads.showInterstitialIfReady()
+                statusMessage = if (shown) "Showing interstitial" else "Not ready — preload first"
+            }
+            DevActionRow("Preload rewarded") {
+                com.andriybobchuk.mooney.core.ads.Ads.preloadRewarded(
+                    com.andriybobchuk.mooney.core.ads.AdUnitIds.rewarded
+                )
+                statusMessage = "Rewarded preload requested — wait ~2s, then 'Show'"
+            }
+            DevActionRow("Show rewarded (if preloaded)") {
+                com.andriybobchuk.mooney.core.ads.Ads.showRewarded(
+                    onReward = { statusMessage = "Reward earned!" },
+                    onDismissed = { statusMessage = "Rewarded ad dismissed" }
+                )
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            Text(
                 text = "Using: mooney_dev.db",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant

@@ -75,8 +75,18 @@ import com.andriybobchuk.mooney.core.presentation.designsystem.components.MeshGr
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import kotlinx.coroutines.launch
 import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.choose_currencies_up_to
+import mooney.composeapp.generated.resources.continue_label
+import mooney.composeapp.generated.resources.get_started
 import mooney.composeapp.generated.resources.mooney_icon
+import mooney.composeapp.generated.resources.primary_currency
+import mooney.composeapp.generated.resources.primary_currency_desc
+import mooney.composeapp.generated.resources.swipe_to_unwrap
+import mooney.composeapp.generated.resources.swipe_up_reveal
+import mooney.composeapp.generated.resources.welcome_to_mooney
+import mooney.composeapp.generated.resources.your_new_mooney_ready
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
 private const val PAGER_PAGE_COUNT = 3 // currency selection, base currency, welcome
@@ -260,7 +270,7 @@ private fun CurrencySelectionContent(
         Spacer(modifier = Modifier.weight(0.06f))
 
         Text(
-            text = "Welcome to Mooney",
+            text = stringResource(Res.string.welcome_to_mooney),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
@@ -269,7 +279,7 @@ private fun CurrencySelectionContent(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Choose currencies you use (up to ${state.maxCurrencies})",
+            text = stringResource(Res.string.choose_currencies_up_to, state.maxCurrencies),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
         )
@@ -312,7 +322,7 @@ private fun CurrencySelectionContent(
             )
         ) {
             Text(
-                text = "Continue",
+                text = stringResource(Res.string.continue_label),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
             )
@@ -337,7 +347,7 @@ private fun BaseCurrencyContent(
         Spacer(modifier = Modifier.weight(0.06f))
 
         Text(
-            text = "Primary Currency",
+            text = stringResource(Res.string.primary_currency),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
@@ -346,7 +356,7 @@ private fun BaseCurrencyContent(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "All totals and analytics will be shown in this currency",
+            text = stringResource(Res.string.primary_currency_desc),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
             textAlign = TextAlign.Center
@@ -389,7 +399,7 @@ private fun BaseCurrencyContent(
             )
         ) {
             Text(
-                text = "Get Started",
+                text = stringResource(Res.string.get_started),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
             )
@@ -476,7 +486,7 @@ private fun WelcomeContent(
         Spacer(modifier = Modifier.weight(0.25f))
 
         Text(
-            text = "Your new Mooney is ready",
+            text = stringResource(Res.string.your_new_mooney_ready),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
@@ -486,7 +496,7 @@ private fun WelcomeContent(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Swipe up to reveal what's\nwaiting for you inside",
+            text = stringResource(Res.string.swipe_up_reveal),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
             textAlign = TextAlign.Center
@@ -499,7 +509,7 @@ private fun WelcomeContent(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Swipe to unwrap the app",
+            text = stringResource(Res.string.swipe_to_unwrap),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
@@ -525,7 +535,7 @@ private fun WelcomeContent(
             }
         ) {
             Text(
-                text = "Continue",
+                text = stringResource(Res.string.continue_label),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium

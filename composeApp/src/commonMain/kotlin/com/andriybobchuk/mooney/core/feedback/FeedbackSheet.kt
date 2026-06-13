@@ -47,6 +47,16 @@ import com.andriybobchuk.mooney.mooney.domain.feedback.FeedbackKind
 import com.andriybobchuk.mooney.mooney.domain.usecase.SubmitFeedbackUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.couldnt_send
+import mooney.composeapp.generated.resources.feedback_hint_bug
+import mooney.composeapp.generated.resources.feedback_hint_feature
+import mooney.composeapp.generated.resources.feedback_hint_general
+import mooney.composeapp.generated.resources.feedback_hint_widget
+import mooney.composeapp.generated.resources.got_it_thanks
+import mooney.composeapp.generated.resources.send
+import mooney.composeapp.generated.resources.whats_on_your_mind
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 
 /**
@@ -145,7 +155,7 @@ private fun FeedbackFormContent(
     onSubmit: () -> Unit
 ) {
     Text(
-        text = "What's on your mind?",
+        text = stringResource(Res.string.whats_on_your_mind),
         fontSize = 22.sp,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onBackground
@@ -189,10 +199,10 @@ private fun FeedbackFormContent(
         if (body.isEmpty()) {
             Text(
                 text = when (kind) {
-                    FeedbackKind.BUG -> "What broke? What were you trying to do?"
-                    FeedbackKind.FEATURE -> "What's missing? How would you use it?"
-                    FeedbackKind.WIDGET -> "Describe the widget — what would it show?"
-                    FeedbackKind.GENERAL -> "Your feedback…"
+                    FeedbackKind.BUG -> stringResource(Res.string.feedback_hint_bug)
+                    FeedbackKind.FEATURE -> stringResource(Res.string.feedback_hint_feature)
+                    FeedbackKind.WIDGET -> stringResource(Res.string.feedback_hint_widget)
+                    FeedbackKind.GENERAL -> stringResource(Res.string.feedback_hint_general)
                 },
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
@@ -214,7 +224,7 @@ private fun FeedbackFormContent(
     if (error) {
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Couldn't send. Check your connection and try again.",
+            text = stringResource(Res.string.couldnt_send),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.error
         )
@@ -242,7 +252,7 @@ private fun FeedbackFormContent(
             )
         } else {
             Text(
-                text = "Send",
+                text = stringResource(Res.string.send),
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.sp
             )
@@ -295,7 +305,7 @@ private fun FeedbackThanksContent() {
         Text(text = "🙏", fontSize = 48.sp)
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "Got it. Thank you.",
+            text = stringResource(Res.string.got_it_thanks),
             fontSize = 20.sp,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onBackground,

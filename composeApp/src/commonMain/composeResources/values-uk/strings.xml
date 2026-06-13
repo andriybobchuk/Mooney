@@ -119,4 +119,340 @@
     <string name="add_subcategory">Додати підкатегорію</string>
     <string name="category_name">Назва категорії</string>
     <string name="emoji_label">Емодзі</string>
+
+    <!-- Net Income / Аналітика -->
+    <string name="last_12_months">Останні 12 місяців</string>
+    <string name="last_6_months_label">Останні 6 місяців</string>
+    <string name="saved_last_n_months">ЗАОЩАДЖЕНО · ОСТАННІ %d МІС.</string>
+    <string name="of_gross_income">%s%% валового доходу</string>
+    <string name="per_month_avg">≈ %s/міс.</string>
+    <string name="net_worth_trajectory">Траєкторія чистого капіталу</string>
+    <string name="today_marker">Сьогодні</string>
+    <string name="months_forward">+%d міс.</string>
+    <string name="actual_label">Факт</string>
+    <string name="projected_label">Прогноз</string>
+    <string name="of_every_dollar_earned">З кожної заробленої гривні</string>
+    <string name="n_gross">%s валовий</string>
+    <string name="saved_label">Заощаджено</string>
+    <string name="spent_label">Витрачено</string>
+    <string name="if_you_keep_pace">Якщо триматимеш цей темп</string>
+    <string name="est_income_next_12">Прогноз доходу · 12 міс.</string>
+    <string name="est_savings_next_12">Прогноз заощаджень · 12 міс.</string>
+    <string name="net_worth_in_6">Чистий капітал через 6 міс.</string>
+    <string name="net_worth_in_12">Чистий капітал через 12 міс.</string>
+    <string name="forecast_disclaimer">Прогноз ґрунтується на середньому заощадженні %2$s/міс. за останні %1$d міс. Це орієнтир, а не гарантія — ринки й витрати змінюються.</string>
+
+    <!-- Меню активів -->
+    <string name="display_assets_in_header">Показати суму активів у заголовку</string>
+    <string name="display_networth_in_header">Показати чистий капітал у заголовку</string>
+    <string name="total_assets">Загальні активи</string>
+
+    <!-- Прокрутка -->
+    <string name="scroll_to_top">Угору</string>
+
+    <!-- CSV-імпорт -->
+    <string name="import_csv">Імпортувати CSV з іншого застосунку</string>
+    <string name="import_csv_desc">Mint, YNAB, Wallet, Money Manager або будь-який CSV з колонками Date і Amount</string>
+    <string name="csv_imported_n">Імпортовано %d транзакцій</string>
+    <string name="csv_imported_n_new_account">Імпортовано %d транзакцій у новий рахунок \'Імпортовано\'</string>
+    <string name="csv_columns_not_recognised">Не вдалося розпізнати колонки дати / суми в цьому файлі. Спробуйте експортувати ще раз або перейменуйте колонки на \'Date\' і \'Amount\'.</string>
+    <string name="csv_import_failed">Не вдалося імпортувати CSV: %s</string>
+
+    <!-- Підтримати Mooney -->
+    <string name="support_mooney">Підтримати Mooney</string>
+    <string name="watch_ad_support">Переглянь коротку рекламу, щоб підтримати нас</string>
+    <string name="thanks_reward">Дякую! 🎉</string>
+
+    <!-- Опції розробника -->
+    <string name="disable_ads_dev">Вимкнути рекламу</string>
+    <string name="disable_ads_dev_desc">Приховує всі банери / повноекранні / відео‑нагороди в цій збірці, незалежно від правил показу. Зберігається між запусками.</string>
+
+    <!-- Загальне -->
+    <string name="reset">Скинути</string>
+    <string name="remove">Видалити</string>
+    <string name="send">Надіслати</string>
+    <string name="upgrade">Покращити</string>
+    <string name="active_alerts">Активні сповіщення</string>
+    <string name="exchange_rates">Курси валют</string>
+    <string name="frequently_used">Часто використовувані</string>
+    <string name="day_label">День:</string>
+    <string name="week_label">Тиждень</string>
+    <string name="restore_purchases">Відновити покупки</string>
+    <string name="rate_mooney">Оцінити Mooney</string>
+    <string name="share_feedback">Поділитися відгуком</string>
+    <string name="privacy_policy">Політика конфіденційності</string>
+    <string name="categories_label">Категорії</string>
+    <string name="transactions_label">Транзакції</string>
+
+    <!-- Відгук -->
+    <string name="enjoying_mooney">Подобається Mooney?</string>
+    <string name="feedback_intro">Твій відгук допомагає покращити застосунок — створюю сам, читаю кожну відповідь.</string>
+    <string name="not_really">Не дуже</string>
+    <string name="got_it_thanks">Зрозумів. Дякую.</string>
+    <string name="couldnt_send">Не вдалося надіслати. Перевір з\'єднання і спробуй ще раз.</string>
+    <string name="whats_on_your_mind">Що на думці?</string>
+    <string name="feedback_pick_category">Обери категорію і напиши будь-що — баг, ідея, розчарування. Створюю сам, читаю кожне повідомлення.</string>
+
+    <!-- Paywall -->
+    <string name="get_mooney_pro">Отримати Mooney Pro</string>
+    <string name="restore_purchases_link">Відновити покупки</string>
+    <string name="auto_renews_monthly">Автоматично продовжується щомісяця. Скасовуй у будь‑який час в App Store.</string>
+    <string name="terms_of_use">Умови використання</string>
+    <string name="unlimited_accounts_categories">Безлімітні рахунки, категорії та більше</string>
+
+    <!-- Календар / витрати -->
+    <string name="no_spending_data">Дані про витрати відсутні</string>
+    <string name="months_n_below_caption">Числа під кожним місяцем показують кількість транзакцій</string>
+
+    <!-- Порожні стани -->
+    <string name="start_tracking_first_tx">Почни відстежувати витрати, додавши першу транзакцію.</string>
+    <string name="add_more_currencies_in_settings">Додай більше валют у Налаштуваннях</string>
+    <string name="want_more_widgets">Хочеш більше віджетів?</string>
+    <string name="want_more_widgets_desc">Напиши, що було б корисно — найкращі ідеї з\'являться в наступному релізі.</string>
+    <string name="tap_to_suggest">Натисни, щоб запропонувати</string>
+
+    <!-- Онбординг -->
+    <string name="choose_currencies_up_to">Обери валюти, якими користуєшся (до %d)</string>
+    <string name="continue_label">Далі</string>
+    <string name="primary_currency">Основна валюта</string>
+    <string name="primary_currency_desc">Усі підсумки й аналітика будуть показані в цій валюті</string>
+    <string name="get_started">Почати</string>
+    <string name="your_new_mooney_ready">Твій новий Mooney готовий</string>
+    <string name="swipe_up_reveal">Свайп догори, щоб відкрити,\nщо чекає всередині</string>
+    <string name="swipe_to_unwrap">Свайп, щоб розгорнути застосунок</string>
+
+    <!-- Аналітика -->
+    <string name="net_worth_label">Чистий капітал</string>
+    <string name="tap_to_view_history">Натисни, щоб побачити історію</string>
+
+    <!-- Налаштування — Premium -->
+    <string name="plan_label">План</string>
+    <string name="pro_label">Pro</string>
+    <string name="free_label">Безкоштовний</string>
+    <string name="replay_onboarding">Повторити онбординг</string>
+    <string name="reset_view">Скинути й переглянути</string>
+
+    <!-- Вибір -->
+    <string name="more">Більше</string>
+
+    <!-- Категорії -->
+    <string name="confirm_delete_category">Видалити \"%s\"? Транзакції з цією категорією стануть незв\'язаними.</string>
+    <string name="confirm_delete_account">Видалити \"%s\"? Усі пов\'язані транзакції також буде видалено.</string>
+    <string name="transaction_categories">Категорії транзакцій</string>
+    <string name="asset_categories">Категорії активів</string>
+    <string name="copy_action">Копіювати</string>
+    <string name="share">Поділитися</string>
+    <string name="upgrade_to_pro_cta">Покращити</string>
+    <string name="in_the_green">У плюсі</string>
+    <string name="avg_save_rate">Сер. норма заощаджень</string>
+    <string name="no_transactions_short">Транзакцій немає</string>
+    <string name="best_month">Найкращий місяць</string>
+    <string name="worst_month">Найгірший місяць</string>
+    <string name="six_month_total">Сума 6 міс.</string>
+    <string name="six_month_average">Середнє 6 міс.</string>
+    <string name="in_green_n_of_m">%1$d з %2$d місяців</string>
+    <string name="select_up_to_quick">Обери до %d категорій як швидкі ярлики</string>
+    <string name="pinned_n_of_m">Закріплено (%1$d/%2$d)</string>
+    <string name="available_categories">Доступні категорії</string>
+    <string name="active_alerts_section">Активні сповіщення</string>
+    <string name="data_backup">Резервна копія</string>
+    <string name="data_backup_desc">Експортуй або імпортуй усі фінансові дані</string>
+    <string name="important_label">Важливо</string>
+    <string name="data_backup_warning">Експортуй дані перед зміною імені пакета або переінсталяцією. Імпорт додасть дані до існуючих.</string>
+    <string name="delete_recurring_tx">Видалити періодичну транзакцію</string>
+    <string name="no_goals_yet">Цілей поки немає</string>
+    <string name="not_enough_data_estimate">Недостатньо даних для оцінки</string>
+    <string name="goal_reached">Ціль досягнуто!</string>
+
+    <!-- Керування категоріями -->
+    <string name="delete_asset_category_msg">Видалити \"%1$s\"? Рахунки, що використовують цю категорію, збережуть свої дані, але з\'являться в \"Інше\".</string>
+    <string name="delete_tx_category_msg">Видалити \"%1$s\"? Транзакції, що використовують цю категорію, стануть незв\'язаними.</string>
+    <string name="add_asset_category">Додати категорію активу</string>
+    <string name="add_liability_category">Додати категорію зобов\'язання</string>
+    <string name="assets_section">Активи</string>
+    <string name="liabilities_section">Зобов\'язання</string>
+    <string name="no_active_subscription">Активну підписку не знайдено</string>
+
+    <!-- Чистий капітал flex -->
+    <string name="in_country_suffix">у %1$s</string>
+    <string name="close">Закрити</string>
+
+    <!-- Діалог видалення транзакції -->
+    <string name="delete_tx_confirm">Видалити транзакцію \"%1$s\" на %2$s %3$s?</string>
+
+    <!-- Діалог цілей -->
+    <string name="delete_goal_confirm">Видалити \"%1$s\"? Цього не можна скасувати.</string>
+
+    <!-- Діалоги налаштувань -->
+    <string name="update_categories_title">Оновити категорії</string>
+    <string name="update">Оновити</string>
+    <string name="import_action">Імпорт</string>
+    <string name="following_will_be_imported">Будуть імпортовані наступні дані:</string>
+    <string name="will_add_to_existing">Це додасться до існуючих даних.</string>
+    <string name="default_expense_category">Категорія витрат за замовчуванням</string>
+    <string name="default_income_category">Категорія доходів за замовчуванням</string>
+
+    <!-- Екран обміну -->
+    <string name="set_alert">Встановити сповіщення</string>
+    <string name="tap_currency_for_chart">Натисніть на валюту, щоб побачити графік</string>
+
+    <!-- Аркуш цілі -->
+    <string name="track_progress_against">Відстежувати прогрес по</string>
+    <string name="account">Рахунок</string>
+    <string name="select_account_short">Вибрати рахунок</string>
+
+    <!-- Діалоги рахунку -->
+    <string name="delete_account_title">Видалити рахунок</string>
+    <string name="delete_account_confirm">Видалити \"%1$s\"? Цього не можна скасувати.</string>
+
+    <!-- Повторювані -->
+    <string name="recurring_transactions_title">Повторювані транзакції</string>
+
+    <!-- Прогноз -->
+    <string name="nw_in_6_mo">Чистий капітал через 6 міс.</string>
+    <string name="nw_in_12_mo">Чистий капітал через 12 міс.</string>
+    <string name="saved_dot_pct">Збережено · %1$s%%</string>
+    <string name="spent_dot_pct">Витрачено · %1$s%%</string>
+
+    <!-- Форма цілі -->
+    <string name="title_label">Назва</string>
+    <string name="target_amount_label">Цільова сума</string>
+
+    <!-- Напрямок сповіщення -->
+    <string name="above">Вище</string>
+    <string name="below">Нижче</string>
+
+    <!-- Меню транзакцій -->
+    <string name="goals_chip">Цілі</string>
+
+    <!-- Експорт/імпорт описи -->
+    <string name="save_all_data_desc">Зберегти всі дані у файл</string>
+    <string name="restore_from_backup_desc">Відновити дані з файлу резервної копії</string>
+
+    <!-- Рядки налаштувань -->
+    <string name="exclude_taxes_title">Виключити податки з підсумків</string>
+    <string name="exchange_rate_source">Джерело курсів валют</string>
+    <string name="currency_insights">Аналітика валют</string>
+    <string name="transactions_widget_pager">Пейджер віджета транзакцій</string>
+
+    <!-- Заголовки -->
+    <string name="goals_title">Цілі</string>
+    <string name="analytics_title">Аналітика</string>
+    <string name="net_income_title">Чистий дохід</string>
+    <string name="net_worth_title">Чистий капітал</string>
+
+    <!-- Переказ -->
+    <string name="transfer_to_account">Переказ на %1$s</string>
+    <string name="general_label">Загальне</string>
+
+    <!-- Виключити податки -->
+    <string name="exclude_taxes_desc">Податкові транзакції не враховуватимуться в сумах витрат</string>
+
+    <!-- Заголовки Paywall -->
+    <string name="paywall_acct_headline">Додавайте безліч рахунків</string>
+    <string name="paywall_acct_sub">Слідкуйте за кожною картою, гаманцем і ціллю заощаджень в одному місці.</string>
+    <string name="paywall_cat_headline">Розподіляйте витрати по-своєму</string>
+    <string name="paywall_cat_sub">Створюйте безліч своїх категорій, що пасують вашому життю.</string>
+    <string name="paywall_settings_headline">Візьміть фінанси під повний контроль</string>
+    <string name="paywall_settings_sub">Відкрийте все, що вміє Mooney.</string>
+    <string name="paywall_generic_headline">Відкрийте Mooney Pro</string>
+    <string name="paywall_generic_sub">Отримайте весь функціонал.</string>
+
+    <!-- Переваги Pro -->
+    <string name="paywall_benefit_accounts_title">Безлімітні рахунки</string>
+    <string name="paywall_benefit_accounts_sub">Понад безкоштовний ліміт у 20 рахунків</string>
+    <string name="paywall_benefit_categories_title">Безлімітні свої категорії</string>
+    <string name="paywall_benefit_categories_sub">Понад безкоштовний ліміт у 50 категорій</string>
+
+    <!-- Ціна -->
+    <string name="paywall_price_with">Mooney Pro · Щомісяця · %1$s / міс.</string>
+    <string name="paywall_price_without">Mooney Pro · Щомісячна підписка</string>
+
+    <!-- Додатки екрана транзакцій -->
+    <string name="custom_rate">Свій курс</string>
+    <string name="todays_rate">Сьогоднішній курс</string>
+    <string name="quick_recurring">Повторювані</string>
+    <string name="quick_categories">Категорії</string>
+
+    <!-- Джерело курсів -->
+    <string name="exchange_rate_source_choose">Виберіть постачальника для конвертації валют</string>
+    <string name="all_currencies">Усі валюти</string>
+    <string name="historical_data">Історичні дані</string>
+    <string name="ers_extended_desc">Підтримує всі валюти застосунку (включно з UAH, RUB, AED). Без графіків історії.</string>
+
+    <!-- Розділи налаштувань -->
+    <string name="section_transactions">Транзакції</string>
+
+    <!-- Актив / Зобов'язання -->
+    <string name="asset_label">Актив</string>
+    <string name="liability_label">Зобов\'язання</string>
+
+    <!-- Підказки для відгуку -->
+    <string name="feedback_hint_bug">Що зламалося? Що ви намагалися зробити?</string>
+    <string name="feedback_hint_feature">Чого не вистачає? Як би ви це використовували?</string>
+    <string name="feedback_hint_widget">Опишіть віджет — що він має показувати?</string>
+    <string name="feedback_hint_general">Ваш відгук…</string>
+
+    <!-- Підказки курсу -->
+    <string name="rate_high">Високий — слушний час для конвертації</string>
+    <string name="rate_above_avg">Вище середнього</string>
+    <string name="rate_below_avg">Нижче середнього</string>
+    <string name="rate_low">Низький — варто почекати</string>
+    <string name="not_enough_data">Недостатньо даних</string>
+
+    <!-- Короткі підписи -->
+    <string name="rate_high_short">Високий</string>
+    <string name="rate_above_avg_short">Вище сер.</string>
+    <string name="rate_below_avg_short">Нижче сер.</string>
+    <string name="rate_low_short">Низький</string>
+    <string name="historical_rates">Історичні курси</string>
+
+    <!-- Цільовий курс -->
+    <string name="target_rate_label">Цільовий курс (%1$s)</string>
+
+    <!-- Снекбари -->
+    <string name="failed_to_read_file">Не вдалося прочитати файл</string>
+
+    <!-- Цілі -->
+    <string name="new_goal">Нова ціль</string>
+    <string name="edit_goal_title">Редагувати ціль</string>
+    <string name="create_goal">Створити ціль</string>
+    <string name="total_assets_label">Усі активи</string>
+
+    <!-- Статистика -->
+    <string name="highest_label">Максимум</string>
+    <string name="lowest_label">Мінімум</string>
+    <string name="avg_per_month">Сер. / міс.</string>
+    <string name="in_6_mo">За 6 міс.</string>
+    <string name="in_12_mo">За 12 міс.</string>
+
+    <!-- Кнопки транзакції -->
+    <string name="confirm">Підтвердити</string>
+    <string name="repeat_question">Повторити?</string>
+
+    <!-- Поділитися -->
+    <string name="share_my_net_worth">Мій чистий капітал:</string>
+    <string name="share_tracked_with">Відстежую в Mooney 💰</string>
+
+    <!-- Додатки транзакції -->
+    <string name="destination_amount_label">Сума отримання (%1$s)</string>
+    <string name="select_parent_format">Виберіть %1$s</string>
+
+    <!-- Сповіщення курсу -->
+    <string name="alert_me_when_format">Сповістити, коли 1 %1$s буде</string>
+
+    <!-- Загальне -->
+    <string name="unknown">Невідомо</string>
+
+    <!-- Розклад -->
+    <string name="no_recurring_yet">Немає повторюваних транзакцій</string>
+    <string name="recurring_empty_hint">Натисніть +, щоб створити повторювану транзакцію — записи створюватимуться автоматично.</string>
+    <string name="schedule_label">Розклад</string>
+    <string name="frequency_label">Частота</string>
+    <string name="monthly_label">Щомісяця</string>
+    <string name="weekly_label">Щотижня</string>
+    <string name="yearly_label">Щороку</string>
+    <string name="repeat_on_day">Повторювати в день</string>
+    <string name="repeat_on">Повторювати</string>
+    <string name="month_label">Місяць</string>
 </resources>

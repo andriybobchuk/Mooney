@@ -51,12 +51,17 @@ fun SettingsScreen(
     onBackClick: () -> Unit,
     onNavigateToTransactionCategories: () -> Unit = {},
     onNavigateToAssetCategories: () -> Unit = {},
-    onReplayOnboarding: () -> Unit = {}
+    onReplayOnboarding: () -> Unit = {},
+    // Settings is a top-level tab — when reached from the bottom nav, this
+    // renders the persistent nav bar. Null means we're reached from a
+    // detail screen (e.g. older flows) and should show a back button instead.
+    bottomNavbar: (@Composable () -> Unit)? = null
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val fileHandler = koinInject<FileHandler>()
     val coroutineScope = rememberCoroutineScope()
+    val failedToReadFile = stringResource(Res.string.failed_to_read_file)
 
     var showImportConfirmDialog by remember { mutableStateOf(false) }
     var showUpdateCategoriesConfirm by remember { mutableStateOf(false) }
@@ -160,13 +165,13 @@ fun SettingsScreen(
             title = { Text(stringResource(Res.string.confirm_import)) },
             text = {
                 Column {
-                    Text("The following data will be imported:")
+                    Text(stringResource(Res.string.following_will_be_imported))
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("\u2022 ${currentPreview.first} transactions")
-                    Text("\u2022 ${currentPreview.second} accounts")
-                    Text("\u2022 ${currentPreview.third} goals")
+                    Text("\u2022 ${currentPreview.first} ${stringResource(Res.string.nav_transactions).lowercase()}")
+                    Text("\u2022 ${currentPreview.second} ${stringResource(Res.string.nav_assets).lowercase()}")
+                    Text("\u2022 ${currentPreview.third} ${stringResource(Res.string.nav_goals).lowercase()}")
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("This will add to your existing data.", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(Res.string.will_add_to_existing), style = MaterialTheme.typography.bodySmall)
                 }
             },
             confirmButton = {
@@ -175,7 +180,7 @@ fun SettingsScreen(
                         viewModel.confirmImport(currentJsonData)
                     }
                 ) {
-                    Text("Import")
+                    Text(stringResource(Res.string.import_action))
                 }
             },
             dismissButton = {
@@ -196,7 +201,7 @@ fun SettingsScreen(
     if (showUpdateCategoriesConfirm) {
         AlertDialog(
             onDismissRequest = { showUpdateCategoriesConfirm = false },
-            title = { Text("Update Categories") },
+            title = { Text(stringResource(Res.string.update_categories_title)) },
             text = {
                 Column {
                     Text("Get the latest categories without losing any data:")
@@ -211,7 +216,7 @@ fun SettingsScreen(
                     showUpdateCategoriesConfirm = false
                     viewModel.updateTransactionCategories()
                 }) {
-                    Text("Update")
+                    Text(stringResource(Res.string.update))
                 }
             },
             dismissButton = {
@@ -305,12 +310,12 @@ fun SettingsScreen(
         MooneyBottomSheet(onDismissRequest = { showExchangeRateSourceSheet = false }) {
             Column(modifier = Modifier.padding(20.dp)) {
                 Text(
-                    "Exchange Rate Source",
+                    stringResource(Res.string.exchange_rate_source),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 Text(
-                    "Choose which provider to use for currency conversion",
+                    stringResource(Res.string.exchange_rate_source_choose),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 16.dp)
@@ -318,8 +323,8 @@ fun SettingsScreen(
                 ExchangeRateSource.entries.forEach { source ->
                     val isSelected = state.exchangeRateSource == source
                     val title = when (source) {
-                        ExchangeRateSource.EXTENDED -> "All currencies"
-                        ExchangeRateSource.HISTORICAL -> "Historical data"
+                        ExchangeRateSource.EXTENDED -> stringResource(Res.string.all_currencies)
+                        ExchangeRateSource.HISTORICAL -> stringResource(Res.string.historical_data)
                     }
                     val description = when (source) {
                         ExchangeRateSource.EXTENDED ->
@@ -568,7 +573,7 @@ fun SettingsScreen(
         }
         MooneyBottomSheet(onDismissRequest = { showDefaultExpenseCategorySheet = false }) {
             Column(modifier = Modifier.padding(20.dp)) {
-                Text("Default Expense Category", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                Text(stringResource(Res.string.default_expense_category), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
                 LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
                     expenseGenerals.forEach { general ->
                         val subcategories = state.allCategories.filter { it.parent?.id == general.id }
@@ -632,7 +637,7 @@ fun SettingsScreen(
         }
         MooneyBottomSheet(onDismissRequest = { showDefaultIncomeCategorySheet = false }) {
             Column(modifier = Modifier.padding(20.dp)) {
-                Text("Default Income Category", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                Text(stringResource(Res.string.default_income_category), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
                 LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
                     incomeGenerals.forEach { general ->
                         val subcategories = state.allCategories.filter { it.parent?.id == general.id }
@@ -691,7 +696,7 @@ fun SettingsScreen(
     if (showPrimaryAccountSheet) {
         MooneyBottomSheet(onDismissRequest = { showPrimaryAccountSheet = false }) {
             Column(modifier = Modifier.padding(20.dp)) {
-                Text("Primary Account", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 4.dp))
+                Text(stringResource(Res.string.primary_account), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 4.dp))
                 Text(
                     "This account is pre-selected when adding transactions.",
                     style = MaterialTheme.typography.bodySmall,
@@ -745,10 +750,23 @@ fun SettingsScreen(
         topBar = {
             Toolbars.Primary(
                 title = stringResource(Res.string.settings),
-                showBackButton = true,
+                // No back button when reached as a primary tab — the user
+                // moves between tabs via the bottom nav instead.
+                showBackButton = bottomNavbar == null,
                 onBackClick = onBackClick,
                 scrollBehavior = scrollBehavior
             )
+        },
+        bottomBar = {
+            // Banner above the nav: ineligible-state renders nothing, so the
+            // bottom nav stays flush with the screen edge for premium / new
+            // users. The slot guards itself via AdEligibilityUseCase.
+            androidx.compose.foundation.layout.Column {
+                com.andriybobchuk.mooney.core.ads.AdBannerSlot(
+                    placement = com.andriybobchuk.mooney.core.ads.AdPlacement.SETTINGS_BANNER
+                )
+                bottomNavbar?.invoke()
+            }
         }
     ) { paddingValues ->
         if (state.isLoading) {
@@ -823,67 +841,22 @@ fun SettingsScreen(
                     }
                 }
 
-                // TRANSACTIONS section
+                // TRANSACTIONS section — categories management and the
+                // default expense / default income / primary-account
+                // pickers moved out. Transaction Categories live in the
+                // dedicated Categories screen; Primary Account is set on
+                // the Assets screen. Only the genuine setting (tax toggle)
+                // remains here.
                 item {
-                    SettingsSectionHeader("Transactions")
+                    SettingsSectionHeader(stringResource(Res.string.section_transactions))
                 }
                 item {
-                    val defaultExpenseCat = state.allCategories.find { it.id == state.defaultExpenseCategoryId }
-                    val defaultExpenseName = defaultExpenseCat?.let {
-                        "${it.resolveEmoji()} ${it.title}"
-                    } ?: state.defaultExpenseCategoryId
-                    val defaultIncomeCat = state.allCategories.find { it.id == state.defaultIncomeCategoryId }
-                    val defaultIncomeName = defaultIncomeCat?.let {
-                        "${it.resolveEmoji()} ${it.title}"
-                    } ?: state.defaultIncomeCategoryId
-                    val primaryAccountName = state.accounts.find { it.id == state.primaryAccountId }?.let {
-                        "${it.emoji} ${it.title}"
-                    } ?: "None"
-
                     SettingsGroup {
-                        SettingsRow(
-                            title = "Transaction Categories",
-                            value = "${state.allCategories.size}",
-                            onClick = onNavigateToTransactionCategories
-                        )
-                        SettingsDivider()
-                        SettingsRow(
-                            title = "Default Expense",
-                            value = defaultExpenseName,
-                            onClick = { showDefaultExpenseCategorySheet = true }
-                        )
-                        SettingsDivider()
-                        SettingsRow(
-                            title = "Default Income",
-                            value = defaultIncomeName,
-                            onClick = { showDefaultIncomeCategorySheet = true }
-                        )
-                        SettingsDivider()
-                        SettingsRow(
-                            title = "Default Account",
-                            value = primaryAccountName,
-                            onClick = { showPrimaryAccountSheet = true }
-                        )
-                        SettingsDivider()
                         SettingsToggleRow(
-                            title = "Exclude Taxes from Totals",
-                            description = "Tax transactions won't count towards your spending totals",
+                            title = stringResource(Res.string.exclude_taxes_title),
+                            description = stringResource(Res.string.exclude_taxes_desc),
                             checked = state.excludeTaxesFromTotals,
                             onCheckedChange = { viewModel.onAction(SettingsAction.OnExcludeTaxesToggle(it)) }
-                        )
-                    }
-                }
-
-                // ASSETS section
-                item {
-                    SettingsSectionHeader("Assets")
-                }
-                item {
-                    SettingsGroup {
-                        SettingsRow(
-                            title = "Asset Categories",
-                            value = "${state.assetCategories.size}",
-                            onClick = onNavigateToAssetCategories
                         )
                     }
                 }
@@ -922,15 +895,22 @@ fun SettingsScreen(
                                 onCheckedChange = { viewModel.toggleWidgetPager(it) }
                             )
                             SettingsDivider()
+                            SettingsToggleRow(
+                                title = stringResource(Res.string.disable_ads_dev),
+                                description = stringResource(Res.string.disable_ads_dev_desc),
+                                checked = state.adsDisabled,
+                                onCheckedChange = { viewModel.toggleAdsDisabled(it) }
+                            )
+                            SettingsDivider()
                             SettingsRow(
-                                title = "Replay Onboarding",
-                                value = "Reset & view",
+                                title = stringResource(Res.string.replay_onboarding),
+                                value = stringResource(Res.string.reset_view),
                                 onClick = { viewModel.replayOnboarding() }
                             )
                             SettingsDivider()
                             SettingsRow(
-                                title = "Plan",
-                                value = if (state.devForcePremium) "Pro" else "Free",
+                                title = stringResource(Res.string.plan_label),
+                                value = if (state.devForcePremium) stringResource(Res.string.pro_label) else stringResource(Res.string.free_label),
                                 onClick = { viewModel.setDevPlanPro(!state.devForcePremium) }
                             )
                             SettingsDivider()
@@ -968,7 +948,32 @@ fun SettingsScreen(
                                         }
                                         .onFailure { error ->
                                             snackbarHostState.showSnackbar(
-                                                error.message ?: "Failed to read file"
+                                                error.message ?: failedToReadFile
+                                            )
+                                        }
+                                }
+                            },
+                            showLoading = state.isImporting
+                        )
+                        SettingsDivider()
+                        // Universal CSV import — works with any finance app's
+                        // CSV export (Mint, YNAB, Wallet, etc.). Auto-detects
+                        // date / amount / description columns; if it can't,
+                        // the snackbar tells the user what to rename.
+                        SettingsRow(
+                            title = stringResource(Res.string.import_csv),
+                            description = stringResource(Res.string.import_csv_desc),
+                            onClick = {
+                                coroutineScope.launch {
+                                    fileHandler.pickAndReadTextFile()
+                                        .onSuccess { content ->
+                                            content?.let {
+                                                viewModel.onAction(SettingsAction.OnImportCsv(it))
+                                            }
+                                        }
+                                        .onFailure { error ->
+                                            snackbarHostState.showSnackbar(
+                                                error.message ?: failedToReadFile
                                             )
                                         }
                                 }
@@ -1001,24 +1006,71 @@ fun SettingsScreen(
                         )
                         SettingsDivider()
                         SettingsRow(
-                            title = "Share feedback",
+                            title = stringResource(Res.string.share_feedback),
                             onClick = { showFeedbackSheet = true }
                         )
                         SettingsDivider()
                         SettingsRow(
-                            title = "Rate Mooney",
+                            title = stringResource(Res.string.rate_mooney),
                             onClick = { showRatePrePrompt = true }
                         )
                         SettingsDivider()
                         SettingsRow(
-                            title = "Privacy Policy",
+                            title = stringResource(Res.string.privacy_policy),
                             onClick = { uriHandler.openUri("https://andriybobchuk.github.io/Mooney/privacy-policy.html") }
                         )
                         SettingsDivider()
                         SettingsRow(
-                            title = "Restore Purchases",
+                            title = stringResource(Res.string.restore_purchases),
                             onClick = { viewModel.onRestorePurchases() }
                         )
+                    }
+                }
+
+                // SUPPORT US — rewarded ad. Free-tier + post-grace-period
+                // users only; the eligibility check inside this item hides
+                // the WHOLE section (header + row) for everyone else, so
+                // Premium users never see an empty "Support Mooney" header.
+                item {
+                    var rewardedStatus by androidx.compose.runtime.remember {
+                        androidx.compose.runtime.mutableStateOf<String?>(null)
+                    }
+                    val rewardedSession = com.andriybobchuk.mooney.core.ads.LocalAdSession.current
+                    val eligibility: com.andriybobchuk.mooney.core.ads.AdEligibilityUseCase = org.koin.compose.koinInject()
+                    var rewardedEligible by androidx.compose.runtime.remember {
+                        androidx.compose.runtime.mutableStateOf(false)
+                    }
+                    androidx.compose.runtime.LaunchedEffect(rewardedSession) {
+                        rewardedEligible = eligibility.isEligible(
+                            placement = com.andriybobchuk.mooney.core.ads.AdPlacement.REWARDED_FEATURE_UNLOCK,
+                            sessionTapCount = rewardedSession.tapCount,
+                            sessionCount = rewardedSession.sessionCount
+                        )
+                    }
+                    if (rewardedEligible) {
+                        androidx.compose.foundation.layout.Column {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            SettingsSectionHeader(stringResource(Res.string.support_mooney))
+                            SettingsGroup {
+                                SettingsRow(
+                                    title = stringResource(Res.string.watch_ad_support),
+                                    value = rewardedStatus.orEmpty(),
+                                    onClick = {
+                                        com.andriybobchuk.mooney.core.ads.Ads.showRewarded(
+                                            onReward = {
+                                                rewardedStatus = "Thanks! 🎉"
+                                                com.andriybobchuk.mooney.core.ads.Ads.preloadRewarded(
+                                                    com.andriybobchuk.mooney.core.ads.AdUnitIds.rewarded
+                                                )
+                                            },
+                                            onDismissed = {
+                                                // Quiet on dismissal — never shame the user.
+                                            }
+                                        )
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -1268,7 +1320,7 @@ private fun PremiumBanner(onClick: () -> Unit) {
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "Unlimited accounts, categories & more",
+                        text = stringResource(Res.string.unlimited_accounts_categories),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.85f)
                     )
@@ -1281,7 +1333,7 @@ private fun PremiumBanner(onClick: () -> Unit) {
                     color = Color.White
                 ) {
                     Text(
-                        text = "Upgrade",
+                        text = stringResource(Res.string.upgrade_to_pro_cta),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = blue,

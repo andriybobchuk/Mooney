@@ -20,6 +20,12 @@ import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.presentation.settings.SettingsAction
 import com.andriybobchuk.mooney.mooney.presentation.settings.SettingsState
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.available_categories
+import mooney.composeapp.generated.resources.pinned_categories
+import mooney.composeapp.generated.resources.pinned_n_of_m
+import mooney.composeapp.generated.resources.select_up_to_quick
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun PinnedCategoriesSection(
@@ -28,14 +34,14 @@ fun PinnedCategoriesSection(
 ) {
     Column {
         Text(
-            text = "Pinned Categories",
+            text = stringResource(Res.string.pinned_categories),
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface
         )
         
         Text(
-            text = "Select up to ${state.maxPinnedCategories} categories to appear as quick shortcuts",
+            text = stringResource(Res.string.select_up_to_quick, state.maxPinnedCategories),
             fontSize = 14.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp)
@@ -46,7 +52,7 @@ fun PinnedCategoriesSection(
         // Currently pinned categories
         if (state.pinnedCategories.isNotEmpty()) {
             Text(
-                text = "Pinned (${state.pinnedCategories.size}/${state.maxPinnedCategories})",
+                text = stringResource(Res.string.pinned_n_of_m, state.pinnedCategories.size, state.maxPinnedCategories),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.primary,
@@ -70,7 +76,7 @@ fun PinnedCategoriesSection(
         
         // All available categories
         Text(
-            text = "Available Categories",
+            text = stringResource(Res.string.available_categories),
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -45,6 +45,12 @@ import com.andriybobchuk.mooney.core.presentation.designsystem.components.Enhanc
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.close
+import mooney.composeapp.generated.resources.in_country_suffix
+import mooney.composeapp.generated.resources.net_worth_label
+import mooney.composeapp.generated.resources.share
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Full-screen "flex" overlay shown via long-press on the net-worth header.
@@ -115,7 +121,7 @@ private fun FlexSheetContent(
             IconButton(onClick = onDismiss) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = "Close",
+                    contentDescription = stringResource(Res.string.close),
                     tint = onBg.copy(alpha = 0.75f)
                 )
             }
@@ -130,7 +136,7 @@ private fun FlexSheetContent(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Net Worth",
+                text = stringResource(Res.string.net_worth_label),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Medium,
                     letterSpacing = 4.sp
@@ -195,7 +201,7 @@ private fun FlexSheetContent(
                         color = onBg
                     )
                     Text(
-                        text = " in ${rank.country}",
+                        text = " ${stringResource(Res.string.in_country_suffix, rank.country)}",
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.Medium
                         ),
@@ -276,7 +282,7 @@ private fun FlexSheetContent(
                 )
                 Spacer(Modifier.width(10.dp))
                 Text(
-                    text = "Share",
+                    text = stringResource(Res.string.share),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp

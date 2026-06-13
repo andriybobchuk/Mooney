@@ -21,6 +21,15 @@ import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.RateWatchAlert
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import com.andriybobchuk.mooney.mooney.domain.parseAmountInput
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.above
+import mooney.composeapp.generated.resources.alert_me_when_format
+import mooney.composeapp.generated.resources.active_alerts_section
+import mooney.composeapp.generated.resources.below
+import mooney.composeapp.generated.resources.remove
+import mooney.composeapp.generated.resources.set_alert
+import mooney.composeapp.generated.resources.target_rate_label
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun RateWatchAlertSheet(
@@ -55,7 +64,7 @@ fun RateWatchAlertSheet(
 
         // Target rate input
         Text(
-            text = "Alert me when 1 ${baseCurrency.symbol} is",
+            text = stringResource(Res.string.alert_me_when_format, baseCurrency.symbol),
             style = MaterialTheme.typography.bodyMedium
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -66,13 +75,13 @@ fun RateWatchAlertSheet(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             DirectionChip(
-                label = "Above",
+                label = stringResource(Res.string.above),
                 isSelected = direction == AlertDirection.ABOVE,
                 onClick = { direction = AlertDirection.ABOVE },
                 modifier = Modifier.weight(1f)
             )
             DirectionChip(
-                label = "Below",
+                label = stringResource(Res.string.below),
                 isSelected = direction == AlertDirection.BELOW,
                 onClick = { direction = AlertDirection.BELOW },
                 modifier = Modifier.weight(1f)
@@ -85,7 +94,7 @@ fun RateWatchAlertSheet(
         OutlinedTextField(
             value = targetRate,
             onValueChange = { targetRate = it },
-            label = { Text("Target rate (${targetCurrency.symbol})") },
+            label = { Text(stringResource(Res.string.target_rate_label, targetCurrency.symbol)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
@@ -107,7 +116,7 @@ fun RateWatchAlertSheet(
                 containerColor = MaterialTheme.colorScheme.primary
             )
         ) {
-            Text("Set Alert", modifier = Modifier.padding(vertical = 4.dp))
+            Text(stringResource(Res.string.set_alert), modifier = Modifier.padding(vertical = 4.dp))
         }
 
         // Existing alerts
@@ -117,7 +126,7 @@ fun RateWatchAlertSheet(
         if (pairAlerts.isNotEmpty()) {
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "Active Alerts",
+                text = stringResource(Res.string.active_alerts_section),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Medium
             )
@@ -138,7 +147,7 @@ fun RateWatchAlertSheet(
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        text = "Remove",
+                        text = stringResource(Res.string.remove),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier

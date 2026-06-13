@@ -44,6 +44,7 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase
 import com.andriybobchuk.mooney.core.presentation.theme.ThemeManager
 import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.core.analytics.DefaultAnalyticsTracker
+import com.andriybobchuk.mooney.core.ads.AdEligibilityUseCase
 import com.andriybobchuk.mooney.core.premium.PremiumManager
 
 expect val platformModule: Module
@@ -199,6 +200,8 @@ val sharedModule = module {
 
     // Recurring Transactions
     singleOf(::ProcessRecurringTransactionsUseCase)
+    singleOf(::ImportCsvUseCase)
+    single { com.andriybobchuk.mooney.mooney.domain.backup.UniversalCsvImporter() }
     singleOf(::AcceptPendingTransactionUseCase)
     singleOf(::GetRecurringTransactionsUseCase)
     singleOf(::SaveRecurringTransactionUseCase)
@@ -233,6 +236,11 @@ val sharedModule = module {
 
     // Premium
     single { PremiumManager(get(), get(), get()) }
+
+    // Ads — eligibility/frequency capping. The SDK itself is invoked via
+    // `Ads.kt` (expect/actual; iOS bridges to Swift, Android no-op until we
+    // wire play-services-ads). See core/ads/Ads.kt.
+    singleOf(::AdEligibilityUseCase)
 
     viewModelOf(::AssetsViewModel)
     // Manual registration — TransactionViewModel has too many params for `viewModelOf`.

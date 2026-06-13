@@ -22,6 +22,8 @@ sealed interface SettingsAction {
     data object OnExportData : SettingsAction
 
     data class OnImportData(val jsonData: String) : SettingsAction
+    /** CSV import from other finance apps (Mint, YNAB, Wallet, etc.). */
+    data class OnImportCsv(val csvContent: String) : SettingsAction
 
     // User Currencies
     data class OnToggleUserCurrency(val currencyCode: String) : SettingsAction

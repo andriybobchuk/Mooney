@@ -1,5 +1,6 @@
 package com.andriybobchuk.mooney.mooney.presentation.assets
 
+import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
@@ -64,12 +65,15 @@ class AssetsViewModel(
 
     private var observeAccountsJob: Job? = null
 
-    // Seed initial isInitialLoading from the app cache: if the cache is
-    // already warm, we render the previous snapshot's data on first frame
-    // and skip the shimmer altogether. Only a true cold start shows it.
-    private val _uiState = MutableStateFlow(
-        AssetsState(isInitialLoading = !appDataCache.snapshot.value.isReady)
-    )
+    // Always default to isInitialLoading=true (do NOT seed from cache).
+    // Net worth needs computation (convert each foreign-currency account into
+    // base, sum, etc.) — even when the raw account list is cached, the
+    // computed total is not. Seeding from cache.isReady was making the
+    // shimmer never appear on first-visit-after-launch because the cache
+    // pre-warm in NavigationHost won the race. Tab switching still skips
+    // the shimmer because the VM is shared across the nav graph, so the
+    // already-loaded state survives navigation.
+    private val _uiState = MutableStateFlow(AssetsState())
 
     init {
         observeBaseCurrencyChanges()
@@ -87,6 +91,7 @@ class AssetsViewModel(
             observeUserCurrencies()
             observeAssetCategories()
             observeCurrencyInsightsSetting()
+            observeAssetsOnlyInTopBar()
             // Refresh rates BEFORE observing assets so conversions use live rates
             ensureRatesLoaded()
             observeAssets()
@@ -117,6 +122,24 @@ class AssetsViewModel(
                 loadCurrencyInsights(_uiState.value.assets)
             }
         }.launchIn(viewModelScope)
+    }
+
+    private fun observeAssetsOnlyInTopBar() {
+        dataStore.data.map { prefs ->
+            prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.ASSETS_ONLY_IN_TOP_BAR] ?: false
+        }.onEach { enabled ->
+            _uiState.update { it.copy(showAssetsOnlyInTopBar = enabled) }
+        }.launchIn(viewModelScope)
+    }
+
+    fun toggleAssetsOnlyInTopBar() {
+        viewModelScope.launch {
+            val newValue = !_uiState.value.showAssetsOnlyInTopBar
+            dataStore.edit { prefs ->
+                prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.ASSETS_ONLY_IN_TOP_BAR] = newValue
+            }
+            _uiState.update { it.copy(showAssetsOnlyInTopBar = newValue) }
+        }
     }
 
     private fun observeAssetCategories() {
@@ -476,5 +499,11 @@ data class AssetsState(
     val currencyInsightsEnabled: Boolean = false,
     val userCurrencies: List<Currency> = emptyList(),
     val exchangeRates: com.andriybobchuk.mooney.mooney.domain.ExchangeRates =
-        com.andriybobchuk.mooney.mooney.domain.ExchangeRates(emptyMap())
+        com.andriybobchuk.mooney.mooney.domain.ExchangeRates(emptyMap()),
+    /**
+     * When true, the Assets top-bar shows gross assets instead of net worth.
+     * Toggle from the overflow menu in the top bar — only useful for users
+     * who track liabilities and want a clean view of just what they own.
+     */
+    val showAssetsOnlyInTopBar: Boolean = false
 )

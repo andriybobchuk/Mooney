@@ -67,6 +67,23 @@ import com.andriybobchuk.mooney.mooney.domain.RecurringSchedule
 import com.andriybobchuk.mooney.mooney.domain.RecurringTransaction
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionBottomSheet
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.delete
+import mooney.composeapp.generated.resources.delete_recurring_tx
+import mooney.composeapp.generated.resources.frequency_label
+import mooney.composeapp.generated.resources.month_label
+import mooney.composeapp.generated.resources.monthly_label
+import mooney.composeapp.generated.resources.no_recurring_yet
+import mooney.composeapp.generated.resources.recurring_empty_hint
+import mooney.composeapp.generated.resources.recurring_transactions_title
+import mooney.composeapp.generated.resources.remove
+import mooney.composeapp.generated.resources.repeat_on
+import mooney.composeapp.generated.resources.repeat_on_day
+import mooney.composeapp.generated.resources.save
+import mooney.composeapp.generated.resources.schedule_label
+import mooney.composeapp.generated.resources.weekly_label
+import mooney.composeapp.generated.resources.yearly_label
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -82,7 +99,7 @@ fun RecurringTransactionsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Recurring Transactions") },
+                title = { Text(stringResource(Res.string.recurring_transactions_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -123,13 +140,13 @@ fun RecurringTransactionsScreen(
                     modifier = Modifier.padding(horizontal = 32.dp)
                 ) {
                     Text(
-                        "No recurring transactions yet",
+                        stringResource(Res.string.no_recurring_yet),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Tap + to create a recurring transaction that will automatically generate entries on schedule.",
+                        stringResource(Res.string.recurring_empty_hint),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center
@@ -196,7 +213,7 @@ fun RecurringTransactionsScreen(
                     .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
                 Text(
-                    text = "Delete Recurring Transaction",
+                    text = stringResource(Res.string.delete_recurring_tx),
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
@@ -220,7 +237,7 @@ fun RecurringTransactionsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "Delete",
+                        stringResource(Res.string.delete),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -394,7 +411,7 @@ fun RecurringScheduleSheet(
                 .padding(bottom = 32.dp)
         ) {
             Text(
-                "Schedule",
+                stringResource(Res.string.schedule_label),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -402,16 +419,16 @@ fun RecurringScheduleSheet(
 
             // Frequency chips
             Text(
-                "Frequency",
+                stringResource(Res.string.frequency_label),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(
-                    RecurringFrequency.MONTHLY to "Monthly",
-                    RecurringFrequency.WEEKLY to "Weekly",
-                    RecurringFrequency.YEARLY to "Yearly"
+                    RecurringFrequency.MONTHLY to stringResource(Res.string.monthly_label),
+                    RecurringFrequency.WEEKLY to stringResource(Res.string.weekly_label),
+                    RecurringFrequency.YEARLY to stringResource(Res.string.yearly_label)
                 ).forEach { (freq, label) ->
                     FilterChip(
                         selected = frequency == freq,
@@ -431,7 +448,7 @@ fun RecurringScheduleSheet(
             when (frequency) {
                 RecurringFrequency.MONTHLY -> {
                     Text(
-                        "Repeat on day",
+                        stringResource(Res.string.repeat_on_day),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -443,7 +460,7 @@ fun RecurringScheduleSheet(
                 }
                 RecurringFrequency.WEEKLY -> {
                     Text(
-                        "Repeat on",
+                        stringResource(Res.string.repeat_on),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -455,7 +472,7 @@ fun RecurringScheduleSheet(
                 }
                 RecurringFrequency.YEARLY -> {
                     Text(
-                        "Month",
+                        stringResource(Res.string.month_label),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -506,14 +523,14 @@ fun RecurringScheduleSheet(
             ) {
                 if (onRemove != null) {
                     MooneyButton(
-                        text = "Remove",
+                        text = stringResource(Res.string.remove),
                         onClick = onRemove,
                         modifier = Modifier.weight(1f),
                         variant = ButtonVariant.SECONDARY
                     )
                 }
                 MooneyButton(
-                    text = "Save",
+                    text = stringResource(Res.string.save),
                     onClick = {
                         onScheduleSelected(
                             RecurringSchedule(

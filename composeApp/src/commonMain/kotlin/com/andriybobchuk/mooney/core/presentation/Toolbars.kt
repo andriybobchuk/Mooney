@@ -33,6 +33,11 @@ object Toolbars {
         scrollBehavior: TopAppBarScrollBehavior,
         actions: List<ToolBarAction> = emptyList(),
         customContent: @Composable (() -> Unit)? = null,
+        // Optional trailing slot for cases where the caller needs to render
+        // their own composable inside the actions row (e.g. an IconButton
+        // with an attached DropdownMenu that anchors to it). Rendered AFTER
+        // [actions], inside the same Row, so the layout stays consistent.
+        trailingActionContent: @Composable (() -> Unit)? = null,
         containerColor: Color = MaterialTheme.colorScheme.background
     ) {
         TopAppBar(
@@ -103,6 +108,7 @@ object Toolbars {
                         }
                     }
                 }
+                trailingActionContent?.invoke()
             }
         )
     }

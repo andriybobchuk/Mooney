@@ -2,6 +2,7 @@ package com.andriybobchuk.mooney.di
 
 import com.andriybobchuk.mooney.core.data.database.MooneyDatabaseFactory
 import com.andriybobchuk.mooney.core.data.preferences.PreferencesDataStoreFactory
+import com.andriybobchuk.mooney.core.data.preferences.StartupPrefs
 import com.andriybobchuk.mooney.core.platform.FileHandler
 import com.andriybobchuk.mooney.core.premium.ActivityProvider
 import com.andriybobchuk.mooney.core.premium.AndroidBillingManager
@@ -17,6 +18,7 @@ actual val platformModule: Module
         single<HttpClientEngine> { OkHttp.create() }
         single { MooneyDatabaseFactory(androidApplication()) }
         single { PreferencesDataStoreFactory(androidApplication()) }
+        single { StartupPrefs(androidApplication()) }
         single { FileHandler(androidApplication()) }
         single { ActivityProvider() }
         single<BillingManager> { AndroidBillingManager(androidApplication(), get()) }

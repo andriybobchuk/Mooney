@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <resources>
     <string name="app_name">Mooney</string>
+
+    <!-- Nawigacja -->
     <string name="nav_transactions">Transakcje</string>
     <string name="nav_assets">Aktywa</string>
     <string name="nav_exchange">Wymiana</string>
     <string name="nav_analytics">Analityka</string>
     <string name="nav_goals">Cele</string>
+    <string name="nav_settings">Ustawienia</string>
+
+    <!-- Wspólne -->
     <string name="settings">Ustawienia</string>
     <string name="feedback">Opinia</string>
     <string name="cancel">Anuluj</string>
@@ -16,6 +21,8 @@
     <string name="save">Zapisz</string>
     <string name="back">Wstecz</string>
     <string name="version">Wersja</string>
+
+    <!-- Transakcje -->
     <string name="spent_in">Wydano w %s</string>
     <string name="no_transactions">Brak transakcji</string>
     <string name="tap_to_add_transaction">Naciśnij + aby dodać pierwszą transakcję</string>
@@ -41,15 +48,19 @@
     <string name="year">Rok</string>
     <string name="month">Miesiąc</string>
     <string name="day">Dzień</string>
+
+    <!-- Onboarding -->
     <string name="lets_get_started">Zaczynajmy</string>
     <string name="add_account_step">Dodaj konto</string>
     <string name="add_account_step_desc">Konto bankowe, gotówka lub inwestycja</string>
     <string name="track_spending_step">Śledź wydatki</string>
-    <string name="track_spending_step_desc">Dodawaj transakcje aby zobaczyć analizy</string>
+    <string name="track_spending_step_desc">Dodawaj transakcje, aby zobaczyć analizy</string>
     <string name="add_first_account">Dodaj pierwsze konto</string>
+
+    <!-- Aktywa -->
     <string name="total_net_worth">Wartość netto</string>
     <string name="welcome_to_mooney">Witaj w Mooney</string>
-    <string name="welcome_description">Dodaj pierwsze konto, aby rozpocząć śledzenie finansów. Możesz dodać konta bankowe, gotówkę, inwestycje i wiele więcej.</string>
+    <string name="welcome_description">Dodaj pierwsze konto, aby rozpocząć śledzenie finansów. Możesz dodawać konta bankowe, gotówkę, inwestycje i więcej.</string>
     <string name="no_accounts_yet">Brak kont</string>
     <string name="add_account">Dodaj konto</string>
     <string name="edit_asset">Edytuj aktywo</string>
@@ -60,6 +71,8 @@
     <string name="category">Kategoria</string>
     <string name="currency">Waluta</string>
     <string name="select_currency">Wybierz walutę</string>
+
+    <!-- Analityka -->
     <string name="analytics">Analityka</string>
     <string name="no_analytics_yet">Brak analityki</string>
     <string name="analytics_empty_desc">Zacznij dodawać transakcje, aby zobaczyć przychody, wydatki i analizy finansowe.</string>
@@ -77,15 +90,17 @@
     <string name="next_6_months">Następne 6 miesięcy</string>
     <string name="based_on_selected">Na podstawie wybranego miesiąca</string>
     <string name="subcategories_breakdown">Podział podkategorii</string>
-    <string name="tap_category_subcategories">Naciśnij kategorię aby zobaczyć podkategorie</string>
+    <string name="tap_category_subcategories">Naciśnij kategorię, aby zobaczyć podkategorie</string>
+
+    <!-- Ustawienia -->
     <string name="preferences">Preferencje</string>
     <string name="appearance">Wygląd</string>
     <string name="default_currency">Domyślna waluta</string>
     <string name="pinned_categories">Przypięte kategorie</string>
     <string name="language">Język</string>
     <string name="data">Dane</string>
-    <string name="export_data">Eksport danych</string>
-    <string name="import_data">Import danych</string>
+    <string name="export_data">Eksportuj dane</string>
+    <string name="import_data">Importuj dane</string>
     <string name="about">O aplikacji</string>
     <string name="confirm_import">Potwierdź import</string>
     <string name="import_preview">Następujące dane zostaną zaimportowane:</string>
@@ -98,19 +113,21 @@
     <string name="dark">Ciemny</string>
     <string name="system">Systemowy</string>
     <string name="select_up_to_categories">Wybierz do %d kategorii</string>
+
+    <!-- Opinie -->
     <string name="get_in_touch">Skontaktuj się</string>
     <string name="feedback_description">Mooney jest aktywnie rozwijany. Znalazłeś błąd? Masz pomysł? Napisz — Twoja opinia kształtuje aplikację.</string>
+
+    <!-- Cele -->
     <string name="add_goal">Dodaj cel</string>
     <string name="edit_goal">Edytuj cel</string>
     <string name="delete_goal">Usuń cel</string>
-    <string name="error_disk_full">Wygląda na to, że dysk jest pełny.</string>
-    <string name="error_unknown">Coś poszło nie tak.</string>
-    <string name="error_request_timeout">Upłynął limit czasu żądania.</string>
-    <string name="error_no_internet">Nie udało się połączyć z serwerem. Sprawdź połączenie internetowe.</string>
-    <string name="error_too_many_requests">Wygląda na to, że Twój limit został przekroczony.</string>
-    <string name="error_serialization">Nie udało się przetworzyć danych.</string>
+
+    <!-- Aktywa -->
     <string name="set_as_primary">Ustaw jako główne</string>
     <string name="primary_account">Konto główne</string>
+
+    <!-- Ustawienia — waluty i kategorie -->
     <string name="currencies">Waluty</string>
     <string name="manage_currencies">Zarządzaj walutami</string>
     <string name="categories">Kategorie</string>
@@ -119,4 +136,348 @@
     <string name="add_subcategory">Dodaj podkategorię</string>
     <string name="category_name">Nazwa kategorii</string>
     <string name="emoji_label">Emoji</string>
+
+    <!-- Błędy -->
+    <string name="error_disk_full">Wygląda na to, że dysk jest pełny.</string>
+    <string name="error_unknown">Coś poszło nie tak.</string>
+    <string name="error_request_timeout">Upłynął limit czasu żądania.</string>
+    <string name="error_no_internet">Nie udało się połączyć z serwerem. Sprawdź połączenie internetowe.</string>
+    <string name="error_too_many_requests">Twój limit zapytań został przekroczony.</string>
+    <string name="error_serialization">Nie udało się przetworzyć danych.</string>
+
+    <!-- Net Income / Analityka -->
+    <string name="last_12_months">Ostatnie 12 miesięcy</string>
+    <string name="last_6_months_label">Ostatnie 6 miesięcy</string>
+    <string name="saved_last_n_months">ZAOSZCZĘDZONO · OSTATNIE %d MIES.</string>
+    <string name="of_gross_income">%s%% przychodu brutto</string>
+    <string name="per_month_avg">≈ %s/mies.</string>
+    <string name="net_worth_trajectory">Trajektoria wartości netto</string>
+    <string name="today_marker">Dziś</string>
+    <string name="months_forward">+%d mies.</string>
+    <string name="actual_label">Rzeczywiste</string>
+    <string name="projected_label">Prognoza</string>
+    <string name="of_every_dollar_earned">Z każdej zarobionej złotówki</string>
+    <string name="n_gross">%s brutto</string>
+    <string name="saved_label">Zaoszczędzone</string>
+    <string name="spent_label">Wydane</string>
+    <string name="if_you_keep_pace">Jeśli utrzymasz to tempo</string>
+    <string name="est_income_next_12">Szac. przychód · 12 mies. naprzód</string>
+    <string name="est_savings_next_12">Szac. oszczędności · 12 mies.</string>
+    <string name="net_worth_in_6">Wartość netto za 6 mies.</string>
+    <string name="net_worth_in_12">Wartość netto za 12 mies.</string>
+    <string name="forecast_disclaimer">Prognoza oparta na średnich oszczędnościach %2$s/mies. z ostatnich %1$d miesięcy. To wskazówka, nie gwarancja — rynki i wydatki bywają zmienne.</string>
+
+    <!-- Menu w nagłówku Aktywów -->
+    <string name="display_assets_in_header">Pokaż kwotę aktywów w nagłówku</string>
+    <string name="display_networth_in_header">Pokaż wartość netto w nagłówku</string>
+    <string name="total_assets">Aktywa razem</string>
+
+    <!-- Przewijanie -->
+    <string name="scroll_to_top">Przewiń do góry</string>
+
+    <!-- Import CSV -->
+    <string name="import_csv">Importuj CSV z innej aplikacji</string>
+    <string name="import_csv_desc">Mint, YNAB, Wallet, Money Manager lub dowolny CSV z kolumnami Data i Kwota</string>
+    <string name="csv_imported_n">Zaimportowano %d transakcji</string>
+    <string name="csv_imported_n_new_account">Zaimportowano %d transakcji do nowego konta \'Importowane\'</string>
+    <string name="csv_columns_not_recognised">Nie rozpoznano kolumn daty / kwoty w tym pliku. Wyeksportuj ponownie z aplikacji źródłowej lub zmień nazwy kolumn na \'Data\' i \'Kwota\'.</string>
+    <string name="csv_import_failed">Nie udało się zaimportować CSV: %s</string>
+
+    <!-- Wesprzyj Mooney -->
+    <string name="support_mooney">Wesprzyj Mooney</string>
+    <string name="watch_ad_support">Obejrzyj krótką reklamę i wesprzyj nas</string>
+    <string name="thanks_reward">Dzięki! 🎉</string>
+
+    <!-- Opcje deweloperskie -->
+    <string name="disable_ads_dev">Wyłącz reklamy</string>
+    <string name="disable_ads_dev_desc">Ukrywa wszystkie banery / interstycjały / reklamy nagrodowe w tej kompilacji, niezależnie od reguł kwalifikacji. Ustawienie zapisuje się między uruchomieniami.</string>
+
+    <!-- Wspólne -->
+    <string name="reset">Resetuj</string>
+    <string name="remove">Usuń</string>
+    <string name="send">Wyślij</string>
+    <string name="upgrade">Ulepsz</string>
+    <string name="active_alerts">Aktywne alerty</string>
+    <string name="exchange_rates">Kursy wymiany</string>
+    <string name="frequently_used">Często używane</string>
+    <string name="day_label">Dzień:</string>
+    <string name="week_label">Tydzień</string>
+    <string name="restore_purchases">Przywróć zakupy</string>
+    <string name="rate_mooney">Oceń Mooney</string>
+    <string name="share_feedback">Podziel się opinią</string>
+    <string name="privacy_policy">Polityka prywatności</string>
+    <string name="categories_label">Kategorie</string>
+    <string name="transactions_label">Transakcje</string>
+
+    <!-- Opinie / oceny -->
+    <string name="enjoying_mooney">Podoba Ci się Mooney?</string>
+    <string name="feedback_intro">Twoja opinia pomaga rozwijać aplikację — pracuję sam, każda odpowiedź zostaje przeczytana.</string>
+    <string name="not_really">Niezupełnie</string>
+    <string name="got_it_thanks">Rozumiem. Dziękuję.</string>
+    <string name="couldnt_send">Nie udało się wysłać. Sprawdź połączenie i spróbuj ponownie.</string>
+    <string name="whats_on_your_mind">Co Ci leży na sercu?</string>
+    <string name="feedback_pick_category">Wybierz kategorię i napisz cokolwiek — błąd, pomysł, frustracja. Tworzę sam, każda wiadomość zostanie przeczytana.</string>
+
+    <!-- Paywall -->
+    <string name="get_mooney_pro">Wybierz Mooney Pro</string>
+    <string name="restore_purchases_link">Przywróć zakupy</string>
+    <string name="auto_renews_monthly">Odnawia się co miesiąc. Anuluj kiedy chcesz w ustawieniach App Store.</string>
+    <string name="terms_of_use">Warunki użytkowania</string>
+    <string name="unlimited_accounts_categories">Nieograniczone konta, kategorie i więcej</string>
+
+    <!-- Kalendarz / wydatki -->
+    <string name="no_spending_data">Brak danych o wydatkach</string>
+    <string name="months_n_below_caption">Liczby pod miesiącami pokazują liczbę transakcji</string>
+
+    <!-- Puste stany -->
+    <string name="start_tracking_first_tx">Zacznij śledzić wydatki, dodając pierwszą transakcję.</string>
+    <string name="add_more_currencies_in_settings">Dodaj kolejne waluty w Ustawieniach</string>
+    <string name="want_more_widgets">Chcesz więcej widżetów?</string>
+    <string name="want_more_widgets_desc">Napisz, co byłoby przydatne — najlepsze pomysły wdrożę w kolejnej wersji.</string>
+    <string name="tap_to_suggest">Naciśnij, aby zaproponować</string>
+
+    <!-- Onboarding -->
+    <string name="choose_currencies_up_to">Wybierz używane waluty (do %d)</string>
+    <string name="continue_label">Dalej</string>
+    <string name="primary_currency">Główna waluta</string>
+    <string name="primary_currency_desc">Wszystkie sumy i analizy będą wyświetlane w tej walucie</string>
+    <string name="get_started">Zaczynamy</string>
+    <string name="your_new_mooney_ready">Twoje nowe Mooney jest gotowe</string>
+    <string name="swipe_up_reveal">Przesuń w górę, aby odkryć,\nco czeka w środku</string>
+    <string name="swipe_to_unwrap">Przesuń, aby odpakować aplikację</string>
+
+    <!-- Etykiety analityki -->
+    <string name="net_worth_label">Wartość netto</string>
+    <string name="tap_to_view_history">Naciśnij, aby zobaczyć historię</string>
+
+    <!-- Ustawienia — Premium / Plan -->
+    <string name="plan_label">Plan</string>
+    <string name="pro_label">Pro</string>
+    <string name="free_label">Darmowy</string>
+    <string name="replay_onboarding">Powtórz onboarding</string>
+    <string name="reset_view">Zresetuj i zobacz</string>
+
+    <!-- Wybór waluty -->
+    <string name="more">Więcej</string>
+
+    <!-- Zarządzanie kategoriami -->
+    <string name="confirm_delete_category">Usunąć \"%s\"? Transakcje z tą kategorią staną się niepowiązane.</string>
+    <string name="confirm_delete_account">Usunąć \"%s\"? Wszystkie powiązane transakcje także zostaną usunięte.</string>
+    <string name="transaction_categories">Kategorie transakcji</string>
+    <string name="asset_categories">Kategorie aktywów</string>
+    <string name="copy_action">Kopiuj</string>
+    <string name="share">Udostępnij</string>
+    <string name="upgrade_to_pro_cta">Ulepsz</string>
+    <string name="in_the_green">Na plusie</string>
+    <string name="avg_save_rate">Średnia stopa oszczędności</string>
+    <string name="no_transactions_short">Brak transakcji</string>
+    <string name="best_month">Najlepszy miesiąc</string>
+    <string name="worst_month">Najgorszy miesiąc</string>
+    <string name="six_month_total">Suma 6 mies.</string>
+    <string name="six_month_average">Średnia 6 mies.</string>
+    <string name="in_green_n_of_m">%1$d z %2$d miesięcy</string>
+    <string name="select_up_to_quick">Wybierz do %d kategorii jako szybkie skróty</string>
+    <string name="pinned_n_of_m">Przypięte (%1$d/%2$d)</string>
+    <string name="available_categories">Dostępne kategorie</string>
+    <string name="active_alerts_section">Aktywne alerty</string>
+    <string name="data_backup">Kopia danych</string>
+    <string name="data_backup_desc">Eksportuj lub importuj kompletne dane finansowe</string>
+    <string name="important_label">Ważne</string>
+    <string name="data_backup_warning">Wyeksportuj dane przed zmianą nazwy pakietu lub ponowną instalacją. Import doda dane do istniejących.</string>
+    <string name="delete_recurring_tx">Usuń transakcję cykliczną</string>
+    <string name="no_goals_yet">Brak celów</string>
+    <string name="not_enough_data_estimate">Za mało danych do oszacowania</string>
+    <string name="goal_reached">Cel osiągnięty!</string>
+
+    <!-- Zarządzanie kategoriami -->
+    <string name="delete_asset_category_msg">Usunąć \"%1$s\"? Konta używające tej kategorii zachowają swoje dane, ale pojawią się w \"Inne\".</string>
+    <string name="delete_tx_category_msg">Usunąć \"%1$s\"? Transakcje używające tej kategorii staną się niepowiązane.</string>
+    <string name="add_asset_category">Dodaj kategorię aktywa</string>
+    <string name="add_liability_category">Dodaj kategorię zobowiązania</string>
+    <string name="assets_section">Aktywa</string>
+    <string name="liabilities_section">Zobowiązania</string>
+    <string name="no_active_subscription">Nie znaleziono aktywnej subskrypcji</string>
+
+    <!-- Wartość netto flex -->
+    <string name="in_country_suffix">w %1$s</string>
+    <string name="close">Zamknij</string>
+
+    <!-- Dialog usuwania transakcji -->
+    <string name="delete_tx_confirm">Usunąć transakcję \"%1$s\" na %2$s %3$s?</string>
+
+    <!-- Cele dialog -->
+    <string name="delete_goal_confirm">Usunąć \"%1$s\"? Tego nie można cofnąć.</string>
+
+    <!-- Dialogi ustawień -->
+    <string name="update_categories_title">Aktualizuj kategorie</string>
+    <string name="update">Aktualizuj</string>
+    <string name="import_action">Importuj</string>
+    <string name="following_will_be_imported">Następujące dane zostaną zaimportowane:</string>
+    <string name="will_add_to_existing">Zostaną dodane do istniejących danych.</string>
+    <string name="default_expense_category">Domyślna kategoria wydatków</string>
+    <string name="default_income_category">Domyślna kategoria przychodów</string>
+
+    <!-- Ekran wymiany -->
+    <string name="set_alert">Ustaw alert</string>
+    <string name="tap_currency_for_chart">Stuknij walutę, aby zobaczyć wykres</string>
+
+    <!-- Arkusz celu -->
+    <string name="track_progress_against">Śledź postęp w stosunku do</string>
+    <string name="account">Konto</string>
+    <string name="select_account_short">Wybierz konto</string>
+
+    <!-- Dialogi konta -->
+    <string name="delete_account_title">Usuń konto</string>
+    <string name="delete_account_confirm">Usunąć \"%1$s\"? Tego nie można cofnąć.</string>
+
+    <!-- Cykliczne -->
+    <string name="recurring_transactions_title">Transakcje cykliczne</string>
+
+    <!-- Prognoza -->
+    <string name="nw_in_6_mo">Wartość netto za 6 mies.</string>
+    <string name="nw_in_12_mo">Wartość netto za 12 mies.</string>
+    <string name="saved_dot_pct">Zaoszczędzone · %1$s%%</string>
+    <string name="spent_dot_pct">Wydane · %1$s%%</string>
+
+    <!-- Formularz celu -->
+    <string name="title_label">Tytuł</string>
+    <string name="target_amount_label">Kwota docelowa</string>
+
+    <!-- Kierunek alertu -->
+    <string name="above">Powyżej</string>
+    <string name="below">Poniżej</string>
+
+    <!-- Menu transakcji -->
+    <string name="goals_chip">Cele</string>
+
+    <!-- Eksport/import opisy -->
+    <string name="save_all_data_desc">Zapisz wszystkie dane do pliku</string>
+    <string name="restore_from_backup_desc">Przywróć dane z pliku kopii zapasowej</string>
+
+    <!-- Wiersze ustawień -->
+    <string name="exclude_taxes_title">Wyłącz podatki z sum</string>
+    <string name="exchange_rate_source">Źródło kursów walut</string>
+    <string name="currency_insights">Analizy walut</string>
+    <string name="transactions_widget_pager">Pager widgetu transakcji</string>
+
+    <!-- Tytuły pasków -->
+    <string name="goals_title">Cele</string>
+    <string name="analytics_title">Analizy</string>
+    <string name="net_income_title">Dochód netto</string>
+    <string name="net_worth_title">Wartość netto</string>
+
+    <!-- Transfer -->
+    <string name="transfer_to_account">Transfer do %1$s</string>
+    <string name="general_label">Ogólne</string>
+
+    <!-- Wyłącz podatki -->
+    <string name="exclude_taxes_desc">Transakcje podatkowe nie będą wliczane do sum wydatków</string>
+
+    <!-- Paywall nagłówki -->
+    <string name="paywall_acct_headline">Dodawaj nielimitowane konta</string>
+    <string name="paywall_acct_sub">Śledź każdą kartę, portfel i cel oszczędnościowy w jednym miejscu.</string>
+    <string name="paywall_cat_headline">Kategoryzuj tak, jak wydajesz</string>
+    <string name="paywall_cat_sub">Twórz nielimitowane własne kategorie pasujące do Twojego życia.</string>
+    <string name="paywall_settings_headline">Przejmij pełną kontrolę nad pieniędzmi</string>
+    <string name="paywall_settings_sub">Odblokuj wszystko, co Mooney potrafi.</string>
+    <string name="paywall_generic_headline">Odblokuj Mooney Pro</string>
+    <string name="paywall_generic_sub">Korzystaj z pełnych możliwości.</string>
+
+    <!-- Korzyści Pro -->
+    <string name="paywall_benefit_accounts_title">Nielimitowane konta</string>
+    <string name="paywall_benefit_accounts_sub">Ponad bezpłatny limit 20 kont</string>
+    <string name="paywall_benefit_categories_title">Nielimitowane własne kategorie</string>
+    <string name="paywall_benefit_categories_sub">Ponad bezpłatny limit 50 kategorii</string>
+
+    <!-- Cena -->
+    <string name="paywall_price_with">Mooney Pro · Miesięcznie · %1$s / miesiąc</string>
+    <string name="paywall_price_without">Mooney Pro · Subskrypcja miesięczna</string>
+
+    <!-- Dodatki ekranu transakcji -->
+    <string name="custom_rate">Własny kurs</string>
+    <string name="todays_rate">Dzisiejszy kurs</string>
+    <string name="quick_recurring">Cykliczne</string>
+    <string name="quick_categories">Kategorie</string>
+
+    <!-- Źródło kursów -->
+    <string name="exchange_rate_source_choose">Wybierz dostawcę używanego do przeliczania walut</string>
+    <string name="all_currencies">Wszystkie waluty</string>
+    <string name="historical_data">Dane historyczne</string>
+    <string name="ers_extended_desc">Obsługuje każdą walutę dostępną w aplikacji (w tym UAH, RUB, AED). Brak wykresów historycznych.</string>
+
+    <!-- Sekcje ustawień -->
+    <string name="section_transactions">Transakcje</string>
+
+    <!-- Aktywa / Zobowiązania -->
+    <string name="asset_label">Aktywo</string>
+    <string name="liability_label">Zobowiązanie</string>
+
+    <!-- Podpowiedzi opinii -->
+    <string name="feedback_hint_bug">Co się zepsuło? Co próbowałeś zrobić?</string>
+    <string name="feedback_hint_feature">Czego brakuje? Jak byś z tego korzystał?</string>
+    <string name="feedback_hint_widget">Opisz widget — co miałby pokazywać?</string>
+    <string name="feedback_hint_general">Twoja opinia…</string>
+
+    <!-- Wskazówki kursu -->
+    <string name="rate_high">Wysoki — dobry moment na wymianę</string>
+    <string name="rate_above_avg">Powyżej średniej</string>
+    <string name="rate_below_avg">Poniżej średniej</string>
+    <string name="rate_low">Niski — rozważ poczekanie</string>
+    <string name="not_enough_data">Za mało danych</string>
+
+    <!-- Krótkie etykiety -->
+    <string name="rate_high_short">Wysoki</string>
+    <string name="rate_above_avg_short">Pow. śr.</string>
+    <string name="rate_below_avg_short">Pon. śr.</string>
+    <string name="rate_low_short">Niski</string>
+    <string name="historical_rates">Kursy historyczne</string>
+
+    <!-- Etykieta alertu -->
+    <string name="target_rate_label">Kurs docelowy (%1$s)</string>
+
+    <!-- Snackbary -->
+    <string name="failed_to_read_file">Nie udało się odczytać pliku</string>
+
+    <!-- Cele -->
+    <string name="new_goal">Nowy cel</string>
+    <string name="edit_goal_title">Edytuj cel</string>
+    <string name="create_goal">Utwórz cel</string>
+    <string name="total_assets_label">Łączne aktywa</string>
+
+    <!-- Statystyki -->
+    <string name="highest_label">Najwyższy</string>
+    <string name="lowest_label">Najniższy</string>
+    <string name="avg_per_month">Śr. / miesiąc</string>
+    <string name="in_6_mo">Za 6 mies.</string>
+    <string name="in_12_mo">Za 12 mies.</string>
+
+    <!-- Przyciski transakcji -->
+    <string name="confirm">Potwierdź</string>
+    <string name="repeat_question">Powtórz?</string>
+
+    <!-- Udostępnij -->
+    <string name="share_my_net_worth">Moja wartość netto:</string>
+    <string name="share_tracked_with">Śledzone z Mooney 💰</string>
+
+    <!-- Transakcja dodatkowe -->
+    <string name="destination_amount_label">Kwota docelowa (%1$s)</string>
+    <string name="select_parent_format">Wybierz %1$s</string>
+
+    <!-- Alert kursu -->
+    <string name="alert_me_when_format">Powiadom, gdy 1 %1$s jest</string>
+
+    <!-- Ogólne -->
+    <string name="unknown">Nieznany</string>
+
+    <!-- Harmonogram cykliczny -->
+    <string name="no_recurring_yet">Brak transakcji cyklicznych</string>
+    <string name="recurring_empty_hint">Stuknij +, aby utworzyć transakcję cykliczną, która będzie automatycznie generować wpisy.</string>
+    <string name="schedule_label">Harmonogram</string>
+    <string name="frequency_label">Częstotliwość</string>
+    <string name="monthly_label">Miesięcznie</string>
+    <string name="weekly_label">Tygodniowo</string>
+    <string name="yearly_label">Rocznie</string>
+    <string name="repeat_on_day">Powtarzaj w dniu</string>
+    <string name="repeat_on">Powtarzaj w</string>
+    <string name="month_label">Miesiąc</string>
 </resources>

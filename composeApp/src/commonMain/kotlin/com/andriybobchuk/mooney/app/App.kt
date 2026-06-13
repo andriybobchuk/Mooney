@@ -19,6 +19,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.andriybobchuk.mooney.core.data.preferences.StartupPrefs
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.DevLabel
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.DevToolsBottomSheet
 import com.andriybobchuk.mooney.core.presentation.theme.AppColorsExtended
@@ -58,7 +59,15 @@ fun App() {
     }
 
     val themeManager: ThemeManager = koinInject()
-    val themeMode by themeManager.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
+    val startupPrefs: StartupPrefs = koinInject()
+    // Synchronously seed the theme so the first composition picks the user's
+    // chosen mode instead of always flashing SYSTEM until DataStore lands.
+    val initialThemeMode = remember {
+        startupPrefs.getThemeMode()
+            ?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() }
+            ?: ThemeMode.SYSTEM
+    }
+    val themeMode by themeManager.themeMode.collectAsState(initial = initialThemeMode)
     val appTheme by themeManager.currentAppTheme.collectAsState(initial = AppTheme.BLUE)
     val systemInDarkTheme = isSystemInDarkTheme()
 
@@ -67,7 +76,15 @@ fun App() {
     val appColors = getAppColorsForTheme(appTheme, isDarkMode)
     val typography = MooneyTypography()
 
-    CompositionLocalProvider(LocalAppColors provides appColors) {
+    val layoutDirection = if (com.andriybobchuk.mooney.core.presentation.locale.isCurrentLocaleRtl()) {
+        androidx.compose.ui.unit.LayoutDirection.Rtl
+    } else {
+        androidx.compose.ui.unit.LayoutDirection.Ltr
+    }
+    CompositionLocalProvider(
+        LocalAppColors provides appColors,
+        androidx.compose.ui.platform.LocalLayoutDirection provides layoutDirection
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = typography

@@ -52,7 +52,6 @@ enum class TimePeriod(val displayName: String, val months: Int) {
 fun TrendChart(
     historicalData: List<MonthlyMetricSnapshot>,
     selectedMonth: MonthKey,
-    onMonthSelected: (MonthKey) -> Unit,
     modifier: Modifier = Modifier,
     selectedPeriod: TimePeriod = TimePeriod.SIX_MONTHS,
     onPeriodSelected: (TimePeriod) -> Unit = {},
@@ -88,7 +87,10 @@ fun TrendChart(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(260.dp) // Increased height for selector
+            // No bottom month-label row anymore (month picking lives in the
+            // shared MonthSelector above the chart) so the container is a
+            // touch shorter than before.
+            .height(220.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
             .padding(16.dp)
@@ -169,6 +171,7 @@ fun TrendChart(
             val zeroLineColor = MaterialTheme.colorScheme.onSurface.copy(
                 alpha = if (isDark) 0.75f else 0.55f
             )
+            val markerColor = MaterialTheme.colorScheme.primary
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -176,64 +179,16 @@ fun TrendChart(
                     .align(Alignment.TopCenter)
                     .padding(top = 32.dp)
             ) {
-                drawTrendChart(filteredData, size.width, size.height, zeroLineColor)
+                drawTrendChart(
+                    data = filteredData,
+                    width = size.width,
+                    height = size.height,
+                    zeroLineColor = zeroLineColor,
+                    selectedMonth = selectedMonth,
+                    markerColor = markerColor
+                )
             }
         }
-        
-        // Month Labels (Clickable) — hidden in Lifetime mode (too many to fit).
-        if (selectedPeriod != TimePeriod.LIFETIME) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            filteredData.forEach { snapshot ->
-                val isSelected = snapshot.month == selectedMonth
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable { onMonthSelected(snapshot.month) }
-                        .background(
-                            if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                            else Color.Transparent,
-                            RoundedCornerShape(8.dp)
-                        )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    if (selectedPeriod == TimePeriod.ONE_YEAR) {
-                        // Just a dot in 1-year mode
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .background(
-                                    if (isSelected) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                                    CircleShape
-                                )
-                        )
-                    } else {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = snapshot.month.toShortDisplayString(),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Gray
-                            )
-                            Text(
-                                text = "${snapshot.transactionCount}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.7f) else Color.Gray.copy(alpha = 0.7f),
-                                fontSize = 10.sp
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        }
-        Spacer(modifier = Modifier.height(2.dp))
     }
 }
 
@@ -273,7 +228,9 @@ private fun DrawScope.drawTrendChart(
     data: List<MonthlyMetricSnapshot>,
     width: Float,
     height: Float,
-    zeroLineColor: Color
+    zeroLineColor: Color,
+    selectedMonth: MonthKey,
+    markerColor: Color
 ) {
     if (data.size < 2) return
 
@@ -299,7 +256,21 @@ private fun DrawScope.drawTrendChart(
 
     // Draw grid lines
     drawGridLines(padding, chartWidth, chartHeight, maxValue, minValue, zeroLineColor)
-    
+
+    // Vertical accent line marking the currently-selected month. Drawn before
+    // the trend lines so it sits behind the data points / paths and reads as
+    // a quiet guide rather than competing with the metrics.
+    val selectedIndex = data.indexOfFirst { it.month == selectedMonth }
+    if (selectedIndex >= 0) {
+        val x = padding + (chartWidth * selectedIndex / (data.size - 1))
+        drawLine(
+            color = markerColor.copy(alpha = 0.55f),
+            start = Offset(x, padding),
+            end = Offset(x, padding + chartHeight),
+            strokeWidth = 1.5.dp.toPx()
+        )
+    }
+
     // Draw trend lines for each metric
     drawMetricLine(data, { it.revenue }, colors[0], padding, chartWidth, chartHeight, maxValue, minValue)
     drawMetricLine(data, { it.taxes }, colors[1], padding, chartWidth, chartHeight, maxValue, minValue)

@@ -15,6 +15,9 @@ import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.HistoricalRate
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import com.andriybobchuk.mooney.mooney.domain.AccountWithConversion
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.edit
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun AssetDetailSheet(
@@ -80,7 +83,7 @@ fun AssetDetailSheet(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text("Edit", modifier = Modifier.padding(vertical = 4.dp))
+            Text(stringResource(Res.string.edit), modifier = Modifier.padding(vertical = 4.dp))
         }
 
         Spacer(Modifier.height(16.dp))

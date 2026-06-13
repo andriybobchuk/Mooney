@@ -7,6 +7,7 @@ import mooney.composeapp.generated.resources.exchange
 import mooney.composeapp.generated.resources.goals
 import mooney.composeapp.generated.resources.ic_back
 import mooney.composeapp.generated.resources.ic_categories
+import mooney.composeapp.generated.resources.ic_more_vert
 import mooney.composeapp.generated.resources.ic_calendar
 import mooney.composeapp.generated.resources.ic_chevron_left
 import mooney.composeapp.generated.resources.ic_chevron_right
@@ -73,4 +74,6 @@ object Icons {
 
     @Composable
     fun CategoriesIcon(): Painter = painterResource(Res.drawable.ic_categories)
+    @Composable
+    fun MoreVertIcon(): Painter = painterResource(Res.drawable.ic_more_vert)
 }

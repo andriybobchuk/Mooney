@@ -12,9 +12,16 @@ struct ComposeView: UIViewControllerRepresentable {
 
 struct ContentView: View {
     var body: some View {
-        ComposeView()
-                .ignoresSafeArea(.keyboard)
-                .ignoresSafeArea(.container) // Compose has own keyboard handler
+        // Painting the SwiftUI window background white before Compose attaches
+        // bridges the launch-screen → first-frame transition. Without this,
+        // there can be a brief gray/transparent frame visible while
+        // ComposeUIViewController initializes.
+        ZStack {
+            Color.white.ignoresSafeArea()
+            ComposeView()
+                    .ignoresSafeArea(.keyboard)
+                    .ignoresSafeArea(.container) // Compose has own keyboard handler
+        }
     }
 }
 

@@ -1,24 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <resources>
     <string name="app_name">Mooney</string>
+
+    <!-- Навигация -->
     <string name="nav_transactions">Транзакции</string>
     <string name="nav_assets">Активы</string>
     <string name="nav_exchange">Обмен</string>
     <string name="nav_analytics">Аналитика</string>
     <string name="nav_goals">Цели</string>
+    <string name="nav_settings">Настройки</string>
+
+    <!-- Общее -->
     <string name="settings">Настройки</string>
-    <string name="feedback">Обратная связь</string>
+    <string name="feedback">Отзыв</string>
     <string name="cancel">Отмена</string>
     <string name="done">Готово</string>
-    <string name="edit">Редактировать</string>
+    <string name="edit">Изменить</string>
     <string name="delete">Удалить</string>
     <string name="add">Добавить</string>
     <string name="save">Сохранить</string>
     <string name="back">Назад</string>
     <string name="version">Версия</string>
+
+    <!-- Транзакции -->
     <string name="spent_in">Потрачено в %s</string>
-    <string name="no_transactions">Нет транзакций</string>
-    <string name="tap_to_add_transaction">Нажмите + чтобы добавить первую транзакцию</string>
+    <string name="no_transactions">Транзакций нет</string>
+    <string name="tap_to_add_transaction">Нажмите +, чтобы добавить первую транзакцию</string>
     <string name="add_transaction">Добавить транзакцию</string>
     <string name="edit_transaction">Редактировать транзакцию</string>
     <string name="add_new_transaction">Новая транзакция</string>
@@ -29,57 +36,65 @@
     <string name="amount">Сумма</string>
     <string name="from_account">Со счёта</string>
     <string name="to_account">На счёт</string>
-    <string name="select_account">Выбрать счёт</string>
-    <string name="select_category">Выбрать категорию</string>
-    <string name="select_date">Выбрать дату</string>
+    <string name="select_account">Выберите счёт</string>
+    <string name="select_category">Выберите категорию</string>
+    <string name="select_date">Выберите дату</string>
     <string name="internal_transfer">Внутренний перевод</string>
     <string name="new_account_value">Новое значение счёта</string>
     <string name="spending_comparison">Сравнение расходов</string>
     <string name="current">Текущий</string>
-    <string name="six_month_avg">Ср. 6 мес.</string>
-    <string name="select_month">Выбрать месяц</string>
+    <string name="six_month_avg">Ср. за 6 мес.</string>
+    <string name="select_month">Выберите месяц</string>
     <string name="year">Год</string>
     <string name="month">Месяц</string>
     <string name="day">День</string>
+
+    <!-- Онбординг -->
     <string name="lets_get_started">Начнём</string>
     <string name="add_account_step">Добавьте счёт</string>
     <string name="add_account_step_desc">Банковский счёт, наличные или инвестиции</string>
     <string name="track_spending_step">Отслеживайте расходы</string>
-    <string name="track_spending_step_desc">Добавляйте транзакции для аналитики</string>
+    <string name="track_spending_step_desc">Добавляйте транзакции, чтобы видеть аналитику</string>
     <string name="add_first_account">Добавить первый счёт</string>
-    <string name="total_net_worth">Общий капитал</string>
+
+    <!-- Активы -->
+    <string name="total_net_worth">Чистая стоимость</string>
     <string name="welcome_to_mooney">Добро пожаловать в Mooney</string>
-    <string name="welcome_description">Добавьте первый счёт, чтобы начать отслеживать финансы. Вы можете добавить банковские счета, наличные, инвестиции и многое другое.</string>
+    <string name="welcome_description">Добавьте первый счёт, чтобы начать отслеживать финансы. Подойдут банковские счета, наличные, инвестиции и многое другое.</string>
     <string name="no_accounts_yet">Счетов пока нет</string>
     <string name="add_account">Добавить счёт</string>
-    <string name="edit_asset">Редактировать актив</string>
+    <string name="edit_asset">Изменить актив</string>
     <string name="add_new_asset">Новый актив</string>
     <string name="update_asset">Обновить актив</string>
     <string name="title">Название</string>
-    <string name="value">Стоимость</string>
+    <string name="value">Сумма</string>
     <string name="category">Категория</string>
     <string name="currency">Валюта</string>
-    <string name="select_currency">Выбрать валюту</string>
+    <string name="select_currency">Выберите валюту</string>
+
+    <!-- Аналитика -->
     <string name="analytics">Аналитика</string>
     <string name="no_analytics_yet">Аналитики пока нет</string>
-    <string name="analytics_empty_desc">Начните добавлять транзакции, чтобы видеть доходы, расходы и финансовую аналитику.</string>
+    <string name="analytics_empty_desc">Добавьте транзакции, чтобы увидеть доходы, расходы и финансовые инсайты.</string>
     <string name="go_to_transactions">Перейти к транзакциям</string>
-    <string name="revenue">Выручка</string>
+    <string name="revenue">Доходы</string>
     <string name="taxes">Налоги</string>
-    <string name="operating_costs">Операционные расходы</string>
-    <string name="net_income">Чистая прибыль</string>
-    <string name="revenue_breakdown">Состав выручки</string>
-    <string name="operating_costs_breakdown">Состав расходов</string>
-    <string name="tax_breakdown">Состав налогов</string>
-    <string name="partial_month_note">Показаны неполные данные — месяц ещё не завершился</string>
+    <string name="operating_costs">Расходы</string>
+    <string name="net_income">Чистый доход</string>
+    <string name="revenue_breakdown">Разбор доходов</string>
+    <string name="operating_costs_breakdown">Разбор расходов</string>
+    <string name="tax_breakdown">Разбор налогов</string>
+    <string name="partial_month_note">Показаны неполные данные — месяц ещё не закончился</string>
     <string name="profit_over_6_months">Прибыль за 6 месяцев</string>
     <string name="last_6_months">Последние 6 месяцев</string>
     <string name="next_6_months">Следующие 6 месяцев</string>
     <string name="based_on_selected">На основе выбранного месяца</string>
-    <string name="subcategories_breakdown">Распределение подкатегорий</string>
-    <string name="tap_category_subcategories">Нажмите на категорию для подкатегорий</string>
+    <string name="subcategories_breakdown">Разбор подкатегорий</string>
+    <string name="tap_category_subcategories">Нажмите на категорию, чтобы увидеть подкатегории</string>
+
+    <!-- Настройки -->
     <string name="preferences">Настройки</string>
-    <string name="appearance">Внешний вид</string>
+    <string name="appearance">Оформление</string>
     <string name="default_currency">Валюта по умолчанию</string>
     <string name="pinned_categories">Закреплённые категории</string>
     <string name="language">Язык</string>
@@ -92,25 +107,27 @@
     <string name="transactions_count">%d транзакций</string>
     <string name="accounts_count">%d счетов</string>
     <string name="goals_count">%d целей</string>
-    <string name="import_add_note">Данные будут добавлены к существующим записям.</string>
-    <string name="import_btn">Импортировать</string>
+    <string name="import_add_note">Данные добавятся к существующим.</string>
+    <string name="import_btn">Импорт</string>
     <string name="light">Светлая</string>
     <string name="dark">Тёмная</string>
     <string name="system">Системная</string>
     <string name="select_up_to_categories">Выберите до %d категорий</string>
-    <string name="get_in_touch">Свяжитесь с нами</string>
-    <string name="feedback_description">Mooney активно разрабатывается. Нашли ошибку? Есть идея? Напишите — ваш отзыв формирует приложение.</string>
+
+    <!-- Отзывы -->
+    <string name="get_in_touch">Напишите нам</string>
+    <string name="feedback_description">Mooney активно развивается. Нашли баг? Есть идея? Напишите — ваш отзыв формирует приложение.</string>
+
+    <!-- Цели -->
     <string name="add_goal">Добавить цель</string>
-    <string name="edit_goal">Редактировать цель</string>
+    <string name="edit_goal">Изменить цель</string>
     <string name="delete_goal">Удалить цель</string>
-    <string name="error_disk_full">Похоже, диск заполнен.</string>
-    <string name="error_unknown">Что-то пошло не так.</string>
-    <string name="error_request_timeout">Время запроса истекло.</string>
-    <string name="error_no_internet">Не удалось связаться с сервером. Проверьте интернет-соединение.</string>
-    <string name="error_too_many_requests">Похоже, ваша квота исчерпана.</string>
-    <string name="error_serialization">Не удалось обработать данные.</string>
+
+    <!-- Активы -->
     <string name="set_as_primary">Сделать основным</string>
     <string name="primary_account">Основной счёт</string>
+
+    <!-- Настройки — валюты и категории -->
     <string name="currencies">Валюты</string>
     <string name="manage_currencies">Управление валютами</string>
     <string name="categories">Категории</string>
@@ -119,4 +136,348 @@
     <string name="add_subcategory">Добавить подкатегорию</string>
     <string name="category_name">Название категории</string>
     <string name="emoji_label">Эмодзи</string>
+
+    <!-- Ошибки -->
+    <string name="error_disk_full">Похоже, на устройстве закончилось место.</string>
+    <string name="error_unknown">Что-то пошло не так.</string>
+    <string name="error_request_timeout">Превышено время ожидания запроса.</string>
+    <string name="error_no_internet">Не удалось связаться с сервером. Проверьте подключение к интернету.</string>
+    <string name="error_too_many_requests">Кажется, ваш лимит превышен.</string>
+    <string name="error_serialization">Не удалось обработать данные.</string>
+
+    <!-- Чистый доход / Аналитика -->
+    <string name="last_12_months">Последние 12 месяцев</string>
+    <string name="last_6_months_label">Последние 6 месяцев</string>
+    <string name="saved_last_n_months">СБЕРЕЖЕНО · ПОСЛЕДНИЕ %d МЕС.</string>
+    <string name="of_gross_income">%s%% от валового дохода</string>
+    <string name="per_month_avg">≈ %s/мес.</string>
+    <string name="net_worth_trajectory">Траектория чистой стоимости</string>
+    <string name="today_marker">Сегодня</string>
+    <string name="months_forward">+%d мес.</string>
+    <string name="actual_label">Факт</string>
+    <string name="projected_label">Прогноз</string>
+    <string name="of_every_dollar_earned">С каждого заработанного рубля</string>
+    <string name="n_gross">%s валовый</string>
+    <string name="saved_label">Сохранено</string>
+    <string name="spent_label">Потрачено</string>
+    <string name="if_you_keep_pace">Если сохраните темп</string>
+    <string name="est_income_next_12">Прогноз дохода · 12 мес.</string>
+    <string name="est_savings_next_12">Прогноз сбережений · 12 мес.</string>
+    <string name="net_worth_in_6">Чистая стоимость через 6 мес.</string>
+    <string name="net_worth_in_12">Чистая стоимость через 12 мес.</string>
+    <string name="forecast_disclaimer">Прогноз основан на средних сбережениях %2$s/мес. за последние %1$d мес. Это ориентир, а не гарантия — рынки и расходы меняются.</string>
+
+    <!-- Меню в заголовке Активов -->
+    <string name="display_assets_in_header">Показать сумму активов в заголовке</string>
+    <string name="display_networth_in_header">Показать чистую стоимость в заголовке</string>
+    <string name="total_assets">Активы всего</string>
+
+    <!-- Прокрутка -->
+    <string name="scroll_to_top">Наверх</string>
+
+    <!-- Импорт CSV -->
+    <string name="import_csv">Импортировать CSV из другого приложения</string>
+    <string name="import_csv_desc">Mint, YNAB, Wallet, Money Manager или любой CSV с колонками Дата и Сумма</string>
+    <string name="csv_imported_n">Импортировано %d транзакций</string>
+    <string name="csv_imported_n_new_account">Импортировано %d транзакций в новый счёт \'Импортировано\'</string>
+    <string name="csv_columns_not_recognised">Не удалось распознать столбцы даты / суммы в этом CSV. Попробуйте экспортировать снова из исходного приложения или переименуйте столбцы в \'Date\' и \'Amount\'.</string>
+    <string name="csv_import_failed">Не удалось импортировать CSV: %s</string>
+
+    <!-- Поддержите Mooney -->
+    <string name="support_mooney">Поддержите Mooney</string>
+    <string name="watch_ad_support">Посмотрите короткую рекламу, чтобы поддержать нас</string>
+    <string name="thanks_reward">Спасибо! 🎉</string>
+
+    <!-- Опции разработчика -->
+    <string name="disable_ads_dev">Отключить рекламу</string>
+    <string name="disable_ads_dev_desc">Скрывает все баннеры / межстраничные / награждаемые рекламы в этой сборке, независимо от правил показа. Настройка сохраняется между запусками.</string>
+
+    <!-- Общее -->
+    <string name="reset">Сбросить</string>
+    <string name="remove">Удалить</string>
+    <string name="send">Отправить</string>
+    <string name="upgrade">Улучшить</string>
+    <string name="active_alerts">Активные оповещения</string>
+    <string name="exchange_rates">Курсы валют</string>
+    <string name="frequently_used">Часто используемые</string>
+    <string name="day_label">День:</string>
+    <string name="week_label">Неделя</string>
+    <string name="restore_purchases">Восстановить покупки</string>
+    <string name="rate_mooney">Оценить Mooney</string>
+    <string name="share_feedback">Поделиться отзывом</string>
+    <string name="privacy_policy">Политика конфиденциальности</string>
+    <string name="categories_label">Категории</string>
+    <string name="transactions_label">Транзакции</string>
+
+    <!-- Отзывы / оценка -->
+    <string name="enjoying_mooney">Нравится Mooney?</string>
+    <string name="feedback_intro">Ваш отзыв помогает улучшить приложение — делаю в одиночку, читаю каждое сообщение.</string>
+    <string name="not_really">Не очень</string>
+    <string name="got_it_thanks">Понял. Спасибо.</string>
+    <string name="couldnt_send">Не удалось отправить. Проверьте соединение и попробуйте снова.</string>
+    <string name="whats_on_your_mind">Что у вас на уме?</string>
+    <string name="feedback_pick_category">Выберите категорию и расскажите всё — баг, идею, раздражение. Делаю один, читаю каждое сообщение.</string>
+
+    <!-- Paywall -->
+    <string name="get_mooney_pro">Получить Mooney Pro</string>
+    <string name="restore_purchases_link">Восстановить покупки</string>
+    <string name="auto_renews_monthly">Продлевается ежемесячно. Отмените в любое время в App Store.</string>
+    <string name="terms_of_use">Условия использования</string>
+    <string name="unlimited_accounts_categories">Безлимитные счета, категории и больше</string>
+
+    <!-- Календарь / расходы -->
+    <string name="no_spending_data">Нет данных о расходах</string>
+    <string name="months_n_below_caption">Цифры под месяцами показывают количество транзакций</string>
+
+    <!-- Пустые состояния -->
+    <string name="start_tracking_first_tx">Начните отслеживать расходы, добавив первую транзакцию.</string>
+    <string name="add_more_currencies_in_settings">Добавьте больше валют в Настройках</string>
+    <string name="want_more_widgets">Хотите больше виджетов?</string>
+    <string name="want_more_widgets_desc">Напишите, что было бы полезно — лучшие идеи попадут в следующий релиз.</string>
+    <string name="tap_to_suggest">Нажмите, чтобы предложить</string>
+
+    <!-- Онбординг -->
+    <string name="choose_currencies_up_to">Выберите валюты, которыми пользуетесь (до %d)</string>
+    <string name="continue_label">Продолжить</string>
+    <string name="primary_currency">Основная валюта</string>
+    <string name="primary_currency_desc">Все итоги и аналитика будут показаны в этой валюте</string>
+    <string name="get_started">Начать</string>
+    <string name="your_new_mooney_ready">Ваш новый Mooney готов</string>
+    <string name="swipe_up_reveal">Смахните вверх, чтобы открыть,\nчто ждёт внутри</string>
+    <string name="swipe_to_unwrap">Смахните, чтобы развернуть приложение</string>
+
+    <!-- Аналитика -->
+    <string name="net_worth_label">Чистая стоимость</string>
+    <string name="tap_to_view_history">Нажмите, чтобы посмотреть историю</string>
+
+    <!-- Настройки — Premium -->
+    <string name="plan_label">Тариф</string>
+    <string name="pro_label">Pro</string>
+    <string name="free_label">Бесплатный</string>
+    <string name="replay_onboarding">Повторить онбординг</string>
+    <string name="reset_view">Сбросить и посмотреть</string>
+
+    <!-- Выбор -->
+    <string name="more">Ещё</string>
+
+    <!-- Управление категориями -->
+    <string name="confirm_delete_category">Удалить \"%s\"? Транзакции с этой категорией станут несвязанными.</string>
+    <string name="confirm_delete_account">Удалить \"%s\"? Все связанные транзакции тоже будут удалены.</string>
+    <string name="transaction_categories">Категории транзакций</string>
+    <string name="asset_categories">Категории активов</string>
+    <string name="copy_action">Копировать</string>
+    <string name="share">Поделиться</string>
+    <string name="upgrade_to_pro_cta">Улучшить</string>
+    <string name="in_the_green">В плюсе</string>
+    <string name="avg_save_rate">Ср. норма сбережений</string>
+    <string name="no_transactions_short">Транзакций нет</string>
+    <string name="best_month">Лучший месяц</string>
+    <string name="worst_month">Худший месяц</string>
+    <string name="six_month_total">Сумма за 6 мес.</string>
+    <string name="six_month_average">Среднее за 6 мес.</string>
+    <string name="in_green_n_of_m">%1$d из %2$d месяцев</string>
+    <string name="select_up_to_quick">Выберите до %d категорий для быстрых ярлыков</string>
+    <string name="pinned_n_of_m">Закреплено (%1$d/%2$d)</string>
+    <string name="available_categories">Доступные категории</string>
+    <string name="active_alerts_section">Активные оповещения</string>
+    <string name="data_backup">Резервная копия данных</string>
+    <string name="data_backup_desc">Экспортируйте или импортируйте все финансовые данные</string>
+    <string name="important_label">Важно</string>
+    <string name="data_backup_warning">Экспортируйте данные перед сменой имени пакета или переустановкой. Импорт добавит данные к существующим.</string>
+    <string name="delete_recurring_tx">Удалить повторяющуюся транзакцию</string>
+    <string name="no_goals_yet">Целей пока нет</string>
+    <string name="not_enough_data_estimate">Недостаточно данных для оценки</string>
+    <string name="goal_reached">Цель достигнута!</string>
+
+    <!-- Управление категориями -->
+    <string name="delete_asset_category_msg">Удалить \"%1$s\"? Счета, использующие эту категорию, сохранят свои данные, но появятся в \"Другое\".</string>
+    <string name="delete_tx_category_msg">Удалить \"%1$s\"? Транзакции, использующие эту категорию, станут несвязанными.</string>
+    <string name="add_asset_category">Добавить категорию актива</string>
+    <string name="add_liability_category">Добавить категорию обязательства</string>
+    <string name="assets_section">Активы</string>
+    <string name="liabilities_section">Обязательства</string>
+    <string name="no_active_subscription">Активная подписка не найдена</string>
+
+    <!-- Чистый капитал flex -->
+    <string name="in_country_suffix">в %1$s</string>
+    <string name="close">Закрыть</string>
+
+    <!-- Диалог удаления транзакции -->
+    <string name="delete_tx_confirm">Удалить транзакцию \"%1$s\" на %2$s %3$s?</string>
+
+    <!-- Диалог целей -->
+    <string name="delete_goal_confirm">Удалить \"%1$s\"? Это нельзя отменить.</string>
+
+    <!-- Диалоги настроек -->
+    <string name="update_categories_title">Обновить категории</string>
+    <string name="update">Обновить</string>
+    <string name="import_action">Импорт</string>
+    <string name="following_will_be_imported">Будут импортированы следующие данные:</string>
+    <string name="will_add_to_existing">Это добавится к существующим данным.</string>
+    <string name="default_expense_category">Категория расходов по умолчанию</string>
+    <string name="default_income_category">Категория доходов по умолчанию</string>
+
+    <!-- Экран обмена -->
+    <string name="set_alert">Установить уведомление</string>
+    <string name="tap_currency_for_chart">Нажмите на валюту, чтобы увидеть график</string>
+
+    <!-- Лист цели -->
+    <string name="track_progress_against">Отслеживать прогресс по</string>
+    <string name="account">Счёт</string>
+    <string name="select_account_short">Выбрать счёт</string>
+
+    <!-- Диалоги счёта -->
+    <string name="delete_account_title">Удалить счёт</string>
+    <string name="delete_account_confirm">Удалить \"%1$s\"? Это нельзя отменить.</string>
+
+    <!-- Повторяющиеся -->
+    <string name="recurring_transactions_title">Повторяющиеся транзакции</string>
+
+    <!-- Прогноз -->
+    <string name="nw_in_6_mo">Чистый капитал через 6 мес.</string>
+    <string name="nw_in_12_mo">Чистый капитал через 12 мес.</string>
+    <string name="saved_dot_pct">Сохранено · %1$s%%</string>
+    <string name="spent_dot_pct">Потрачено · %1$s%%</string>
+
+    <!-- Форма цели -->
+    <string name="title_label">Название</string>
+    <string name="target_amount_label">Целевая сумма</string>
+
+    <!-- Направление уведомления -->
+    <string name="above">Выше</string>
+    <string name="below">Ниже</string>
+
+    <!-- Меню транзакций -->
+    <string name="goals_chip">Цели</string>
+
+    <!-- Экспорт/импорт описания -->
+    <string name="save_all_data_desc">Сохранить все данные в файл</string>
+    <string name="restore_from_backup_desc">Восстановить данные из файла резервной копии</string>
+
+    <!-- Строки настроек -->
+    <string name="exclude_taxes_title">Исключить налоги из итогов</string>
+    <string name="exchange_rate_source">Источник курсов валют</string>
+    <string name="currency_insights">Аналитика валют</string>
+    <string name="transactions_widget_pager">Пейджер виджета транзакций</string>
+
+    <!-- Заголовки -->
+    <string name="goals_title">Цели</string>
+    <string name="analytics_title">Аналитика</string>
+    <string name="net_income_title">Чистый доход</string>
+    <string name="net_worth_title">Чистый капитал</string>
+
+    <!-- Перевод -->
+    <string name="transfer_to_account">Перевод на %1$s</string>
+    <string name="general_label">Общее</string>
+
+    <!-- Исключить налоги -->
+    <string name="exclude_taxes_desc">Налоговые транзакции не будут учитываться в суммах расходов</string>
+
+    <!-- Заголовки Paywall -->
+    <string name="paywall_acct_headline">Добавляйте сколько угодно счетов</string>
+    <string name="paywall_acct_sub">Отслеживайте каждую карту, кошелёк и цель сбережений в одном месте.</string>
+    <string name="paywall_cat_headline">Распределяйте расходы по-своему</string>
+    <string name="paywall_cat_sub">Создавайте сколько угодно своих категорий, подходящих под вашу жизнь.</string>
+    <string name="paywall_settings_headline">Возьмите финансы под полный контроль</string>
+    <string name="paywall_settings_sub">Откройте всё, что умеет Mooney.</string>
+    <string name="paywall_generic_headline">Откройте Mooney Pro</string>
+    <string name="paywall_generic_sub">Получите весь функционал.</string>
+
+    <!-- Преимущества Pro -->
+    <string name="paywall_benefit_accounts_title">Безлимитные счета</string>
+    <string name="paywall_benefit_accounts_sub">Сверх бесплатного лимита в 20 счетов</string>
+    <string name="paywall_benefit_categories_title">Безлимитные свои категории</string>
+    <string name="paywall_benefit_categories_sub">Сверх бесплатного лимита в 50 категорий</string>
+
+    <!-- Цена -->
+    <string name="paywall_price_with">Mooney Pro · Ежемесячно · %1$s / мес.</string>
+    <string name="paywall_price_without">Mooney Pro · Ежемесячная подписка</string>
+
+    <!-- Дополнения экрана транзакций -->
+    <string name="custom_rate">Свой курс</string>
+    <string name="todays_rate">Сегодняшний курс</string>
+    <string name="quick_recurring">Повторяющиеся</string>
+    <string name="quick_categories">Категории</string>
+
+    <!-- Источник курсов -->
+    <string name="exchange_rate_source_choose">Выберите поставщика для конвертации валют</string>
+    <string name="all_currencies">Все валюты</string>
+    <string name="historical_data">Исторические данные</string>
+    <string name="ers_extended_desc">Поддерживает все валюты приложения (включая UAH, RUB, AED). Без графиков истории.</string>
+
+    <!-- Разделы настроек -->
+    <string name="section_transactions">Транзакции</string>
+
+    <!-- Актив / Обязательство -->
+    <string name="asset_label">Актив</string>
+    <string name="liability_label">Обязательство</string>
+
+    <!-- Подсказки для отзыва -->
+    <string name="feedback_hint_bug">Что сломалось? Что вы пытались сделать?</string>
+    <string name="feedback_hint_feature">Чего не хватает? Как бы вы это использовали?</string>
+    <string name="feedback_hint_widget">Опишите виджет — что он должен показывать?</string>
+    <string name="feedback_hint_general">Ваш отзыв…</string>
+
+    <!-- Подсказки курса -->
+    <string name="rate_high">Высокий — хороший момент для конвертации</string>
+    <string name="rate_above_avg">Выше среднего</string>
+    <string name="rate_below_avg">Ниже среднего</string>
+    <string name="rate_low">Низкий — стоит подождать</string>
+    <string name="not_enough_data">Недостаточно данных</string>
+
+    <!-- Краткие подписи -->
+    <string name="rate_high_short">Высокий</string>
+    <string name="rate_above_avg_short">Выше ср.</string>
+    <string name="rate_below_avg_short">Ниже ср.</string>
+    <string name="rate_low_short">Низкий</string>
+    <string name="historical_rates">Исторические курсы</string>
+
+    <!-- Целевой курс -->
+    <string name="target_rate_label">Целевой курс (%1$s)</string>
+
+    <!-- Снэкбары -->
+    <string name="failed_to_read_file">Не удалось прочитать файл</string>
+
+    <!-- Цели -->
+    <string name="new_goal">Новая цель</string>
+    <string name="edit_goal_title">Редактировать цель</string>
+    <string name="create_goal">Создать цель</string>
+    <string name="total_assets_label">Все активы</string>
+
+    <!-- Статистика -->
+    <string name="highest_label">Максимум</string>
+    <string name="lowest_label">Минимум</string>
+    <string name="avg_per_month">Сред. / мес.</string>
+    <string name="in_6_mo">Через 6 мес.</string>
+    <string name="in_12_mo">Через 12 мес.</string>
+
+    <!-- Кнопки транзакции -->
+    <string name="confirm">Подтвердить</string>
+    <string name="repeat_question">Повторить?</string>
+
+    <!-- Поделиться -->
+    <string name="share_my_net_worth">Мой чистый капитал:</string>
+    <string name="share_tracked_with">Отслеживаю в Mooney 💰</string>
+
+    <!-- Дополнения транзакции -->
+    <string name="destination_amount_label">Сумма получения (%1$s)</string>
+    <string name="select_parent_format">Выберите %1$s</string>
+
+    <!-- Уведомление о курсе -->
+    <string name="alert_me_when_format">Уведомить, когда 1 %1$s будет</string>
+
+    <!-- Общее -->
+    <string name="unknown">Неизвестно</string>
+
+    <!-- Расписание -->
+    <string name="no_recurring_yet">Нет повторяющихся транзакций</string>
+    <string name="recurring_empty_hint">Нажмите +, чтобы создать повторяющуюся транзакцию — записи будут создаваться автоматически.</string>
+    <string name="schedule_label">Расписание</string>
+    <string name="frequency_label">Частота</string>
+    <string name="monthly_label">Ежемесячно</string>
+    <string name="weekly_label">Еженедельно</string>
+    <string name="yearly_label">Ежегодно</string>
+    <string name="repeat_on_day">Повторять в день</string>
+    <string name="repeat_on">Повторять</string>
+    <string name="month_label">Месяц</string>
 </resources>

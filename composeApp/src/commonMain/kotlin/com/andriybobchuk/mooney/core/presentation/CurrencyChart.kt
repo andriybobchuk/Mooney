@@ -24,6 +24,13 @@ import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.HistoricalRate
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import kotlinx.datetime.*
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.not_enough_data
+import mooney.composeapp.generated.resources.rate_above_avg
+import mooney.composeapp.generated.resources.rate_below_avg
+import mooney.composeapp.generated.resources.rate_high
+import mooney.composeapp.generated.resources.rate_low
+import org.jetbrains.compose.resources.stringResource
 
 enum class ChartTimeRange(val months: Int, val label: String) {
     ONE_MONTH(1, "1M"),
@@ -102,7 +109,7 @@ fun CurrencyRateChart(
                 modifier = Modifier.fillMaxWidth().height(200.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Not enough data", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                Text(stringResource(Res.string.not_enough_data), style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
             }
             return
         }
@@ -327,10 +334,10 @@ fun PercentileRow(percentile: Int) {
         else -> Color(0xFFFF9800)
     }
     val label = when {
-        percentile >= 75 -> "High — good time to convert"
-        percentile >= 50 -> "Above average"
-        percentile >= 25 -> "Below average"
-        else -> "Low — consider waiting"
+        percentile >= 75 -> stringResource(Res.string.rate_high)
+        percentile >= 50 -> stringResource(Res.string.rate_above_avg)
+        percentile >= 25 -> stringResource(Res.string.rate_below_avg)
+        else -> stringResource(Res.string.rate_low)
     }
 
     Row(

@@ -39,7 +39,14 @@ data class SettingsState(
     /** Local override for Pro plan — used by the Developer Plan toggle. */
     val devForcePremium: Boolean = false,
     /** Dev opt-in: when true, the Transactions screen shows the multi-widget pager again. */
-    val widgetPagerEnabled: Boolean = false
+    val widgetPagerEnabled: Boolean = false,
+    /**
+     * Dev kill-switch for all ads. Overrides every other gate in
+     * [com.andriybobchuk.mooney.core.ads.AdEligibilityUseCase] so the dev can
+     * preview the ad-free UX inside the same build that normally serves
+     * ads. Persists across launches.
+     */
+    val adsDisabled: Boolean = false
 ) {
     val maxPinnedCategories: Int = 5
     val canAddMorePinned: Boolean = pinnedCategoryIds.size < maxPinnedCategories

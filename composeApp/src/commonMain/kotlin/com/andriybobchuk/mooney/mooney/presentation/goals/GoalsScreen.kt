@@ -84,6 +84,31 @@ import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import com.andriybobchuk.mooney.mooney.domain.parseAmountInput
 import com.andriybobchuk.mooney.mooney.domain.usecase.GoalCompletionEstimate
 import com.andriybobchuk.mooney.mooney.domain.usecase.MonthProjection
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.account
+import mooney.composeapp.generated.resources.cancel
+import mooney.composeapp.generated.resources.currency
+import mooney.composeapp.generated.resources.delete
+import mooney.composeapp.generated.resources.delete_goal
+import mooney.composeapp.generated.resources.delete_goal_confirm
+import mooney.composeapp.generated.resources.edit
+import mooney.composeapp.generated.resources.goal_reached
+import mooney.composeapp.generated.resources.goals_title
+import mooney.composeapp.generated.resources.no_goals_yet
+import mooney.composeapp.generated.resources.not_enough_data_estimate
+import mooney.composeapp.generated.resources.select_account_short
+import mooney.composeapp.generated.resources.select_currency
+import mooney.composeapp.generated.resources.assets_section
+import mooney.composeapp.generated.resources.create_goal
+import mooney.composeapp.generated.resources.edit_goal_title
+import mooney.composeapp.generated.resources.net_worth_title
+import mooney.composeapp.generated.resources.new_goal
+import mooney.composeapp.generated.resources.save
+import mooney.composeapp.generated.resources.target_amount_label
+import mooney.composeapp.generated.resources.title_label
+import mooney.composeapp.generated.resources.total_assets_label
+import mooney.composeapp.generated.resources.track_progress_against
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,7 +125,7 @@ fun GoalsScreen(
         modifier = Modifier.background(Color.Transparent),
         topBar = {
             Toolbars.Primary(
-                title = "Goals",
+                title = stringResource(Res.string.goals_title),
                 containerColor = Color.Transparent,
                 scrollBehavior = scrollBehavior,
                 showBackButton = true,
@@ -135,7 +160,7 @@ fun GoalsScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "No goals yet",
+                        text = stringResource(Res.string.no_goals_yet),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
@@ -190,16 +215,16 @@ fun GoalsScreen(
     if (state.showDeleteDialog && goalToDelete != null) {
         AlertDialog(
             onDismissRequest = { viewModel.onAction(GoalsAction.HideDeleteDialog) },
-            title = { Text("Delete Goal") },
-            text = { Text("Delete \"${goalToDelete.title}\"? This cannot be undone.") },
+            title = { Text(stringResource(Res.string.delete_goal)) },
+            text = { Text(stringResource(Res.string.delete_goal_confirm, goalToDelete.title)) },
             confirmButton = {
                 TextButton(onClick = { viewModel.onAction(GoalsAction.ConfirmDeleteGoal(goalToDelete.id)) }) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(Res.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { viewModel.onAction(GoalsAction.HideDeleteDialog) }) {
-                    Text("Cancel")
+                    Text(stringResource(Res.string.cancel))
                 }
             }
         )
@@ -230,9 +255,9 @@ private fun GoalCard(
     )
 
     val trackingLabel = when (goal.trackingType) {
-        GoalTrackingType.ACCOUNT -> accounts.find { it.id == goal.accountId }?.title ?: "Account"
-        GoalTrackingType.NET_WORTH -> "Net Worth"
-        GoalTrackingType.TOTAL_ASSETS -> "Total Assets"
+        GoalTrackingType.ACCOUNT -> accounts.find { it.id == goal.accountId }?.title ?: stringResource(Res.string.account)
+        GoalTrackingType.NET_WORTH -> stringResource(Res.string.net_worth_title)
+        GoalTrackingType.TOTAL_ASSETS -> stringResource(Res.string.total_assets_label)
     }
 
     val isCompleted = progressPct >= 100.0
@@ -349,7 +374,7 @@ private fun GoalCard(
                         }
                     } else if (estimate.monthlySavingsRate <= 0) {
                         Text(
-                            text = "Not enough data to estimate",
+                            text = stringResource(Res.string.not_enough_data_estimate),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                         )
@@ -367,7 +392,7 @@ private fun GoalCard(
                 } else if (estimate is GoalCompletionEstimate.AlreadyCompleted) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Goal reached!",
+                        text = stringResource(Res.string.goal_reached),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,
                         color = accentColor
@@ -381,12 +406,12 @@ private fun GoalCard(
             onDismissRequest = { showContextMenu = false }
         ) {
             DropdownMenuItem(
-                text = { Text("Edit") },
+                text = { Text(stringResource(Res.string.edit)) },
                 onClick = { onEdit(goal); showContextMenu = false },
                 leadingIcon = { Icon(Icons.Outlined.Edit, null) }
             )
             DropdownMenuItem(
-                text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
+                text = { Text(stringResource(Res.string.delete), color = MaterialTheme.colorScheme.error) },
                 onClick = { onDelete(goal); showContextMenu = false },
                 leadingIcon = { Icon(Icons.Outlined.Delete, null, tint = MaterialTheme.colorScheme.error) }
             )
@@ -479,7 +504,7 @@ private fun AddEditGoalSheet(
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
-                text = if (editingGoal != null) "Edit Goal" else "New Goal",
+                text = if (editingGoal != null) stringResource(Res.string.edit_goal_title) else stringResource(Res.string.new_goal),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -489,7 +514,7 @@ private fun AddEditGoalSheet(
             MooneyTextField(
                 value = title,
                 onValueChange = { if (it.length <= 40) title = it },
-                label = "Title",
+                label = stringResource(Res.string.title_label),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -499,7 +524,7 @@ private fun AddEditGoalSheet(
             MooneyTextField(
                 value = targetAmount,
                 onValueChange = { targetAmount = it },
-                label = "Target amount",
+                label = stringResource(Res.string.target_amount_label),
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true
@@ -508,7 +533,7 @@ private fun AddEditGoalSheet(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Currency selector
-            Text("Currency", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+            Text(stringResource(Res.string.currency), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -525,7 +550,7 @@ private fun AddEditGoalSheet(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Tracking type
-            Text("Track progress against", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+            Text(stringResource(Res.string.track_progress_against), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -534,9 +559,9 @@ private fun AddEditGoalSheet(
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 listOf(
-                    "Account" to GoalTrackingType.ACCOUNT,
-                    "Net Worth" to GoalTrackingType.NET_WORTH,
-                    "Assets" to GoalTrackingType.TOTAL_ASSETS
+                    stringResource(Res.string.account) to GoalTrackingType.ACCOUNT,
+                    stringResource(Res.string.net_worth_title) to GoalTrackingType.NET_WORTH,
+                    stringResource(Res.string.assets_section) to GoalTrackingType.TOTAL_ASSETS
                 ).forEach { (label, type) ->
                     val isSelected = trackingType == type
                     Box(
@@ -562,7 +587,7 @@ private fun AddEditGoalSheet(
             if (trackingType == GoalTrackingType.ACCOUNT) {
                 Spacer(modifier = Modifier.height(12.dp))
                 val selectedAccount = accounts.find { it.id == selectedAccountId }
-                Text("Account", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
+                Text(stringResource(Res.string.account), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 6.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -572,7 +597,7 @@ private fun AddEditGoalSheet(
                         .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(selectedAccount?.title ?: "Select account", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                    Text(selectedAccount?.title ?: stringResource(Res.string.select_account_short), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                     Icon(painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                 }
             }
@@ -580,7 +605,7 @@ private fun AddEditGoalSheet(
             Spacer(modifier = Modifier.height(20.dp))
 
             MooneyButton(
-                text = if (editingGoal != null) "Save" else "Create Goal",
+                text = if (editingGoal != null) stringResource(Res.string.save) else stringResource(Res.string.create_goal),
                 variant = ButtonVariant.PRIMARY,
                 onClick = {
                     val amount = targetAmount.parseAmountInput() ?: 0.0
@@ -600,7 +625,7 @@ private fun AddEditGoalSheet(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
-                Text("Select Currency", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                Text(stringResource(Res.string.select_currency), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
                 LazyColumn(modifier = Modifier.height(400.dp)) {
                     items(Currency.entries) { currency ->
                         val isSelected = selectedCurrency == currency
@@ -635,7 +660,7 @@ private fun AddEditGoalSheet(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
-                Text("Select Account", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
+                Text(stringResource(Res.string.select_account_short), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 16.dp))
                 LazyColumn(modifier = Modifier.height(400.dp)) {
                     items(accounts.filter { !it.isLiability }) { account ->
                         val isSelected = selectedAccountId == account.id

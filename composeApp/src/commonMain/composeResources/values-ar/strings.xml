@@ -480,6 +480,14 @@
     <!-- التحويل -->
     <string name="transfer_from_to">%1$s → %2$s</string>
 
+    <!-- حالات فارغة -->
+    <string name="goals_empty_desc">حدد أهدافًا مالية وتابع تقدمك نحوها.</string>
+    <string name="assets_welcome_desc">أضف حسابك الأول لتبدأ بمتابعة أموالك. يمكنك إضافة حسابات بنكية ونقد واستثمارات والمزيد.</string>
+    <string name="recurring_delete_warning">سيؤدي هذا إلى إيقاف الإدخالات التلقائية المستقبلية. لن تتأثر المعاملات الحالية.</string>
+    <string name="trend_not_enough_data">لا توجد بيانات كافية بعد — أضف المزيد من المعاملات لرؤية الاتجاهات</string>
+    <string name="base_currency_prefix">الأساس: %1$s</string>
+    <string name="current_rate_prefix">الحالي: %1$s</string>
+
     <!-- ملخص -->
     <string name="recurring_summary_monthly">يتكرر شهريًا في اليوم %1$d</string>
     <string name="recurring_summary_weekly">يتكرر أسبوعيًا</string>

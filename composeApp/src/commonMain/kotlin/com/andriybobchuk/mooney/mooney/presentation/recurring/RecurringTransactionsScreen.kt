@@ -75,6 +75,7 @@ import mooney.composeapp.generated.resources.month_label
 import mooney.composeapp.generated.resources.monthly_label
 import mooney.composeapp.generated.resources.no_recurring_yet
 import mooney.composeapp.generated.resources.recurring_empty_hint
+import mooney.composeapp.generated.resources.recurring_delete_warning
 import mooney.composeapp.generated.resources.recurring_summary_daily
 import mooney.composeapp.generated.resources.recurring_summary_monthly
 import mooney.composeapp.generated.resources.recurring_summary_weekly
@@ -222,7 +223,7 @@ fun RecurringTransactionsScreen(
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 Text(
-                    text = "This will stop future automatic entries. Existing transactions won't be affected.",
+                    text = stringResource(Res.string.recurring_delete_warning),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 16.dp)

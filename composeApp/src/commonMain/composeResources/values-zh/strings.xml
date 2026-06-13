@@ -480,6 +480,14 @@
     <!-- 转账 -->
     <string name="transfer_from_to">%1$s → %2$s</string>
 
+    <!-- 空状态 -->
+    <string name="goals_empty_desc">设定财务目标并追踪你的进度。</string>
+    <string name="assets_welcome_desc">添加第一个账户以开始跟踪你的财务。你可以添加银行账户、现金、投资等。</string>
+    <string name="recurring_delete_warning">这将停止未来的自动记录。现有交易不受影响。</string>
+    <string name="trend_not_enough_data">数据还不够 — 添加更多交易以查看趋势</string>
+    <string name="base_currency_prefix">基准：%1$s</string>
+    <string name="current_rate_prefix">当前：%1$s</string>
+
     <!-- 摘要 -->
     <string name="recurring_summary_monthly">每月重复，日 %1$d</string>
     <string name="recurring_summary_weekly">每周重复</string>

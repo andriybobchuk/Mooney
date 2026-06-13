@@ -93,6 +93,7 @@ import mooney.composeapp.generated.resources.delete_goal
 import mooney.composeapp.generated.resources.delete_goal_confirm
 import mooney.composeapp.generated.resources.edit
 import mooney.composeapp.generated.resources.goal_reached
+import mooney.composeapp.generated.resources.goals_empty_desc
 import mooney.composeapp.generated.resources.goals_title
 import mooney.composeapp.generated.resources.no_goals_yet
 import mooney.composeapp.generated.resources.not_enough_data_estimate
@@ -168,7 +169,7 @@ fun GoalsScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Set financial goals and track your progress toward them.",
+                        text = stringResource(Res.string.goals_empty_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurfaceVariant

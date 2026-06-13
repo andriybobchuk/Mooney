@@ -55,6 +55,8 @@ import mooney.composeapp.generated.resources.rate_above_avg_short
 import mooney.composeapp.generated.resources.rate_below_avg_short
 import mooney.composeapp.generated.resources.rate_high_short
 import mooney.composeapp.generated.resources.rate_low_short
+import mooney.composeapp.generated.resources.base_currency_prefix
+import mooney.composeapp.generated.resources.current_rate_prefix
 import mooney.composeapp.generated.resources.tap_currency_for_chart
 import org.jetbrains.compose.resources.stringResource
 
@@ -87,7 +89,7 @@ fun ExchangeScreen(
                             )
                         )
                         Text(
-                            text = "Base: ${state.displayBaseCurrency.symbol} ${state.displayBaseCurrency.name}",
+                            text = stringResource(Res.string.base_currency_prefix, "${state.displayBaseCurrency.symbol} ${state.displayBaseCurrency.name}"),
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Normal,
@@ -197,7 +199,7 @@ private fun ExchangeScreenContent(
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                text = "Current: ${triggered.currentRate.formatWithCommas()} ${triggered.alert.toCurrency.symbol}",
+                                text = stringResource(Res.string.current_rate_prefix, "${triggered.currentRate.formatWithCommas()} ${triggered.alert.toCurrency.symbol}"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                             )

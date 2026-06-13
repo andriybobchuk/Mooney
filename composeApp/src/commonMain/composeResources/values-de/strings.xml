@@ -480,6 +480,14 @@
     <!-- Überweisung -->
     <string name="transfer_from_to">%1$s → %2$s</string>
 
+    <!-- Leere Zustände -->
+    <string name="goals_empty_desc">Setzen Sie sich Finanzziele und verfolgen Sie Ihren Fortschritt.</string>
+    <string name="assets_welcome_desc">Fügen Sie Ihr erstes Konto hinzu, um Ihre Finanzen zu verfolgen. Sie können Bankkonten, Bargeld, Investitionen und mehr hinzufügen.</string>
+    <string name="recurring_delete_warning">Dies stoppt zukünftige automatische Einträge. Bestehende Transaktionen sind nicht betroffen.</string>
+    <string name="trend_not_enough_data">Noch zu wenig Daten — fügen Sie mehr Transaktionen hinzu, um Trends zu sehen</string>
+    <string name="base_currency_prefix">Basis: %1$s</string>
+    <string name="current_rate_prefix">Aktuell: %1$s</string>
+
     <!-- Zusammenfassung -->
     <string name="recurring_summary_monthly">Wiederholt sich monatlich am Tag %1$d</string>
     <string name="recurring_summary_weekly">Wiederholt sich wöchentlich</string>

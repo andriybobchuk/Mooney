@@ -455,6 +455,14 @@
     <!-- Переказ -->
     <string name="transfer_from_to">%1$s → %2$s</string>
 
+    <!-- Порожні стани -->
+    <string name="goals_empty_desc">Ставте фінансові цілі та слідкуйте за прогресом їх досягнення.</string>
+    <string name="assets_welcome_desc">Додайте перший рахунок, щоб почати відстежувати фінанси. Можна додати банківські рахунки, готівку, інвестиції та інше.</string>
+    <string name="recurring_delete_warning">Це зупинить майбутні автоматичні записи. Існуючі транзакції не зміняться.</string>
+    <string name="trend_not_enough_data">Поки недостатньо даних — додайте більше транзакцій, щоб побачити тренди</string>
+    <string name="base_currency_prefix">База: %1$s</string>
+    <string name="current_rate_prefix">Зараз: %1$s</string>
+
     <!-- Короткий опис -->
     <string name="recurring_summary_monthly">Повторюється щомісяця, день %1$d</string>
     <string name="recurring_summary_weekly">Повторюється щотижня</string>

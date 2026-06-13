@@ -23,6 +23,7 @@ import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import com.andriybobchuk.mooney.mooney.domain.parseAmountInput
 import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.above
+import mooney.composeapp.generated.resources.current_rate_prefix
 import mooney.composeapp.generated.resources.alert_me_when_format
 import mooney.composeapp.generated.resources.active_alerts_section
 import mooney.composeapp.generated.resources.below
@@ -55,7 +56,7 @@ fun RateWatchAlertSheet(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Current: ${currentRate.formatWithCommas()} ${targetCurrency.symbol}",
+            text = stringResource(Res.string.current_rate_prefix, "${currentRate.formatWithCommas()} ${targetCurrency.symbol}"),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

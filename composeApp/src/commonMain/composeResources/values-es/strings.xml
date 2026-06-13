@@ -480,6 +480,14 @@
     <!-- Transferencia -->
     <string name="transfer_from_to">%1$s → %2$s</string>
 
+    <!-- Estados vacíos -->
+    <string name="goals_empty_desc">Establece metas financieras y sigue tu progreso hacia ellas.</string>
+    <string name="assets_welcome_desc">Añade tu primera cuenta para empezar a controlar tus finanzas. Puedes añadir cuentas bancarias, efectivo, inversiones y más.</string>
+    <string name="recurring_delete_warning">Esto detendrá las entradas automáticas futuras. Las transacciones existentes no se verán afectadas.</string>
+    <string name="trend_not_enough_data">Aún no hay datos suficientes — añade más transacciones para ver tendencias</string>
+    <string name="base_currency_prefix">Base: %1$s</string>
+    <string name="current_rate_prefix">Actual: %1$s</string>
+
     <!-- Resumen -->
     <string name="recurring_summary_monthly">Se repite mensualmente el día %1$d</string>
     <string name="recurring_summary_weekly">Se repite cada semana</string>

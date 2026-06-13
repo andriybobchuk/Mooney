@@ -498,6 +498,14 @@
     <!-- Transfer list display -->
     <string name="transfer_from_to">%1$s → %2$s</string>
 
+    <!-- Empty states -->
+    <string name="goals_empty_desc">Set financial goals and track your progress toward them.</string>
+    <string name="assets_welcome_desc">Add your first account to start tracking your finances. You can add bank accounts, cash, investments, and more.</string>
+    <string name="recurring_delete_warning">This will stop future automatic entries. Existing transactions won\'t be affected.</string>
+    <string name="trend_not_enough_data">Not enough data yet — add more transactions to see trends</string>
+    <string name="base_currency_prefix">Base: %1$s</string>
+    <string name="current_rate_prefix">Current: %1$s</string>
+
     <!-- Recurring summary -->
     <string name="recurring_summary_monthly">Repeats monthly on day %1$d</string>
     <string name="recurring_summary_weekly">Repeats every week</string>

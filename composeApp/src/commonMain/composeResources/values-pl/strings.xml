@@ -480,6 +480,14 @@
     <!-- Transfer -->
     <string name="transfer_from_to">%1$s → %2$s</string>
 
+    <!-- Pusty stan -->
+    <string name="goals_empty_desc">Wyznaczaj cele finansowe i śledź postępy w ich realizacji.</string>
+    <string name="assets_welcome_desc">Dodaj pierwsze konto, aby zacząć śledzić finanse. Możesz dodać konta bankowe, gotówkę, inwestycje i więcej.</string>
+    <string name="recurring_delete_warning">To zatrzyma przyszłe automatyczne wpisy. Istniejące transakcje pozostaną bez zmian.</string>
+    <string name="trend_not_enough_data">Za mało danych — dodaj więcej transakcji, aby zobaczyć trendy</string>
+    <string name="base_currency_prefix">Baza: %1$s</string>
+    <string name="current_rate_prefix">Aktualnie: %1$s</string>
+
     <!-- Streszczenie -->
     <string name="recurring_summary_monthly">Powtarza się co miesiąc, dzień %1$d</string>
     <string name="recurring_summary_weekly">Powtarza się co tydzień</string>

@@ -608,7 +608,7 @@ private fun AssetsScreenContent(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Add your first account to start tracking your finances. You can add bank accounts, cash, investments, and more.",
+                            text = stringResource(Res.string.assets_welcome_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center

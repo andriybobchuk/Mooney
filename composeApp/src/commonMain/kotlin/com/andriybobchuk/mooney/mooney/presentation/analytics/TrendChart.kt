@@ -45,6 +45,7 @@ import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.period_1y
 import mooney.composeapp.generated.resources.period_6mo
 import mooney.composeapp.generated.resources.period_lifetime
+import mooney.composeapp.generated.resources.trend_not_enough_data
 import org.jetbrains.compose.resources.stringResource
 
 enum class TimePeriod(val displayName: String, val months: Int) {
@@ -161,7 +162,7 @@ fun TrendChart(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Not enough data yet — add more transactions to see trends",
+                    text = stringResource(Res.string.trend_not_enough_data),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,

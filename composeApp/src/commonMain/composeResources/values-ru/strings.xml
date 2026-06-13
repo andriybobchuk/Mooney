@@ -480,6 +480,14 @@
     <!-- Перевод -->
     <string name="transfer_from_to">%1$s → %2$s</string>
 
+    <!-- Пустые состояния -->
+    <string name="goals_empty_desc">Ставьте финансовые цели и следите за прогрессом в их достижении.</string>
+    <string name="assets_welcome_desc">Добавьте первый счёт, чтобы начать отслеживать финансы. Можно добавить банковские счета, наличные, инвестиции и многое другое.</string>
+    <string name="recurring_delete_warning">Это остановит будущие автоматические записи. Существующие транзакции не пострадают.</string>
+    <string name="trend_not_enough_data">Пока недостаточно данных — добавьте больше транзакций, чтобы увидеть тренды</string>
+    <string name="base_currency_prefix">База: %1$s</string>
+    <string name="current_rate_prefix">Сейчас: %1$s</string>
+
     <!-- Краткое описание -->
     <string name="recurring_summary_monthly">Повторяется ежемесячно, день %1$d</string>
     <string name="recurring_summary_weekly">Повторяется еженедельно</string>

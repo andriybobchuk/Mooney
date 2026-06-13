@@ -206,7 +206,7 @@ fun AnalyticsScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Start adding transactions to see revenue, expenses, and financial insights.",
+                            text = stringResource(Res.string.analytics_empty_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center

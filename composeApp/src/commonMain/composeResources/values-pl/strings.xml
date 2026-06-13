@@ -490,6 +490,7 @@
 
     <!-- Wartość netto zastrzeżenie -->
     <string name="net_worth_disclaimer">Wartości historyczne są odtwarzane z miesięcznego dochodu netto — duże, jednorazowe zmiany (sprzedaż samochodu, importy) mogą zniekształcić wykres.</string>
+    <string name="net_worth_history_empty">Gdy zbierzesz kilka miesięcy aktywności, trajektoria pojawi się tutaj.</string>
 
     <!-- Streszczenie -->
     <string name="recurring_summary_monthly">Powtarza się co miesiąc, dzień %1$d</string>

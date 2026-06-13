@@ -490,6 +490,7 @@
 
     <!-- Aviso patrimonio -->
     <string name="net_worth_disclaimer">Los valores pasados se reconstruyen a partir de tu ingreso neto mensual — los cambios grandes y puntuales (venta de un coche, importaciones de cuentas) pueden desplazar la línea.</string>
+    <string name="net_worth_history_empty">Cuando tengas un par de meses de actividad, la trayectoria aparecerá aquí.</string>
 
     <!-- Resumen -->
     <string name="recurring_summary_monthly">Se repite mensualmente el día %1$d</string>

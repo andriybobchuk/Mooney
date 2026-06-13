@@ -52,6 +52,7 @@ import mooney.composeapp.generated.resources.in_6_mo
 import mooney.composeapp.generated.resources.lowest_label
 import mooney.composeapp.generated.resources.months_forward
 import mooney.composeapp.generated.resources.net_worth_disclaimer
+import mooney.composeapp.generated.resources.net_worth_history_empty
 import mooney.composeapp.generated.resources.net_worth_title
 import mooney.composeapp.generated.resources.net_worth_trajectory
 import mooney.composeapp.generated.resources.projected_label
@@ -207,7 +208,7 @@ private fun NetWorthTrajectoryCard(history: List<NetWorthPoint>) {
             Spacer(modifier = Modifier.height(8.dp))
             if (history.size < 2) {
                 Text(
-                    text = "Once you have a couple of months of activity the trajectory shows up here.",
+                    text = stringResource(Res.string.net_worth_history_empty),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

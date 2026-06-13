@@ -490,6 +490,7 @@
 
     <!-- Vermögen Hinweis -->
     <string name="net_worth_disclaimer">Vergangene Werte werden aus Ihrem monatlichen Nettoeinkommen rekonstruiert — große Einzeländerungen (Autoverkauf, Kontoimporte) können die Linie verschieben.</string>
+    <string name="net_worth_history_empty">Sobald Sie ein paar Monate Aktivität haben, erscheint die Entwicklung hier.</string>
 
     <!-- Zusammenfassung -->
     <string name="recurring_summary_monthly">Wiederholt sich monatlich am Tag %1$d</string>

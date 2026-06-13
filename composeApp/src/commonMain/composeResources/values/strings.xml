@@ -508,6 +508,7 @@
 
     <!-- Net worth disclaimer -->
     <string name="net_worth_disclaimer">Past values are reconstructed from your monthly net income — large one-off changes (selling a car, account imports) may shift the line.</string>
+    <string name="net_worth_history_empty">Once you have a couple of months of activity the trajectory shows up here.</string>
 
     <!-- Recurring summary -->
     <string name="recurring_summary_monthly">Repeats monthly on day %1$d</string>

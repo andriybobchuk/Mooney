@@ -477,6 +477,9 @@
     <!-- مؤشر -->
     <string name="pct_of_revenue">%1$s%% من الإيرادات</string>
 
+    <!-- التحويل -->
+    <string name="transfer_from_to">%1$s → %2$s</string>
+
     <!-- ملخص -->
     <string name="recurring_summary_monthly">يتكرر شهريًا في اليوم %1$d</string>
     <string name="recurring_summary_weekly">يتكرر أسبوعيًا</string>

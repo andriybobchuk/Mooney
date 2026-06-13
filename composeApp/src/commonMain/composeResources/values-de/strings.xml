@@ -477,6 +477,9 @@
     <!-- Kennzahl -->
     <string name="pct_of_revenue">%1$s%% des Umsatzes</string>
 
+    <!-- Überweisung -->
+    <string name="transfer_from_to">%1$s → %2$s</string>
+
     <!-- Zusammenfassung -->
     <string name="recurring_summary_monthly">Wiederholt sich monatlich am Tag %1$d</string>
     <string name="recurring_summary_weekly">Wiederholt sich wöchentlich</string>

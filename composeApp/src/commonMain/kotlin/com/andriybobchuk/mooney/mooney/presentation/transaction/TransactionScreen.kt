@@ -1113,7 +1113,7 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
                 val destinationAccount = accounts.find { it?.id == destinationAccountId }
                 val destinationAccountTitle = destinationAccount?.title ?: "Unknown"
                 Text(
-                    "${transaction.account.title} to $destinationAccountTitle",
+                    stringResource(Res.string.transfer_from_to, transaction.account.title, destinationAccountTitle),
                     style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                 )
             } else {

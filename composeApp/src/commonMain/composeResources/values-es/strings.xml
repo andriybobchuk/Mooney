@@ -477,6 +477,9 @@
     <!-- Métrica -->
     <string name="pct_of_revenue">%1$s%% de ingresos</string>
 
+    <!-- Transferencia -->
+    <string name="transfer_from_to">%1$s → %2$s</string>
+
     <!-- Resumen -->
     <string name="recurring_summary_monthly">Se repite mensualmente el día %1$d</string>
     <string name="recurring_summary_weekly">Se repite cada semana</string>

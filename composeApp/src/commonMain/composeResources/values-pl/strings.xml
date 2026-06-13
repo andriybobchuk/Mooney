@@ -477,6 +477,9 @@
     <!-- Wskaźnik -->
     <string name="pct_of_revenue">%1$s%% przychodu</string>
 
+    <!-- Transfer -->
+    <string name="transfer_from_to">%1$s → %2$s</string>
+
     <!-- Streszczenie -->
     <string name="recurring_summary_monthly">Powtarza się co miesiąc, dzień %1$d</string>
     <string name="recurring_summary_weekly">Powtarza się co tydzień</string>

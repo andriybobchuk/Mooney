@@ -477,6 +477,9 @@
     <!-- Метрика -->
     <string name="pct_of_revenue">%1$s%% дохода</string>
 
+    <!-- Перевод -->
+    <string name="transfer_from_to">%1$s → %2$s</string>
+
     <!-- Краткое описание -->
     <string name="recurring_summary_monthly">Повторяется ежемесячно, день %1$d</string>
     <string name="recurring_summary_weekly">Повторяется еженедельно</string>

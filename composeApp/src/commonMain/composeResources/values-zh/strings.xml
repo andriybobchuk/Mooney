@@ -477,6 +477,9 @@
     <!-- 指标 -->
     <string name="pct_of_revenue">%1$s%% 收入</string>
 
+    <!-- 转账 -->
+    <string name="transfer_from_to">%1$s → %2$s</string>
+
     <!-- 摘要 -->
     <string name="recurring_summary_monthly">每月重复，日 %1$d</string>
     <string name="recurring_summary_weekly">每周重复</string>

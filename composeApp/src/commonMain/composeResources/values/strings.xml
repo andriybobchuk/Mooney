@@ -492,6 +492,9 @@
     <string name="period_1y">1y</string>
     <string name="period_lifetime">Lifetime</string>
 
+    <!-- Metric subtitle -->
+    <string name="pct_of_revenue">%1$s%% of revenue</string>
+
     <!-- Recurring schedule sheet -->
     <string name="no_recurring_yet">No recurring transactions yet</string>
     <string name="recurring_empty_hint">Tap + to create a recurring transaction that will automatically generate entries on schedule.</string>

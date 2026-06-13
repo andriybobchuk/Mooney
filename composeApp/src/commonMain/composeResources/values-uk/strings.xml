@@ -449,6 +449,9 @@
     <string name="period_1y">1 рік</string>
     <string name="period_lifetime">За весь час</string>
 
+    <!-- Метрика -->
+    <string name="pct_of_revenue">%1$s%% доходу</string>
+
     <!-- Розклад -->
     <string name="no_recurring_yet">Немає повторюваних транзакцій</string>
     <string name="recurring_empty_hint">Натисніть +, щоб створити повторювану транзакцію — записи створюватимуться автоматично.</string>

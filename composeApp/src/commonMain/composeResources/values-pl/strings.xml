@@ -474,6 +474,9 @@
     <string name="period_1y">1 rok</string>
     <string name="period_lifetime">Cały czas</string>
 
+    <!-- Wskaźnik -->
+    <string name="pct_of_revenue">%1$s%% przychodu</string>
+
     <!-- Harmonogram cykliczny -->
     <string name="no_recurring_yet">Brak transakcji cyklicznych</string>
     <string name="recurring_empty_hint">Stuknij +, aby utworzyć transakcję cykliczną, która będzie automatycznie generować wpisy.</string>

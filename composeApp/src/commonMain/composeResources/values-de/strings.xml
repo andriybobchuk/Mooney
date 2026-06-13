@@ -474,6 +474,9 @@
     <string name="period_1y">1 J.</string>
     <string name="period_lifetime">Gesamt</string>
 
+    <!-- Kennzahl -->
+    <string name="pct_of_revenue">%1$s%% des Umsatzes</string>
+
     <!-- Zeitplan -->
     <string name="no_recurring_yet">Noch keine wiederkehrenden Transaktionen</string>
     <string name="recurring_empty_hint">Tippen Sie auf +, um eine wiederkehrende Transaktion zu erstellen, die Einträge automatisch nach Zeitplan generiert.</string>

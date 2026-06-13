@@ -474,6 +474,9 @@
     <string name="period_1y">1 a</string>
     <string name="period_lifetime">Total</string>
 
+    <!-- Métrica -->
+    <string name="pct_of_revenue">%1$s%% de ingresos</string>
+
     <!-- Programación -->
     <string name="no_recurring_yet">Aún no hay transacciones recurrentes</string>
     <string name="recurring_empty_hint">Toca + para crear una transacción recurrente que generará entradas automáticamente según el programa.</string>

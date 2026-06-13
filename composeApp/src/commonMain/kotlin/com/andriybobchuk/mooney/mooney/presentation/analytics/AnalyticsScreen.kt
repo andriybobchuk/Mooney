@@ -543,7 +543,7 @@ fun EnhancedMetricCard(
                 metric.subtitle?.let {
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = it,
+                        text = localizedMetricSubtitle(it),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1422,4 +1422,14 @@ private fun localizedMetricTitle(rawTitle: String): String = when (rawTitle) {
     METRIC_EXPENSES -> stringResource(Res.string.operating_costs)
     METRIC_TAXES -> stringResource(Res.string.taxes)
     else -> rawTitle
+}
+
+@Composable
+private fun localizedMetricSubtitle(rawSubtitle: String): String {
+    val pctOfRevenuePrefix = "pct_of_revenue:"
+    return if (rawSubtitle.startsWith(pctOfRevenuePrefix)) {
+        stringResource(Res.string.pct_of_revenue, rawSubtitle.removePrefix(pctOfRevenuePrefix))
+    } else {
+        rawSubtitle
+    }
 }

@@ -71,7 +71,7 @@ class CalculateAnalyticsMetricsUseCase(
     ): AnalyticsMetric {
         val trendPercentage = if (previous != 0.0) ((current - previous) / previous) * 100 else 0.0
         val subtitle = if (revenueForSubtitle != null && revenueForSubtitle > 0) {
-            "${percentage(current, revenueForSubtitle)}% of revenue"
+            "pct_of_revenue:${percentage(current, revenueForSubtitle)}"
         } else if (revenueForSubtitle != null) {
             "–"
         } else {

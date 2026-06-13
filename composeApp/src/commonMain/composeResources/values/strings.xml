@@ -487,6 +487,11 @@
     <!-- Generic -->
     <string name="unknown">Unknown</string>
 
+    <!-- Trend period -->
+    <string name="period_6mo">6mo</string>
+    <string name="period_1y">1y</string>
+    <string name="period_lifetime">Lifetime</string>
+
     <!-- Recurring schedule sheet -->
     <string name="no_recurring_yet">No recurring transactions yet</string>
     <string name="recurring_empty_hint">Tap + to create a recurring transaction that will automatically generate entries on schedule.</string>

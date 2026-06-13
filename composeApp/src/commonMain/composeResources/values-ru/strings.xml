@@ -469,6 +469,11 @@
     <!-- Общее -->
     <string name="unknown">Неизвестно</string>
 
+    <!-- Период тренда -->
+    <string name="period_6mo">6 мес.</string>
+    <string name="period_1y">1 год</string>
+    <string name="period_lifetime">За всё время</string>
+
     <!-- Расписание -->
     <string name="no_recurring_yet">Нет повторяющихся транзакций</string>
     <string name="recurring_empty_hint">Нажмите +, чтобы создать повторяющуюся транзакцию — записи будут создаваться автоматически.</string>

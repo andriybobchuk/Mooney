@@ -469,6 +469,11 @@
     <!-- Genérico -->
     <string name="unknown">Desconocido</string>
 
+    <!-- Periodo de tendencia -->
+    <string name="period_6mo">6 m</string>
+    <string name="period_1y">1 a</string>
+    <string name="period_lifetime">Total</string>
+
     <!-- Programación -->
     <string name="no_recurring_yet">Aún no hay transacciones recurrentes</string>
     <string name="recurring_empty_hint">Toca + para crear una transacción recurrente que generará entradas automáticamente según el programa.</string>

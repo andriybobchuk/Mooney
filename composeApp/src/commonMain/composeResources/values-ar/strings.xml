@@ -469,6 +469,11 @@
     <!-- عام -->
     <string name="unknown">غير معروف</string>
 
+    <!-- فترة الاتجاه -->
+    <string name="period_6mo">6 أشهر</string>
+    <string name="period_1y">سنة</string>
+    <string name="period_lifetime">منذ البداية</string>
+
     <!-- الجدول -->
     <string name="no_recurring_yet">لا توجد معاملات متكررة بعد</string>
     <string name="recurring_empty_hint">اضغط + لإنشاء معاملة متكررة سيتم إنشاء سجلاتها تلقائيًا حسب الجدول.</string>

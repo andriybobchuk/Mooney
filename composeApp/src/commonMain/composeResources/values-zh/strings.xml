@@ -469,6 +469,11 @@
     <!-- 通用 -->
     <string name="unknown">未知</string>
 
+    <!-- 趋势周期 -->
+    <string name="period_6mo">6 月</string>
+    <string name="period_1y">1 年</string>
+    <string name="period_lifetime">全部</string>
+
     <!-- 排程 -->
     <string name="no_recurring_yet">尚无周期性交易</string>
     <string name="recurring_empty_hint">点按 + 创建周期性交易，系统将按计划自动生成记录。</string>

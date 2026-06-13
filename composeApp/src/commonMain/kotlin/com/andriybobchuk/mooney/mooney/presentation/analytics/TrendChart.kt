@@ -41,6 +41,11 @@ import com.andriybobchuk.mooney.mooney.domain.MonthKey
 import com.andriybobchuk.mooney.mooney.domain.MonthlyMetricSnapshot
 import kotlin.math.max
 import kotlin.math.min
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.period_1y
+import mooney.composeapp.generated.resources.period_6mo
+import mooney.composeapp.generated.resources.period_lifetime
+import org.jetbrains.compose.resources.stringResource
 
 enum class TimePeriod(val displayName: String, val months: Int) {
     SIX_MONTHS("6mo", 6),
@@ -120,7 +125,7 @@ fun TrendChart(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = period.displayName,
+                        text = localizedPeriod(period),
                         style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                             fontSize = 11.sp,
@@ -375,5 +380,12 @@ private fun DrawScope.drawMetricLine(
             center = point
         )
     }
+}
+
+@Composable
+private fun localizedPeriod(period: TimePeriod): String = when (period) {
+    TimePeriod.SIX_MONTHS -> stringResource(Res.string.period_6mo)
+    TimePeriod.ONE_YEAR -> stringResource(Res.string.period_1y)
+    TimePeriod.LIFETIME -> stringResource(Res.string.period_lifetime)
 }
 

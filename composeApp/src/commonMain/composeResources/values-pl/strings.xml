@@ -469,6 +469,11 @@
     <!-- Ogólne -->
     <string name="unknown">Nieznany</string>
 
+    <!-- Okres trendu -->
+    <string name="period_6mo">6 mies.</string>
+    <string name="period_1y">1 rok</string>
+    <string name="period_lifetime">Cały czas</string>
+
     <!-- Harmonogram cykliczny -->
     <string name="no_recurring_yet">Brak transakcji cyklicznych</string>
     <string name="recurring_empty_hint">Stuknij +, aby utworzyć transakcję cykliczną, która będzie automatycznie generować wpisy.</string>

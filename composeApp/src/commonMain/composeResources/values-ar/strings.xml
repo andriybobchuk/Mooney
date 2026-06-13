@@ -488,6 +488,9 @@
     <string name="base_currency_prefix">الأساس: %1$s</string>
     <string name="current_rate_prefix">الحالي: %1$s</string>
 
+    <!-- إخلاء مسؤولية -->
+    <string name="net_worth_disclaimer">القيم السابقة معاد بناؤها من صافي دخلك الشهري — التغيرات الكبيرة لمرة واحدة (بيع سيارة، استيراد حسابات) قد تزيح الخط.</string>
+
     <!-- ملخص -->
     <string name="recurring_summary_monthly">يتكرر شهريًا في اليوم %1$d</string>
     <string name="recurring_summary_weekly">يتكرر أسبوعيًا</string>

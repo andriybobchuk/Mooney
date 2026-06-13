@@ -488,6 +488,9 @@
     <string name="base_currency_prefix">База: %1$s</string>
     <string name="current_rate_prefix">Сейчас: %1$s</string>
 
+    <!-- Чистый капитал оговорка -->
+    <string name="net_worth_disclaimer">Прошлые значения восстановлены из ваших месячных чистых доходов — крупные разовые изменения (продажа машины, импорт счетов) могут сместить линию.</string>
+
     <!-- Краткое описание -->
     <string name="recurring_summary_monthly">Повторяется ежемесячно, день %1$d</string>
     <string name="recurring_summary_weekly">Повторяется еженедельно</string>

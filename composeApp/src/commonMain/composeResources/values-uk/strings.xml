@@ -463,6 +463,9 @@
     <string name="base_currency_prefix">База: %1$s</string>
     <string name="current_rate_prefix">Зараз: %1$s</string>
 
+    <!-- Чистий капітал застереження -->
+    <string name="net_worth_disclaimer">Минулі значення відновлюються з ваших місячних чистих доходів — великі разові зміни (продаж автомобіля, імпорти рахунків) можуть змістити лінію.</string>
+
     <!-- Короткий опис -->
     <string name="recurring_summary_monthly">Повторюється щомісяця, день %1$d</string>
     <string name="recurring_summary_weekly">Повторюється щотижня</string>

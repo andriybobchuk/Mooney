@@ -488,6 +488,9 @@
     <string name="base_currency_prefix">Baza: %1$s</string>
     <string name="current_rate_prefix">Aktualnie: %1$s</string>
 
+    <!-- Wartość netto zastrzeżenie -->
+    <string name="net_worth_disclaimer">Wartości historyczne są odtwarzane z miesięcznego dochodu netto — duże, jednorazowe zmiany (sprzedaż samochodu, importy) mogą zniekształcić wykres.</string>
+
     <!-- Streszczenie -->
     <string name="recurring_summary_monthly">Powtarza się co miesiąc, dzień %1$d</string>
     <string name="recurring_summary_weekly">Powtarza się co tydzień</string>

@@ -51,6 +51,7 @@ import mooney.composeapp.generated.resources.in_12_mo
 import mooney.composeapp.generated.resources.in_6_mo
 import mooney.composeapp.generated.resources.lowest_label
 import mooney.composeapp.generated.resources.months_forward
+import mooney.composeapp.generated.resources.net_worth_disclaimer
 import mooney.composeapp.generated.resources.net_worth_title
 import mooney.composeapp.generated.resources.net_worth_trajectory
 import mooney.composeapp.generated.resources.projected_label
@@ -116,9 +117,7 @@ fun NetWorthDetailScreen(
             NetWorthStatsGrid(history = history)
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "Past values are reconstructed from your monthly net " +
-                    "income — large one-off changes (selling a car, account " +
-                    "imports) may shift the line.",
+                text = stringResource(Res.string.net_worth_disclaimer),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

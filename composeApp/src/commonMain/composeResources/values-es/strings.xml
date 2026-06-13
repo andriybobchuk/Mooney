@@ -488,6 +488,9 @@
     <string name="base_currency_prefix">Base: %1$s</string>
     <string name="current_rate_prefix">Actual: %1$s</string>
 
+    <!-- Aviso patrimonio -->
+    <string name="net_worth_disclaimer">Los valores pasados se reconstruyen a partir de tu ingreso neto mensual — los cambios grandes y puntuales (venta de un coche, importaciones de cuentas) pueden desplazar la línea.</string>
+
     <!-- Resumen -->
     <string name="recurring_summary_monthly">Se repite mensualmente el día %1$d</string>
     <string name="recurring_summary_weekly">Se repite cada semana</string>

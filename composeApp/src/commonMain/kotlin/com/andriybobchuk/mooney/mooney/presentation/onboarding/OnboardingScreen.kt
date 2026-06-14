@@ -45,7 +45,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -516,31 +515,6 @@ private fun WelcomeContent(
         )
 
         Spacer(modifier = Modifier.weight(0.1f))
-
-        TextButton(
-            onClick = {
-                if (!swiped) {
-                    swiped = true
-                    scope.launch {
-                        launch {
-                            slideOffset.animateTo(
-                                -swipeThresholdPx * 4f,
-                                tween(500, easing = EaseInOut)
-                            )
-                        }
-                        swipeAlpha.animateTo(0f, tween(400, easing = EaseOut))
-                        onSwipeUp()
-                    }
-                }
-            }
-        ) {
-            Text(
-                text = stringResource(Res.string.continue_label),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium
-            )
-        }
 
         Spacer(modifier = Modifier.height(16.dp))
     }

@@ -649,6 +649,14 @@ fun TransactionsScreenContent(
         }
     }
 
+    // The most recent day that actually has confirmed transactions — anchor
+    // for the single native ad row we let inside the feed.
+    val latestFilledDay by remember(sortedGroups) {
+        derivedStateOf {
+            sortedGroups.firstOrNull { it.second.isNotEmpty() }?.first
+        }
+    }
+
     val isEmpty = sortedGroups.isEmpty() && pendingTransactions.isEmpty()
 
     // Track item indices per-date so a click on the calendar heatmap can
@@ -1040,6 +1048,16 @@ fun TransactionsScreenContent(
                     }
                 }
             }
+
+            // Single sponsored "transaction-style" row — sits at the bottom of
+            // the latest filled day so it lands inside the user's actual feed
+            // rhythm rather than at the tail of an empty list. AdBannerSlot
+            // self-gates: hidden for premium / grace-period / cooled-down users.
+            if (date == latestFilledDay) {
+                item(key = "native_ad_$date") {
+                    NativeTransactionAdRow()
+                }
+            }
         }
     }
 
@@ -1167,6 +1185,37 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
 //            }
         }
     }
+}
+
+/**
+ * Bare banner ad slot dropped into the transaction feed at the bottom of the
+ * latest filled day. No custom chrome — just the raw AdMob banner so it reads
+ * as standard-issue rather than pretending to be a transaction. Self-hides
+ * for premium / grace-period / cooled-down users via the eligibility gate.
+ */
+@Composable
+fun NativeTransactionAdRow() {
+    val eligibility: com.andriybobchuk.mooney.core.ads.AdEligibilityUseCase = org.koin.compose.koinInject()
+    val session = com.andriybobchuk.mooney.core.ads.LocalAdSession.current
+    var eligible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(session) {
+        eligible = eligibility.isEligible(
+            placement = com.andriybobchuk.mooney.core.ads.AdPlacement.TRANSACTIONS_NATIVE_ROW,
+            sessionTapCount = session.tapCount,
+            sessionCount = session.sessionCount
+        )
+        if (eligible) {
+            eligibility.markShown(com.andriybobchuk.mooney.core.ads.AdPlacement.TRANSACTIONS_NATIVE_ROW)
+        }
+    }
+
+    if (!eligible) return
+
+    com.andriybobchuk.mooney.core.ads.MooneyBannerAdView(
+        adUnitId = com.andriybobchuk.mooney.core.ads.AdUnitIds.banner,
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

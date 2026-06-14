@@ -66,6 +66,13 @@ import com.andriybobchuk.mooney.mooney.domain.RecurringFrequency
 import com.andriybobchuk.mooney.mooney.domain.RecurringSchedule
 import com.andriybobchuk.mooney.mooney.domain.RecurringTransaction
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionBottomSheet
 import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.delete
@@ -101,22 +108,14 @@ fun RecurringTransactionsScreen(
     var editingRecurring by remember { mutableStateOf<RecurringTransaction?>(null) }
     var deletingRecurringId by remember { mutableStateOf<Int?>(null) }
 
+    val scrollBehavior = androidx.compose.material3.TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(Res.string.recurring_transactions_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            painter = com.andriybobchuk.mooney.core.presentation.Icons.BackIcon(),
-                            contentDescription = "Back",
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
+            com.andriybobchuk.mooney.core.presentation.Toolbars.Primary(
+                title = stringResource(Res.string.recurring_transactions_title),
+                showBackButton = true,
+                onBackClick = onBackClick,
+                scrollBehavior = scrollBehavior
             )
         },
         floatingActionButton = {
@@ -159,25 +158,12 @@ fun RecurringTransactionsScreen(
                 }
             }
         } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                items(state.recurringTransactions, key = { it.id }) { recurring ->
-                    RecurringTransactionItem(
-                        recurring = recurring,
-                        modifier = Modifier.combinedClickable(
-                            onClick = { editingRecurring = recurring },
-                            onLongClick = { deletingRecurringId = recurring.id }
-                        )
-                    )
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.08f),
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-                }
-            }
+            RecurringTimeline(
+                items = state.recurringTransactions,
+                paddingValues = paddingValues,
+                onClickItem = { editingRecurring = it },
+                onLongClickItem = { deletingRecurringId = it.id }
+            )
         }
     }
 
@@ -250,6 +236,180 @@ fun RecurringTransactionsScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
             }
+        }
+    }
+}
+
+/**
+ * Timeline layout — day-number rail on the left, recurring rows grouped by
+ * their next-due day. Mirrors the calendar-app style where multiple events on
+ * the same day share one date badge. The first upcoming day's badge is filled
+ * with the primary color so the eye lands there first.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun RecurringTimeline(
+    items: List<RecurringTransaction>,
+    paddingValues: androidx.compose.foundation.layout.PaddingValues,
+    onClickItem: (RecurringTransaction) -> Unit,
+    onLongClickItem: (RecurringTransaction) -> Unit
+) {
+    val today: LocalDate = remember {
+        Clock.System.now()
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .date
+    }
+    val grouped: Map<LocalDate, List<RecurringTransaction>> = remember(items, today) {
+        val pairs: List<Pair<RecurringTransaction, LocalDate>> = items.map { rec ->
+            rec to nextDueDate(rec.schedule, today)
+        }
+        val sorted: List<Pair<RecurringTransaction, LocalDate>> = pairs.sortedBy { it.second }
+        sorted.groupBy(keySelector = { it.second }, valueTransform = { it.first })
+    }
+    val orderedDays: List<LocalDate> = grouped.keys.toList()
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 12.dp)
+    ) {
+        items(orderedDays.size, key = { orderedDays[it].toString() }) { index ->
+            val date: LocalDate = orderedDays[index]
+            val daysUntil: Int = (date.toEpochDays() - today.toEpochDays()).toInt()
+            val isFirst = index == 0
+            val dayItems: List<RecurringTransaction> = grouped[date] ?: emptyList()
+            RecurringDayGroup(
+                date = date,
+                daysUntil = daysUntil,
+                isFirst = isFirst,
+                items = dayItems,
+                onClickItem = onClickItem,
+                onLongClickItem = onLongClickItem
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun RecurringDayGroup(
+    date: LocalDate,
+    daysUntil: Int,
+    isFirst: Boolean,
+    items: List<RecurringTransaction>,
+    onClickItem: (RecurringTransaction) -> Unit,
+    onLongClickItem: (RecurringTransaction) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        DayBadge(
+            day = date.dayOfMonth,
+            highlighted = isFirst,
+            modifier = Modifier.padding(top = 4.dp)
+        )
+        Spacer(Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "in $daysUntil days",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = if (isFirst) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
+                },
+                modifier = Modifier.padding(bottom = 6.dp)
+            )
+            items.forEach { recurring ->
+                Box(
+                    modifier = Modifier.combinedClickable(
+                        onClick = { onClickItem(recurring) },
+                        onLongClick = { onLongClickItem(recurring) }
+                    )
+                ) {
+                    RecurringTransactionItem(recurring = recurring)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DayBadge(day: Int, highlighted: Boolean, modifier: Modifier = Modifier) {
+    val suffix = ordinalSuffix(day)
+    Column(
+        modifier = modifier
+            .size(width = 52.dp, height = 56.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(
+                if (highlighted) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                }
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = day.toString(),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = if (highlighted) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            }
+        )
+        Text(
+            text = suffix,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (highlighted) {
+                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+        )
+    }
+}
+
+private fun ordinalSuffix(n: Int): String = when {
+    n % 100 in 11..13 -> "th"
+    n % 10 == 1 -> "st"
+    n % 10 == 2 -> "nd"
+    n % 10 == 3 -> "rd"
+    else -> "th"
+}
+
+private fun nextDueDate(
+    schedule: RecurringSchedule,
+    today: LocalDate
+): LocalDate {
+    return when (schedule.frequency) {
+        RecurringFrequency.DAILY -> today.plus(1, DateTimeUnit.DAY)
+        RecurringFrequency.WEEKLY -> {
+            // weekDay 0..6 with 0 = Monday in this codebase
+            val target = schedule.weekDay ?: 0
+            val todayIdx = (today.dayOfWeek.isoDayNumber - 1).coerceIn(0, 6)
+            val diff = ((target - todayIdx) + 7) % 7
+            today.plus(if (diff == 0) 7 else diff, DateTimeUnit.DAY)
+        }
+        RecurringFrequency.MONTHLY -> {
+            val day = schedule.dayOfMonth.coerceIn(1, 28)
+            val thisMonth = LocalDate(today.year, today.monthNumber, day)
+            if (thisMonth > today) thisMonth
+            else thisMonth.plus(1, DateTimeUnit.MONTH)
+        }
+        RecurringFrequency.YEARLY -> {
+            val month = (schedule.monthOfYear ?: today.monthNumber).coerceIn(1, 12)
+            val day = schedule.dayOfMonth.coerceIn(1, 28)
+            val thisYear = LocalDate(today.year, month, day)
+            if (thisYear > today) thisYear
+            else thisYear.plus(1, DateTimeUnit.YEAR)
         }
     }
 }

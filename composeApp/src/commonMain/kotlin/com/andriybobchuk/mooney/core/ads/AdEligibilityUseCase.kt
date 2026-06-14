@@ -82,6 +82,7 @@ class AdEligibilityUseCase(
             AdPlacement.SETTINGS_BANNER -> bannerCooledDown(prefs, PreferencesKeys.ADS_LAST_BANNER_SETTINGS, now)
             AdPlacement.ANALYTICS_BREAKDOWN_BANNER -> bannerCooledDown(prefs, PreferencesKeys.ADS_LAST_BANNER_ANALYTICS, now)
             AdPlacement.CATEGORIES_BANNER -> bannerCooledDown(prefs, PreferencesKeys.ADS_LAST_BANNER_CATEGORIES, now)
+            AdPlacement.ASSETS_BANNER -> bannerCooledDown(prefs, PreferencesKeys.ADS_LAST_BANNER_ASSETS, now)
 
             AdPlacement.INTERSTITIAL_RETURN_TO_TRANSACTIONS -> {
                 // Hard cap: at most one interstitial per cold-start session.
@@ -113,6 +114,8 @@ class AdEligibilityUseCase(
                 dataStore.edit { it[PreferencesKeys.ADS_LAST_BANNER_ANALYTICS] = now }
             AdPlacement.CATEGORIES_BANNER ->
                 dataStore.edit { it[PreferencesKeys.ADS_LAST_BANNER_CATEGORIES] = now }
+            AdPlacement.ASSETS_BANNER ->
+                dataStore.edit { it[PreferencesKeys.ADS_LAST_BANNER_ASSETS] = now }
             else -> Unit
         }
     }

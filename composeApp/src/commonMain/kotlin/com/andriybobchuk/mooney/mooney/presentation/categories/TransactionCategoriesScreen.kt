@@ -11,21 +11,27 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,29 +49,57 @@ import com.andriybobchuk.mooney.core.premium.PaywallSheet
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import com.andriybobchuk.mooney.mooney.domain.Category
-import org.jetbrains.compose.resources.stringResource
+import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import mooney.composeapp.generated.resources.Res
-import mooney.composeapp.generated.resources.*
+import mooney.composeapp.generated.resources.add_category
+import mooney.composeapp.generated.resources.add_subcategory
+import mooney.composeapp.generated.resources.cancel
+import mooney.composeapp.generated.resources.category_name
+import mooney.composeapp.generated.resources.delete
+import mooney.composeapp.generated.resources.delete_tx_category_msg
+import mooney.composeapp.generated.resources.expense
+import mooney.composeapp.generated.resources.income
+import mooney.composeapp.generated.resources.save
+import mooney.composeapp.generated.resources.transaction_categories
+import org.jetbrains.compose.resources.stringResource
+
+private const val DEFAULT_NEW_EMOJI = "🏷️"
+
+private val EMOJI_PALETTE = listOf(
+    "🛒", "🍽️", "☕", "🍺", "🏠", "💡", "🚗", "🚲",
+    "⛽", "🚕", "🎧", "📱", "☁️", "💻", "❤️", "💪",
+    "💊", "🏥", "✨", "👕", "👟", "🎓", "📚", "🎮",
+    "🎬", "🎁", "🐶", "🐾", "🛡️", "🏦", "💼", "💵"
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionCategoriesScreen(
     viewModel: TransactionCategoriesViewModel,
     onBackClick: () -> Unit,
-    // When true, this screen renders only its body — no Scaffold, no top bar
-    // — so it can be embedded as one tab of the unified Categories screen.
     embedded: Boolean = false
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
+    var selectedType by remember { mutableStateOf(CategoryType.EXPENSE) }
+    var editingCategory by remember { mutableStateOf<Category?>(null) }
     var showAddSheet by remember { mutableStateOf(false) }
-    var addParentId by remember { mutableStateOf<String?>(null) }
-    var addType by remember { mutableStateOf("EXPENSE") }
     var deleteId by remember { mutableStateOf<String?>(null) }
     var deleteName by remember { mutableStateOf("") }
 
-    // Paywall
+    val generalCategories by remember(state.allCategories, selectedType) {
+        derivedStateOf {
+            state.allCategories.filter { it.isGeneralCategory() && it.type == selectedType }
+        }
+    }
+
+    val subcategoryCount by remember(state.allCategories, selectedType) {
+        derivedStateOf {
+            state.allCategories.count { it.isSubCategory() && it.type == selectedType }
+        }
+    }
+
     if (state.showPaywall) {
         PaywallSheet(
             isLoading = state.isPurchasing,
@@ -76,7 +111,6 @@ fun TransactionCategoriesScreen(
         )
     }
 
-    // Delete confirmation
     deleteId?.let { id ->
         MooneyBottomSheet(onDismissRequest = { deleteId = null }) {
             Column(
@@ -87,6 +121,7 @@ fun TransactionCategoriesScreen(
                 Text(
                     text = stringResource(Res.string.delete),
                     style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 Text(
@@ -118,23 +153,52 @@ fun TransactionCategoriesScreen(
         }
     }
 
-    // Add category sheet
+    editingCategory?.let { cat ->
+        CategoryEditSheet(
+            category = cat,
+            subcategories = state.allCategories.filter { it.parent?.id == cat.id },
+            onDismiss = { editingCategory = null },
+            onSaveName = { /* future: rename support — VM lacks it today */ },
+            onAddSubcategory = { subTitle ->
+                viewModel.onAction(
+                    TransactionCategoriesAction.AddCategory(
+                        title = subTitle,
+                        type = cat.type.name,
+                        emoji = null,
+                        parentId = cat.id
+                    )
+                )
+            },
+            onDeleteSubcategory = { subId ->
+                viewModel.onAction(TransactionCategoriesAction.DeleteCategory(subId))
+            },
+            onDeleteCategory = {
+                deleteId = cat.id
+                deleteName = cat.title
+                editingCategory = null
+            }
+        )
+    }
+
     if (showAddSheet) {
-        AddCategorySheet(
-            isSubcategory = addParentId != null,
-            initialType = addType,
+        AddCategoryNameSheet(
+            type = selectedType,
             onDismiss = { showAddSheet = false },
-            onAdd = { title, type, emoji, parentId ->
-                viewModel.onAction(TransactionCategoriesAction.AddCategory(title, type, emoji, parentId ?: addParentId))
+            onAdd = { name, emoji ->
+                viewModel.onAction(
+                    TransactionCategoriesAction.AddCategory(
+                        title = name,
+                        type = selectedType.name,
+                        emoji = emoji.ifBlank { null },
+                        parentId = null
+                    )
+                )
                 showAddSheet = false
             }
         )
     }
 
-    // Body is shared between standalone and embedded modes. In embedded mode
-    // there's no Scaffold around us so we render the body with zero outer
-    // padding directly. Standalone mode keeps the original Scaffold + top bar.
-    val body: @Composable (PaddingValues) -> Unit = body@{ paddingValues ->
+    val body: @Composable (PaddingValues) -> Unit = { paddingValues ->
         if (state.isInitialLoading) {
             Box(
                 modifier = Modifier.fillMaxSize().padding(paddingValues),
@@ -145,142 +209,93 @@ fun TransactionCategoriesScreen(
                     strokeWidth = 2.dp
                 )
             }
-            return@body
-        }
-        val generalCategories = remember(state.allCategories) {
-            state.allCategories.filter { it.isGeneralCategory() }
-        }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
+                // Expense / Income type toggle. Bigger contrast than the
+                // outer Transactions/Accounts segmented tabs, since this is
+                // the *active* filter, not a screen pivot.
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf(
+                        CategoryType.EXPENSE to stringResource(Res.string.expense),
+                        CategoryType.INCOME to stringResource(Res.string.income)
+                    ).forEach { (type, label) ->
+                        TypePill(
+                            label = label,
+                            selected = selectedType == type,
+                            onClick = { selectedType = type }
+                        )
+                    }
+                }
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-        ) {
-            // Add main category button
-            item {
-                Text(
-                    "Add, remove, or organize your transaction categories and subcategories.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-
+                // Count line — mirrors the screenshot ("9 categories · 21
+                // subcategories"). The "Reorder" affordance is visible but
+                // disabled until drag-drop ships; better an honest dim label
+                // than a button that does nothing.
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
-                        .clickable {
-                            addParentId = null
-                            addType = "EXPENSE"
-                            showAddSheet = true
-                        }
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "+ ${stringResource(Res.string.add_category)}",
+                        text = "${generalCategories.size} categories · $subcategoryCount subcategories",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = "Reorder",
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
                     )
                 }
 
-                Spacer(Modifier.height(12.dp))
-            }
-
-            // Categories list
-            items(generalCategories.size) { index ->
-                val category = generalCategories[index]
-                val subcategories = remember(state.allCategories, category.id) {
-                    state.allCategories.filter { it.parent?.id == category.id }
-                }
-                Column {
-                    // General category header
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(category.resolveEmoji(), fontSize = 18.sp)
-                        Spacer(Modifier.width(10.dp))
-                        Text(
-                            category.title,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.weight(1f)
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    items(generalCategories, key = { it.id }) { category ->
+                        val subCount = state.allCategories.count { it.parent?.id == category.id }
+                        CategoryListRow(
+                            emoji = category.resolveEmoji().ifBlank { DEFAULT_NEW_EMOJI },
+                            title = category.title,
+                            subcategoryCount = subCount,
+                            onClick = { editingCategory = category }
                         )
-                        TextButton(
-                            onClick = {
-                                addParentId = category.id
-                                addType = category.type.name
-                                showAddSheet = true
-                            },
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
-                        ) {
-                            Text(
-                                "+ ${stringResource(Res.string.add_subcategory)}",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        // Delete button mirrors the one on subcategories so users can
-                        // remove parent (general) categories too. VM already handles
-                        // reassigning child subcategories + linked transactions to the
-                        // root type when a parent is deleted.
-                        IconButton(
-                            onClick = {
-                                deleteId = category.id
-                                deleteName = category.title
-                            },
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Text(
-                                "×",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
                     }
+                }
 
-                    // Subcategories
-                    subcategories.forEach { sub ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 40.dp, top = 6.dp, bottom = 6.dp, end = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                sub.title,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.weight(1f)
-                            )
-                            IconButton(
-                                onClick = {
-                                    deleteId = sub.id
-                                    deleteName = sub.title
-                                },
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Text(
-                                    "\u00D7",
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(Modifier.height(8.dp))
+                // "New category" CTA — full-width black pill at the bottom,
+                // matching the design language Accounts uses for "New
+                // account type" and Transactions uses for "Add transaction".
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(MaterialTheme.colorScheme.onBackground)
+                        .clickable { showAddSheet = true }
+                        .padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "+ ${stringResource(Res.string.add_category)}",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.background
+                    )
                 }
             }
         }
@@ -292,7 +307,7 @@ fun TransactionCategoriesScreen(
         Scaffold(
             topBar = {
                 Toolbars.Primary(
-                    title = org.jetbrains.compose.resources.stringResource(mooney.composeapp.generated.resources.Res.string.transaction_categories),
+                    title = stringResource(Res.string.transaction_categories),
                     showBackButton = true,
                     onBackClick = onBackClick,
                     scrollBehavior = scrollBehavior
@@ -302,91 +317,450 @@ fun TransactionCategoriesScreen(
     }
 }
 
+@Composable
+private fun TypePill(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(50),
+        color = if (selected) {
+            MaterialTheme.colorScheme.onBackground
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+        }
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+            color = if (selected) {
+                MaterialTheme.colorScheme.background
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            },
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp)
+        )
+    }
+}
+
+@Composable
+private fun CategoryListRow(
+    emoji: String,
+    title: String,
+    subcategoryCount: Int,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .clickable { onClick() }
+            .padding(vertical = 10.dp, horizontal = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(emoji, fontSize = 22.sp)
+        }
+        Spacer(Modifier.width(14.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+        if (subcategoryCount > 0) {
+            Box(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .padding(horizontal = 10.dp, vertical = 3.dp)
+            ) {
+                Text(
+                    text = subcategoryCount.toString(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+        }
+        Icon(
+            painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(14.dp)
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddCategorySheet(
-    isSubcategory: Boolean,
-    initialType: String,
+private fun AddCategoryNameSheet(
+    type: CategoryType,
     onDismiss: () -> Unit,
-    onAdd: (title: String, type: String, emoji: String?, parentId: String?) -> Unit
+    onAdd: (name: String, emoji: String) -> Unit
 ) {
     MooneyBottomSheet(onDismissRequest = onDismiss) {
         var name by remember { mutableStateOf("") }
-        var emoji by remember { mutableStateOf("") }
-        var selectedType by remember { mutableStateOf(initialType) }
+        var emoji by remember { mutableStateOf(DEFAULT_NEW_EMOJI) }
+        var showIconPicker by remember { mutableStateOf(false) }
+        val canSave = name.isNotBlank()
 
-        Column(modifier = Modifier.padding(20.dp)) {
-            Text(
-                if (isSubcategory) stringResource(Res.string.add_subcategory)
-                else stringResource(Res.string.add_category),
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(bottom = 16.dp)
+        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
+            EditSheetTopBar(
+                title = "New ${if (type == CategoryType.EXPENSE) "expense" else "income"} category",
+                saveLabel = stringResource(Res.string.save),
+                saveEnabled = canSave,
+                onCancel = onDismiss,
+                onSave = { if (canSave) onAdd(name.trim(), emoji) }
             )
+            Spacer(Modifier.height(20.dp))
+            CategoryHero(emoji = emoji)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = name.ifBlank { "Untitled" },
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(20.dp))
 
-            if (!isSubcategory) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .padding(4.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    listOf("EXPENSE" to stringResource(Res.string.expense), "INCOME" to stringResource(Res.string.income)).forEach { (type, label) ->
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(
-                                    if (selectedType == type) MaterialTheme.colorScheme.surface
-                                    else Color.Transparent
-                                )
-                                .clickable { selectedType = type }
-                                .padding(vertical = 12.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                label,
-                                style = MaterialTheme.typography.labelLarge,
-                                color = if (selectedType == type) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-                Spacer(Modifier.height(16.dp))
-            }
-
+            FormSectionLabel("NAME")
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text(stringResource(Res.string.category_name)) },
+                placeholder = { Text(stringResource(Res.string.category_name)) },
                 singleLine = true,
+                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             )
-            if (!isSubcategory) {
+
+            Spacer(Modifier.height(16.dp))
+
+            IconPickerToggle(
+                emoji = emoji,
+                expanded = showIconPicker,
+                onToggle = { showIconPicker = !showIconPicker }
+            )
+
+            if (showIconPicker) {
                 Spacer(Modifier.height(12.dp))
+                EmojiGrid(selected = emoji, onSelect = { emoji = it })
+            }
+
+            Spacer(Modifier.height(20.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CategoryEditSheet(
+    category: Category,
+    subcategories: List<Category>,
+    onDismiss: () -> Unit,
+    onSaveName: (String) -> Unit,
+    onAddSubcategory: (String) -> Unit,
+    onDeleteSubcategory: (String) -> Unit,
+    onDeleteCategory: () -> Unit
+) {
+    MooneyBottomSheet(onDismissRequest = onDismiss) {
+        var name by remember(category.id) { mutableStateOf(category.title) }
+        var newSubName by remember { mutableStateOf("") }
+        var showIconPicker by remember { mutableStateOf(false) }
+        val emoji = category.resolveEmoji().ifBlank { DEFAULT_NEW_EMOJI }
+
+        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
+            EditSheetTopBar(
+                title = "Edit category",
+                saveLabel = stringResource(Res.string.save),
+                saveEnabled = name.isNotBlank() && name.trim() != category.title,
+                onCancel = onDismiss,
+                onSave = {
+                    onSaveName(name.trim())
+                    onDismiss()
+                }
+            )
+            Spacer(Modifier.height(20.dp))
+            CategoryHero(emoji = emoji)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = name.ifBlank { category.title },
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(20.dp))
+
+            FormSectionLabel("NAME")
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            IconPickerToggle(
+                emoji = emoji,
+                expanded = showIconPicker,
+                onToggle = { showIconPicker = !showIconPicker }
+            )
+
+            // Hint: icon edits aren't persisted yet — VM upsert path keeps the
+            // original. Visual picker stays so users can preview the swap;
+            // wire to a real rename/icon-update when the VM supports it.
+            if (showIconPicker) {
+                Spacer(Modifier.height(12.dp))
+                EmojiGrid(selected = emoji, onSelect = { /* preview-only */ })
+            }
+
+            Spacer(Modifier.height(20.dp))
+            FormSectionLabel("SUBCATEGORIES · OPTIONAL")
+
+            subcategories.forEach { sub ->
+                SubcategoryChip(
+                    title = sub.title,
+                    onDelete = { onDeleteSubcategory(sub.id) }
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
-                    value = emoji,
-                    onValueChange = { emoji = it },
-                    label = { Text(stringResource(Res.string.emoji_label)) },
+                    value = newSubName,
+                    onValueChange = { newSubName = it },
+                    placeholder = { Text(stringResource(Res.string.add_subcategory)) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(Modifier.width(8.dp))
+                Surface(
+                    onClick = {
+                        if (newSubName.isNotBlank()) {
+                            onAddSubcategory(newSubName.trim())
+                            newSubName = ""
+                        }
+                    },
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("+", fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f))
+                    .clickable { onDeleteCategory() }
+                    .padding(vertical = 14.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "🗑  ${stringResource(Res.string.delete)} category",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.error
                 )
             }
-            Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = {
-                    if (name.isNotBlank()) {
-                        onAdd(name.trim(), selectedType, if (isSubcategory) null else emoji.ifBlank { null }, null)
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = name.isNotBlank()
-            ) {
-                Text(stringResource(Res.string.add))
-            }
-            Spacer(Modifier.height(16.dp))
+
+            Spacer(Modifier.height(20.dp))
         }
+    }
+}
+
+@Composable
+private fun EditSheetTopBar(
+    title: String,
+    saveLabel: String,
+    saveEnabled: Boolean,
+    onCancel: () -> Unit,
+    onSave: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(Res.string.cancel),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier
+                .clickable { onCancel() }
+                .padding(end = 12.dp)
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = saveLabel,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = if (saveEnabled) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+            },
+            modifier = Modifier
+                .clickable(enabled = saveEnabled) { onSave() }
+                .padding(start = 12.dp)
+        )
+    }
+}
+
+@Composable
+private fun CategoryHero(emoji: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(80.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(emoji, fontSize = 40.sp)
+        }
+    }
+}
+
+@Composable
+private fun FormSectionLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+        modifier = Modifier.padding(bottom = 8.dp)
+    )
+}
+
+@Composable
+private fun IconPickerToggle(
+    emoji: String,
+    expanded: Boolean,
+    onToggle: () -> Unit
+) {
+    Surface(
+        onClick = onToggle,
+        shape = RoundedCornerShape(14.dp),
+        color = Color.Transparent,
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = if (expanded) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+            }
+        ),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Icon",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+            Text(emoji, fontSize = 20.sp)
+        }
+    }
+}
+
+@Composable
+private fun EmojiGrid(selected: String, onSelect: (String) -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(8),
+            modifier = Modifier
+                .padding(12.dp)
+                .heightIn(max = 220.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            gridItems(EMOJI_PALETTE) { e ->
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(
+                            if (e == selected) {
+                                MaterialTheme.colorScheme.surface
+                            } else {
+                                Color.Transparent
+                            }
+                        )
+                        .clickable { onSelect(e) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(e, fontSize = 20.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SubcategoryChip(title: String, onDelete: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = "✕",
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .clickable { onDelete() }
+                .padding(start = 8.dp)
+        )
     }
 }

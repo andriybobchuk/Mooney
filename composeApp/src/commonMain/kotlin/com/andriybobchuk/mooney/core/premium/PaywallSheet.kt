@@ -1,8 +1,6 @@
 package com.andriybobchuk.mooney.core.premium
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,8 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -32,9 +28,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -42,22 +35,18 @@ import androidx.compose.ui.unit.sp
 import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.auto_renews_monthly
 import mooney.composeapp.generated.resources.get_mooney_pro
-import mooney.composeapp.generated.resources.paywall_acct_headline
-import mooney.composeapp.generated.resources.paywall_acct_sub
 import mooney.composeapp.generated.resources.paywall_benefit_accounts_sub
 import mooney.composeapp.generated.resources.paywall_benefit_accounts_title
 import mooney.composeapp.generated.resources.paywall_benefit_categories_sub
 import mooney.composeapp.generated.resources.paywall_benefit_categories_title
+import mooney.composeapp.generated.resources.paywall_benefit_lock_sub
+import mooney.composeapp.generated.resources.paywall_benefit_lock_title
 import mooney.composeapp.generated.resources.paywall_benefit_noads_sub
 import mooney.composeapp.generated.resources.paywall_benefit_noads_title
-import mooney.composeapp.generated.resources.paywall_cat_headline
-import mooney.composeapp.generated.resources.paywall_cat_sub
-import mooney.composeapp.generated.resources.paywall_generic_headline
-import mooney.composeapp.generated.resources.paywall_generic_sub
 import mooney.composeapp.generated.resources.paywall_price_with
 import mooney.composeapp.generated.resources.paywall_price_without
-import mooney.composeapp.generated.resources.paywall_settings_headline
-import mooney.composeapp.generated.resources.paywall_settings_sub
+import mooney.composeapp.generated.resources.paywall_subtitle_more_power
+import mooney.composeapp.generated.resources.paywall_title_no_limits
 import mooney.composeapp.generated.resources.privacy_policy
 import mooney.composeapp.generated.resources.restore_purchases_link
 import mooney.composeapp.generated.resources.terms_of_use
@@ -73,40 +62,19 @@ enum class PaywallTrigger {
     ACCOUNT_LIMIT,
     CATEGORY_LIMIT,
     SETTINGS_BANNER,
+    APP_LOCK,
     GENERIC
-}
-
-private data class PaywallHero(val headline: String, val sub: String)
-
-@Composable
-private fun heroFor(trigger: PaywallTrigger): PaywallHero = when (trigger) {
-    PaywallTrigger.ACCOUNT_LIMIT -> PaywallHero(
-        headline = stringResource(Res.string.paywall_acct_headline),
-        sub = stringResource(Res.string.paywall_acct_sub)
-    )
-    PaywallTrigger.CATEGORY_LIMIT -> PaywallHero(
-        headline = stringResource(Res.string.paywall_cat_headline),
-        sub = stringResource(Res.string.paywall_cat_sub)
-    )
-    PaywallTrigger.SETTINGS_BANNER -> PaywallHero(
-        headline = stringResource(Res.string.paywall_settings_headline),
-        sub = stringResource(Res.string.paywall_settings_sub)
-    )
-    PaywallTrigger.GENERIC -> PaywallHero(
-        headline = stringResource(Res.string.paywall_generic_headline),
-        sub = stringResource(Res.string.paywall_generic_sub)
-    )
 }
 
 private data class BenefitItem(val emoji: String, val title: String, val subtitle: String)
 
-// Be honest — these are literally the only things Pro unlocks today. More may
-// come later; until then, no fake benefits to inflate perceived value.
+// Honest list — every benefit ships in the app today.
 @Composable
 private fun rememberBenefits(): List<BenefitItem> = listOf(
     BenefitItem("👛", stringResource(Res.string.paywall_benefit_accounts_title), stringResource(Res.string.paywall_benefit_accounts_sub)),
     BenefitItem("🏷️", stringResource(Res.string.paywall_benefit_categories_title), stringResource(Res.string.paywall_benefit_categories_sub)),
-    BenefitItem("🚫", stringResource(Res.string.paywall_benefit_noads_title), stringResource(Res.string.paywall_benefit_noads_sub))
+    BenefitItem("🚫", stringResource(Res.string.paywall_benefit_noads_title), stringResource(Res.string.paywall_benefit_noads_sub)),
+    BenefitItem("🔒", stringResource(Res.string.paywall_benefit_lock_title), stringResource(Res.string.paywall_benefit_lock_sub))
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -132,8 +100,6 @@ fun PaywallSheet(
             com.andriybobchuk.mooney.core.analytics.AnalyticsEvent.PaywallViewed(trigger.name)
         )
     }
-
-    val hero = heroFor(trigger)
 
     val wrappedOnDismiss: () -> Unit = {
         analyticsTracker.trackEvent(
@@ -166,51 +132,44 @@ fun PaywallSheet(
         ) {
             PaywallMeshBackground()
 
-            // Close button — top-right within the sheet content area.
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-            ) {
-                androidx.compose.material3.IconButton(onClick = wrappedOnDismiss) {
-                    androidx.compose.material3.Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = "Close",
-                        tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f)
-                    )
-                }
-            }
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 56.dp)
+                    .padding(top = 24.dp)
                     .padding(horizontal = 28.dp)
                     .padding(bottom = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.weight(0.6f))
-
-                // Headline.
-                Text(
-                    text = hero.headline,
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 34.sp,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center
-                )
-
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // App icon with PRO badge — same vibe as the onboarding hero
+                // but compact, so the headline still leads.
+                MooneyProIconBadge()
+
+                Spacer(modifier = Modifier.height(36.dp))
+
+                // Headline — single-line on phones; reduced from 30sp so it
+                // wraps less aggressively on narrow viewports.
                 Text(
-                    text = hero.sub,
+                    text = stringResource(Res.string.paywall_title_no_limits),
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 28.sp,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = stringResource(Res.string.paywall_subtitle_more_power),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(36.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
                 // Benefits — honest, only the two things Pro actually unlocks today.
                 Column(

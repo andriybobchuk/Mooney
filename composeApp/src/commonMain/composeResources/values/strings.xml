@@ -211,7 +211,7 @@
     <string name="week_label">Week</string>
     <string name="restore_purchases">Restore Purchases</string>
     <string name="rate_mooney">Rate Mooney</string>
-    <string name="share_feedback">Share feedback</string>
+    <string name="share_feedback">Contact</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="categories_label">Categories</string>
     <string name="transactions_label">Transactions</string>
@@ -259,7 +259,7 @@
 
     <!-- Settings — Premium / Plan -->
     <string name="plan_label">Plan</string>
-    <string name="pro_label">Pro</string>
+    <string name="pro_label">PRO</string>
     <string name="free_label">Free</string>
     <string name="replay_onboarding">Replay Onboarding</string>
     <string name="reset_view">Reset &amp; view</string>
@@ -410,11 +410,29 @@
 
     <!-- Paywall benefits -->
     <string name="paywall_benefit_accounts_title">Unlimited accounts</string>
-    <string name="paywall_benefit_accounts_sub">Beyond the 20-account free tier</string>
+    <string name="paywall_benefit_accounts_sub">Beyond the 5-account free tier</string>
     <string name="paywall_benefit_categories_title">Unlimited custom categories</string>
-    <string name="paywall_benefit_categories_sub">Beyond the 50-category free tier</string>
+    <string name="paywall_benefit_categories_sub">Beyond the 5-category free tier</string>
     <string name="paywall_benefit_noads_title">No ads, ever</string>
     <string name="paywall_benefit_noads_sub">Banner and interstitial ads stay off</string>
+    <string name="paywall_benefit_lock_title">Lock screen</string>
+    <string name="paywall_benefit_lock_sub">PIN + biometric for ultimate security</string>
+    <string name="paywall_title_no_limits">Mooney. Without limits.</string>
+    <string name="paywall_subtitle_more_power">More power. Zero ads.</string>
+    <string name="premium_banner_subtitle_no_ads">Unlimited accounts, categories, no ads</string>
+    <string name="contact_intro">I&apos;m actively building Mooney and would love to hear from you. Reach out through any channel below.</string>
+    <string name="app_lock_title">App Lock</string>
+    <string name="app_lock_summary">Require a PIN every time the app opens.</string>
+    <string name="app_lock_set_pin">Set PIN</string>
+    <string name="app_lock_change_pin">Change PIN</string>
+    <string name="app_lock_disable">Disable App Lock</string>
+    <string name="app_lock_enter_pin">Enter PIN</string>
+    <string name="app_lock_confirm_pin">Confirm PIN</string>
+    <string name="app_lock_pins_dont_match">PINs don&apos;t match. Try again.</string>
+    <string name="app_lock_wrong_pin">Wrong PIN. Try again.</string>
+    <string name="app_lock_unlock_to_continue">Unlock to continue</string>
+    <string name="security_section">Security</string>
+    <string name="sponsored_label">Sponsored</string>
 
     <!-- Paywall price line -->
     <string name="paywall_price_with">Mooney Pro · Monthly · %1$s / month</string>

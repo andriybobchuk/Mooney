@@ -1,17 +1,25 @@
 package com.andriybobchuk.mooney.core.presentation
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -47,9 +55,12 @@ object Toolbars {
                 } else if (title.isNotEmpty() || subtitle.isNotEmpty()) {
                     Column {
                         if (title.isNotEmpty()) {
+                            // Bold + 20sp is now the single title style for
+                            // every screen — consistent weight + size across
+                            // the app so nav transitions don't visually jump.
                             Text(
                                 text = title,
-                                fontWeight = FontWeight.Medium,
+                                fontWeight = FontWeight.Bold,
                                 fontSize = 20.sp
                             )
                         }
@@ -75,42 +86,77 @@ object Toolbars {
             ),
             navigationIcon = {
                 if (showBackButton) {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            painter = Icons.BackIcon(),
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    CircleToolbarButton(
+                        painter = Icons.BackIcon(),
+                        contentDescription = "Back",
+                        onClick = onBackClick
+                    )
                 }
             },
             actions = {
                 customContent?.invoke()
                 actions.take(3).forEach { actionIcon ->
-                    IconButton(
-                        onClick = actionIcon.onClick,
-                        enabled = actionIcon.enabled,
-                    ) {
-                        when {
-                            actionIcon.painter != null -> Icon(
-                                painter = actionIcon.painter,
-                                contentDescription = actionIcon.contentDescription,
-                                tint = MaterialTheme.colorScheme.onBackground,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            actionIcon.icon != null -> Icon(
-                                imageVector = actionIcon.icon,
-                                contentDescription = actionIcon.contentDescription,
-                                tint = MaterialTheme.colorScheme.onBackground,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
+                    when {
+                        actionIcon.painter != null -> CircleToolbarButton(
+                            painter = actionIcon.painter,
+                            contentDescription = actionIcon.contentDescription,
+                            onClick = actionIcon.onClick,
+                            enabled = actionIcon.enabled
+                        )
+                        actionIcon.icon != null -> CircleToolbarButton(
+                            icon = actionIcon.icon,
+                            contentDescription = actionIcon.contentDescription,
+                            onClick = actionIcon.onClick,
+                            enabled = actionIcon.enabled
+                        )
                     }
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
                 trailingActionContent?.invoke()
+                Spacer(modifier = Modifier.width(8.dp))
             }
         )
+    }
+
+    /**
+     * Round 36dp button used for every top-bar leading / trailing action.
+     * Mirrors the calendar/month-stepper chip on the Transactions screen so
+     * every screen reads with the same Apple-style "round control" language.
+     */
+    @Composable
+    fun CircleToolbarButton(
+        painter: Painter? = null,
+        icon: ImageVector? = null,
+        contentDescription: String,
+        onClick: () -> Unit,
+        enabled: Boolean = true
+    ) {
+        val bgAlpha = if (enabled) 0.35f else 0.15f
+        val tintAlpha = if (enabled) 1f else 0.35f
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = bgAlpha))
+                .clickable(enabled = enabled, onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            when {
+                painter != null -> Icon(
+                    painter = painter,
+                    contentDescription = contentDescription,
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = tintAlpha),
+                    modifier = Modifier.size(16.dp)
+                )
+                icon != null -> Icon(
+                    imageVector = icon,
+                    contentDescription = contentDescription,
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = tintAlpha),
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
     }
 
     data class ToolBarAction(

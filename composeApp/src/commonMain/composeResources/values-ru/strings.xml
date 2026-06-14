@@ -124,6 +124,7 @@
     <string name="paywall_founder_badge">🔥 Цена для первых</string>
     <string name="paywall_founder_locked">Зафиксируйте цену навсегда — ранние пользователи сохраняют её по мере роста Mooney.</string>
     <string name="paywall_price_will_rise">Цена будет расти с выходом новых функций.</string>
+    <string name="tx_description_label">Описание (необязательно)</string>
 
     <!-- Цели -->
     <string name="add_goal">Добавить цель</string>

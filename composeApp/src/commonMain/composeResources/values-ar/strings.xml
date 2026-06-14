@@ -124,6 +124,7 @@
     <string name="paywall_founder_badge">🔥 سعر المؤسسين</string>
     <string name="paywall_founder_locked">ثبّت هذا السعر إلى الأبد — يحتفظ به الداعمون الأوائل مع نمو Mooney.</string>
     <string name="paywall_price_will_rise">سيرتفع السعر مع إضافة المزيد من الميزات.</string>
+    <string name="tx_description_label">الوصف (اختياري)</string>
 
     <!-- الأهداف -->
     <string name="add_goal">إضافة هدف</string>

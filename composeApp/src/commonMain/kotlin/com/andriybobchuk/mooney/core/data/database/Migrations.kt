@@ -473,6 +473,16 @@ val MIGRATION_15_16 = object : Migration(15, 16) {
     }
 }
 
+val MIGRATION_16_17 = object : Migration(16, 17) {
+    override fun migrate(connection: SQLiteConnection) {
+        if (!hasColumn(connection, "TransactionEntity", "description")) {
+            connection.execSQL(
+                "ALTER TABLE TransactionEntity ADD COLUMN description TEXT"
+            )
+        }
+    }
+}
+
 val MIGRATION_14_15 = object : Migration(14, 15) {
     override fun migrate(connection: SQLiteConnection) {
         connection.execSQL("""

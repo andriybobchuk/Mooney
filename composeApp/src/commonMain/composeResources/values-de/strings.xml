@@ -124,6 +124,7 @@
     <string name="paywall_founder_badge">🔥 Founder-Preis</string>
     <string name="paywall_founder_locked">Sichere dir diesen Preis dauerhaft — frühe Unterstützer behalten ihn, während Mooney wächst.</string>
     <string name="paywall_price_will_rise">Der Preis steigt, wenn mehr Funktionen erscheinen.</string>
+    <string name="tx_description_label">Beschreibung (optional)</string>
 
     <!-- Ziele -->
     <string name="add_goal">Ziel hinzufügen</string>

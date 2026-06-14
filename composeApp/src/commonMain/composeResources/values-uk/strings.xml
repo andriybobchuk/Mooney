@@ -107,6 +107,7 @@
     <string name="paywall_founder_badge">🔥 Ціна для перших</string>
     <string name="paywall_founder_locked">Зафіксуй ціну назавжди — ранні користувачі зберігають її в міру розвитку Mooney.</string>
     <string name="paywall_price_will_rise">Ціна зростатиме з виходом нових функцій.</string>
+    <string name="tx_description_label">Опис (необов'язково)</string>
     <string name="add_goal">Додати ціль</string>
     <string name="edit_goal">Редагувати ціль</string>
     <string name="delete_goal">Видалити ціль</string>

@@ -1198,6 +1198,7 @@ fun TransactionBottomSheet(
 
     var amount by remember { mutableStateOf(transactionToEdit?.amount?.formatToPlainString()) }
     var newAccountValue by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf(transactionToEdit?.description ?: "") }
 
     val defaultAccount = accounts.filterNotNull().toAccounts().find { it.isPrimary }
     var selectedAccount by remember { mutableStateOf(transactionToEdit?.account ?: defaultAccount) }
@@ -1551,6 +1552,20 @@ fun TransactionBottomSheet(
 
             } // end scrollable Column
 
+            Spacer(Modifier.height(12.dp))
+
+            // Optional description — shows up in the Analytics breakdown
+            // drilldown so the user can answer "what was this $42 again?"
+            // months later. Single line by design; we don't want this to
+            // become a journal field.
+            MooneyTextField(
+                value = description,
+                onValueChange = { description = it },
+                label = stringResource(Res.string.tx_description_label),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+
             // Validation
             val parsedAmt = (amount ?: "").parseAmountInput() ?: 0.0
             val validation = remember(parsedAmt, selectedAccount, destinationAccount, selectedTransactionType) {
@@ -1663,7 +1678,8 @@ fun TransactionBottomSheet(
                                 currentSelectedSubCategory ?: fCat
                             },
                             date = selectedDate,
-                            destinationAmount = computedDestinationAmount
+                            destinationAmount = computedDestinationAmount,
+                            description = description.trim().takeIf { it.isNotEmpty() }
                         )
                         
                         val schedule = if (isRecurringEnabled) recurringSchedule else null

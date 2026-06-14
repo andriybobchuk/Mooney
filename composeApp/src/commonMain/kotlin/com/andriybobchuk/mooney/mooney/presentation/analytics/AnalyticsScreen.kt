@@ -742,11 +742,18 @@ fun CategoryTransactionsSheet(
                     )
                 }
                 if (isExpanded) {
-                    items(items = txs, key = { tx -> "tx_${subcat.id}_${tx.id}" }) { transaction ->
-                        com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionItem(
-                            transaction = transaction,
-                            accounts = emptyList()
-                        )
+                    // Group this subcategory's transactions by day so the user
+                    // can scan "what happened on March 14" at a glance, with
+                    // the description as the differentiator inside each row.
+                    val byDay: List<Pair<kotlinx.datetime.LocalDate, List<com.andriybobchuk.mooney.mooney.domain.Transaction>>> =
+                        txs.groupBy { it.date }.toList().sortedByDescending { (day, _) -> day }
+                    byDay.forEach { (day, dayTxs) ->
+                        item("day_${subcat.id}_$day") {
+                            DayHeaderRow(date = day)
+                        }
+                        items(items = dayTxs, key = { tx -> "tx_${subcat.id}_${tx.id}" }) { transaction ->
+                            TxDrilldownRow(transaction = transaction)
+                        }
                     }
                 }
             }
@@ -1474,5 +1481,49 @@ private fun AnalyticsRequestCard(onClick: () -> Unit) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun DayHeaderRow(date: kotlinx.datetime.LocalDate) {
+    val day = date.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
+    Text(
+        text = "$day · ${date.dayOfMonth} ${date.month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }}",
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 4.dp)
+    )
+}
+
+@Composable
+private fun TxDrilldownRow(transaction: com.andriybobchuk.mooney.mooney.domain.Transaction) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            val description = transaction.description?.takeIf { it.isNotBlank() }
+            Text(
+                text = description ?: transaction.subcategory.title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = transaction.account.title,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Text(
+            text = "${transaction.amount.formatWithCommas()} ${transaction.account.currency.symbol}",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }

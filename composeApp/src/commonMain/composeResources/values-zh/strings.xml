@@ -124,6 +124,7 @@
     <string name="paywall_founder_badge">🔥 创始价</string>
     <string name="paywall_founder_locked">永久锁定此价格 — 早期支持者将随着 Mooney 的成长继续享有。</string>
     <string name="paywall_price_will_rise">随着更多功能上线，价格将会上涨。</string>
+    <string name="tx_description_label">备注（可选）</string>
 
     <!-- 目标 -->
     <string name="add_goal">添加目标</string>

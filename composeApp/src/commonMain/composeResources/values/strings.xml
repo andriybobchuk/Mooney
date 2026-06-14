@@ -127,6 +127,9 @@
     <string name="paywall_founder_locked">Lock in this price forever — early supporters keep it as Mooney grows.</string>
     <string name="paywall_price_will_rise">Price will increase as more features ship.</string>
 
+    <!-- Transaction description -->
+    <string name="tx_description_label">Description (optional)</string>
+
     <!-- Goals -->
     <string name="add_goal">Add Goal</string>
     <string name="edit_goal">Edit Goal</string>

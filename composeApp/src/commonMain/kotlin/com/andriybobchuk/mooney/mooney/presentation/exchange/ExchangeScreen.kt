@@ -48,6 +48,17 @@ import kotlinx.datetime.*
 import org.koin.compose.viewmodel.koinViewModel
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.draw.alpha
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.exchange_rates
+import mooney.composeapp.generated.resources.historical_rates
+import mooney.composeapp.generated.resources.rate_above_avg_short
+import mooney.composeapp.generated.resources.rate_below_avg_short
+import mooney.composeapp.generated.resources.rate_high_short
+import mooney.composeapp.generated.resources.rate_low_short
+import mooney.composeapp.generated.resources.base_currency_prefix
+import mooney.composeapp.generated.resources.current_rate_prefix
+import mooney.composeapp.generated.resources.tap_currency_for_chart
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,14 +82,14 @@ fun ExchangeScreen(
                         }
                     ) {
                         Text(
-                            text = "Exchange Rates",
+                            text = stringResource(Res.string.exchange_rates),
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 20.sp
                             )
                         )
                         Text(
-                            text = "Base: ${state.displayBaseCurrency.symbol} ${state.displayBaseCurrency.name}",
+                            text = stringResource(Res.string.base_currency_prefix, "${state.displayBaseCurrency.symbol} ${state.displayBaseCurrency.name}"),
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Normal,
@@ -188,7 +199,7 @@ private fun ExchangeScreenContent(
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
-                                text = "Current: ${triggered.currentRate.formatWithCommas()} ${triggered.alert.toCurrency.symbol}",
+                                text = stringResource(Res.string.current_rate_prefix, "${triggered.currentRate.formatWithCommas()} ${triggered.alert.toCurrency.symbol}"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                             )
@@ -269,7 +280,7 @@ private fun HistoricalExchangeRateChart(
             ) {
                 Column {
                     Text(
-                        text = if (chartCurrency != null) "${chartCurrency.name}/${state.displayBaseCurrency.name}" else "Historical Rates",
+                        text = if (chartCurrency != null) "${chartCurrency.name}/${state.displayBaseCurrency.name}" else stringResource(Res.string.historical_rates),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -316,7 +327,7 @@ private fun HistoricalExchangeRateChart(
                     modifier = Modifier.fillMaxWidth().height(220.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Tap a currency to see its chart", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                    Text(stringResource(Res.string.tap_currency_for_chart), style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
                 }
             } else {
                 val minRate = chartRates.minOf { it.rate }
@@ -711,10 +722,10 @@ private fun PercentileBar(percentile: Int) {
         else -> Color(0xFFFF9800)
     }
     val label = when {
-        percentile >= 75 -> "High"
-        percentile >= 50 -> "Above avg"
-        percentile >= 25 -> "Below avg"
-        else -> "Low"
+        percentile >= 75 -> stringResource(Res.string.rate_high_short)
+        percentile >= 50 -> stringResource(Res.string.rate_above_avg_short)
+        percentile >= 25 -> stringResource(Res.string.rate_below_avg_short)
+        else -> stringResource(Res.string.rate_low_short)
     }
 
     Column(horizontalAlignment = Alignment.End) {

@@ -1,0 +1,517 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<resources>
+    <string name="app_name">Mooney</string>
+
+    <!-- التنقل -->
+    <string name="nav_transactions">المعاملات</string>
+    <string name="nav_assets">الأصول</string>
+    <string name="nav_exchange">صرف العملات</string>
+    <string name="nav_analytics">التحليلات</string>
+    <string name="nav_goals">الأهداف</string>
+    <string name="nav_settings">الإعدادات</string>
+
+    <!-- عام -->
+    <string name="settings">الإعدادات</string>
+    <string name="feedback">ملاحظات</string>
+    <string name="cancel">إلغاء</string>
+    <string name="done">تم</string>
+    <string name="edit">تعديل</string>
+    <string name="delete">حذف</string>
+    <string name="add">إضافة</string>
+    <string name="save">حفظ</string>
+    <string name="back">رجوع</string>
+    <string name="version">الإصدار</string>
+
+    <!-- المعاملات -->
+    <string name="spent_in">المنفق في %s</string>
+    <string name="no_transactions">لا توجد معاملات</string>
+    <string name="tap_to_add_transaction">اضغط + لإضافة أول معاملة</string>
+    <string name="add_transaction">إضافة معاملة</string>
+    <string name="edit_transaction">تعديل المعاملة</string>
+    <string name="add_new_transaction">معاملة جديدة</string>
+    <string name="update_transaction">تحديث المعاملة</string>
+    <string name="expense">مصروف</string>
+    <string name="income">دخل</string>
+    <string name="transfer">تحويل</string>
+    <string name="amount">المبلغ</string>
+    <string name="from_account">من الحساب</string>
+    <string name="to_account">إلى الحساب</string>
+    <string name="select_account">اختر الحساب</string>
+    <string name="select_category">اختر الفئة</string>
+    <string name="select_date">اختر التاريخ</string>
+    <string name="internal_transfer">تحويل داخلي</string>
+    <string name="new_account_value">قيمة الحساب الجديدة</string>
+    <string name="spending_comparison">مقارنة المصروفات</string>
+    <string name="current">الحالي</string>
+    <string name="six_month_avg">متوسط 6 أشهر</string>
+    <string name="select_month">اختر الشهر</string>
+    <string name="year">السنة</string>
+    <string name="month">الشهر</string>
+    <string name="day">اليوم</string>
+
+    <!-- البدء -->
+    <string name="lets_get_started">لنبدأ</string>
+    <string name="add_account_step">أضف حساباً</string>
+    <string name="add_account_step_desc">حساب بنكي أو نقد أو استثمار</string>
+    <string name="track_spending_step">تتبع الإنفاق</string>
+    <string name="track_spending_step_desc">أضف معاملات لترى التحليلات</string>
+    <string name="add_first_account">أضف حسابك الأول</string>
+
+    <!-- الأصول -->
+    <string name="total_net_worth">صافي الثروة</string>
+    <string name="welcome_to_mooney">مرحبًا بك في Mooney</string>
+    <string name="welcome_description">أضف حسابك الأول لتبدأ بمتابعة أموالك. يمكنك إضافة حسابات بنكية ونقدًا واستثمارات والمزيد.</string>
+    <string name="no_accounts_yet">لا توجد حسابات بعد</string>
+    <string name="add_account">إضافة حساب</string>
+    <string name="edit_asset">تعديل الأصل</string>
+    <string name="add_new_asset">أصل جديد</string>
+    <string name="update_asset">تحديث الأصل</string>
+    <string name="title">العنوان</string>
+    <string name="value">القيمة</string>
+    <string name="category">الفئة</string>
+    <string name="currency">العملة</string>
+    <string name="select_currency">اختر العملة</string>
+
+    <!-- التحليلات -->
+    <string name="analytics">التحليلات</string>
+    <string name="no_analytics_yet">لا توجد تحليلات بعد</string>
+    <string name="analytics_empty_desc">ابدأ بإضافة المعاملات لترى الدخل والمصروفات ورؤى مالية.</string>
+    <string name="go_to_transactions">انتقل إلى المعاملات</string>
+    <string name="revenue">الإيرادات</string>
+    <string name="taxes">الضرائب</string>
+    <string name="operating_costs">المصروفات التشغيلية</string>
+    <string name="net_income">صافي الدخل</string>
+    <string name="revenue_breakdown">تفصيل الإيرادات</string>
+    <string name="operating_costs_breakdown">تفصيل المصروفات</string>
+    <string name="tax_breakdown">تفصيل الضرائب</string>
+    <string name="partial_month_note">عرض بيانات جزئية — الشهر لم ينتهِ بعد</string>
+    <string name="profit_over_6_months">الربح خلال 6 أشهر</string>
+    <string name="last_6_months">آخر 6 أشهر</string>
+    <string name="next_6_months">الأشهر الستة القادمة</string>
+    <string name="based_on_selected">بناءً على الشهر المحدد</string>
+    <string name="subcategories_breakdown">تفصيل الفئات الفرعية</string>
+    <string name="tap_category_subcategories">اضغط على فئة لرؤية الفئات الفرعية</string>
+
+    <!-- الإعدادات -->
+    <string name="preferences">التفضيلات</string>
+    <string name="appearance">المظهر</string>
+    <string name="default_currency">العملة الافتراضية</string>
+    <string name="pinned_categories">الفئات المثبتة</string>
+    <string name="language">اللغة</string>
+    <string name="data">البيانات</string>
+    <string name="export_data">تصدير البيانات</string>
+    <string name="import_data">استيراد البيانات</string>
+    <string name="about">حول</string>
+    <string name="confirm_import">تأكيد الاستيراد</string>
+    <string name="import_preview">سيتم استيراد البيانات التالية:</string>
+    <string name="transactions_count">%d معاملة</string>
+    <string name="accounts_count">%d حساب</string>
+    <string name="goals_count">%d هدف</string>
+    <string name="import_add_note">سيتم إضافة هذا إلى بياناتك الحالية.</string>
+    <string name="import_btn">استيراد</string>
+    <string name="light">فاتح</string>
+    <string name="dark">داكن</string>
+    <string name="system">النظام</string>
+    <string name="select_up_to_categories">اختر حتى %d فئة</string>
+
+    <!-- ملاحظات -->
+    <string name="get_in_touch">تواصل معنا</string>
+    <string name="feedback_description">Mooney قيد التطوير بنشاط. هل وجدت خللاً؟ لديك فكرة؟ راسلنا — رأيك يصيغ التطبيق.</string>
+
+    <!-- الأهداف -->
+    <string name="add_goal">إضافة هدف</string>
+    <string name="edit_goal">تعديل الهدف</string>
+    <string name="delete_goal">حذف الهدف</string>
+
+    <!-- الأصول -->
+    <string name="set_as_primary">تعيين كأساسي</string>
+    <string name="primary_account">الحساب الأساسي</string>
+
+    <!-- الإعدادات — العملات والفئات -->
+    <string name="currencies">العملات</string>
+    <string name="manage_currencies">إدارة العملات</string>
+    <string name="categories">الفئات</string>
+    <string name="manage_categories">إدارة الفئات</string>
+    <string name="add_category">إضافة فئة</string>
+    <string name="add_subcategory">إضافة فئة فرعية</string>
+    <string name="category_name">اسم الفئة</string>
+    <string name="emoji_label">رمز تعبيري</string>
+
+    <!-- الأخطاء -->
+    <string name="error_disk_full">يبدو أن مساحة التخزين ممتلئة.</string>
+    <string name="error_unknown">عذرًا، حدث خطأ ما.</string>
+    <string name="error_request_timeout">انتهت مهلة الطلب.</string>
+    <string name="error_no_internet">تعذّر الوصول إلى الخادم، يرجى التحقق من اتصال الإنترنت.</string>
+    <string name="error_too_many_requests">يبدو أن حصتك قد استُنفذت.</string>
+    <string name="error_serialization">تعذّر معالجة البيانات.</string>
+
+    <!-- صافي الدخل / التحليلات -->
+    <string name="last_12_months">آخر 12 شهراً</string>
+    <string name="last_6_months_label">آخر 6 أشهر</string>
+    <string name="saved_last_n_months">مدّخر · آخر %d شهر</string>
+    <string name="of_gross_income">%s%% من الدخل الإجمالي</string>
+    <string name="per_month_avg">≈ %s/شهرياً</string>
+    <string name="net_worth_trajectory">مسار صافي الثروة</string>
+    <string name="today_marker">اليوم</string>
+    <string name="months_forward">+%d شهر</string>
+    <string name="actual_label">فعلي</string>
+    <string name="projected_label">متوقّع</string>
+    <string name="of_every_dollar_earned">من كل ريال تكسبه</string>
+    <string name="n_gross">%s إجمالي</string>
+    <string name="saved_label">المدّخر</string>
+    <string name="spent_label">المنفق</string>
+    <string name="if_you_keep_pace">إذا استمررت بهذا الإيقاع</string>
+    <string name="est_income_next_12">دخل متوقع · 12 شهراً القادمة</string>
+    <string name="est_savings_next_12">ادخار متوقع · 12 شهراً القادمة</string>
+    <string name="net_worth_in_6">صافي الثروة بعد 6 أشهر</string>
+    <string name="net_worth_in_12">صافي الثروة بعد 12 شهراً</string>
+    <string name="forecast_disclaimer">يستند التوقع إلى متوسط ادخارك %2$s/شهرياً خلال آخر %1$d شهراً. هذا توجيه وليس ضماناً — تتقلب الأسواق والمصروفات.</string>
+
+    <!-- قائمة الأصول -->
+    <string name="display_assets_in_header">عرض مبلغ الأصول في الرأس</string>
+    <string name="display_networth_in_header">عرض صافي الثروة في الرأس</string>
+    <string name="total_assets">إجمالي الأصول</string>
+
+    <!-- التمرير -->
+    <string name="scroll_to_top">للأعلى</string>
+
+    <!-- استيراد CSV -->
+    <string name="import_csv">استيراد CSV من تطبيق آخر</string>
+    <string name="import_csv_desc">Mint أو YNAB أو Wallet أو Money Manager أو أي CSV يحتوي على عمودَي التاريخ والمبلغ</string>
+    <string name="csv_imported_n">تم استيراد %d معاملة</string>
+    <string name="csv_imported_n_new_account">تم استيراد %d معاملة إلى حساب جديد \'مستوردة\'</string>
+    <string name="csv_columns_not_recognised">تعذّر التعرف على أعمدة التاريخ / المبلغ في هذا الملف. حاول التصدير مجدداً من التطبيق الأصلي أو أعد تسمية الأعمدة إلى \'Date\' و\'Amount\'.</string>
+    <string name="csv_import_failed">تعذّر استيراد ملف CSV: %s</string>
+
+    <!-- ادعم Mooney -->
+    <string name="support_mooney">ادعم Mooney</string>
+    <string name="watch_ad_support">شاهد إعلاناً قصيراً لتدعمنا</string>
+    <string name="thanks_reward">شكراً! 🎉</string>
+
+    <!-- خيارات المطوّر -->
+    <string name="disable_ads_dev">تعطيل الإعلانات</string>
+    <string name="disable_ads_dev_desc">إخفاء جميع إعلانات البانر والإنتيرستيشيال والمكافآت في هذا الإصدار بغض النظر عن قواعد الأهلية. يبقى الإعداد بعد إعادة التشغيل.</string>
+
+    <!-- عام -->
+    <string name="reset">إعادة تعيين</string>
+    <string name="remove">إزالة</string>
+    <string name="send">إرسال</string>
+    <string name="upgrade">ترقية</string>
+    <string name="active_alerts">التنبيهات النشطة</string>
+    <string name="exchange_rates">أسعار الصرف</string>
+    <string name="frequently_used">المستخدم بكثرة</string>
+    <string name="day_label">اليوم:</string>
+    <string name="week_label">الأسبوع</string>
+    <string name="restore_purchases">استعادة المشتريات</string>
+    <string name="rate_mooney">قيّم Mooney</string>
+    <string name="share_feedback">شارك بملاحظاتك</string>
+    <string name="privacy_policy">سياسة الخصوصية</string>
+    <string name="categories_label">الفئات</string>
+    <string name="transactions_label">المعاملات</string>
+
+    <!-- المراجعة -->
+    <string name="enjoying_mooney">هل تستمتع بـ Mooney؟</string>
+    <string name="feedback_intro">ملاحظاتك تساعدني على تحسين التطبيق — أطوّره بمفردي وأقرأ كل ردّ.</string>
+    <string name="not_really">ليس فعلاً</string>
+    <string name="got_it_thanks">فهمت. شكراً.</string>
+    <string name="couldnt_send">تعذّر الإرسال. تحقق من الاتصال وحاول مجدداً.</string>
+    <string name="whats_on_your_mind">ما الذي يدور في ذهنك؟</string>
+    <string name="feedback_pick_category">اختر فئة وأخبرني بأي شيء — خلل أو فكرة أو شيء يزعجك. أعمل بمفردي وأقرأ كل رسالة.</string>
+
+    <!-- Paywall -->
+    <string name="get_mooney_pro">احصل على Mooney Pro</string>
+    <string name="restore_purchases_link">استعادة المشتريات</string>
+    <string name="auto_renews_monthly">يتجدّد شهرياً. ألغِ في أي وقت من حساب App Store.</string>
+    <string name="terms_of_use">شروط الاستخدام</string>
+    <string name="unlimited_accounts_categories">حسابات وفئات بلا حدود والمزيد</string>
+
+    <!-- التقويم / المصروفات -->
+    <string name="no_spending_data">لا توجد بيانات إنفاق</string>
+    <string name="months_n_below_caption">الأرقام أسفل كل شهر تُظهر عدد المعاملات</string>
+
+    <!-- الحالات الفارغة -->
+    <string name="start_tracking_first_tx">ابدأ بتتبّع مصروفاتك بإضافة أول معاملة.</string>
+    <string name="add_more_currencies_in_settings">أضف المزيد من العملات في الإعدادات</string>
+    <string name="want_more_widgets">تريد المزيد من العناصر؟</string>
+    <string name="want_more_widgets_desc">أخبرني بما تجده مفيداً — سأبني أفضل الأفكار في الإصدار القادم.</string>
+    <string name="tap_to_suggest">اضغط لتقترح</string>
+
+    <!-- التهيئة -->
+    <string name="choose_currencies_up_to">اختر العملات التي تستخدمها (حتى %d)</string>
+    <string name="continue_label">متابعة</string>
+    <string name="primary_currency">العملة الأساسية</string>
+    <string name="primary_currency_desc">ستظهر جميع المجاميع والتحليلات بهذه العملة</string>
+    <string name="get_started">ابدأ</string>
+    <string name="your_new_mooney_ready">Mooney الجديد جاهز</string>
+    <string name="swipe_up_reveal">اسحب للأعلى لاكتشاف ما ينتظرك\nبالداخل</string>
+    <string name="swipe_to_unwrap">اسحب لفتح التطبيق</string>
+
+    <!-- التحليلات -->
+    <string name="net_worth_label">صافي الثروة</string>
+    <string name="tap_to_view_history">اضغط لعرض السجل</string>
+
+    <!-- الإعدادات — Premium -->
+    <string name="plan_label">الخطة</string>
+    <string name="pro_label">Pro</string>
+    <string name="free_label">مجاني</string>
+    <string name="replay_onboarding">إعادة جولة التعريف</string>
+    <string name="reset_view">إعادة التعيين والعرض</string>
+
+    <!-- الاختيار -->
+    <string name="more">المزيد</string>
+
+    <!-- التصنيفات -->
+    <string name="confirm_delete_category">حذف \"%s\"؟ ستصبح المعاملات في هذه الفئة غير مرتبطة.</string>
+    <string name="confirm_delete_account">حذف \"%s\"؟ سيتم حذف كل المعاملات المرتبطة كذلك.</string>
+    <string name="transaction_categories">فئات المعاملات</string>
+    <string name="asset_categories">فئات الأصول</string>
+    <string name="copy_action">نسخ</string>
+    <string name="share">مشاركة</string>
+    <string name="upgrade_to_pro_cta">ترقية</string>
+    <string name="in_the_green">في الأخضر</string>
+    <string name="avg_save_rate">متوسط نسبة التوفير</string>
+    <string name="no_transactions_short">لا توجد معاملات</string>
+    <string name="best_month">أفضل شهر</string>
+    <string name="worst_month">أسوأ شهر</string>
+    <string name="six_month_total">إجمالي 6 أشهر</string>
+    <string name="six_month_average">متوسط 6 أشهر</string>
+    <string name="in_green_n_of_m">%1$d من %2$d أشهر</string>
+    <string name="select_up_to_quick">اختر حتى %d فئة كاختصارات سريعة</string>
+    <string name="pinned_n_of_m">المثبتة (%1$d/%2$d)</string>
+    <string name="available_categories">الفئات المتاحة</string>
+    <string name="active_alerts_section">التنبيهات النشطة</string>
+    <string name="data_backup">نسخة احتياطية للبيانات</string>
+    <string name="data_backup_desc">صدّر أو استورد كل بياناتك المالية</string>
+    <string name="important_label">مهم</string>
+    <string name="data_backup_warning">صدّر بياناتك قبل تغيير اسم الحزمة أو إعادة التثبيت. سيُضيف الاستيراد البيانات إلى الموجودة.</string>
+    <string name="delete_recurring_tx">حذف المعاملة المتكررة</string>
+    <string name="no_goals_yet">لا توجد أهداف بعد</string>
+    <string name="not_enough_data_estimate">لا توجد بيانات كافية للتقدير</string>
+    <string name="goal_reached">تم تحقيق الهدف!</string>
+
+    <!-- إدارة الفئات -->
+    <string name="delete_asset_category_msg">حذف \"%1$s\"؟ ستحتفظ الحسابات التي تستخدم هذه الفئة ببياناتها لكنها ستظهر تحت \"أخرى\".</string>
+    <string name="delete_tx_category_msg">حذف \"%1$s\"؟ المعاملات التي تستخدم هذه الفئة ستصبح غير مرتبطة.</string>
+    <string name="add_asset_category">إضافة فئة أصل</string>
+    <string name="add_liability_category">إضافة فئة التزام</string>
+    <string name="assets_section">الأصول</string>
+    <string name="liabilities_section">الالتزامات</string>
+    <string name="no_active_subscription">لم يتم العثور على اشتراك نشط</string>
+
+    <!-- صافي الثروة flex -->
+    <string name="in_country_suffix">في %1$s</string>
+    <string name="close">إغلاق</string>
+
+    <!-- مربع حوار حذف المعاملة -->
+    <string name="delete_tx_confirm">حذف معاملة \"%1$s\" بقيمة %2$s %3$s؟</string>
+
+    <!-- مربع حوار الأهداف -->
+    <string name="delete_goal_confirm">حذف \"%1$s\"؟ لا يمكن التراجع عن هذا الإجراء.</string>
+
+    <!-- مربعات حوار الإعدادات -->
+    <string name="update_categories_title">تحديث الفئات</string>
+    <string name="update">تحديث</string>
+    <string name="import_action">استيراد</string>
+    <string name="following_will_be_imported">سيتم استيراد البيانات التالية:</string>
+    <string name="will_add_to_existing">سيتم إضافة هذه البيانات إلى بياناتك الحالية.</string>
+    <string name="default_expense_category">فئة المصاريف الافتراضية</string>
+    <string name="default_income_category">فئة الدخل الافتراضية</string>
+
+    <!-- شاشة الصرف -->
+    <string name="set_alert">ضبط التنبيه</string>
+    <string name="tap_currency_for_chart">انقر على عملة لرؤية مخططها</string>
+
+    <!-- ورقة الهدف -->
+    <string name="track_progress_against">تتبع التقدم مقابل</string>
+    <string name="account">الحساب</string>
+    <string name="select_account_short">اختر الحساب</string>
+
+    <!-- مربعات حوار الحساب -->
+    <string name="delete_account_title">حذف الحساب</string>
+    <string name="delete_account_confirm">حذف \"%1$s\"؟ لا يمكن التراجع عن هذا الإجراء.</string>
+
+    <!-- متكررة -->
+    <string name="recurring_transactions_title">المعاملات المتكررة</string>
+
+    <!-- التوقع -->
+    <string name="nw_in_6_mo">صافي الثروة خلال 6 أشهر</string>
+    <string name="nw_in_12_mo">صافي الثروة خلال 12 شهرًا</string>
+    <string name="saved_dot_pct">المحفوظ · %1$s%%</string>
+    <string name="spent_dot_pct">المنفق · %1$s%%</string>
+
+    <!-- نموذج الهدف -->
+    <string name="title_label">العنوان</string>
+    <string name="target_amount_label">المبلغ المستهدف</string>
+
+    <!-- اتجاه التنبيه -->
+    <string name="above">أعلى</string>
+    <string name="below">أدنى</string>
+
+    <!-- قائمة المعاملات -->
+    <string name="goals_chip">الأهداف</string>
+
+    <!-- التصدير/الاستيراد الأوصاف -->
+    <string name="save_all_data_desc">احفظ جميع بياناتك في ملف</string>
+    <string name="restore_from_backup_desc">استعادة البيانات من ملف نسخة احتياطية</string>
+
+    <!-- صفوف الإعدادات -->
+    <string name="exclude_taxes_title">استبعاد الضرائب من المجاميع</string>
+    <string name="exchange_rate_source">مصدر أسعار الصرف</string>
+    <string name="currency_insights">رؤى العملات</string>
+    <string name="transactions_widget_pager">صفحات أداة المعاملات</string>
+
+    <!-- العناوين -->
+    <string name="goals_title">الأهداف</string>
+    <string name="analytics_title">التحليلات</string>
+    <string name="net_income_title">صافي الدخل</string>
+    <string name="net_worth_title">صافي الثروة</string>
+
+    <!-- التحويل -->
+    <string name="transfer_to_account">تحويل إلى %1$s</string>
+    <string name="general_label">عام</string>
+
+    <!-- استبعاد الضرائب -->
+    <string name="exclude_taxes_desc">معاملات الضرائب لن تُحسب ضمن مجاميع إنفاقك</string>
+
+    <!-- عناوين Paywall -->
+    <string name="paywall_acct_headline">أضف حسابات بلا حدود</string>
+    <string name="paywall_acct_sub">تتبع كل بطاقة ومحفظة وهدف ادخار في مكان واحد.</string>
+    <string name="paywall_cat_headline">صنّف بالطريقة التي تنفق بها</string>
+    <string name="paywall_cat_sub">أنشئ فئات مخصصة بلا حدود تناسب حياتك.</string>
+    <string name="paywall_settings_headline">تحكم بأموالك بالكامل</string>
+    <string name="paywall_settings_sub">افتح كل ما يستطيع Mooney فعله.</string>
+    <string name="paywall_generic_headline">افتح Mooney Pro</string>
+    <string name="paywall_generic_sub">احصل على التجربة الكاملة.</string>
+
+    <!-- مزايا Pro -->
+    <string name="paywall_benefit_accounts_title">حسابات بلا حدود</string>
+    <string name="paywall_benefit_accounts_sub">بما يتجاوز حد 20 حسابًا المجاني</string>
+    <string name="paywall_benefit_categories_title">فئات مخصصة بلا حدود</string>
+    <string name="paywall_benefit_categories_sub">بما يتجاوز حد 50 فئة المجاني</string>
+
+    <!-- السعر -->
+    <string name="paywall_price_with">Mooney Pro · شهريًا · %1$s / شهر</string>
+    <string name="paywall_price_without">Mooney Pro · اشتراك شهري</string>
+
+    <!-- إضافات شاشة المعاملات -->
+    <string name="custom_rate">سعر مخصص</string>
+    <string name="todays_rate">سعر اليوم</string>
+    <string name="quick_recurring">متكررة</string>
+    <string name="quick_categories">الفئات</string>
+
+    <!-- مصدر أسعار الصرف -->
+    <string name="exchange_rate_source_choose">اختر مزوّد التحويل بين العملات</string>
+    <string name="all_currencies">كل العملات</string>
+    <string name="historical_data">البيانات التاريخية</string>
+    <string name="ers_extended_desc">يدعم كل عملة يوفّرها التطبيق (بما في ذلك UAH وRUB وAED). بدون رسوم بيانية تاريخية.</string>
+
+    <!-- أقسام الإعدادات -->
+    <string name="section_transactions">المعاملات</string>
+
+    <!-- أصل / التزام -->
+    <string name="asset_label">أصل</string>
+    <string name="liability_label">التزام</string>
+
+    <!-- تلميحات الملاحظات -->
+    <string name="feedback_hint_bug">ما الذي تعطّل؟ وما الذي كنت تحاول فعله؟</string>
+    <string name="feedback_hint_feature">ما المفقود؟ وكيف ستستخدمه؟</string>
+    <string name="feedback_hint_widget">صف الأداة — ماذا ستعرض؟</string>
+    <string name="feedback_hint_general">ملاحظاتك…</string>
+
+    <!-- تلميحات سعر الصرف -->
+    <string name="rate_high">مرتفع — وقت جيد للتحويل</string>
+    <string name="rate_above_avg">أعلى من المتوسط</string>
+    <string name="rate_below_avg">أدنى من المتوسط</string>
+    <string name="rate_low">منخفض — فكّر في الانتظار</string>
+    <string name="not_enough_data">لا توجد بيانات كافية</string>
+
+    <!-- تسميات قصيرة للأسعار -->
+    <string name="rate_high_short">مرتفع</string>
+    <string name="rate_above_avg_short">فوق المتوسط</string>
+    <string name="rate_below_avg_short">دون المتوسط</string>
+    <string name="rate_low_short">منخفض</string>
+    <string name="historical_rates">الأسعار التاريخية</string>
+
+    <!-- السعر المستهدف -->
+    <string name="target_rate_label">السعر المستهدف (%1$s)</string>
+
+    <!-- إشعارات الشريط -->
+    <string name="failed_to_read_file">تعذّر قراءة الملف</string>
+
+    <!-- الأهداف -->
+    <string name="new_goal">هدف جديد</string>
+    <string name="edit_goal_title">تعديل الهدف</string>
+    <string name="create_goal">إنشاء هدف</string>
+    <string name="total_assets_label">إجمالي الأصول</string>
+
+    <!-- إحصاءات -->
+    <string name="highest_label">الأعلى</string>
+    <string name="lowest_label">الأدنى</string>
+    <string name="avg_per_month">متوسط / شهر</string>
+    <string name="in_6_mo">خلال 6 أشهر</string>
+    <string name="in_12_mo">خلال 12 شهرًا</string>
+
+    <!-- أزرار المعاملة -->
+    <string name="confirm">تأكيد</string>
+    <string name="repeat_question">تكرار؟</string>
+
+    <!-- مشاركة -->
+    <string name="share_my_net_worth">صافي ثروتي:</string>
+    <string name="share_tracked_with">أتتبّع مع Mooney 💰</string>
+
+    <!-- إضافات المعاملة -->
+    <string name="destination_amount_label">المبلغ المستهدف (%1$s)</string>
+    <string name="select_parent_format">اختر %1$s</string>
+
+    <!-- تنبيه السعر -->
+    <string name="alert_me_when_format">نبّهني عندما يصبح 1 %1$s</string>
+
+    <!-- عام -->
+    <string name="unknown">غير معروف</string>
+
+    <!-- فترة الاتجاه -->
+    <string name="period_6mo">6 أشهر</string>
+    <string name="period_1y">سنة</string>
+    <string name="period_lifetime">منذ البداية</string>
+
+    <!-- مؤشر -->
+    <string name="pct_of_revenue">%1$s%% من الإيرادات</string>
+
+    <!-- التحويل -->
+    <string name="transfer_from_to">%1$s → %2$s</string>
+
+    <!-- حالات فارغة -->
+    <string name="goals_empty_desc">حدد أهدافًا مالية وتابع تقدمك نحوها.</string>
+    <string name="assets_welcome_desc">أضف حسابك الأول لتبدأ بمتابعة أموالك. يمكنك إضافة حسابات بنكية ونقد واستثمارات والمزيد.</string>
+    <string name="recurring_delete_warning">سيؤدي هذا إلى إيقاف الإدخالات التلقائية المستقبلية. لن تتأثر المعاملات الحالية.</string>
+    <string name="trend_not_enough_data">لا توجد بيانات كافية بعد — أضف المزيد من المعاملات لرؤية الاتجاهات</string>
+    <string name="base_currency_prefix">الأساس: %1$s</string>
+    <string name="current_rate_prefix">الحالي: %1$s</string>
+
+    <!-- إخلاء مسؤولية -->
+    <string name="net_worth_disclaimer">القيم السابقة معاد بناؤها من صافي دخلك الشهري — التغيرات الكبيرة لمرة واحدة (بيع سيارة، استيراد حسابات) قد تزيح الخط.</string>
+    <string name="net_worth_history_empty">عندما تتراكم بضعة أشهر من النشاط ستظهر المسارات هنا.</string>
+
+    <!-- مقدمة الملاحظات -->
+
+    <!-- التسوية -->
+    <string name="recon_current_diff">الحالي: %1$s %2$s ← الفرق: %3$s %4$s</string>
+
+    <!-- ملخص -->
+    <string name="recurring_summary_monthly">يتكرر شهريًا في اليوم %1$d</string>
+    <string name="recurring_summary_weekly">يتكرر أسبوعيًا</string>
+    <string name="recurring_summary_yearly">يتكرر سنويًا، الشهر %1$d، اليوم %2$d</string>
+    <string name="recurring_summary_daily">يتكرر يوميًا</string>
+
+    <!-- الجدول -->
+    <string name="no_recurring_yet">لا توجد معاملات متكررة بعد</string>
+    <string name="recurring_empty_hint">اضغط + لإنشاء معاملة متكررة سيتم إنشاء سجلاتها تلقائيًا حسب الجدول.</string>
+    <string name="schedule_label">الجدول</string>
+    <string name="frequency_label">التكرار</string>
+    <string name="monthly_label">شهريًا</string>
+    <string name="weekly_label">أسبوعيًا</string>
+    <string name="yearly_label">سنويًا</string>
+    <string name="repeat_on_day">التكرار في يوم</string>
+    <string name="repeat_on">التكرار في</string>
+    <string name="month_label">الشهر</string>
+</resources>

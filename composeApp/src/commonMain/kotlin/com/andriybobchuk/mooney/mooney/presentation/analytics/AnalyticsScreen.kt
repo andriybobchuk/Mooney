@@ -101,6 +101,7 @@ fun AnalyticsScreen(
     onNavigateToTransactions: () -> Unit = {},
     onNavigateToBreakdown: (String) -> Unit = {},
     onNavigateToNetIncome: () -> Unit = {},
+    onNavigateToNetWorth: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
@@ -116,6 +117,35 @@ fun AnalyticsScreen(
 
     LaunchedEffect(selectedTimePeriod) {
         if (selectedTimePeriod == TimePeriod.LIFETIME) viewModel.loadLifetimeData()
+    }
+
+    // Auto-bump the chart window when the user picks a month outside the
+    // currently visible range. We only upgrade (6mo → 1y → Lifetime), never
+    // downgrade — the user can always manually pull the period back down via
+    // the in-chart period chips if they want a narrower view.
+    LaunchedEffect(state.selectedMonth) {
+        val now = MonthKey.current()
+        val monthsAgo = (now.year - state.selectedMonth.year) * 12 +
+            (now.month - state.selectedMonth.month)
+        when {
+            monthsAgo >= TimePeriod.ONE_YEAR.months &&
+                selectedTimePeriod != TimePeriod.LIFETIME -> {
+                selectedTimePeriod = TimePeriod.LIFETIME
+            }
+            monthsAgo >= TimePeriod.SIX_MONTHS.months &&
+                selectedTimePeriod == TimePeriod.SIX_MONTHS -> {
+                selectedTimePeriod = TimePeriod.ONE_YEAR
+            }
+        }
+    }
+
+    // Counts per month for the picker sheet caption. Built from whichever
+    // dataset is richer — lifetime data when it's loaded covers the full
+    // history; otherwise fall back to the 6-month historical window.
+    val monthlyCounts = remember(state.historicalMetrics, state.lifetimeMetrics) {
+        val source = if (state.lifetimeMetrics.isNotEmpty()) state.lifetimeMetrics
+        else state.historicalMetrics
+        source.associate { it.month to it.transactionCount }
     }
     val hasAnyData = state.transactionsForMonth.filterNotNull().isNotEmpty() ||
         state.historicalMetrics.any { it.revenue > 0 || it.taxes > 0 || it.operatingCosts > 0 || it.netIncome != 0.0 }
@@ -135,22 +165,18 @@ fun AnalyticsScreen(
         topBar = {
             Toolbars.Primary(
                 containerColor = Color.Transparent,
-                title = run {
-                    val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-                    if (state.selectedMonth.year == now.year) {
-                        "${state.selectedMonth.toDisplayString().substringBeforeLast(' ')} Analytics"
-                    } else {
-                        "${state.selectedMonth.toDisplayString()} Analytics"
-                    }
-                },
+                // Title is the plain word — the month is already shown inside
+                // the selector pill sitting in customContent.
+                title = stringResource(Res.string.analytics_title),
                 scrollBehavior = scrollBehavior,
-                actions = listOf(
-                    Toolbars.ToolBarAction(
-                        painter = com.andriybobchuk.mooney.core.presentation.Icons.SettingsIcon(),
-                        contentDescription = stringResource(Res.string.settings),
-                        onClick = onSettingsClick
+                customContent = {
+                    com.andriybobchuk.mooney.mooney.presentation.components.MonthSelector(
+                        selectedMonth = state.selectedMonth,
+                        onMonthSelected = viewModel::onMonthSelected,
+                        monthlyCounts = monthlyCounts
                     )
-                )
+                },
+                actions = emptyList()
             )
         },
         bottomBar = { bottomNavbar() },
@@ -180,7 +206,7 @@ fun AnalyticsScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Start adding transactions to see revenue, expenses, and financial insights.",
+                            text = stringResource(Res.string.analytics_empty_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -218,13 +244,14 @@ fun AnalyticsScreen(
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
             ) {
 
-                // Trend Chart
+                // Trend Chart — month picking lives in the toolbar's MonthSelector.
+                // The chart visualizes the trend and highlights the selected month
+                // with a vertical accent line.
                 TrendChart(
                     historicalData = state.historicalMetrics,
                     lifetimeData = state.lifetimeMetrics,
                     isLifetimeLoading = state.isLifetimeLoading,
                     selectedMonth = state.selectedMonth,
-                    onMonthSelected = viewModel::onMonthSelected,
                     selectedPeriod = selectedTimePeriod,
                     onPeriodSelected = { selectedTimePeriod = it },
                     modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 0.dp, bottom = 8.dp)
@@ -238,15 +265,25 @@ fun AnalyticsScreen(
                             metric = metric,
                             onClick = {
                                 when (metric.title) {
-                                    "Net Income" -> onNavigateToNetIncome()
-                                    "Revenue" -> onNavigateToBreakdown("REVENUE")
-                                    "Expenses" -> onNavigateToBreakdown("OPERATING_COSTS")
-                                    "Taxes" -> onNavigateToBreakdown("TAXES")
+                                    METRIC_NET_INCOME -> onNavigateToNetIncome()
+                                    METRIC_REVENUE -> onNavigateToBreakdown("REVENUE")
+                                    METRIC_EXPENSES -> onNavigateToBreakdown("OPERATING_COSTS")
+                                    METRIC_TAXES -> onNavigateToBreakdown("TAXES")
                                 }
                             }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
+                    // Net Worth card hidden for now — detail screen exists but
+                    // entry point is gated until the underlying history math
+                    // is fleshed out (current reconstruction relies on net
+                    // income summation which is approximate). Re-enable by
+                    // un-commenting the call below.
+                    // NetWorthCard(
+                    //     amount = state.currentNetWorth,
+                    //     currency = GlobalConfig.baseCurrency,
+                    //     onClick = onNavigateToNetWorth
+                    // )
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -493,7 +530,7 @@ fun EnhancedMetricCard(
             // Metric info
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = metric.title,
+                    text = localizedMetricTitle(metric.title),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -506,7 +543,7 @@ fun EnhancedMetricCard(
                 metric.subtitle?.let {
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = it,
+                        text = localizedMetricSubtitle(it),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -641,7 +678,7 @@ fun CategoryTransactionsSheet(
 
         if (transactions.isEmpty()) {
             Text(
-                text = "No transactions",
+                text = stringResource(Res.string.no_transactions_short),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 20.dp)
@@ -958,13 +995,13 @@ fun NetIncomeChartBottomSheet(
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             NetIncomeStatCard(
                 modifier = Modifier.weight(1f),
-                label = "Best month",
+                label = stringResource(Res.string.best_month),
                 value = bestMonth?.netIncome ?: 0.0,
                 sublabel = bestMonth?.month?.toShortDisplayString()
             )
             NetIncomeStatCard(
                 modifier = Modifier.weight(1f),
-                label = "Worst month",
+                label = stringResource(Res.string.worst_month),
                 value = worstMonth?.netIncome ?: 0.0,
                 sublabel = worstMonth?.month?.toShortDisplayString()
             )
@@ -1089,7 +1126,7 @@ private fun NetIncomeInsightStrip(
     ) {
         Column {
             Text(
-                text = "In the green",
+                text = stringResource(Res.string.in_the_green),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1102,7 +1139,7 @@ private fun NetIncomeInsightStrip(
         if (avgSaveRate != null) {
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "Avg save rate",
+                    text = stringResource(Res.string.avg_save_rate),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1319,5 +1356,80 @@ private fun AnalyticsScreenShimmer(modifier: Modifier = Modifier) {
                     .background(barColor)
             )
         }
+    }
+}
+
+@Composable
+private fun NetWorthCard(
+    amount: Double,
+    currency: com.andriybobchuk.mooney.mooney.domain.Currency,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // No colored dot — net worth sits on its own axis and would be
+            // misleading to imply it shares the chart with income/expense.
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(Res.string.net_worth_label),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "${amount.formatWithCommas()} ${currency.symbol}",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = stringResource(Res.string.tap_to_view_history),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(
+                painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+    }
+}
+
+internal const val METRIC_NET_INCOME = "Net Income"
+internal const val METRIC_REVENUE = "Revenue"
+internal const val METRIC_EXPENSES = "Expenses"
+internal const val METRIC_TAXES = "Taxes"
+
+@Composable
+private fun localizedMetricTitle(rawTitle: String): String = when (rawTitle) {
+    METRIC_NET_INCOME -> stringResource(Res.string.net_income_title)
+    METRIC_REVENUE -> stringResource(Res.string.revenue)
+    METRIC_EXPENSES -> stringResource(Res.string.operating_costs)
+    METRIC_TAXES -> stringResource(Res.string.taxes)
+    else -> rawTitle
+}
+
+@Composable
+private fun localizedMetricSubtitle(rawSubtitle: String): String {
+    val pctOfRevenuePrefix = "pct_of_revenue:"
+    return if (rawSubtitle.startsWith(pctOfRevenuePrefix)) {
+        stringResource(Res.string.pct_of_revenue, rawSubtitle.removePrefix(pctOfRevenuePrefix))
+    } else {
+        rawSubtitle
     }
 }

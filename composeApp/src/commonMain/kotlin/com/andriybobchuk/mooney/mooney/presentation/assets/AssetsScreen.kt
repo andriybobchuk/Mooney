@@ -122,6 +122,9 @@ fun AssetsScreen(
     var editingAsset by remember { mutableStateOf<UiAsset?>(null) }
     var detailAsset by remember { mutableStateOf<UiAsset?>(null) }
     var showFlexSheet by remember { mutableStateOf(false) }
+    // Overflow-menu visibility for the top-bar 3-dot button. Only ever opened
+    // when state.hasLiabilities is true (button itself is hidden otherwise).
+    var showAssetsMenu by remember { mutableStateOf(false) }
     var showReviewPrePrompt by remember { mutableStateOf(false) }
     var showReviewFeedback by remember { mutableStateOf(false) }
     val flexCoroutineScope = rememberCoroutineScope()
@@ -153,8 +156,21 @@ fun AssetsScreen(
                             )
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
+                        // Either net worth (default) or gross-assets — toggled
+                        // from the overflow menu when the user has liabilities.
+                        // Conversion to the displayed currency uses the same
+                        // pre-computed rate the net-worth flow uses, so totals
+                        // stay consistent across the cycling currency display.
+                        val displayedAmount = if (state.showAssetsOnlyInTopBar) {
+                            // totalAssetsBase is in baseCurrency; convert to the
+                            // currently-displayed currency via the ratio of
+                            // totalNetWorth ↔ baseNetWorth (avoids re-fetching).
+                            if (state.baseNetWorth != 0.0) {
+                                state.totalAssetsBase * (state.totalNetWorth / state.baseNetWorth)
+                            } else state.totalAssetsBase
+                        } else totalNetWorth
                         Text(
-                            text = "${totalNetWorth.formatWithCommas()} ${state.totalNetWorthCurrency.symbol}",
+                            text = "${displayedAmount.formatWithCommas()} ${state.totalNetWorthCurrency.symbol}",
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 20.sp
@@ -162,7 +178,8 @@ fun AssetsScreen(
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = stringResource(Res.string.total_net_worth),
+                            text = if (state.showAssetsOnlyInTopBar) stringResource(Res.string.total_assets)
+                            else stringResource(Res.string.total_net_worth),
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Normal,
@@ -172,38 +189,56 @@ fun AssetsScreen(
                     }
                 },
                 scrollBehavior = scrollBehavior,
-                customContent = if (onGoalsClick != null) {
+                // Overflow menu: only meaningful if the user has liabilities
+                // to subtract from. The trailing `.toList()` materialises the
+                // PrimaryActionItem list — empty when no menu should show.
+                actions = emptyList(),
+                // Inline button + DropdownMenu so the menu anchors directly
+                // under the icon — Material3's DropdownMenu uses its enclosing
+                // composable as the anchor point. Only shown when there are
+                // liabilities to subtract from.
+                trailingActionContent = if (state.hasLiabilities) {
                     {
-                        IconButton(onClick = onGoalsClick) {
-                            BadgedBox(
-                                badge = {
-                                    if (achievedGoalsCount > 0) {
-                                        Badge(
-                                            containerColor = MaterialTheme.colorScheme.primary,
-                                            contentColor = MaterialTheme.colorScheme.onPrimary
-                                        ) {
-                                            Text(achievedGoalsCount.toString())
-                                        }
-                                    }
-                                }
+                        Box {
+                            androidx.compose.material3.IconButton(
+                                onClick = { showAssetsMenu = true }
                             ) {
                                 Icon(
-                                    painter = com.andriybobchuk.mooney.core.presentation.Icons.GoalsIcon(),
-                                    contentDescription = "Goals",
-                                    modifier = Modifier.size(22.dp),
-                                    tint = MaterialTheme.colorScheme.onBackground
+                                    painter = com.andriybobchuk.mooney.core.presentation.Icons.MoreVertIcon(),
+                                    contentDescription = "More",
+                                    tint = MaterialTheme.colorScheme.onBackground,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            androidx.compose.material3.DropdownMenu(
+                                expanded = showAssetsMenu,
+                                onDismissRequest = { showAssetsMenu = false },
+                                // Standard surface background — by default
+                                // Material3 picks `surfaceContainer` which is
+                                // a clean off-white / off-black depending on
+                                // theme. The pink the user saw was the inverse-
+                                // surface coming from a stale colorScheme;
+                                // explicit override removes any ambiguity.
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ) {
+                                androidx.compose.material3.DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            if (state.showAssetsOnlyInTopBar)
+                                                stringResource(Res.string.display_networth_in_header)
+                                            else
+                                                stringResource(Res.string.display_assets_in_header)
+                                        )
+                                    },
+                                    onClick = {
+                                        viewModel.toggleAssetsOnlyInTopBar()
+                                        showAssetsMenu = false
+                                    }
                                 )
                             }
                         }
                     }
-                } else null,
-                actions = listOf(
-                    Toolbars.ToolBarAction(
-                        painter = com.andriybobchuk.mooney.core.presentation.Icons.SettingsIcon(),
-                        contentDescription = stringResource(Res.string.settings),
-                        onClick = onSettingsClick
-                    )
-                )
+                } else null
             )
         },
         bottomBar = {
@@ -573,7 +608,7 @@ private fun AssetsScreenContent(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Add your first account to start tracking your finances. You can add bank accounts, cash, investments, and more.",
+                            text = stringResource(Res.string.assets_welcome_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -1037,8 +1072,8 @@ private fun AssetCard(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete Account") },
-            text = { Text("Delete \"${asset.title}\"? This cannot be undone.") },
+            title = { Text(stringResource(Res.string.delete_account_title)) },
+            text = { Text(stringResource(Res.string.delete_account_confirm, asset.title)) },
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteConfirm = false
@@ -1101,7 +1136,7 @@ private fun AssetSheet(
                 .padding(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            listOf("Asset" to false, "Liability" to true).forEach { (label, liability) ->
+            listOf(stringResource(Res.string.asset_label) to false, stringResource(Res.string.liability_label) to true).forEach { (label, liability) ->
                 val isSelected = isLiability == liability
                 Box(
                     modifier = Modifier
@@ -1230,7 +1265,7 @@ private fun AssetSheet(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(Modifier.width(4.dp))
-                        Text("Add Category")
+                        Text(stringResource(Res.string.add_category))
                     }
                 }
                 filteredCategories.forEach { category ->

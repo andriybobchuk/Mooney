@@ -33,6 +33,70 @@
 	<false/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Mooney needs access to your photo library to attach receipt images to transactions.</string>
+	<!-- AdMob app ID for Mooney (iOS). Real ID; debug builds use the test
+	     unit IDs from AdUnitIds.kt — but this top-level App ID is the same
+	     in both, the SDK requires it set to your live app at all times. -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-7021633711522076~6326300426</string>
+	<!-- Apple's required list of ad network identifiers (SKAdNetwork) so
+	     iOS 14.5+ attribution works without IDFA. Canonical list maintained
+	     by Google; copy/paste verbatim from
+	     https://developers.google.com/admob/ios/ios14#skadnetwork
+	     when adding new partners. -->
+	<key>SKAdNetworkItems</key>
+	<array>
+		<dict><key>SKAdNetworkIdentifier</key><string>cstr6suwn9.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>4fzdc2evr5.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>2fnua5tdw4.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>ydx93a7ass.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>p78axxw29g.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>v72qych5uu.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>ludvb6z3bs.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>cp8zw746q7.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>3sh42y64q3.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>c6k4g5qg8m.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>s39g8k73mm.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>3qy4746246.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>3rd42ekr43.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>hs6bdukanm.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>mlmmfzh3r3.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>v4nxqhlyqp.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>wzmmz9fp6w.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>su67r6k2v3.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>yclnxrl5pm.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>7ug5zh24hu.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>gta9lk7p23.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>vutu7akeur.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>y5ghdn5j9k.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>v9wttpbfk9.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>n38lu8286q.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>47vhws6wlr.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>kbd757ywx3.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>9t245vhmpl.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>a2p9lx4jpn.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>22mmun2rn5.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>4468km3ulz.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>2u9pt9hc89.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>8s468mfl3y.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>av6w8kgt66.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>klf5c3l5u5.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>ppxm28t8ap.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>424m5254lk.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>uw77j35x4d.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>578prtvx9j.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>4dzt52r2t5.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>e5fvkxwrpn.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>8c4e2ghe7u.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>zq492l623r.skadnetwork</string></dict>
+		<dict><key>SKAdNetworkIdentifier</key><string>3qcr597p9d.skadnetwork</string></dict>
+	</array>
+	<!-- ATT consent prompt copy. Required if you call ATTrackingManager
+	     anywhere. AdMob will work without ATT (limited measurement), so
+	     this is optional — uncomment when you decide to surface the prompt.
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Allowing tracking helps Mooney keep showing relevant ads so we can stay free.</string>
+	-->
+
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>arm64</string>

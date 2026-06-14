@@ -45,6 +45,14 @@ import com.andriybobchuk.mooney.core.presentation.designsystem.components.Enhanc
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRates
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.close
+import mooney.composeapp.generated.resources.in_country_suffix
+import mooney.composeapp.generated.resources.net_worth_label
+import mooney.composeapp.generated.resources.share
+import mooney.composeapp.generated.resources.share_my_net_worth
+import mooney.composeapp.generated.resources.share_tracked_with
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Full-screen "flex" overlay shown via long-press on the net-worth header.
@@ -97,6 +105,9 @@ private fun FlexSheetContent(
     val onBg = MaterialTheme.colorScheme.onBackground
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val bottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val shareHeader = stringResource(Res.string.share_my_net_worth)
+    val shareFooter = stringResource(Res.string.share_tracked_with)
+    val inCountryTemplate = stringResource(Res.string.in_country_suffix, "%1\$s")
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val screenWidthDp = maxWidth.value.toInt()
@@ -115,7 +126,7 @@ private fun FlexSheetContent(
             IconButton(onClick = onDismiss) {
                 Icon(
                     imageVector = Icons.Filled.Close,
-                    contentDescription = "Close",
+                    contentDescription = stringResource(Res.string.close),
                     tint = onBg.copy(alpha = 0.75f)
                 )
             }
@@ -130,7 +141,7 @@ private fun FlexSheetContent(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Net Worth",
+                text = stringResource(Res.string.net_worth_label),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Medium,
                     letterSpacing = 4.sp
@@ -195,7 +206,7 @@ private fun FlexSheetContent(
                         color = onBg
                     )
                     Text(
-                        text = " in ${rank.country}",
+                        text = " ${stringResource(Res.string.in_country_suffix, rank.country)}",
                         style = MaterialTheme.typography.labelLarge.copy(
                             fontWeight = FontWeight.Medium
                         ),
@@ -261,7 +272,15 @@ private fun FlexSheetContent(
                     .background(MaterialTheme.colorScheme.inverseSurface)
                     .clickable {
                         onShareClick(
-                            buildShareText(totalInBaseCurrency, baseCurrency, otherCurrencies, exchangeRates)
+                            buildShareText(
+                                totalInBaseCurrency,
+                                baseCurrency,
+                                otherCurrencies,
+                                exchangeRates,
+                                shareHeader = shareHeader,
+                                shareFooter = shareFooter,
+                                inCountryTemplate = inCountryTemplate
+                            )
                         )
                     }
                     .padding(horizontal = 28.dp, vertical = 14.dp),
@@ -276,7 +295,7 @@ private fun FlexSheetContent(
                 )
                 Spacer(Modifier.width(10.dp))
                 Text(
-                    text = "Share",
+                    text = stringResource(Res.string.share),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
@@ -303,13 +322,17 @@ private fun buildShareText(
     totalInBase: Double,
     baseCurrency: Currency,
     otherCurrencies: List<Currency>,
-    exchangeRates: ExchangeRates
+    exchangeRates: ExchangeRates,
+    shareHeader: String,
+    shareFooter: String,
+    inCountryTemplate: String
 ): String = buildString {
-    appendLine("My net worth:")
+    appendLine(shareHeader)
     appendLine("${totalInBase.formatWithCommas()} ${baseCurrency.symbol} ${baseCurrency.name}")
     val rank = computeWealthRank(totalInBase, baseCurrency)
     if (rank != null) {
-        appendLine("${rank.flag} ${rank.formatTopPercent()} in ${rank.country}")
+        val inCountry = inCountryTemplate.replace("%1\$s", rank.country)
+        appendLine("${rank.flag} ${rank.formatTopPercent()} $inCountry")
     }
     if (otherCurrencies.isNotEmpty()) {
         appendLine()
@@ -319,5 +342,5 @@ private fun buildShareText(
         }
     }
     appendLine()
-    append("Tracked with Mooney 💰")
+    append(shareFooter)
 }

@@ -28,6 +28,11 @@ import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
 import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.EnhancedMeshBackground
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.enjoying_mooney
+import mooney.composeapp.generated.resources.feedback_intro
+import mooney.composeapp.generated.resources.not_really
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 
 /**
@@ -86,7 +91,7 @@ fun ReviewPrePromptDialog(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "Enjoying Mooney?",
+                    text = stringResource(Res.string.enjoying_mooney),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -94,7 +99,7 @@ fun ReviewPrePromptDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Your feedback helps me improve the app — built solo, every reply is read.",
+                    text = stringResource(Res.string.feedback_intro),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center
@@ -126,7 +131,7 @@ fun ReviewPrePromptDialog(
                     shape = RoundedCornerShape(14.dp)
                 ) {
                     Text(
-                        text = "Not really",
+                        text = stringResource(Res.string.not_really),
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.75f),
                         fontSize = 15.sp

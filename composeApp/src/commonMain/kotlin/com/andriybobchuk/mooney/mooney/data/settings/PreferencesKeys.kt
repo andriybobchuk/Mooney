@@ -41,4 +41,17 @@ object PreferencesKeys {
     // from ongoing engagement in Firebase funnels.
     val ANALYTICS_FIRST_ACCOUNT_FIRED = booleanPreferencesKey("analytics_first_account_fired")
     val ANALYTICS_FIRST_TRANSACTION_FIRED = booleanPreferencesKey("analytics_first_transaction_fired")
+    // Ads — frequency-capping counters used by AdEligibilityUseCase. All are
+    // best-effort; if a write loses a race, worst case we show one extra ad
+    // (capped at the next check anyway). See core/ads/Ads.kt.
+    val ADS_LAST_INTERSTITIAL_TIMESTAMP = androidx.datastore.preferences.core.longPreferencesKey("ads_last_interstitial_timestamp")
+    val ADS_LAST_APP_OPEN_DAY = intPreferencesKey("ads_last_app_open_day")
+    /** Developer kill-switch for all ads — read by AdEligibilityUseCase. */
+    val ADS_DISABLED_DEV = booleanPreferencesKey("ads_disabled_dev")
+    /**
+     * When true, the Assets top-bar shows the gross-assets total instead of
+     * net worth (assets − liabilities). Only takes visible effect when the
+     * user actually has liabilities; otherwise the two are equal.
+     */
+    val ASSETS_ONLY_IN_TOP_BAR = booleanPreferencesKey("assets_only_in_top_bar")
 }

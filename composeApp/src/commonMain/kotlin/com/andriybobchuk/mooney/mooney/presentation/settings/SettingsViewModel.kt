@@ -58,7 +58,12 @@ class SettingsViewModel(
     private val updateTransactionCategoriesUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.UpdateTransactionCategoriesUseCase,
     private val currencyManagerUseCase: CurrencyManagerUseCase,
     private val dataStore: androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>,
-    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
+    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache,
+    // CSV import — both injected together so the use case has everything it
+    // needs (parsing + DB writes) without the ViewModel having to wire
+    // accounts/categories per-call.
+    private val universalCsvImporter: com.andriybobchuk.mooney.mooney.domain.backup.UniversalCsvImporter,
+    private val importCsvUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.ImportCsvUseCase
 ) : ViewModel() {
 
     // Seed `isLoading` from the app cache so opening Settings while the cache
@@ -80,6 +85,7 @@ class SettingsViewModel(
         observeCurrencyInsights()
         observeWidgetPager()
         observeDeveloperOptions()
+        observeAdsDisabled()
         observeDevPremiumFlag()
     }
 
@@ -124,6 +130,23 @@ class SettingsViewModel(
         }.onEach { enabled ->
             _state.update { it.copy(developerOptionsEnabled = enabled) }
         }.launchIn(viewModelScope)
+    }
+
+    private fun observeAdsDisabled() {
+        dataStore.data.map { prefs ->
+            prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.ADS_DISABLED_DEV] ?: false
+        }.onEach { disabled ->
+            _state.update { it.copy(adsDisabled = disabled) }
+        }.launchIn(viewModelScope)
+    }
+
+    fun toggleAdsDisabled(disabled: Boolean) {
+        viewModelScope.launch {
+            dataStore.edit { prefs ->
+                prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.ADS_DISABLED_DEV] = disabled
+            }
+            _state.update { it.copy(adsDisabled = disabled) }
+        }
     }
 
     fun enableDeveloperOptions() {
@@ -227,6 +250,7 @@ class SettingsViewModel(
             is SettingsAction.OnLanguageChange -> handleLanguageChange(action.language)
             is SettingsAction.OnExportData -> handleExportData()
             is SettingsAction.OnImportData -> handleImportData(action.jsonData)
+            is SettingsAction.OnImportCsv -> handleImportCsv(action.csvContent)
             is SettingsAction.OnToggleUserCurrency -> handleToggleUserCurrency(action.currencyCode)
             is SettingsAction.OnDefaultExpenseCategoryChange -> handleDefaultExpenseCategoryChange(action.categoryId)
             is SettingsAction.OnDefaultIncomeCategoryChange -> handleDefaultIncomeCategoryChange(action.categoryId)
@@ -250,6 +274,55 @@ class SettingsViewModel(
             } catch (e: Exception) {
                 analyticsTracker.recordException(e, "Settings", mapOf("action" to "export"))
                 _state.update { it.copy(isExporting = false, error = "Export failed: ${e.message}") }
+            }
+        }
+    }
+
+    private fun handleImportCsv(csvContent: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(isImporting = true, restoreMessage = null) }
+            try {
+                val parsed = universalCsvImporter.parse(csvContent)
+                if (!parsed.mapping.isComplete) {
+                    _state.update {
+                        it.copy(
+                            isImporting = false,
+                            restoreMessage = "Couldn't recognise date / amount columns in this CSV. " +
+                                "Try exporting again from the source app, or rename the columns to " +
+                                "include 'Date' and 'Amount'."
+                        )
+                    }
+                    return@launch
+                }
+                val all = universalCsvImporter.parseAll(
+                    rows = parsed.rows,
+                    mapping = parsed.mapping,
+                    dateFormat = parsed.detectedDateFormat,
+                    decimalSeparator = parsed.decimalSeparator
+                )
+                val prefs = preferencesRepository.getCurrentPreferences()
+                val summary = importCsvUseCase(
+                    transactions = all,
+                    defaultExpenseSubcategoryId = prefs.defaultExpenseCategory,
+                    defaultIncomeSubcategoryId = prefs.defaultIncomeCategory
+                )
+                _state.update {
+                    it.copy(
+                        isImporting = false,
+                        restoreMessage = "Imported ${summary.transactionsImported} transactions" +
+                            if (summary.accountCreated) " into a new 'Imported' account" else "" +
+                                if (summary.firstFailureMessage != null) " · ${summary.firstFailureMessage}" else ""
+                    )
+                }
+            } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isImporting = false,
+                        restoreMessage = "Couldn't import CSV: ${e.message ?: "unknown error"}"
+                    )
+                }
             }
         }
     }

@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -165,7 +166,6 @@ fun TransactionsScreen(
     onNavigateToAssets: () -> Unit = {},
     onNavigateToRecurring: () -> Unit = {},
     onNavigateToTransactionCategories: () -> Unit = {},
-    onNavigateToExchange: () -> Unit = {},
     onNavigateToGoals: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -239,31 +239,45 @@ fun TransactionsScreen(
             Toolbars.Primary(
                 containerColor = Color.Transparent,
                 titleContent = {
-                    // Title is just the amount now. The "Spent in <month>"
-                    // text moved down into the MonthSelectorBar pill below
-                    // the toolbar so the date is closer to the chip row.
-                    Text(
+                    // Amount + "Spent in <Month>" subtitle. Date stepper sits
+                    // in the actions slot to the right of the title — Settings
+                    // moved out of the toolbar entirely (now a bottom-nav tab).
+                    Column(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
                             .clickable { viewModel.onTotalCurrencyClick() }
-                            .padding(horizontal = 4.dp, vertical = 2.dp),
-                        text = "${total.formatWithCommas()} ${totalCurrency.symbol}",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        ),
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "${total.formatWithCommas()} ${totalCurrency.symbol}",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            ),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Text(
+                            text = stringResource(Res.string.spent_in, state.selectedMonth.toDisplayString().substringBeforeLast(' ')),
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
+                            )
+                        )
+                    }
                 },
                 scrollBehavior = scrollBehavior,
-                actions = listOf(
-                    // Recurring moved to the quick-actions chip row below.
-                    Toolbars.ToolBarAction(
-                        painter = com.andriybobchuk.mooney.core.presentation.Icons.SettingsIcon(),
-                        contentDescription = "Settings",
-                        onClick = onSettingsClick
+                customContent = {
+                    // Compact date stepper replaces the Settings icon in the
+                    // right-side band: ◀ [pill ▾] ▶. The pill opens the
+                    // year/month picker.
+                    com.andriybobchuk.mooney.mooney.presentation.components.MonthSelector(
+                        selectedMonth = state.selectedMonth,
+                        onMonthSelected = viewModel::onMonthSelected,
+                        monthlyCounts = state.monthlyTransactionCounts
                     )
-                )
+                },
+                actions = emptyList()
             )
         },
         bottomBar = { bottomNavbar() },
@@ -302,22 +316,12 @@ fun TransactionsScreen(
                         .padding(paddingValues)
                         .fillMaxSize()
                 ) {
-                    // Month selector moved out of the toolbar to sit just above
-                    // the chip row — same visual band as the chips, closer to
-                    // the data, and the toolbar reads as just "amount + actions".
+                    // Quick-action chips: Recurring, Exchange, Goals,
+                    // Categories. Date stepper is back in the toolbar so the
+                    // chip row is the only thing between toolbar and calendar.
                     if (!showShimmer) {
-                        MonthSelectorBar(
-                            selectedMonth = state.selectedMonth,
-                            onMonthSelected = viewModel::onMonthSelected,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                        )
-                        // Quick-action chips replace the old toolbar icons and
-                        // the hidden Exchange/Goals destinations behind the
-                        // bottom nav. Hidden during cold-start shimmer to
-                        // avoid double-loading visual noise.
                         QuickActionChipsRow(
                             onRecurringClick = onNavigateToRecurring,
-                            onExchangeClick = onNavigateToExchange,
                             onGoalsClick = onNavigateToGoals,
                             onCategoriesClick = onNavigateToTransactionCategories
                         )
@@ -493,7 +497,7 @@ private fun PendingTransactionItem(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "Confirm",
+                    stringResource(Res.string.confirm),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary
@@ -678,8 +682,9 @@ fun TransactionsScreenContent(
         }
     }
 
+    Box(modifier = modifier.fillMaxSize()) {
     LazyColumn(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(if (isEmpty) Color.Transparent else MaterialTheme.colorScheme.background),
         state = lazyListState,
@@ -693,7 +698,10 @@ fun TransactionsScreenContent(
                     dailyTotals = dailyTotals,
                     onDayClick = onDayClick,
                     showAllWidgets = showAllWidgets,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                    // Side padding only — the bottom (and top) bands of
+                    // dead space around the calendar are gone. The first
+                    // date header sits flush against the calendar grid.
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
         } else if (!hasAccounts) {
@@ -824,7 +832,7 @@ fun TransactionsScreenContent(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Start tracking your spending by adding your first transaction.",
+                            text = stringResource(Res.string.start_tracking_first_tx),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -989,7 +997,7 @@ fun TransactionsScreenContent(
                                 modifier = Modifier.padding(bottom = 4.dp)
                             )
                             Text(
-                                text = "Delete \"${tx.subcategory.title}\" transaction for ${tx.amount.formatWithCommas()} ${tx.account.currency.symbol}?",
+                                text = stringResource(Res.string.delete_tx_confirm, tx.subcategory.title, tx.amount.formatWithCommas(), tx.account.currency.symbol),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 16.dp)
@@ -1025,7 +1033,7 @@ fun TransactionsScreenContent(
                                     .padding(horizontal = 16.dp, vertical = 14.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("Cancel", style = MaterialTheme.typography.bodyLarge)
+                                Text(stringResource(Res.string.cancel), style = MaterialTheme.typography.bodyLarge)
                             }
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -1035,6 +1043,40 @@ fun TransactionsScreenContent(
             }
         }
     }
+
+    // Scroll-to-top — appears once the list has been scrolled past the first
+    // item. Sits at the bottom-end above the bottom nav, slightly inset
+    // so it doesn't crowd the add-transaction FAB at the top-level Scaffold.
+    val showScrollToTop = remember {
+        androidx.compose.runtime.derivedStateOf { lazyListState.firstVisibleItemIndex > 0 }
+    }
+    androidx.compose.animation.AnimatedVisibility(
+        visible = showScrollToTop.value,
+        modifier = Modifier
+            .align(Alignment.BottomEnd)
+            .padding(end = 16.dp, bottom = 88.dp),
+        enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.scaleIn(),
+        exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.scaleOut()
+    ) {
+        androidx.compose.material3.SmallFloatingActionButton(
+            onClick = {
+                coroutineScope.launch { lazyListState.animateScrollToItem(0) }
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            elevation = androidx.compose.material3.FloatingActionButtonDefaults.elevation(
+                defaultElevation = 4.dp,
+                pressedElevation = 6.dp
+            )
+        ) {
+            Icon(
+                imageVector = androidx.compose.material.icons.Icons.Outlined.KeyboardArrowDown,
+                contentDescription = "Scroll to top",
+                modifier = Modifier.rotate(180f)
+            )
+        }
+    }
+    } // end Box
 }
 
 
@@ -1071,7 +1113,7 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
                 val destinationAccount = accounts.find { it?.id == destinationAccountId }
                 val destinationAccountTitle = destinationAccount?.title ?: "Unknown"
                 Text(
-                    "${transaction.account.title} to $destinationAccountTitle",
+                    stringResource(Res.string.transfer_from_to, transaction.account.title, destinationAccountTitle),
                     style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                 )
             } else {
@@ -1352,7 +1394,7 @@ fun TransactionBottomSheet(
 
                 if (difference != 0.0 && reconAccount != null) {
                     Text(
-                        text = "Current: ${currentValue.formatWithCommas()} $currencySymbol → Diff: ${if (difference > 0) "+" else ""}${difference.formatWithCommas()} $currencySymbol",
+                        text = stringResource(Res.string.recon_current_diff, currentValue.formatWithCommas(), currencySymbol, "${if (difference > 0) "+" else ""}${difference.formatWithCommas()}", currencySymbol),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (difference > 0) MaterialTheme.appColors.incomeColor else MaterialTheme.appColors.expenseColor,
                         fontWeight = FontWeight.Medium,
@@ -1497,7 +1539,7 @@ fun TransactionBottomSheet(
                 val repeatLabel = if (isRecurringEnabled) {
                     recurringSchedule.toDisplayString()
                 } else {
-                    "Repeat?"
+                    stringResource(Res.string.repeat_question)
                 }
                 MooneyButton(
                     text = repeatLabel,
@@ -1859,7 +1901,7 @@ fun CalendarDaySelector(
 
     Column {
         Text(
-            text = "Day:",
+            text = stringResource(Res.string.day_label),
             style = MaterialTheme.typography.labelMedium,
             modifier = Modifier.padding(bottom = 8.dp)
         )
@@ -2012,7 +2054,7 @@ private fun CrossCurrencyTransferField(
             .padding(horizontal = 14.dp, vertical = 10.dp)
     ) {
         Text(
-            text = "Destination amount (${destinationCurrency.symbol})",
+            text = stringResource(Res.string.destination_amount_label, destinationCurrency.symbol),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
         )
@@ -2041,7 +2083,7 @@ private fun CrossCurrencyTransferField(
             if (userOverrode) {
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Reset",
+                    text = stringResource(Res.string.reset),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable {
@@ -2051,7 +2093,7 @@ private fun CrossCurrencyTransferField(
             }
         }
         Spacer(modifier = Modifier.height(4.dp))
-        val hintLabel = if (userOverrode) "Custom rate" else "Today's rate"
+        val hintLabel = if (userOverrode) stringResource(Res.string.custom_rate) else stringResource(Res.string.todays_rate)
         Text(
             text = "$hintLabel · 1 ${sourceCurrency.symbol} = ${perUnit.formatWithCommas()} ${destinationCurrency.symbol}",
             style = MaterialTheme.typography.labelSmall,
@@ -2213,7 +2255,7 @@ private fun AccountField(
                     .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
                 Text(
-                    text = "Select Account",
+                    text = stringResource(Res.string.select_account),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
@@ -2385,7 +2427,7 @@ fun CategorySelectionBottomSheet(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(Modifier.width(4.dp))
-                    Text("Add Category")
+                    Text(stringResource(Res.string.add_category))
                 }
             }
 
@@ -2639,7 +2681,7 @@ fun SubCategorySelectionBottomSheet(
     ) {
         Column(Modifier.padding(20.dp).fillMaxSize()) {
             Text(
-                text = "Select ${parentCategory.title}",
+                text = stringResource(Res.string.select_parent_format, parentCategory.title),
                 fontWeight = FontWeight.Medium,
                 fontSize = 20.sp,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -2648,7 +2690,7 @@ fun SubCategorySelectionBottomSheet(
             // Parent category option
             SubCategoryItem(
                 title = "${parentCategory.emoji} ${parentCategory.title}",
-                subtitle = "General",
+                subtitle = stringResource(Res.string.general_label),
                 isSelected = initialSelectedSubCategory == null,
                 onClick = onParentSelected
             )
@@ -2750,7 +2792,7 @@ fun FrequentCategoriesSection(
     if (frequentCategories.isNotEmpty()) {
         Column {
             Text(
-                text = "Frequently Used",
+                text = stringResource(Res.string.frequently_used),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 4.dp)
@@ -2819,13 +2861,15 @@ fun TransactionPagerView(
      */
     showAllWidgets: Boolean = false
 ) {
-    // Calendar-only path: render the heatmap directly, save the dots-indicator
-    // vertical space, and skip all the pager wiring.
+    // Calendar-only path: render the heatmap at its natural intrinsic
+    // height. The pager-mode `.height(200.dp)` was forcing extra vertical
+    // space below the grid when the calendar's content rows were shorter
+    // than 200dp — exactly the dead band the user wants gone.
     if (!showAllWidgets) {
         SpendingCalendarView(
             selectedMonth = selectedMonth,
             dailyTotals = dailyTotals,
-            modifier = modifier.fillMaxWidth().height(200.dp),
+            modifier = modifier.fillMaxWidth(),
             onDayClick = onDayClick
         )
         return
@@ -2951,7 +2995,7 @@ private fun CurrencyRatesWidget(modifier: Modifier = Modifier) {
         modifier = modifier.padding(horizontal = 16.dp, vertical = 4.dp)
     ) {
         Text(
-            text = "Exchange rates",
+            text = stringResource(Res.string.exchange_rates),
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(bottom = 10.dp)
@@ -2963,7 +3007,7 @@ private fun CurrencyRatesWidget(modifier: Modifier = Modifier) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Add more currencies in Settings",
+                    text = stringResource(Res.string.add_more_currencies_in_settings),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
                 )
@@ -3047,7 +3091,7 @@ private fun SuggestWidgetCard(modifier: Modifier = Modifier) {
         Text(text = "💡", fontSize = 28.sp)
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Want more widgets?",
+            text = stringResource(Res.string.want_more_widgets),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface
@@ -3061,7 +3105,7 @@ private fun SuggestWidgetCard(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(10.dp))
         Text(
-            text = "Tap to suggest",
+            text = stringResource(Res.string.tap_to_suggest),
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary
@@ -3217,7 +3261,7 @@ fun SpendingLineChart(
 
                 if (currentTotal == 0.0 && previousTotal == 0.0) {
                     Text(
-                        text = "No spending data available",
+                        text = stringResource(Res.string.no_spending_data),
                         modifier = Modifier.align(Alignment.Center),
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.Gray
@@ -3380,7 +3424,7 @@ fun SpendingCalendarView(
             
             // Weekly total header
             Text(
-                text = "Week",
+                text = stringResource(Res.string.week_label),
                 style = MaterialTheme.typography.labelSmall,
                 modifier = Modifier.width(44.dp),
                 textAlign = TextAlign.Center,
@@ -3419,6 +3463,9 @@ fun SpendingCalendarView(
                                 modifier = Modifier
                                     .aspectRatio(1.5f)
                                     .fillMaxSize()
+                                    // clip BEFORE clickable so the ripple
+                                    // honors the Card's rounded corners.
+                                    .clip(RoundedCornerShape(6.dp))
                                     .clickable { onDayClick(LocalDate(year, month, day)) },
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surface.copy(
@@ -3607,7 +3654,6 @@ fun TransactionTypeSwitch(
 @Composable
 private fun QuickActionChipsRow(
     onRecurringClick: () -> Unit,
-    onExchangeClick: () -> Unit,
     onGoalsClick: () -> Unit,
     onCategoriesClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -3621,28 +3667,21 @@ private fun QuickActionChipsRow(
     ) {
         item {
             QuickActionChip(
-                label = "Recurring",
+                label = stringResource(Res.string.quick_recurring),
                 icon = com.andriybobchuk.mooney.core.presentation.Icons.RecurringIcon(),
                 onClick = onRecurringClick
             )
         }
         item {
             QuickActionChip(
-                label = "Exchange",
-                icon = com.andriybobchuk.mooney.core.presentation.Icons.ExchangeIcon(),
-                onClick = onExchangeClick
-            )
-        }
-        item {
-            QuickActionChip(
-                label = "Goals",
+                label = stringResource(Res.string.goals_chip),
                 icon = com.andriybobchuk.mooney.core.presentation.Icons.GoalsIcon(),
                 onClick = onGoalsClick
             )
         }
         item {
             QuickActionChip(
-                label = "Categories",
+                label = stringResource(Res.string.quick_categories),
                 icon = com.andriybobchuk.mooney.core.presentation.Icons.CategoriesIcon(),
                 onClick = onCategoriesClick
             )
@@ -3679,254 +3718,13 @@ private fun QuickActionChip(
         },
         shape = RoundedCornerShape(50),
         colors = androidx.compose.material3.AssistChipDefaults.assistChipColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
         ),
         border = null
     )
 }
 
-/**
- * Month selector replacing the old calendar icon in the top bar.
- * Layout: ◀  [ Mar ▾ ]  ▶
- *  - The left arrow steps one month back.
- *  - The center pill shows the current month and opens the year/month sheet.
- *  - The right arrow steps one month forward.
- *
- * Forward stepping past the current month is disabled (Mooney has no
- * meaningful future-month data — the calendar widget doesn't render days
- * past today).
- */
-@Composable
-private fun MonthSelectorBar(
-    selectedMonth: MonthKey,
-    onMonthSelected: (MonthKey) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val currentMonth = remember { MonthKey.current() }
-    val canGoForward = remember(selectedMonth, currentMonth) {
-        selectedMonth.year < currentMonth.year ||
-            (selectedMonth.year == currentMonth.year && selectedMonth.month < currentMonth.month)
-    }
-    var showSheet by remember { mutableStateOf(false) }
-    val monthName = remember(selectedMonth) {
-        // Full month name without the year — the pill reads "Spent in March"
-        // rather than "Mar" once we hoist it out of the cramped toolbar.
-        selectedMonth.toDisplayString().substringBeforeLast(' ')
-    }
-
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        MonthStepperButton(
-            onClick = { onMonthSelected(selectedMonth.previousMonth()) },
-            painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronLeftIcon(),
-            contentDescription = "Previous month",
-            enabled = true
-        )
-
-        Row(
-            modifier = Modifier
-                .clip(RoundedCornerShape(50))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
-                .clickable { showSheet = true }
-                .padding(horizontal = 14.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // "Spent in <Month>" — month bolded, prefix regular weight.
-            // Two stacked Texts in a Row keeps the import surface tiny and
-            // avoids pulling in the AnnotatedString span builders.
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "Spent in ",
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Normal),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = monthName,
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-            Icon(
-                imageVector = androidx.compose.material.icons.Icons.Outlined.KeyboardArrowDown,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
-        }
-
-        MonthStepperButton(
-            onClick = { if (canGoForward) onMonthSelected(selectedMonth.nextMonth()) },
-            painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
-            contentDescription = "Next month",
-            enabled = canGoForward
-        )
-    }
-
-    if (showSheet) {
-        YearMonthPickerSheet(
-            initialMonth = selectedMonth,
-            currentMonth = currentMonth,
-            onPick = { picked ->
-                onMonthSelected(picked)
-                showSheet = false
-            },
-            onDismiss = { showSheet = false }
-        )
-    }
-}
-
-@Composable
-private fun MonthStepperButton(
-    onClick: () -> Unit,
-    painter: androidx.compose.ui.graphics.painter.Painter,
-    contentDescription: String,
-    enabled: Boolean
-) {
-    Box(
-        modifier = Modifier
-            .size(36.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = if (enabled) 0.6f else 0.25f))
-            .clickable(enabled = enabled, onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            painter = painter,
-            contentDescription = contentDescription,
-            modifier = Modifier.size(16.dp),
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.35f)
-        )
-    }
-}
-
-/**
- * Bottom sheet for picking any year + month. Year nav row at top, 3×4 month
- * grid below. Selected month is filled inverse-surface; months in the future
- * (after [currentMonth]) are rendered disabled.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun YearMonthPickerSheet(
-    initialMonth: MonthKey,
-    currentMonth: MonthKey,
-    onPick: (MonthKey) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var year by remember { mutableStateOf(initialMonth.year) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    androidx.compose.material3.ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.background,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        dragHandle = null
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp)
-        ) {
-            // Year navigation row.
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                MonthStepperButton(
-                    onClick = { year-- },
-                    painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronLeftIcon(),
-                    contentDescription = "Previous year",
-                    enabled = true
-                )
-                Text(
-                    text = year.toString(),
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                MonthStepperButton(
-                    onClick = { year++ },
-                    painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
-                    contentDescription = "Next year",
-                    // Don't navigate past the current year — no data lives in
-                    // the future and the months would all be disabled anyway.
-                    enabled = year < currentMonth.year
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // 3-column grid of months.
-            val monthLabels = listOf(
-                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-            )
-            for (row in 0 until 4) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    for (col in 0 until 3) {
-                        val monthIndex = row * 3 + col
-                        val monthNumber = monthIndex + 1
-                        val isSelected = year == initialMonth.year && monthNumber == initialMonth.month
-                        val isFuture = year > currentMonth.year ||
-                            (year == currentMonth.year && monthNumber > currentMonth.month)
-
-                        MonthGridCell(
-                            label = monthLabels[monthIndex],
-                            isSelected = isSelected,
-                            isDisabled = isFuture,
-                            onClick = {
-                                if (!isFuture) onPick(MonthKey(year, monthNumber))
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-    }
-}
-
-@Composable
-private fun MonthGridCell(
-    label: String,
-    isSelected: Boolean,
-    isDisabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val bg = when {
-        isSelected -> MaterialTheme.colorScheme.inverseSurface
-        else -> Color.Transparent
-    }
-    val fg = when {
-        isSelected -> MaterialTheme.colorScheme.inverseOnSurface
-        isDisabled -> MaterialTheme.colorScheme.onBackground.copy(alpha = 0.25f)
-        else -> MaterialTheme.colorScheme.onBackground
-    }
-    Box(
-        modifier = modifier
-            .height(56.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(bg)
-            .clickable(enabled = !isDisabled, onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-            color = fg
-        )
-    }
-}
+// MonthSelectorBar / YearMonthPickerSheet / MonthGridCell were extracted to
+// com.andriybobchuk.mooney.mooney.presentation.components.MonthSelector so the
+// Analytics screen can reuse the exact same affordance.
 

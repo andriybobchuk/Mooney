@@ -50,7 +50,11 @@ data class TransactionState(
     /** True until the first transactions/accounts emission lands. Drives the shimmer. */
     val isInitialLoading: Boolean = true,
     /** User-defined order of top-level transaction categories (ID list). Empty = use natural order. */
-    val transactionCategoryOrder: List<String> = emptyList()
+    val transactionCategoryOrder: List<String> = emptyList(),
+    // Per-month transaction counts across the entire user's history. Powers the
+    // count caption under each cell in the month-picker bottom sheet. Computed
+    // from the full cache, not from [transactions] (which is month-filtered).
+    val monthlyTransactionCounts: Map<MonthKey, Int> = emptyMap()
 )
 
 @Suppress("LongParameterList", "TooManyFunctions")
@@ -160,6 +164,19 @@ class TransactionViewModel(
         observeBaseCurrencyChanges()
         observeTaxPreference()
         observeTransactionCategoryOrder()
+        observeMonthlyTransactionCounts()
+    }
+
+    private fun observeMonthlyTransactionCounts() {
+        appDataCache.snapshot
+            .map { it.transactions }
+            .onEach { transactions ->
+                val counts = transactions.groupingBy {
+                    MonthKey(it.date.year, it.date.monthNumber)
+                }.eachCount()
+                _uiState.update { it.copy(monthlyTransactionCounts = counts) }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun observeTransactionCategoryOrder() {

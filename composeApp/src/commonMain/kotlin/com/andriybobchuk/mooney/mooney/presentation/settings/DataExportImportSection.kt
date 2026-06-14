@@ -23,6 +23,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.presentation.designsystem.MooneyDesignSystem
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.data_backup
+import mooney.composeapp.generated.resources.data_backup_desc
+import mooney.composeapp.generated.resources.data_backup_warning
+import mooney.composeapp.generated.resources.export_data
+import mooney.composeapp.generated.resources.import_data
+import mooney.composeapp.generated.resources.important_label
+import mooney.composeapp.generated.resources.restore_from_backup_desc
+import mooney.composeapp.generated.resources.save_all_data_desc
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun DataExportImportSection(
@@ -58,13 +68,13 @@ fun DataExportImportSection(
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Data Backup",
+                        text = stringResource(Res.string.data_backup),
                         style = MooneyDesignSystem.Typography.TitleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Export or import your complete financial data",
+                        text = stringResource(Res.string.data_backup_desc),
                         style = MooneyDesignSystem.Typography.BodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -76,8 +86,8 @@ fun DataExportImportSection(
             // Export Button
             ExportImportButton(
                 icon = Icons.Outlined.Share,
-                title = "Export Data",
-                subtitle = "Save all your data to a file",
+                title = stringResource(Res.string.export_data),
+                subtitle = stringResource(Res.string.save_all_data_desc),
                 onClick = onExportClick,
                 isLoading = isExporting,
                 enabled = !isImporting && !isExporting,
@@ -90,8 +100,8 @@ fun DataExportImportSection(
             // Import Button
             ExportImportButton(
                 icon = Icons.Outlined.Refresh,
-                title = "Import Data",
-                subtitle = "Restore data from a backup file",
+                title = stringResource(Res.string.import_data),
+                subtitle = stringResource(Res.string.restore_from_backup_desc),
                 onClick = onImportClick,
                 isLoading = isImporting,
                 enabled = !isImporting && !isExporting,
@@ -124,13 +134,13 @@ fun DataExportImportSection(
                 Spacer(modifier = Modifier.width(8.dp))
                 Column {
                     Text(
-                        text = "Important",
+                        text = stringResource(Res.string.important_label),
                         style = MooneyDesignSystem.Typography.LabelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.warning
                     )
                     Text(
-                        text = "Export your data before changing app package name or reinstalling. Import will add data to existing records.",
+                        text = stringResource(Res.string.data_backup_warning),
                         style = MooneyDesignSystem.Typography.BodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         lineHeight = 16.sp

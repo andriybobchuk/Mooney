@@ -49,7 +49,12 @@ data class AnalyticsState(
     /** Lifetime view loads lazily — these track its state. */
     val lifetimeMetrics: List<MonthlyMetricSnapshot> = emptyList(),
     val isLifetimeLoading: Boolean = false,
-    val lifetimeLoaded: Boolean = false
+    val lifetimeLoaded: Boolean = false,
+    /**
+     * Sum of all account balances (assets minus liabilities) converted to
+     * base currency. Updated whenever accounts emit.
+     */
+    val currentNetWorth: Double = 0.0
 )
 
 class AnalyticsViewModel(
@@ -60,7 +65,12 @@ class AnalyticsViewModel(
     private val loadHistoricalAnalyticsUseCase: LoadHistoricalAnalyticsUseCase,
     private val loadCategoriesForSheetTypeUseCase: LoadCategoriesForSheetTypeUseCase,
     private val getPreviousMonthTransactionsUseCase: GetPreviousMonthTransactionsUseCase,
-    private val analyticsTracker: AnalyticsTracker
+    private val analyticsTracker: AnalyticsTracker,
+    // Net worth on the Analytics card = sum of current account balances. Both
+    // sources cheap; observing accounts via the cache means the card updates
+    // when balances change without an extra subscription.
+    private val getAccountsUseCase: GetAccountsUseCase,
+    private val calculateNetWorthUseCase: CalculateNetWorthUseCase
 ) : ViewModel() {
     private var baseCurrency: Currency = GlobalConfig.baseCurrency
 
@@ -77,6 +87,21 @@ class AnalyticsViewModel(
         loadMetricsForMonth(_state.value.selectedMonth)
         loadHistoricalData()
         observeBaseCurrency()
+        observeNetWorth()
+    }
+
+    private fun observeNetWorth() {
+        viewModelScope.launch {
+            getAccountsUseCase().collect { rawAccounts ->
+                val accounts = rawAccounts.filterNotNull()
+                val result = calculateNetWorthUseCase(
+                    accounts = accounts,
+                    selectedCurrency = baseCurrency,
+                    baseCurrency = baseCurrency
+                )
+                _state.update { it.copy(currentNetWorth = result.totalNetWorth) }
+            }
+        }
     }
 
     private fun observeBaseCurrency() {
@@ -84,6 +109,10 @@ class AnalyticsViewModel(
             GlobalConfig.baseCurrencyFlow.collect { newCurrency ->
                 if (newCurrency != baseCurrency) {
                     baseCurrency = newCurrency
+                    // Lifetime numbers are denominated in the old currency —
+                    // wipe them so the next request to the Lifetime view
+                    // recomputes against the new currency.
+                    _state.update { it.copy(lifetimeLoaded = false, lifetimeMetrics = emptyList()) }
                     loadMetricsForMonth(_state.value.selectedMonth)
                     loadHistoricalData()
                 }
@@ -161,9 +190,10 @@ class AnalyticsViewModel(
                 baseCurrency = baseCurrency
             )
             _state.update { it.copy(historicalMetrics = historicalData) }
-            // Invalidate lifetime so it gets recomputed on next request
-            // (e.g., after a currency change).
-            _state.update { it.copy(lifetimeLoaded = false, lifetimeMetrics = emptyList()) }
+            // Don't invalidate lifetime here — refresh() is called on every
+            // resume, and a stale wipe race-condition'd with loadLifetimeData()
+            // left the chart blank after switching tabs. Currency changes do
+            // their own invalidation in observeBaseCurrency().
         }
     }
 

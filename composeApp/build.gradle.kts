@@ -30,6 +30,12 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+            // Link UIKit explicitly so the framework's modulemap gets a
+            // `use UIKit` — without this, Swift sees the protocol's
+            // `UIView` return as a forward-declared opaque class, and any
+            // Swift impl using `UIKit.UIView` fails to conform to the
+            // protocol (this took an hour to diagnose).
+            linkerOpts("-framework", "UIKit")
         }
     }
 
@@ -48,6 +54,7 @@ kotlin {
             implementation(libs.koin.androidx.compose)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.billing.ktx)
+            implementation(libs.androidx.core.splashscreen)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -151,6 +158,44 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+}
+
+// Patch the iOS framework so Swift can resolve `UIView` in protocol methods
+// to `UIKit.UIView` instead of a forward-declared opaque type. Two parts:
+//   1. modulemap gets `use UIKit` — declares the module dependency
+//   2. umbrella header gets `#import <UIKit/UIKit.h>` — actually pulls in
+//      UIKit's type declarations, which unifies the forward-declared
+//      `@class UIView` with the real `UIKit.UIView`
+// Without BOTH, Swift protocol conformance fails for any class returning a
+// `UIKit.UIView` because Swift sees the protocol's `UIView` as a different
+// (framework-local opaque) type. KMP provides no public knob for this, so
+// we post-process.
+tasks.matching { it.name.startsWith("link") && it.name.contains("FrameworkIos") }.configureEach {
+    doLast {
+        val frameworkBaseDir = outputs.files.singleFile
+        val modulemap = frameworkBaseDir.resolve("ComposeApp.framework/Modules/module.modulemap")
+        if (modulemap.exists()) {
+            val content = modulemap.readText()
+            if (!content.contains("use UIKit")) {
+                modulemap.writeText(content.replace("use Foundation", "use Foundation\n    use UIKit"))
+            }
+        }
+        val umbrellaHeader = frameworkBaseDir.resolve("ComposeApp.framework/Headers/ComposeApp.h")
+        if (umbrellaHeader.exists()) {
+            val content = umbrellaHeader.readText()
+            if (!content.contains("#import <UIKit/UIKit.h>")) {
+                // Insert right before the first Foundation #import so the
+                // UIKit headers land at the top of the file with the rest of
+                // the system framework imports.
+                umbrellaHeader.writeText(
+                    content.replaceFirst(
+                        "#import <Foundation/NSArray.h>",
+                        "#import <UIKit/UIKit.h>\n#import <Foundation/NSArray.h>"
+                    )
+                )
+            }
+        }
     }
 }
 

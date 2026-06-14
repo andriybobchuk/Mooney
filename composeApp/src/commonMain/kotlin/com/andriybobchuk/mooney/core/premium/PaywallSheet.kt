@@ -39,6 +39,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.auto_renews_monthly
+import mooney.composeapp.generated.resources.get_mooney_pro
+import mooney.composeapp.generated.resources.paywall_acct_headline
+import mooney.composeapp.generated.resources.paywall_acct_sub
+import mooney.composeapp.generated.resources.paywall_benefit_accounts_sub
+import mooney.composeapp.generated.resources.paywall_benefit_accounts_title
+import mooney.composeapp.generated.resources.paywall_benefit_categories_sub
+import mooney.composeapp.generated.resources.paywall_benefit_categories_title
+import mooney.composeapp.generated.resources.paywall_cat_headline
+import mooney.composeapp.generated.resources.paywall_cat_sub
+import mooney.composeapp.generated.resources.paywall_generic_headline
+import mooney.composeapp.generated.resources.paywall_generic_sub
+import mooney.composeapp.generated.resources.paywall_price_with
+import mooney.composeapp.generated.resources.paywall_price_without
+import mooney.composeapp.generated.resources.paywall_settings_headline
+import mooney.composeapp.generated.resources.paywall_settings_sub
+import mooney.composeapp.generated.resources.privacy_policy
+import mooney.composeapp.generated.resources.restore_purchases_link
+import mooney.composeapp.generated.resources.terms_of_use
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 
 /**
@@ -55,22 +76,23 @@ enum class PaywallTrigger {
 
 private data class PaywallHero(val headline: String, val sub: String)
 
+@Composable
 private fun heroFor(trigger: PaywallTrigger): PaywallHero = when (trigger) {
     PaywallTrigger.ACCOUNT_LIMIT -> PaywallHero(
-        headline = "Add unlimited accounts",
-        sub = "Track every card, wallet, and savings goal in one place."
+        headline = stringResource(Res.string.paywall_acct_headline),
+        sub = stringResource(Res.string.paywall_acct_sub)
     )
     PaywallTrigger.CATEGORY_LIMIT -> PaywallHero(
-        headline = "Categorize the way you spend",
-        sub = "Create unlimited custom categories that match your life."
+        headline = stringResource(Res.string.paywall_cat_headline),
+        sub = stringResource(Res.string.paywall_cat_sub)
     )
     PaywallTrigger.SETTINGS_BANNER -> PaywallHero(
-        headline = "Take full control of your money",
-        sub = "Unlock everything Mooney can do."
+        headline = stringResource(Res.string.paywall_settings_headline),
+        sub = stringResource(Res.string.paywall_settings_sub)
     )
     PaywallTrigger.GENERIC -> PaywallHero(
-        headline = "Unlock Mooney Pro",
-        sub = "Get the full experience."
+        headline = stringResource(Res.string.paywall_generic_headline),
+        sub = stringResource(Res.string.paywall_generic_sub)
     )
 }
 
@@ -78,9 +100,10 @@ private data class BenefitItem(val emoji: String, val title: String, val subtitl
 
 // Be honest — these are literally the only things Pro unlocks today. More may
 // come later; until then, no fake benefits to inflate perceived value.
-private val BENEFITS = listOf(
-    BenefitItem("👛", "Unlimited accounts", "Beyond the 20-account free tier"),
-    BenefitItem("🏷️", "Unlimited custom categories", "Beyond the 50-category free tier")
+@Composable
+private fun rememberBenefits(): List<BenefitItem> = listOf(
+    BenefitItem("👛", stringResource(Res.string.paywall_benefit_accounts_title), stringResource(Res.string.paywall_benefit_accounts_sub)),
+    BenefitItem("🏷️", stringResource(Res.string.paywall_benefit_categories_title), stringResource(Res.string.paywall_benefit_categories_sub))
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -191,7 +214,7 @@ fun PaywallSheet(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    BENEFITS.forEach { benefit -> BenefitRow(benefit) }
+                    rememberBenefits().forEach { benefit -> BenefitRow(benefit) }
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -238,7 +261,7 @@ fun PaywallSheet(
                         )
                     } else {
                         Text(
-                            text = "Get Mooney Pro",
+                            text = stringResource(Res.string.get_mooney_pro),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -291,14 +314,14 @@ private fun SubscriptionLegalFooter(
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val mutedColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.45f)
     val linkColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-    val priceLine = if (price != null) "Mooney Pro · Monthly · $price / month" else "Mooney Pro · Monthly subscription"
+    val priceLine = if (price != null) stringResource(Res.string.paywall_price_with, price) else stringResource(Res.string.paywall_price_without)
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Restore purchases",
+            text = stringResource(Res.string.restore_purchases_link),
             style = MaterialTheme.typography.bodySmall,
             color = mutedColor,
             modifier = Modifier
@@ -316,7 +339,7 @@ private fun SubscriptionLegalFooter(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Auto-renews monthly. Cancel anytime in your App Store account.",
+            text = stringResource(Res.string.auto_renews_monthly),
             style = MaterialTheme.typography.labelSmall,
             color = mutedColor,
             textAlign = TextAlign.Center,
@@ -325,7 +348,7 @@ private fun SubscriptionLegalFooter(
         Spacer(modifier = Modifier.height(6.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Text(
-                text = "Terms of Use",
+                text = stringResource(Res.string.terms_of_use),
                 style = MaterialTheme.typography.labelSmall,
                 color = linkColor,
                 fontWeight = FontWeight.SemiBold,
@@ -334,7 +357,7 @@ private fun SubscriptionLegalFooter(
                 }
             )
             Text(
-                text = "Privacy Policy",
+                text = stringResource(Res.string.privacy_policy),
                 style = MaterialTheme.typography.labelSmall,
                 color = linkColor,
                 fontWeight = FontWeight.SemiBold,

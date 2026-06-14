@@ -2,6 +2,7 @@ package com.andriybobchuk.mooney.di
 
 import com.andriybobchuk.mooney.core.data.database.MooneyDatabaseFactory
 import com.andriybobchuk.mooney.core.data.preferences.PreferencesDataStoreFactory
+import com.andriybobchuk.mooney.core.data.preferences.StartupPrefs
 import com.andriybobchuk.mooney.core.platform.FileHandler
 import com.andriybobchuk.mooney.core.premium.BillingManager
 import com.andriybobchuk.mooney.core.premium.IosBillingManager
@@ -15,6 +16,7 @@ actual val platformModule: Module
         single<HttpClientEngine> { Darwin.create() }
         single { MooneyDatabaseFactory() }
         single { PreferencesDataStoreFactory() }
+        single { StartupPrefs() }
         single { FileHandler() }
         single<BillingManager> { IosBillingManager() }
     }

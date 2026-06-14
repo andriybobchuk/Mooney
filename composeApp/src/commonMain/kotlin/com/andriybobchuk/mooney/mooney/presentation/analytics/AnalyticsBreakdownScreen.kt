@@ -38,7 +38,7 @@ fun AnalyticsBreakdownScreen(
 
     val title = when (sheetType) {
         CategorySheetType.REVENUE -> stringResource(Res.string.revenue_breakdown)
-        CategorySheetType.OPERATING_COSTS -> "Expenses Breakdown"
+        CategorySheetType.OPERATING_COSTS -> stringResource(Res.string.operating_costs_breakdown)
         CategorySheetType.TAXES -> stringResource(Res.string.tax_breakdown)
     }
 
@@ -51,6 +51,11 @@ fun AnalyticsBreakdownScreen(
                 showBackButton = true,
                 onBackClick = onBackClick,
                 scrollBehavior = scrollBehavior
+            )
+        },
+        bottomBar = {
+            com.andriybobchuk.mooney.core.ads.AdBannerSlot(
+                placement = com.andriybobchuk.mooney.core.ads.AdPlacement.ANALYTICS_BREAKDOWN_BANNER
             )
         }
     ) { paddingValues ->
@@ -114,17 +119,21 @@ fun AnalyticsNetIncomeScreen(
         modifier = Modifier.background(Color.Transparent),
         topBar = {
             Toolbars.Primary(
-                title = stringResource(Res.string.profit_over_6_months),
+                title = stringResource(Res.string.net_income_title),
                 showBackButton = true,
                 onBackClick = onBackClick,
                 scrollBehavior = scrollBehavior
             )
+        },
+        bottomBar = {
+            com.andriybobchuk.mooney.core.ads.AdBannerSlot(
+                placement = com.andriybobchuk.mooney.core.ads.AdPlacement.ANALYTICS_BREAKDOWN_BANNER
+            )
         }
     ) { paddingValues ->
-        NetIncomeChartBottomSheet(
+        com.andriybobchuk.mooney.mooney.presentation.analytics.NetIncomeRedesigned(
             historicalData = state.historicalMetrics,
-            selectedMonth = state.selectedMonth,
-            onDismiss = onBackClick,
+            currentNetWorth = state.currentNetWorth,
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)

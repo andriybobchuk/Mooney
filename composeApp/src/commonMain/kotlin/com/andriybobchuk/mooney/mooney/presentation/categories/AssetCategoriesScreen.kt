@@ -47,7 +47,8 @@ import mooney.composeapp.generated.resources.*
 @Composable
 fun AssetCategoriesScreen(
     viewModel: AssetCategoriesViewModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    embedded: Boolean = false
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -76,7 +77,7 @@ fun AssetCategoriesScreen(
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 Text(
-                    text = "Delete \"$deleteName\"? Accounts using this category will keep their data but appear under \"Other\".",
+                    text = stringResource(Res.string.delete_asset_category_msg, deleteName),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 16.dp)
@@ -114,7 +115,7 @@ fun AssetCategoriesScreen(
                     .padding(20.dp)
             ) {
                 Text(
-                    if (addIsLiability) "Add Liability Category" else "Add Asset Category",
+                    if (addIsLiability) stringResource(Res.string.add_liability_category) else stringResource(Res.string.add_asset_category),
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
@@ -143,19 +144,8 @@ fun AssetCategoriesScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            Toolbars.Primary(
-                title = "Asset Categories",
-                showBackButton = true,
-                onBackClick = onBackClick,
-                scrollBehavior = scrollBehavior
-            )
-        }
-    ) { paddingValues ->
+    val body: @Composable (PaddingValues) -> Unit = body@{ paddingValues ->
         if (state.isInitialLoading) {
-            // Cold start — render a placeholder rather than letting the list
-            // render blank before the first cache emission.
             Box(
                 modifier = Modifier.fillMaxSize().padding(paddingValues),
                 contentAlignment = Alignment.Center
@@ -165,7 +155,7 @@ fun AssetCategoriesScreen(
                     strokeWidth = 2.dp
                 )
             }
-            return@Scaffold
+            return@body
         }
         LazyColumn(
             modifier = Modifier
@@ -187,7 +177,7 @@ fun AssetCategoriesScreen(
                     Text("\uD83D\uDCB0", fontSize = 18.sp)
                     Spacer(Modifier.width(10.dp))
                     Text(
-                        "Assets",
+                        stringResource(Res.string.assets_section),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.weight(1f)
@@ -249,7 +239,7 @@ fun AssetCategoriesScreen(
                     Text("\uD83D\uDCC9", fontSize = 18.sp)
                     Spacer(Modifier.width(10.dp))
                     Text(
-                        "Liabilities",
+                        stringResource(Res.string.liabilities_section),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.weight(1f)
@@ -296,6 +286,21 @@ fun AssetCategoriesScreen(
             }
         }
     }
+
+    if (embedded) {
+        body(PaddingValues(0.dp))
+    } else {
+        Scaffold(
+            topBar = {
+                Toolbars.Primary(
+                    title = org.jetbrains.compose.resources.stringResource(mooney.composeapp.generated.resources.Res.string.asset_categories),
+                    showBackButton = true,
+                    onBackClick = onBackClick,
+                    scrollBehavior = scrollBehavior
+                )
+            }
+        ) { paddingValues -> body(paddingValues) }
+    }
 }
 
 @Composable
@@ -325,7 +330,7 @@ private fun CategoryItemRow(
             )
             Spacer(modifier = Modifier.width(8.dp))
             TextButton(onClick = onSaveRename) {
-                Text("Save")
+                Text(stringResource(Res.string.save))
             }
         } else {
             Text(

@@ -50,7 +50,10 @@ import mooney.composeapp.generated.resources.*
 @Composable
 fun TransactionCategoriesScreen(
     viewModel: TransactionCategoriesViewModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    // When true, this screen renders only its body — no Scaffold, no top bar
+    // — so it can be embedded as one tab of the unified Categories screen.
+    embedded: Boolean = false
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -87,7 +90,7 @@ fun TransactionCategoriesScreen(
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
                 Text(
-                    text = "Delete \"$deleteName\"? Transactions using this category will become unlinked.",
+                    text = stringResource(Res.string.delete_tx_category_msg, deleteName),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 16.dp)
@@ -128,19 +131,11 @@ fun TransactionCategoriesScreen(
         )
     }
 
-    Scaffold(
-        topBar = {
-            Toolbars.Primary(
-                title = "Transaction Categories",
-                showBackButton = true,
-                onBackClick = onBackClick,
-                scrollBehavior = scrollBehavior
-            )
-        }
-    ) { paddingValues ->
+    // Body is shared between standalone and embedded modes. In embedded mode
+    // there's no Scaffold around us so we render the body with zero outer
+    // padding directly. Standalone mode keeps the original Scaffold + top bar.
+    val body: @Composable (PaddingValues) -> Unit = body@{ paddingValues ->
         if (state.isInitialLoading) {
-            // Cold start (rare here — usually entered with warm cache); render
-            // a tiny spinner rather than letting the screen flash blank.
             Box(
                 modifier = Modifier.fillMaxSize().padding(paddingValues),
                 contentAlignment = Alignment.Center
@@ -150,7 +145,7 @@ fun TransactionCategoriesScreen(
                     strokeWidth = 2.dp
                 )
             }
-            return@Scaffold
+            return@body
         }
         val generalCategories = remember(state.allCategories) {
             state.allCategories.filter { it.isGeneralCategory() }
@@ -289,6 +284,21 @@ fun TransactionCategoriesScreen(
                 }
             }
         }
+    }
+
+    if (embedded) {
+        body(PaddingValues(0.dp))
+    } else {
+        Scaffold(
+            topBar = {
+                Toolbars.Primary(
+                    title = org.jetbrains.compose.resources.stringResource(mooney.composeapp.generated.resources.Res.string.transaction_categories),
+                    showBackButton = true,
+                    onBackClick = onBackClick,
+                    scrollBehavior = scrollBehavior
+                )
+            }
+        ) { paddingValues -> body(paddingValues) }
     }
 }
 

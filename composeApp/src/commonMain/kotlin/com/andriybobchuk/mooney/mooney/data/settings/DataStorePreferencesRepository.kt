@@ -3,6 +3,7 @@ package com.andriybobchuk.mooney.mooney.data.settings
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import com.andriybobchuk.mooney.core.data.preferences.StartupPrefs
 import com.andriybobchuk.mooney.core.presentation.theme.AppTheme
 import com.andriybobchuk.mooney.mooney.domain.settings.ExchangeRateSource
 import com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository
@@ -13,7 +14,8 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 
 class DataStorePreferencesRepository(
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
+    private val startupPrefs: StartupPrefs
 ) : PreferencesRepository {
 
     override fun getUserPreferences(): Flow<UserPreferences> {
@@ -59,12 +61,17 @@ class DataStorePreferencesRepository(
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.DEFAULT_CURRENCY] = currency
         }
+        // Mirror so the next cold-start composition reads the right currency
+        // synchronously instead of falling back to USD until DataStore lands.
+        startupPrefs.setDefaultCurrency(currency)
     }
 
     override suspend fun updateThemeMode(themeMode: ThemeMode) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.THEME_MODE] = themeMode.name
         }
+        // Mirror so cold-start renders the user's chosen theme on frame 1.
+        startupPrefs.setThemeMode(themeMode.name)
     }
 
     override suspend fun updateAppTheme(appTheme: AppTheme) {
@@ -113,15 +120,31 @@ class DataStorePreferencesRepository(
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.ONBOARDING_COMPLETED] = true
         }
+        // Once this flips, every subsequent cold-start can pick the start
+        // destination without waiting for DataStore — eliminating the blank
+        // "Box-and-return" frame on returning launches.
+        startupPrefs.setOnboardingCompleted(true)
     }
 
     override suspend fun clearPreferences() {
         dataStore.edit { preferences ->
             preferences.clear()
         }
+        // Reset the mirror too so a "wipe data" doesn't leave a stale onboarding
+        // flag that would skip the new-install flow.
+        startupPrefs.setOnboardingCompleted(false)
     }
 
     override suspend fun getCurrentPreferences(): UserPreferences {
-        return getUserPreferences().firstOrNull() ?: UserPreferences()
+        val prefs = getUserPreferences().firstOrNull() ?: UserPreferences()
+        // Opportunistic backfill: callers that hit this (NavigationHost on
+        // boot) are usually the same ones that wanted the synchronous mirror.
+        // Writing through here means upgrading installs auto-populate the
+        // mirror on first launch with the new code, without a dedicated
+        // migration step.
+        startupPrefs.setOnboardingCompleted(prefs.onboardingCompleted)
+        startupPrefs.setDefaultCurrency(prefs.defaultCurrency)
+        startupPrefs.setThemeMode(prefs.themeMode.name)
+        return prefs
     }
 }

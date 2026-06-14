@@ -492,6 +492,11 @@
     <string name="net_worth_disclaimer">Vergangene Werte werden aus Ihrem monatlichen Nettoeinkommen rekonstruiert — große Einzeländerungen (Autoverkauf, Kontoimporte) können die Linie verschieben.</string>
     <string name="net_worth_history_empty">Sobald Sie ein paar Monate Aktivität haben, erscheint die Entwicklung hier.</string>
 
+    <!-- Feedback Intro -->
+
+    <!-- Abstimmung -->
+    <string name="recon_current_diff">Aktuell: %1$s %2$s → Diff: %3$s %4$s</string>
+
     <!-- Zusammenfassung -->
     <string name="recurring_summary_monthly">Wiederholt sich monatlich am Tag %1$d</string>
     <string name="recurring_summary_weekly">Wiederholt sich wöchentlich</string>

@@ -492,6 +492,11 @@
     <string name="net_worth_disclaimer">过去的数值是根据你的月度净收入推算的 — 一次性大额变动（如卖车、账户导入）可能让曲线偏移。</string>
     <string name="net_worth_history_empty">累计几个月的活动后，趋势曲线将在此显示。</string>
 
+    <!-- 反馈介绍 -->
+
+    <!-- 调账 -->
+    <string name="recon_current_diff">当前：%1$s %2$s → 差额：%3$s %4$s</string>
+
     <!-- 摘要 -->
     <string name="recurring_summary_monthly">每月重复，日 %1$d</string>
     <string name="recurring_summary_weekly">每周重复</string>

@@ -1394,7 +1394,7 @@ fun TransactionBottomSheet(
 
                 if (difference != 0.0 && reconAccount != null) {
                     Text(
-                        text = "Current: ${currentValue.formatWithCommas()} $currencySymbol → Diff: ${if (difference > 0) "+" else ""}${difference.formatWithCommas()} $currencySymbol",
+                        text = stringResource(Res.string.recon_current_diff, currentValue.formatWithCommas(), currencySymbol, "${if (difference > 0) "+" else ""}${difference.formatWithCommas()}", currencySymbol),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (difference > 0) MaterialTheme.appColors.incomeColor else MaterialTheme.appColors.expenseColor,
                         fontWeight = FontWeight.Medium,

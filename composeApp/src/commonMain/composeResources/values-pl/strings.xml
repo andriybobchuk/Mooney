@@ -492,6 +492,11 @@
     <string name="net_worth_disclaimer">Wartości historyczne są odtwarzane z miesięcznego dochodu netto — duże, jednorazowe zmiany (sprzedaż samochodu, importy) mogą zniekształcić wykres.</string>
     <string name="net_worth_history_empty">Gdy zbierzesz kilka miesięcy aktywności, trajektoria pojawi się tutaj.</string>
 
+    <!-- Intro opinii -->
+
+    <!-- Uzgadnianie -->
+    <string name="recon_current_diff">Aktualnie: %1$s %2$s → Różnica: %3$s %4$s</string>
+
     <!-- Streszczenie -->
     <string name="recurring_summary_monthly">Powtarza się co miesiąc, dzień %1$d</string>
     <string name="recurring_summary_weekly">Powtarza się co tydzień</string>

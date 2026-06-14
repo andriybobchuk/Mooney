@@ -492,6 +492,11 @@
     <string name="net_worth_disclaimer">Прошлые значения восстановлены из ваших месячных чистых доходов — крупные разовые изменения (продажа машины, импорт счетов) могут сместить линию.</string>
     <string name="net_worth_history_empty">Когда накопится несколько месяцев активности, траектория появится здесь.</string>
 
+    <!-- Введение в отзыв -->
+
+    <!-- Сверка -->
+    <string name="recon_current_diff">Сейчас: %1$s %2$s → Разница: %3$s %4$s</string>
+
     <!-- Краткое описание -->
     <string name="recurring_summary_monthly">Повторяется ежемесячно, день %1$d</string>
     <string name="recurring_summary_weekly">Повторяется еженедельно</string>

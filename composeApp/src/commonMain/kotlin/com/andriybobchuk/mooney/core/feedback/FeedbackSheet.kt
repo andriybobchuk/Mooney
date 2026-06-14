@@ -50,6 +50,7 @@ import kotlinx.coroutines.launch
 import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.couldnt_send
 import mooney.composeapp.generated.resources.feedback_hint_bug
+import mooney.composeapp.generated.resources.feedback_intro
 import mooney.composeapp.generated.resources.feedback_hint_feature
 import mooney.composeapp.generated.resources.feedback_hint_general
 import mooney.composeapp.generated.resources.feedback_hint_widget
@@ -162,7 +163,7 @@ private fun FeedbackFormContent(
     )
     Spacer(modifier = Modifier.height(4.dp))
     Text(
-        text = "Pick a category and tell me anything — bug, idea, frustration. Built solo, every message gets read.",
+        text = stringResource(Res.string.feedback_intro),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.65f)
     )

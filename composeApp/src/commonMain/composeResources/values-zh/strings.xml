@@ -117,6 +117,10 @@
     <!-- 反馈 -->
     <string name="get_in_touch">联系我</string>
     <string name="feedback_description">Mooney 正在积极开发中。发现 bug？有想法？告诉我 — 你的反馈塑造这款 App。</string>
+    <string name="feedback_socials_title">嗨！我是 Andriy</string>
+    <string name="feedback_socials_intro">我正在持续开发 Mooney，非常期待你的反馈。发现 bug？有想法？想聊聊？通过下面任何一个渠道找我！</string>
+    <string name="analytics_request_title">需要更多分析功能？</string>
+    <string name="analytics_request_desc">告诉我你想要什么 — 通过任何渠道私信我，我会做出最棒的那些想法。</string>
 
     <!-- 目标 -->
     <string name="add_goal">添加目标</string>

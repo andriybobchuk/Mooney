@@ -122,14 +122,7 @@ val sharedModule = module {
     single { get<PreferencesDataStoreFactory>().create() }
     singleOf(::DataStorePreferencesRepository).bind<PreferencesRepository>()
 
-    // Feedback — writes user-submitted feedback to the `feedback` Firestore
-    // collection via REST. No Swift bridge required; Firestore rules cap writes.
-    single<com.andriybobchuk.mooney.mooney.domain.feedback.FeedbackRepository> {
-        com.andriybobchuk.mooney.mooney.data.feedback.FirestoreFeedbackRepository(httpClient = get())
-    }
-    singleOf(::SubmitFeedbackUseCase)
-
-    // Exchange Rate Providers — Switchable picks one based on the user's Settings choice.
+// Exchange Rate Providers — Switchable picks one based on the user's Settings choice.
     single { com.andriybobchuk.mooney.mooney.data.LiveExchangeRateProvider(httpClient = get()) }
     single { com.andriybobchuk.mooney.mooney.data.ExtendedExchangeRateProvider(httpClient = get()) }
     single<com.andriybobchuk.mooney.mooney.domain.ExchangeRateProvider> {

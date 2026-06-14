@@ -100,6 +100,10 @@
     <string name="select_up_to_categories">Оберіть до %1$d категорій</string>
     <string name="get_in_touch">Зв\'яжіться з нами</string>
     <string name="feedback_description">Mooney активно розробляється. Знайшли помилку? Маєте ідею? Напишіть — ваш відгук формує додаток.</string>
+    <string name="feedback_socials_title">Привіт! Я Андрій</string>
+    <string name="feedback_socials_intro">Я активно розвиваю Mooney і радий буду почути ваші думки. Знайшли баг? Є ідея? Просто хочеться поспілкуватися? Пишіть у будь-який канал нижче!</string>
+    <string name="analytics_request_title">Хочеш більше функцій аналітики?</string>
+    <string name="analytics_request_desc">Напиши, чого тобі бракує — у будь-який канал — і я додам найкращі ідеї.</string>
     <string name="add_goal">Додати ціль</string>
     <string name="edit_goal">Редагувати ціль</string>
     <string name="delete_goal">Видалити ціль</string>

@@ -104,6 +104,7 @@ fun AnalyticsScreen(
     onNavigateToNetWorth: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    var showAnalyticsRequestSheet by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
 
     // Refresh data each time the screen appears
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
@@ -286,9 +287,21 @@ fun AnalyticsScreen(
                     // )
                 }
 
+                Spacer(modifier = Modifier.height(20.dp))
+
+                AnalyticsRequestCard(
+                    onClick = { showAnalyticsRequestSheet = true }
+                )
+
                 Spacer(modifier = Modifier.height(32.dp))
             }
             } // end if (!isEmpty)
+
+            if (showAnalyticsRequestSheet) {
+                com.andriybobchuk.mooney.core.feedback.FeedbackSheet(
+                    onDismiss = { showAnalyticsRequestSheet = false }
+                )
+            }
 
             // Subcategory Bottom Sheet (used from breakdown screens)
             if (state.isSubcategorySheetOpen) {
@@ -1431,5 +1444,35 @@ private fun localizedMetricSubtitle(rawSubtitle: String): String {
         stringResource(Res.string.pct_of_revenue, rawSubtitle.removePrefix(pctOfRevenuePrefix))
     } else {
         rawSubtitle
+    }
+}
+
+
+@Composable
+private fun AnalyticsRequestCard(onClick: () -> Unit) {
+    com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyCard(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).clickable { onClick() }
+    ) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = "💡", fontSize = 28.sp)
+            Spacer(modifier = Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(Res.string.analytics_request_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(Res.string.analytics_request_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }

@@ -117,6 +117,10 @@
     <!-- Отзывы -->
     <string name="get_in_touch">Напишите нам</string>
     <string name="feedback_description">Mooney активно развивается. Нашли баг? Есть идея? Напишите — ваш отзыв формирует приложение.</string>
+    <string name="feedback_socials_title">Привет! Я Андрей</string>
+    <string name="feedback_socials_intro">Я активно развиваю Mooney и буду рад услышать вас. Нашли баг? Есть идея? Просто пообщаться? Напишите в любом из каналов ниже!</string>
+    <string name="analytics_request_title">Нужно больше функций аналитики?</string>
+    <string name="analytics_request_desc">Расскажите, чего не хватает — напишите в любой канал, и я добавлю лучшие идеи.</string>
 
     <!-- Цели -->
     <string name="add_goal">Добавить цель</string>

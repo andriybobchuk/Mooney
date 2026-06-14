@@ -217,8 +217,7 @@ fun TransactionsScreen(
     }
     if (showReviewFeedback) {
         com.andriybobchuk.mooney.core.feedback.FeedbackSheet(
-            onDismiss = { showReviewFeedback = false },
-            initialKind = com.andriybobchuk.mooney.mooney.domain.feedback.FeedbackKind.GENERAL
+            onDismiss = { showReviewFeedback = false }
         )
     }
 
@@ -3077,8 +3076,7 @@ private fun SuggestWidgetCard(modifier: Modifier = Modifier) {
     var showSheet by remember { mutableStateOf(false) }
     if (showSheet) {
         com.andriybobchuk.mooney.core.feedback.FeedbackSheet(
-            onDismiss = { showSheet = false },
-            initialKind = com.andriybobchuk.mooney.mooney.domain.feedback.FeedbackKind.WIDGET
+            onDismiss = { showSheet = false }
         )
     }
     Column(

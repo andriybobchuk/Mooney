@@ -117,6 +117,10 @@
     <!-- Feedback -->
     <string name="get_in_touch">Kontakt aufnehmen</string>
     <string name="feedback_description">Mooney wird aktiv entwickelt. Bug gefunden? Idee? Schreib uns — dein Feedback prägt die App.</string>
+    <string name="feedback_socials_title">Hi! Ich bin Andriy</string>
+    <string name="feedback_socials_intro">Ich entwickle Mooney aktiv und freue mich über deine Nachricht. Bug gefunden? Idee? Lust auf einen Plausch? Erreich mich über einen der Kanäle unten!</string>
+    <string name="analytics_request_title">Brauchst du mehr Analyse-Funktionen?</string>
+    <string name="analytics_request_desc">Sag mir, was nützlich wäre — schreib mir auf einem Kanal und ich baue die besten Ideen.</string>
 
     <!-- Ziele -->
     <string name="add_goal">Ziel hinzufügen</string>

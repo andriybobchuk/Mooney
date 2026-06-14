@@ -18,6 +18,9 @@ enum class AdPlacement {
     /** Bottom of Categories management screen. */
     CATEGORIES_BANNER,
 
+    /** Bottom of Assets screen — mirrors the Settings banner footprint. */
+    ASSETS_BANNER,
+
     /** Single sponsored row at index ~25 inside the Transactions list. */
     TRANSACTIONS_NATIVE_ROW,
 

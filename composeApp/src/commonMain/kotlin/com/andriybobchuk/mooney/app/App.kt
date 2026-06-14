@@ -98,7 +98,19 @@ fun App() {
                         .widthIn(max = 600.dp)
                         .fillMaxHeight()
                 ) {
-                    NavigationHost()
+                    val appLockManager: com.andriybobchuk.mooney.core.security.AppLockManager = koinInject()
+                    var locked by remember { mutableStateOf<Boolean?>(null) }
+                    LaunchedEffect(Unit) {
+                        locked = appLockManager.isLockEnabledNow()
+                    }
+                    when (locked) {
+                        null -> Unit // brief gate while we check the prefs
+                        true -> com.andriybobchuk.mooney.core.security.AppLockUnlockScreen(
+                            manager = appLockManager,
+                            onUnlocked = { locked = false }
+                        )
+                        false -> NavigationHost()
+                    }
                 }
 
                 // DEV overlay — only in debug builds

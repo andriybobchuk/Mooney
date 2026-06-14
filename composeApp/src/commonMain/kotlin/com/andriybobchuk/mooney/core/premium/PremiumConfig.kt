@@ -5,6 +5,6 @@ package com.andriybobchuk.mooney.core.premium
  */
 object PremiumConfig {
     // Free tier limits — also used by Apple Review to test the paywall flow.
-    var maxFreeAccounts: Int = 20
-    var maxFreeCustomCategories: Int = 50
+    var maxFreeAccounts: Int = 5
+    var maxFreeCustomCategories: Int = 5
 }

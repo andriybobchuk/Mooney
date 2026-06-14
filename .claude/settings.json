@@ -31,6 +31,16 @@
       "Bash(comm:*)",
       "Bash(xargs:*)",
       "Bash(diff:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(sips:*)",
+      "Bash(open:*)",
+      "Bash(curl:*)",
+      "Bash(unzip:*)",
+      "Bash(tar:*)",
+      "Bash(which:*)",
+      "Bash(env:*)",
+      "Bash(pwd:*)",
 
       "Bash(mkdir:*)",
       "Bash(cp:*)",
@@ -53,7 +63,11 @@
       "WebFetch(domain:jetbrains.com)",
       "WebFetch(domain:firebase.google.com)",
       "WebFetch(domain:material.io)",
-      "WebFetch(domain:ktor.io)"
+      "WebFetch(domain:ktor.io)",
+      "WebFetch(domain:appstoreconnect.apple.com)",
+      "WebFetch(domain:play.google.com)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:docs.gradle.org)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -77,10 +91,7 @@
       "Read(**/google-services.json)",
       "Read(**/local.properties)"
     ],
-    "ask": [
-      "Bash(git push:*)",
-      "Bash(gh pr merge:*)"
-    ]
+    "ask": []
   },
   "hooks": {
     "SessionStart": [

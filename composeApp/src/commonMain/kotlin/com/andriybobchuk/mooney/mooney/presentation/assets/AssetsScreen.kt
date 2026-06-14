@@ -200,16 +200,11 @@ fun AssetsScreen(
                 trailingActionContent = if (state.hasLiabilities) {
                     {
                         Box {
-                            androidx.compose.material3.IconButton(
+                            com.andriybobchuk.mooney.core.presentation.Toolbars.CircleToolbarButton(
+                                painter = com.andriybobchuk.mooney.core.presentation.Icons.MoreVertIcon(),
+                                contentDescription = "More",
                                 onClick = { showAssetsMenu = true }
-                            ) {
-                                Icon(
-                                    painter = com.andriybobchuk.mooney.core.presentation.Icons.MoreVertIcon(),
-                                    contentDescription = "More",
-                                    tint = MaterialTheme.colorScheme.onBackground,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
+                            )
                             androidx.compose.material3.DropdownMenu(
                                 expanded = showAssetsMenu,
                                 onDismissRequest = { showAssetsMenu = false },
@@ -242,7 +237,12 @@ fun AssetsScreen(
             )
         },
         bottomBar = {
-            bottomNavbar()
+            Column {
+                com.andriybobchuk.mooney.core.ads.AdBannerSlot(
+                    placement = com.andriybobchuk.mooney.core.ads.AdPlacement.ASSETS_BANNER
+                )
+                bottomNavbar()
+            }
         },
         floatingActionButton = {
             if (assets.isNotEmpty()) {

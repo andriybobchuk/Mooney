@@ -50,6 +50,9 @@ object PreferencesKeys {
     val ADS_LAST_BANNER_ANALYTICS = androidx.datastore.preferences.core.longPreferencesKey("ads_last_banner_analytics")
     val ADS_LAST_BANNER_SETTINGS = androidx.datastore.preferences.core.longPreferencesKey("ads_last_banner_settings")
     val ADS_LAST_BANNER_CATEGORIES = androidx.datastore.preferences.core.longPreferencesKey("ads_last_banner_categories")
+    val ADS_LAST_BANNER_ASSETS = androidx.datastore.preferences.core.longPreferencesKey("ads_last_banner_assets")
+    /** PIN hash for App Lock — null/missing means lock is disabled. */
+    val APP_LOCK_PIN_HASH = androidx.datastore.preferences.core.stringPreferencesKey("app_lock_pin_hash")
     /** Developer kill-switch for all ads — read by AdEligibilityUseCase. */
     val ADS_DISABLED_DEV = booleanPreferencesKey("ads_disabled_dev")
     /**

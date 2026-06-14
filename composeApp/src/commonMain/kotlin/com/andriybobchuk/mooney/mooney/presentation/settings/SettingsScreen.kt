@@ -841,6 +841,128 @@ fun SettingsScreen(
                     }
                 }
 
+                // SECURITY section — App Lock entry. Premium-gated at the
+                // entry point so free users see the paywall; once configured,
+                // the gate at App() root runs for everyone.
+                item {
+                    SettingsSectionHeader(stringResource(Res.string.security_section))
+                }
+                item {
+                    val appLockManager: com.andriybobchuk.mooney.core.security.AppLockManager =
+                        org.koin.compose.koinInject()
+                    val premiumManager: com.andriybobchuk.mooney.core.premium.PremiumManager =
+                        org.koin.compose.koinInject()
+                    val isPremium by premiumManager.isPremium.collectAsState(initial = false)
+                    val isLockEnabled by appLockManager.isLockEnabled.collectAsState(initial = false)
+                    var showAppLockPaywall by remember { mutableStateOf(false) }
+                    var showSetupSheet by remember { mutableStateOf(false) }
+                    var showEnabledSheet by remember { mutableStateOf(false) }
+                    val scope = rememberCoroutineScope()
+
+                    SettingsGroup {
+                        AppLockSettingsRow(
+                            title = stringResource(Res.string.app_lock_title),
+                            description = stringResource(Res.string.app_lock_summary),
+                            isEnabled = isLockEnabled,
+                            showProBadge = !isPremium,
+                            onClick = {
+                                if (!isPremium) {
+                                    showAppLockPaywall = true
+                                } else if (isLockEnabled) {
+                                    showEnabledSheet = true
+                                } else {
+                                    showSetupSheet = true
+                                }
+                            }
+                        )
+                    }
+
+                    if (showAppLockPaywall) {
+                        PaywallSheet(
+                            isLoading = state.isPurchasing,
+                            errorMessage = state.purchaseError,
+                            trigger = com.andriybobchuk.mooney.core.premium.PaywallTrigger.APP_LOCK,
+                            onDismiss = { showAppLockPaywall = false },
+                            onSubscribe = { viewModel.onSubscribe() },
+                            onRestore = { viewModel.onRestorePurchases() }
+                        )
+                    }
+
+                    if (showSetupSheet) {
+                        val setPinTitle = stringResource(Res.string.app_lock_set_pin)
+                        val confirmTitle = stringResource(Res.string.app_lock_confirm_pin)
+                        val mismatchMsg = stringResource(Res.string.app_lock_pins_dont_match)
+                        MooneyBottomSheet(onDismissRequest = { showSetupSheet = false }) {
+                            com.andriybobchuk.mooney.core.security.AppLockSetupContent(
+                                onSetupComplete = { newPin ->
+                                    scope.launch {
+                                        appLockManager.setPin(newPin)
+                                        showSetupSheet = false
+                                    }
+                                },
+                                headerTitle = setPinTitle,
+                                confirmTitle = confirmTitle,
+                                mismatchMessage = mismatchMsg
+                            )
+                        }
+                    }
+
+                    if (showEnabledSheet) {
+                        MooneyBottomSheet(onDismissRequest = { showEnabledSheet = false }) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 16.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(Res.string.app_lock_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable {
+                                            showEnabledSheet = false
+                                            showSetupSheet = true
+                                        }
+                                        .background(MaterialTheme.colorScheme.surface)
+                                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        stringResource(Res.string.app_lock_change_pin),
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable {
+                                            scope.launch {
+                                                appLockManager.disable()
+                                                showEnabledSheet = false
+                                            }
+                                        }
+                                        .background(MaterialTheme.colorScheme.errorContainer)
+                                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        stringResource(Res.string.app_lock_disable),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+                        }
+                    }
+                }
+
                 // TRANSACTIONS section — categories management and the
                 // default expense / default income / primary-account
                 // pickers moved out. Transaction Categories live in the
@@ -1103,14 +1225,80 @@ private fun SettingsSectionHeader(title: String) {
 
 @Composable
 private fun SettingsGroup(content: @Composable ColumnScope.() -> Unit) {
+    // Same background as the quick-action pills and the transaction-row icon
+    // backgrounds — single source of truth so cards across the app read as
+    // one tile family.
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 16.dp),
             content = content
+        )
+    }
+}
+
+@Composable
+private fun AppLockSettingsRow(
+    title: String,
+    description: String,
+    isEnabled: Boolean,
+    showProBadge: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
+                )
+                if (showProBadge) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.pro_label),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
+            Text(
+                description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 2.dp)
+            )
+        }
+        if (isEnabled) {
+            Text(
+                text = "✓",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        }
+        Icon(
+            painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(16.dp)
         )
     }
 }
@@ -1251,38 +1439,50 @@ private fun SettingsDivider() {
 
 @Composable
 private fun PremiumBanner(onClick: () -> Unit) {
-    val blue = Color(0xFF3562F6)
-    val teal = Color(0xFF4DD0C8)
+    // Luxury palette inspired by the Mooney app icon: almost-black surface in
+    // light mode (inverts in dark mode), with a single barely-there green mesh
+    // accent. The look reads as "premium hardware" rather than the loud
+    // blue-teal gradient it replaces.
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val surfaceColor = if (isDark) Color(0xFFF5F5F4) else Color(0xFF0B0B0D)
+    val onSurfaceColor = if (isDark) Color(0xFF0B0B0D) else Color(0xFFF5F5F4)
+    val accent = Color(0xFF00C896)
+    val mutedOnSurface = onSurfaceColor.copy(alpha = 0.65f)
+    val ctaBackground = if (isDark) Color(0xFF0B0B0D) else Color.White
+    val ctaForeground = if (isDark) Color.White else Color(0xFF0B0B0D)
+    val proChipBackground = onSurfaceColor.copy(alpha = if (isDark) 0.12f else 0.18f)
 
     Surface(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 8.dp),
-        shape = RoundedCornerShape(16.dp),
-        color = Color.Transparent
+        shape = RoundedCornerShape(20.dp),
+        color = surfaceColor
     ) {
         Box {
+            // Whisper-quiet green accent mesh — mirrors the Mooney icon where
+            // the green is almost invisible against the black.
             Canvas(modifier = Modifier.matchParentSize()) {
                 val w = size.width
                 val h = size.height
-                // Blue-to-teal diagonal gradient
-                drawRect(
-                    brush = Brush.linearGradient(
-                        colors = listOf(blue, teal),
-                        start = Offset(0f, h),
-                        end = Offset(w, 0f)
-                    )
-                )
-                // Soft white glow top-right for depth
                 drawCircle(
                     brush = Brush.radialGradient(
-                        colors = listOf(Color.White.copy(alpha = 0.15f), Color.Transparent),
-                        center = Offset(w * 0.85f, h * 0.1f),
-                        radius = w * 0.45f
+                        colors = listOf(accent.copy(alpha = 0.18f), Color.Transparent),
+                        center = Offset(w * 0.92f, h * 0.1f),
+                        radius = w * 0.55f
                     ),
-                    radius = w * 0.45f,
-                    center = Offset(w * 0.85f, h * 0.1f)
+                    radius = w * 0.55f,
+                    center = Offset(w * 0.92f, h * 0.1f)
+                )
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(accent.copy(alpha = 0.10f), Color.Transparent),
+                        center = Offset(w * 0.15f, h * 0.95f),
+                        radius = w * 0.40f
+                    ),
+                    radius = w * 0.40f,
+                    center = Offset(w * 0.15f, h * 0.95f)
                 )
             }
 
@@ -1298,18 +1498,18 @@ private fun PremiumBanner(onClick: () -> Unit) {
                             text = "Mooney",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = onSurfaceColor
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = Color.White.copy(alpha = 0.2f)
+                            color = proChipBackground
                         ) {
                             Text(
-                                text = "PRO",
+                                text = stringResource(Res.string.pro_label),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White,
+                                color = onSurfaceColor,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                             )
                         }
@@ -1318,9 +1518,9 @@ private fun PremiumBanner(onClick: () -> Unit) {
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = stringResource(Res.string.unlimited_accounts_categories),
+                        text = stringResource(Res.string.premium_banner_subtitle_no_ads),
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.85f)
+                        color = mutedOnSurface
                     )
                 }
 
@@ -1328,13 +1528,13 @@ private fun PremiumBanner(onClick: () -> Unit) {
 
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = Color.White
+                    color = ctaBackground
                 ) {
                     Text(
                         text = stringResource(Res.string.upgrade_to_pro_cta),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
-                        color = blue,
+                        color = ctaForeground,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
                     )
                 }

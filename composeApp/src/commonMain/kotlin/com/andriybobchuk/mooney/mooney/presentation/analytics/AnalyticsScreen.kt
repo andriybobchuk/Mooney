@@ -1460,27 +1460,47 @@ private fun localizedMetricSubtitle(rawSubtitle: String): String {
 
 @Composable
 private fun AnalyticsRequestCard(onClick: () -> Unit) {
-    com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyCard(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).clickable { onClick() }
+    // Same shape, surface tint, padding and inner layout as EnhancedMetricCard
+    // so it visually slots in alongside the Revenue / Expenses / Net Income
+    // cards instead of looking like an afterthought.
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "💡", fontSize = 28.sp)
-            Spacer(modifier = Modifier.width(14.dp))
+            // Colored circle indicator — keeps the visual rhythm with the
+            // metric cards above; uses primary so the row reads as an
+            // action prompt rather than just another data point.
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(MaterialTheme.colorScheme.primary)
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = stringResource(Res.string.analytics_request_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = stringResource(Res.string.analytics_request_desc),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }

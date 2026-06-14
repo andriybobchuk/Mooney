@@ -1084,17 +1084,14 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(vertical = 5.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
                 .size(48.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(MaterialTheme.appColors.transactionIcon),
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
             contentAlignment = Alignment.Center
         ) {
             Text(transaction.subcategory.resolveEmoji(), fontSize = 25.sp)

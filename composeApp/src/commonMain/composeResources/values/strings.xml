@@ -122,6 +122,11 @@
     <string name="analytics_request_title">Need more analytics features?</string>
     <string name="analytics_request_desc">Tell me what you\'d find useful — DM me on any channel and I\'ll build the best ideas.</string>
 
+    <!-- Paywall upsell framing -->
+    <string name="paywall_founder_badge">🔥 Founder pricing</string>
+    <string name="paywall_founder_locked">Lock in this price forever — early supporters keep it as Mooney grows.</string>
+    <string name="paywall_price_will_rise">Price will increase as more features ship.</string>
+
     <!-- Goals -->
     <string name="add_goal">Add Goal</string>
     <string name="edit_goal">Edit Goal</string>

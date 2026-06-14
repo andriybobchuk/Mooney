@@ -104,6 +104,9 @@
     <string name="feedback_socials_intro">Я активно розвиваю Mooney і радий буду почути ваші думки. Знайшли баг? Є ідея? Просто хочеться поспілкуватися? Пишіть у будь-який канал нижче!</string>
     <string name="analytics_request_title">Хочеш більше функцій аналітики?</string>
     <string name="analytics_request_desc">Напиши, чого тобі бракує — у будь-який канал — і я додам найкращі ідеї.</string>
+    <string name="paywall_founder_badge">🔥 Ціна для перших</string>
+    <string name="paywall_founder_locked">Зафіксуй ціну назавжди — ранні користувачі зберігають її в міру розвитку Mooney.</string>
+    <string name="paywall_price_will_rise">Ціна зростатиме з виходом нових функцій.</string>
     <string name="add_goal">Додати ціль</string>
     <string name="edit_goal">Редагувати ціль</string>
     <string name="delete_goal">Видалити ціль</string>

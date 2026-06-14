@@ -121,6 +121,9 @@
     <string name="feedback_socials_intro">我正在持续开发 Mooney，非常期待你的反馈。发现 bug？有想法？想聊聊？通过下面任何一个渠道找我！</string>
     <string name="analytics_request_title">需要更多分析功能？</string>
     <string name="analytics_request_desc">告诉我你想要什么 — 通过任何渠道私信我，我会做出最棒的那些想法。</string>
+    <string name="paywall_founder_badge">🔥 创始价</string>
+    <string name="paywall_founder_locked">永久锁定此价格 — 早期支持者将随着 Mooney 的成长继续享有。</string>
+    <string name="paywall_price_will_rise">随着更多功能上线，价格将会上涨。</string>
 
     <!-- 目标 -->
     <string name="add_goal">添加目标</string>

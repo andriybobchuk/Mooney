@@ -121,6 +121,9 @@
     <string name="feedback_socials_intro">أعمل بنشاط على تطوير Mooney وأحب سماع رأيك. وجدت خللاً؟ لديك فكرة؟ أو حتى محادثة قصيرة؟ تواصل معي عبر أي قناة أدناه!</string>
     <string name="analytics_request_title">تحتاج المزيد من ميزات التحليل؟</string>
     <string name="analytics_request_desc">أخبرني بما تجده مفيدًا — راسلني على أي قناة وسأبني أفضل الأفكار.</string>
+    <string name="paywall_founder_badge">🔥 سعر المؤسسين</string>
+    <string name="paywall_founder_locked">ثبّت هذا السعر إلى الأبد — يحتفظ به الداعمون الأوائل مع نمو Mooney.</string>
+    <string name="paywall_price_will_rise">سيرتفع السعر مع إضافة المزيد من الميزات.</string>
 
     <!-- الأهداف -->
     <string name="add_goal">إضافة هدف</string>

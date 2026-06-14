@@ -1,9 +1,7 @@
 package com.andriybobchuk.mooney.core.premium
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,10 +52,7 @@ import mooney.composeapp.generated.resources.paywall_benefit_noads_sub
 import mooney.composeapp.generated.resources.paywall_benefit_noads_title
 import mooney.composeapp.generated.resources.paywall_cat_headline
 import mooney.composeapp.generated.resources.paywall_cat_sub
-import mooney.composeapp.generated.resources.paywall_founder_badge
-import mooney.composeapp.generated.resources.paywall_founder_locked
 import mooney.composeapp.generated.resources.paywall_generic_headline
-import mooney.composeapp.generated.resources.paywall_price_will_rise
 import mooney.composeapp.generated.resources.paywall_generic_sub
 import mooney.composeapp.generated.resources.paywall_price_with
 import mooney.composeapp.generated.resources.paywall_price_without
@@ -215,37 +210,7 @@ fun PaywallSheet(
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Founder-pricing pill — honest scarcity framing without a fake
-                // strikethrough. Apple Guideline 3.1.1 ("Misleading Customers")
-                // prohibits inflated reference prices unless the SKU actually
-                // sold at the higher price; "founder pricing" is compliant.
-                Row(
-                    modifier = Modifier
-                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(50))
-                        .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.08f))
-                        .padding(horizontal = 14.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(Res.string.paywall_founder_badge),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Text(
-                    text = stringResource(Res.string.paywall_founder_locked),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(36.dp))
 
                 // Benefits — honest, only the two things Pro actually unlocks today.
                 Column(
@@ -371,12 +336,6 @@ private fun SubscriptionLegalFooter(
 
         Text(
             text = priceLine,
-            style = MaterialTheme.typography.labelSmall,
-            color = mutedColor,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            text = stringResource(Res.string.paywall_price_will_rise),
             style = MaterialTheme.typography.labelSmall,
             color = mutedColor,
             textAlign = TextAlign.Center

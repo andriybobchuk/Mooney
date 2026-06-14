@@ -121,9 +121,6 @@
     <string name="feedback_socials_intro">Aktywnie rozwijam Mooney i chętnie usłyszę Twoją opinię. Znalazłeś błąd? Masz pomysł? Po prostu chcesz pogadać? Napisz na którymkolwiek z kanałów poniżej!</string>
     <string name="analytics_request_title">Potrzebujesz więcej funkcji w analityce?</string>
     <string name="analytics_request_desc">Powiedz, co byłoby przydatne — napisz na dowolnym kanale, a najlepsze pomysły wdrożę.</string>
-    <string name="paywall_founder_badge">🔥 Cena dla Founderów</string>
-    <string name="paywall_founder_locked">Zablokuj tę cenę na zawsze — wczesni użytkownicy zachowują ją w miarę rozwoju Mooney.</string>
-    <string name="paywall_price_will_rise">Cena wzrośnie wraz z kolejnymi funkcjami.</string>
     <string name="tx_description_label">Opis (opcjonalnie)</string>
 
     <!-- Cele -->
@@ -187,8 +184,8 @@
     <string name="import_csv">Importuj CSV z innej aplikacji</string>
     <string name="import_csv_desc">Mint, YNAB, Wallet, Money Manager lub dowolny CSV z kolumnami Data i Kwota</string>
     <string name="csv_imported_n">Zaimportowano %1$d transakcji</string>
-    <string name="csv_imported_n_new_account">Zaimportowano %1$d transakcji do nowego konta \'Importowane\'</string>
-    <string name="csv_columns_not_recognised">Nie rozpoznano kolumn daty / kwoty w tym pliku. Wyeksportuj ponownie z aplikacji źródłowej lub zmień nazwy kolumn na \'Data\' i \'Kwota\'.</string>
+    <string name="csv_imported_n_new_account">Zaimportowano %1$d transakcji do nowego konta 'Importowane'</string>
+    <string name="csv_columns_not_recognised">Nie rozpoznano kolumn daty / kwoty w tym pliku. Wyeksportuj ponownie z aplikacji źródłowej lub zmień nazwy kolumn na 'Data' i 'Kwota'.</string>
     <string name="csv_import_failed">Nie udało się zaimportować CSV: %1$s</string>
 
     <!-- Wesprzyj Mooney -->

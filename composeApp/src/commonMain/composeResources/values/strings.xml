@@ -50,7 +50,7 @@
     <string name="day">Day</string>
 
     <!-- Onboarding -->
-    <string name="lets_get_started">Let\'s get started</string>
+    <string name="lets_get_started">Let's get started</string>
     <string name="add_account_step">Add an account</string>
     <string name="add_account_step_desc">Bank account, cash, or investment</string>
     <string name="track_spending_step">Track spending</string>
@@ -117,17 +117,12 @@
     <!-- Feedback -->
     <string name="get_in_touch">Get in touch</string>
     <string name="feedback_description">Mooney is actively being built. Found a bug? Have an idea? Reach out — your feedback shapes the app.</string>
-    <string name="feedback_socials_title">Hey! I\'m Andriy</string>
-    <string name="feedback_socials_intro">I\'m actively building Mooney and would love to hear from you. Found a bug? Have an idea? Just want to chat? Reach out through any channel below!</string>
+    <string name="feedback_socials_title">Hey! I'm Andriy</string>
+    <string name="feedback_socials_intro">I'm actively building Mooney and would love to hear from you. Found a bug? Have an idea? Just want to chat? Reach out through any channel below!</string>
     <string name="analytics_request_title">Need more analytics features?</string>
-    <string name="analytics_request_desc">Tell me what you\'d find useful — DM me on any channel and I\'ll build the best ideas.</string>
+    <string name="analytics_request_desc">Tell me what you'd find useful — DM me on any channel and I'll build the best ideas.</string>
 
-    <!-- Paywall upsell framing -->
-    <string name="paywall_founder_badge">🔥 Founder pricing</string>
-    <string name="paywall_founder_locked">Lock in this price forever — early supporters keep it as Mooney grows.</string>
-    <string name="paywall_price_will_rise">Price will increase as more features ship.</string>
-
-    <!-- Transaction description -->
+<!-- Transaction description -->
     <string name="tx_description_label">Description (optional)</string>
 
     <!-- Goals -->
@@ -153,9 +148,9 @@
     <string name="error_disk_full">Oops, it seems like your disk is full.</string>
     <string name="error_unknown">Oops, something went wrong.</string>
     <string name="error_request_timeout">The request timed out.</string>
-    <string name="error_no_internet">Couldn\'t reach server, please check your internet connection.</string>
+    <string name="error_no_internet">Couldn't reach server, please check your internet connection.</string>
     <string name="error_too_many_requests">Your quota seems to be exceeded.</string>
-    <string name="error_serialization">Couldn\'t parse data.</string>
+    <string name="error_serialization">Couldn't parse data.</string>
 
     <!-- Net Income / Analytics redesign -->
     <string name="last_12_months">Last 12 months</string>
@@ -177,7 +172,7 @@
     <string name="est_savings_next_12">Est. savings · next 12 mo</string>
     <string name="net_worth_in_6">Net worth in 6 mo</string>
     <string name="net_worth_in_12">Net worth in 12 mo</string>
-    <string name="forecast_disclaimer">Forecast based on your last %1$d months\' average savings of %2$s/mo. A guide, not a guarantee — markets and spending vary.</string>
+    <string name="forecast_disclaimer">Forecast based on your last %1$d months' average savings of %2$s/mo. A guide, not a guarantee — markets and spending vary.</string>
 
     <!-- Assets overflow menu -->
     <string name="display_assets_in_header">Display assets amount in header</string>
@@ -191,9 +186,9 @@
     <string name="import_csv">Import CSV from another app</string>
     <string name="import_csv_desc">Mint, YNAB, Wallet, Money Manager, or any CSV with Date + Amount columns</string>
     <string name="csv_imported_n">Imported %1$d transactions</string>
-    <string name="csv_imported_n_new_account">Imported %1$d transactions into a new \'Imported\' account</string>
-    <string name="csv_columns_not_recognised">Couldn\'t recognise date / amount columns in this CSV. Try exporting again from the source app, or rename the columns to include \'Date\' and \'Amount\'.</string>
-    <string name="csv_import_failed">Couldn\'t import CSV: %1$s</string>
+    <string name="csv_imported_n_new_account">Imported %1$d transactions into a new 'Imported' account</string>
+    <string name="csv_columns_not_recognised">Couldn't recognise date / amount columns in this CSV. Try exporting again from the source app, or rename the columns to include 'Date' and 'Amount'.</string>
+    <string name="csv_import_failed">Couldn't import CSV: %1$s</string>
 
     <!-- Settings — Support Mooney -->
     <string name="support_mooney">Support Mooney</string>
@@ -226,8 +221,8 @@
     <string name="feedback_intro">Your feedback helps me improve the app — built solo, every reply is read.</string>
     <string name="not_really">Not really</string>
     <string name="got_it_thanks">Got it. Thank you.</string>
-    <string name="couldnt_send">Couldn\'t send. Check your connection and try again.</string>
-    <string name="whats_on_your_mind">What\'s on your mind?</string>
+    <string name="couldnt_send">Couldn't send. Check your connection and try again.</string>
+    <string name="whats_on_your_mind">What's on your mind?</string>
     <string name="feedback_pick_category">Pick a category and tell me anything — bug, idea, frustration. Built solo, every message gets read.</string>
 
     <!-- Paywall -->
@@ -245,7 +240,7 @@
     <string name="start_tracking_first_tx">Start tracking your spending by adding your first transaction.</string>
     <string name="add_more_currencies_in_settings">Add more currencies in Settings</string>
     <string name="want_more_widgets">Want more widgets?</string>
-    <string name="want_more_widgets_desc">Tell me what you\'d find useful — I\'ll build the best ideas in the next release.</string>
+    <string name="want_more_widgets_desc">Tell me what you'd find useful — I'll build the best ideas in the next release.</string>
     <string name="tap_to_suggest">Tap to suggest</string>
 
     <!-- Onboarding flow -->
@@ -255,7 +250,7 @@
     <string name="primary_currency_desc">All totals and analytics will be shown in this currency</string>
     <string name="get_started">Get Started</string>
     <string name="your_new_mooney_ready">Your new Mooney is ready</string>
-    <string name="swipe_up_reveal">Swipe up to reveal what\'s\nwaiting for you inside</string>
+    <string name="swipe_up_reveal">Swipe up to reveal what's\nwaiting for you inside</string>
     <string name="swipe_to_unwrap">Swipe to unwrap the app</string>
 
     <!-- Analytics card labels -->
@@ -401,7 +396,7 @@
     <string name="general_label">General</string>
 
     <!-- Exclude Taxes -->
-    <string name="exclude_taxes_desc">Tax transactions won\'t count towards your spending totals</string>
+    <string name="exclude_taxes_desc">Tax transactions won't count towards your spending totals</string>
 
     <!-- Paywall heroes -->
     <string name="paywall_acct_headline">Add unlimited accounts</string>
@@ -427,7 +422,7 @@
 
     <!-- Transaction screen extras -->
     <string name="custom_rate">Custom rate</string>
-    <string name="todays_rate">Today\'s rate</string>
+    <string name="todays_rate">Today's rate</string>
     <string name="quick_recurring">Recurring</string>
     <string name="quick_categories">Categories</string>
 
@@ -446,7 +441,7 @@
 
     <!-- Feedback hints -->
     <string name="feedback_hint_bug">What broke? What were you trying to do?</string>
-    <string name="feedback_hint_feature">What\'s missing? How would you use it?</string>
+    <string name="feedback_hint_feature">What's missing? How would you use it?</string>
     <string name="feedback_hint_widget">Describe the widget — what would it show?</string>
     <string name="feedback_hint_general">Your feedback…</string>
 
@@ -515,7 +510,7 @@
     <!-- Empty states -->
     <string name="goals_empty_desc">Set financial goals and track your progress toward them.</string>
     <string name="assets_welcome_desc">Add your first account to start tracking your finances. You can add bank accounts, cash, investments, and more.</string>
-    <string name="recurring_delete_warning">This will stop future automatic entries. Existing transactions won\'t be affected.</string>
+    <string name="recurring_delete_warning">This will stop future automatic entries. Existing transactions won't be affected.</string>
     <string name="trend_not_enough_data">Not enough data yet — add more transactions to see trends</string>
     <string name="base_currency_prefix">Base: %1$s</string>
     <string name="current_rate_prefix">Current: %1$s</string>

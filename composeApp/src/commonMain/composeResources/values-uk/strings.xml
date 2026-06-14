@@ -7,7 +7,7 @@
     <string name="nav_analytics">Аналітика</string>
     <string name="nav_goals">Цілі</string>
     <string name="settings">Налаштування</string>
-    <string name="feedback">Зворотній зв\'язок</string>
+    <string name="feedback">Зворотній зв'язок</string>
     <string name="cancel">Скасувати</string>
     <string name="done">Готово</string>
     <string name="edit">Редагувати</string>
@@ -98,15 +98,12 @@
     <string name="dark">Темна</string>
     <string name="system">Системна</string>
     <string name="select_up_to_categories">Оберіть до %1$d категорій</string>
-    <string name="get_in_touch">Зв\'яжіться з нами</string>
+    <string name="get_in_touch">Зв'яжіться з нами</string>
     <string name="feedback_description">Mooney активно розробляється. Знайшли помилку? Маєте ідею? Напишіть — ваш відгук формує додаток.</string>
     <string name="feedback_socials_title">Привіт! Я Андрій</string>
     <string name="feedback_socials_intro">Я активно розвиваю Mooney і радий буду почути ваші думки. Знайшли баг? Є ідея? Просто хочеться поспілкуватися? Пишіть у будь-який канал нижче!</string>
     <string name="analytics_request_title">Хочеш більше функцій аналітики?</string>
     <string name="analytics_request_desc">Напиши, чого тобі бракує — у будь-який канал — і я додам найкращі ідеї.</string>
-    <string name="paywall_founder_badge">🔥 Ціна для перших</string>
-    <string name="paywall_founder_locked">Зафіксуй ціну назавжди — ранні користувачі зберігають її в міру розвитку Mooney.</string>
-    <string name="paywall_price_will_rise">Ціна зростатиме з виходом нових функцій.</string>
     <string name="tx_description_label">Опис (необов'язково)</string>
     <string name="add_goal">Додати ціль</string>
     <string name="edit_goal">Редагувати ціль</string>
@@ -114,7 +111,7 @@
     <string name="error_disk_full">Схоже, диск заповнений.</string>
     <string name="error_unknown">Щось пішло не так.</string>
     <string name="error_request_timeout">Час запиту вичерпано.</string>
-    <string name="error_no_internet">Не вдалося з\'єднатися з сервером. Перевірте інтернет-з\'єднання.</string>
+    <string name="error_no_internet">Не вдалося з'єднатися з сервером. Перевірте інтернет-з'єднання.</string>
     <string name="error_too_many_requests">Схоже, ваша квота вичерпана.</string>
     <string name="error_serialization">Не вдалося обробити дані.</string>
     <string name="set_as_primary">Зробити основним</string>
@@ -162,8 +159,8 @@
     <string name="import_csv">Імпортувати CSV з іншого застосунку</string>
     <string name="import_csv_desc">Mint, YNAB, Wallet, Money Manager або будь-який CSV з колонками Date і Amount</string>
     <string name="csv_imported_n">Імпортовано %1$d транзакцій</string>
-    <string name="csv_imported_n_new_account">Імпортовано %1$d транзакцій у новий рахунок \'Імпортовано\'</string>
-    <string name="csv_columns_not_recognised">Не вдалося розпізнати колонки дати / суми в цьому файлі. Спробуйте експортувати ще раз або перейменуйте колонки на \'Date\' і \'Amount\'.</string>
+    <string name="csv_imported_n_new_account">Імпортовано %1$d транзакцій у новий рахунок 'Імпортовано'</string>
+    <string name="csv_columns_not_recognised">Не вдалося розпізнати колонки дати / суми в цьому файлі. Спробуйте експортувати ще раз або перейменуйте колонки на 'Date' і 'Amount'.</string>
     <string name="csv_import_failed">Не вдалося імпортувати CSV: %1$s</string>
 
     <!-- Підтримати Mooney -->
@@ -197,7 +194,7 @@
     <string name="feedback_intro">Твій відгук допомагає покращити застосунок — створюю сам, читаю кожну відповідь.</string>
     <string name="not_really">Не дуже</string>
     <string name="got_it_thanks">Зрозумів. Дякую.</string>
-    <string name="couldnt_send">Не вдалося надіслати. Перевір з\'єднання і спробуй ще раз.</string>
+    <string name="couldnt_send">Не вдалося надіслати. Перевір з'єднання і спробуй ще раз.</string>
     <string name="whats_on_your_mind">Що на думці?</string>
     <string name="feedback_pick_category">Обери категорію і напиши будь-що — баг, ідея, розчарування. Створюю сам, читаю кожне повідомлення.</string>
 
@@ -216,7 +213,7 @@
     <string name="start_tracking_first_tx">Почни відстежувати витрати, додавши першу транзакцію.</string>
     <string name="add_more_currencies_in_settings">Додай більше валют у Налаштуваннях</string>
     <string name="want_more_widgets">Хочеш більше віджетів?</string>
-    <string name="want_more_widgets_desc">Напиши, що було б корисно — найкращі ідеї з\'являться в наступному релізі.</string>
+    <string name="want_more_widgets_desc">Напиши, що було б корисно — найкращі ідеї з'являться в наступному релізі.</string>
     <string name="tap_to_suggest">Натисни, щоб запропонувати</string>
 
     <!-- Онбординг -->
@@ -244,8 +241,8 @@
     <string name="more">Більше</string>
 
     <!-- Категорії -->
-    <string name="confirm_delete_category">Видалити \"%1$s\"? Транзакції з цією категорією стануть незв\'язаними.</string>
-    <string name="confirm_delete_account">Видалити \"%1$s\"? Усі пов\'язані транзакції також буде видалено.</string>
+    <string name="confirm_delete_category">Видалити \"%1$s\"? Транзакції з цією категорією стануть незв'язаними.</string>
+    <string name="confirm_delete_account">Видалити \"%1$s\"? Усі пов'язані транзакції також буде видалено.</string>
     <string name="transaction_categories">Категорії транзакцій</string>
     <string name="asset_categories">Категорії активів</string>
     <string name="copy_action">Копіювати</string>
@@ -273,12 +270,12 @@
     <string name="goal_reached">Ціль досягнуто!</string>
 
     <!-- Керування категоріями -->
-    <string name="delete_asset_category_msg">Видалити \"%1$s\"? Рахунки, що використовують цю категорію, збережуть свої дані, але з\'являться в \"Інше\".</string>
-    <string name="delete_tx_category_msg">Видалити \"%1$s\"? Транзакції, що використовують цю категорію, стануть незв\'язаними.</string>
+    <string name="delete_asset_category_msg">Видалити \"%1$s\"? Рахунки, що використовують цю категорію, збережуть свої дані, але з'являться в \"Інше\".</string>
+    <string name="delete_tx_category_msg">Видалити \"%1$s\"? Транзакції, що використовують цю категорію, стануть незв'язаними.</string>
     <string name="add_asset_category">Додати категорію активу</string>
-    <string name="add_liability_category">Додати категорію зобов\'язання</string>
+    <string name="add_liability_category">Додати категорію зобов'язання</string>
     <string name="assets_section">Активи</string>
-    <string name="liabilities_section">Зобов\'язання</string>
+    <string name="liabilities_section">Зобов'язання</string>
     <string name="no_active_subscription">Активну підписку не знайдено</string>
 
     <!-- Чистий капітал flex -->
@@ -395,7 +392,7 @@
 
     <!-- Актив / Зобов'язання -->
     <string name="asset_label">Актив</string>
-    <string name="liability_label">Зобов\'язання</string>
+    <string name="liability_label">Зобов'язання</string>
 
     <!-- Підказки для відгуку -->
     <string name="feedback_hint_bug">Що зламалося? Що ви намагалися зробити?</string>
@@ -475,7 +472,7 @@
 
     <!-- Чистий капітал застереження -->
     <string name="net_worth_disclaimer">Минулі значення відновлюються з ваших місячних чистих доходів — великі разові зміни (продаж автомобіля, імпорти рахунків) можуть змістити лінію.</string>
-    <string name="net_worth_history_empty">Коли накопичиться кілька місяців активності, траєкторія з\'явиться тут.</string>
+    <string name="net_worth_history_empty">Коли накопичиться кілька місяців активності, траєкторія з'явиться тут.</string>
 
     <!-- Вступ до відгуку -->
 

@@ -121,9 +121,6 @@
     <string name="feedback_socials_intro">أعمل بنشاط على تطوير Mooney وأحب سماع رأيك. وجدت خللاً؟ لديك فكرة؟ أو حتى محادثة قصيرة؟ تواصل معي عبر أي قناة أدناه!</string>
     <string name="analytics_request_title">تحتاج المزيد من ميزات التحليل؟</string>
     <string name="analytics_request_desc">أخبرني بما تجده مفيدًا — راسلني على أي قناة وسأبني أفضل الأفكار.</string>
-    <string name="paywall_founder_badge">🔥 سعر المؤسسين</string>
-    <string name="paywall_founder_locked">ثبّت هذا السعر إلى الأبد — يحتفظ به الداعمون الأوائل مع نمو Mooney.</string>
-    <string name="paywall_price_will_rise">سيرتفع السعر مع إضافة المزيد من الميزات.</string>
     <string name="tx_description_label">الوصف (اختياري)</string>
 
     <!-- الأهداف -->
@@ -187,8 +184,8 @@
     <string name="import_csv">استيراد CSV من تطبيق آخر</string>
     <string name="import_csv_desc">Mint أو YNAB أو Wallet أو Money Manager أو أي CSV يحتوي على عمودَي التاريخ والمبلغ</string>
     <string name="csv_imported_n">تم استيراد %1$d معاملة</string>
-    <string name="csv_imported_n_new_account">تم استيراد %1$d معاملة إلى حساب جديد \'مستوردة\'</string>
-    <string name="csv_columns_not_recognised">تعذّر التعرف على أعمدة التاريخ / المبلغ في هذا الملف. حاول التصدير مجدداً من التطبيق الأصلي أو أعد تسمية الأعمدة إلى \'Date\' و\'Amount\'.</string>
+    <string name="csv_imported_n_new_account">تم استيراد %1$d معاملة إلى حساب جديد 'مستوردة'</string>
+    <string name="csv_columns_not_recognised">تعذّر التعرف على أعمدة التاريخ / المبلغ في هذا الملف. حاول التصدير مجدداً من التطبيق الأصلي أو أعد تسمية الأعمدة إلى 'Date' و'Amount'.</string>
     <string name="csv_import_failed">تعذّر استيراد ملف CSV: %1$s</string>
 
     <!-- ادعم Mooney -->

@@ -121,9 +121,6 @@
     <string name="feedback_socials_intro">Estoy desarrollando Mooney activamente y me encantaría saber de ti. ¿Encontraste un bug? ¿Tienes una idea? ¿Solo quieres charlar? Escríbeme por cualquier canal de abajo.</string>
     <string name="analytics_request_title">¿Necesitas más funciones de análisis?</string>
     <string name="analytics_request_desc">Cuéntame qué te resultaría útil — escríbeme por cualquier canal y construiré las mejores ideas.</string>
-    <string name="paywall_founder_badge">🔥 Precio fundador</string>
-    <string name="paywall_founder_locked">Bloquea este precio para siempre — quienes apoyan pronto lo mantienen mientras Mooney crece.</string>
-    <string name="paywall_price_will_rise">El precio aumentará a medida que se añadan más funciones.</string>
     <string name="tx_description_label">Descripción (opcional)</string>
 
     <!-- Metas -->
@@ -187,8 +184,8 @@
     <string name="import_csv">Importar CSV desde otra app</string>
     <string name="import_csv_desc">Mint, YNAB, Wallet, Money Manager o cualquier CSV con columnas Fecha + Importe</string>
     <string name="csv_imported_n">Se importaron %1$d transacciones</string>
-    <string name="csv_imported_n_new_account">Se importaron %1$d transacciones en una nueva cuenta \'Importadas\'</string>
-    <string name="csv_columns_not_recognised">No se reconocieron las columnas de fecha / importe en este CSV. Intenta exportar de nuevo desde la app original o renombra las columnas a \'Date\' y \'Amount\'.</string>
+    <string name="csv_imported_n_new_account">Se importaron %1$d transacciones en una nueva cuenta 'Importadas'</string>
+    <string name="csv_columns_not_recognised">No se reconocieron las columnas de fecha / importe en este CSV. Intenta exportar de nuevo desde la app original o renombra las columnas a 'Date' y 'Amount'.</string>
     <string name="csv_import_failed">No se pudo importar el CSV: %1$s</string>
 
     <!-- Apoya a Mooney -->

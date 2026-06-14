@@ -121,9 +121,6 @@
     <string name="feedback_socials_intro">Я активно развиваю Mooney и буду рад услышать вас. Нашли баг? Есть идея? Просто пообщаться? Напишите в любом из каналов ниже!</string>
     <string name="analytics_request_title">Нужно больше функций аналитики?</string>
     <string name="analytics_request_desc">Расскажите, чего не хватает — напишите в любой канал, и я добавлю лучшие идеи.</string>
-    <string name="paywall_founder_badge">🔥 Цена для первых</string>
-    <string name="paywall_founder_locked">Зафиксируйте цену навсегда — ранние пользователи сохраняют её по мере роста Mooney.</string>
-    <string name="paywall_price_will_rise">Цена будет расти с выходом новых функций.</string>
     <string name="tx_description_label">Описание (необязательно)</string>
 
     <!-- Цели -->
@@ -187,8 +184,8 @@
     <string name="import_csv">Импортировать CSV из другого приложения</string>
     <string name="import_csv_desc">Mint, YNAB, Wallet, Money Manager или любой CSV с колонками Дата и Сумма</string>
     <string name="csv_imported_n">Импортировано %1$d транзакций</string>
-    <string name="csv_imported_n_new_account">Импортировано %1$d транзакций в новый счёт \'Импортировано\'</string>
-    <string name="csv_columns_not_recognised">Не удалось распознать столбцы даты / суммы в этом CSV. Попробуйте экспортировать снова из исходного приложения или переименуйте столбцы в \'Date\' и \'Amount\'.</string>
+    <string name="csv_imported_n_new_account">Импортировано %1$d транзакций в новый счёт 'Импортировано'</string>
+    <string name="csv_columns_not_recognised">Не удалось распознать столбцы даты / суммы в этом CSV. Попробуйте экспортировать снова из исходного приложения или переименуйте столбцы в 'Date' и 'Amount'.</string>
     <string name="csv_import_failed">Не удалось импортировать CSV: %1$s</string>
 
     <!-- Поддержите Mooney -->

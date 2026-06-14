@@ -1084,7 +1084,10 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 5.dp, horizontal = 16.dp),
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -1550,21 +1553,23 @@ fun TransactionBottomSheet(
                 )
             }
 
-            } // end scrollable Column
-
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(8.dp))
 
             // Optional description — shows up in the Analytics breakdown
             // drilldown so the user can answer "what was this $42 again?"
             // months later. Single line by design; we don't want this to
-            // become a journal field.
+            // become a journal field. Slightly smaller text to keep the
+            // sheet compact alongside the date row above it.
             MooneyTextField(
                 value = description,
                 onValueChange = { description = it },
                 label = stringResource(Res.string.tx_description_label),
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodySmall
             )
+
+            } // end scrollable Column
 
             // Validation
             val parsedAmt = (amount ?: "").parseAmountInput() ?: 0.0

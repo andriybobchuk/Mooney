@@ -50,7 +50,7 @@
     <string name="day">Tag</string>
 
     <!-- Onboarding -->
-    <string name="lets_get_started">Los geht\'s</string>
+    <string name="lets_get_started">Los geht's</string>
     <string name="add_account_step">Konto hinzufügen</string>
     <string name="add_account_step_desc">Bankkonto, Bargeld oder Investment</string>
     <string name="track_spending_step">Ausgaben verfolgen</string>
@@ -121,9 +121,6 @@
     <string name="feedback_socials_intro">Ich entwickle Mooney aktiv und freue mich über deine Nachricht. Bug gefunden? Idee? Lust auf einen Plausch? Erreich mich über einen der Kanäle unten!</string>
     <string name="analytics_request_title">Brauchst du mehr Analyse-Funktionen?</string>
     <string name="analytics_request_desc">Sag mir, was nützlich wäre — schreib mir auf einem Kanal und ich baue die besten Ideen.</string>
-    <string name="paywall_founder_badge">🔥 Founder-Preis</string>
-    <string name="paywall_founder_locked">Sichere dir diesen Preis dauerhaft — frühe Unterstützer behalten ihn, während Mooney wächst.</string>
-    <string name="paywall_price_will_rise">Der Preis steigt, wenn mehr Funktionen erscheinen.</string>
     <string name="tx_description_label">Beschreibung (optional)</string>
 
     <!-- Ziele -->
@@ -187,8 +184,8 @@
     <string name="import_csv">CSV aus anderer App importieren</string>
     <string name="import_csv_desc">Mint, YNAB, Wallet, Money Manager oder jede CSV mit Spalten Datum + Betrag</string>
     <string name="csv_imported_n">%1$d Transaktionen importiert</string>
-    <string name="csv_imported_n_new_account">%1$d Transaktionen in ein neues Konto \'Importiert\' importiert</string>
-    <string name="csv_columns_not_recognised">Datum- / Betrag-Spalten in dieser CSV nicht erkannt. Versuche, erneut aus der Quell-App zu exportieren oder die Spalten in \'Date\' und \'Amount\' umzubenennen.</string>
+    <string name="csv_imported_n_new_account">%1$d Transaktionen in ein neues Konto 'Importiert' importiert</string>
+    <string name="csv_columns_not_recognised">Datum- / Betrag-Spalten in dieser CSV nicht erkannt. Versuche, erneut aus der Quell-App zu exportieren oder die Spalten in 'Date' und 'Amount' umzubenennen.</string>
     <string name="csv_import_failed">CSV konnte nicht importiert werden: %1$s</string>
 
     <!-- Mooney unterstützen -->

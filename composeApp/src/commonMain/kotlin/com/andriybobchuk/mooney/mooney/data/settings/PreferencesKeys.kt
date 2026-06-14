@@ -46,6 +46,10 @@ object PreferencesKeys {
     // (capped at the next check anyway). See core/ads/Ads.kt.
     val ADS_LAST_INTERSTITIAL_TIMESTAMP = androidx.datastore.preferences.core.longPreferencesKey("ads_last_interstitial_timestamp")
     val ADS_LAST_APP_OPEN_DAY = intPreferencesKey("ads_last_app_open_day")
+    /** Last-shown timestamp per banner placement — used to cap banner frequency. */
+    val ADS_LAST_BANNER_ANALYTICS = androidx.datastore.preferences.core.longPreferencesKey("ads_last_banner_analytics")
+    val ADS_LAST_BANNER_SETTINGS = androidx.datastore.preferences.core.longPreferencesKey("ads_last_banner_settings")
+    val ADS_LAST_BANNER_CATEGORIES = androidx.datastore.preferences.core.longPreferencesKey("ads_last_banner_categories")
     /** Developer kill-switch for all ads — read by AdEligibilityUseCase. */
     val ADS_DISABLED_DEV = booleanPreferencesKey("ads_disabled_dev")
     /**

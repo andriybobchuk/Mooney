@@ -157,13 +157,7 @@ sealed interface AnalyticsEvent {
         override val params = mapOf("response" to response)
     }
 
-    /** Feedback successfully written to Firestore. Kind is one of FeedbackKind.name. */
-    data class FeedbackSubmitted(val kind: String) : AnalyticsEvent {
-        override val name = "feedback_submitted"
-        override val params = mapOf("kind" to kind)
-    }
-
-    // ───────────────────────── Misc (keep narrow) ─────────────────────────
+// ───────────────────────── Misc (keep narrow) ─────────────────────────
 
     /** Base-currency switches are rare and meaningful — keep as event. */
     data class ChangeDefaultCurrency(val currency: String) : AnalyticsEvent {

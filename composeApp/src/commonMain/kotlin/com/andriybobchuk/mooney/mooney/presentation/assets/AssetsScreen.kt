@@ -424,8 +424,7 @@ fun AssetsScreen(
 
     if (showReviewFeedback) {
         com.andriybobchuk.mooney.core.feedback.FeedbackSheet(
-            onDismiss = { showReviewFeedback = false },
-            initialKind = com.andriybobchuk.mooney.mooney.domain.feedback.FeedbackKind.GENERAL
+            onDismiss = { showReviewFeedback = false }
         )
     }
 }

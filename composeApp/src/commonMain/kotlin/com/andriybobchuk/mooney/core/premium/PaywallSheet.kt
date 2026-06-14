@@ -48,6 +48,8 @@ import mooney.composeapp.generated.resources.paywall_benefit_accounts_sub
 import mooney.composeapp.generated.resources.paywall_benefit_accounts_title
 import mooney.composeapp.generated.resources.paywall_benefit_categories_sub
 import mooney.composeapp.generated.resources.paywall_benefit_categories_title
+import mooney.composeapp.generated.resources.paywall_benefit_noads_sub
+import mooney.composeapp.generated.resources.paywall_benefit_noads_title
 import mooney.composeapp.generated.resources.paywall_cat_headline
 import mooney.composeapp.generated.resources.paywall_cat_sub
 import mooney.composeapp.generated.resources.paywall_generic_headline
@@ -103,7 +105,8 @@ private data class BenefitItem(val emoji: String, val title: String, val subtitl
 @Composable
 private fun rememberBenefits(): List<BenefitItem> = listOf(
     BenefitItem("👛", stringResource(Res.string.paywall_benefit_accounts_title), stringResource(Res.string.paywall_benefit_accounts_sub)),
-    BenefitItem("🏷️", stringResource(Res.string.paywall_benefit_categories_title), stringResource(Res.string.paywall_benefit_categories_sub))
+    BenefitItem("🏷️", stringResource(Res.string.paywall_benefit_categories_title), stringResource(Res.string.paywall_benefit_categories_sub)),
+    BenefitItem("🚫", stringResource(Res.string.paywall_benefit_noads_title), stringResource(Res.string.paywall_benefit_noads_sub))
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

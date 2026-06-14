@@ -217,8 +217,7 @@ fun TransactionsScreen(
     }
     if (showReviewFeedback) {
         com.andriybobchuk.mooney.core.feedback.FeedbackSheet(
-            onDismiss = { showReviewFeedback = false },
-            initialKind = com.andriybobchuk.mooney.mooney.domain.feedback.FeedbackKind.GENERAL
+            onDismiss = { showReviewFeedback = false }
         )
     }
 
@@ -1092,7 +1091,7 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
             modifier = Modifier
                 .size(48.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(MaterialTheme.appColors.transactionIcon),
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)),
             contentAlignment = Alignment.Center
         ) {
             Text(transaction.subcategory.resolveEmoji(), fontSize = 25.sp)
@@ -1199,6 +1198,7 @@ fun TransactionBottomSheet(
 
     var amount by remember { mutableStateOf(transactionToEdit?.amount?.formatToPlainString()) }
     var newAccountValue by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf(transactionToEdit?.description ?: "") }
 
     val defaultAccount = accounts.filterNotNull().toAccounts().find { it.isPrimary }
     var selectedAccount by remember { mutableStateOf(transactionToEdit?.account ?: defaultAccount) }
@@ -1550,6 +1550,22 @@ fun TransactionBottomSheet(
                 )
             }
 
+            Spacer(Modifier.height(8.dp))
+
+            // Optional description — shows up in the Analytics breakdown
+            // drilldown so the user can answer "what was this $42 again?"
+            // months later. Single line by design; we don't want this to
+            // become a journal field. Slightly smaller text to keep the
+            // sheet compact alongside the date row above it.
+            MooneyTextField(
+                value = description,
+                onValueChange = { description = it },
+                label = stringResource(Res.string.tx_description_label),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodySmall
+            )
+
             } // end scrollable Column
 
             // Validation
@@ -1664,7 +1680,8 @@ fun TransactionBottomSheet(
                                 currentSelectedSubCategory ?: fCat
                             },
                             date = selectedDate,
-                            destinationAmount = computedDestinationAmount
+                            destinationAmount = computedDestinationAmount,
+                            description = description.trim().takeIf { it.isNotEmpty() }
                         )
                         
                         val schedule = if (isRecurringEnabled) recurringSchedule else null
@@ -3077,8 +3094,7 @@ private fun SuggestWidgetCard(modifier: Modifier = Modifier) {
     var showSheet by remember { mutableStateOf(false) }
     if (showSheet) {
         com.andriybobchuk.mooney.core.feedback.FeedbackSheet(
-            onDismiss = { showSheet = false },
-            initialKind = com.andriybobchuk.mooney.mooney.domain.feedback.FeedbackKind.WIDGET
+            onDismiss = { showSheet = false }
         )
     }
     Column(

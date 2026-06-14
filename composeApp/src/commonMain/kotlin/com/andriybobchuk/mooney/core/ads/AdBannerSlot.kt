@@ -32,6 +32,13 @@ fun AdBannerSlot(
             sessionTapCount = session.tapCount,
             sessionCount = session.sessionCount
         )
+        if (eligible) {
+            // Stamp the cooldown immediately so the next visit to this
+            // placement (within the cooldown window) won't show another ad,
+            // even if the user backgrounds the app before the impression
+            // finishes loading.
+            eligibility.markShown(placement)
+        }
         println("[Ads] AdBannerSlot $placement: eligible=$eligible (session=$session)")
     }
 

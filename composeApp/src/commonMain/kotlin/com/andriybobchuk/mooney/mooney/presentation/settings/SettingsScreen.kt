@@ -1081,14 +1081,12 @@ fun SettingsScreen(
 
     if (showFeedbackSheet) {
         com.andriybobchuk.mooney.core.feedback.FeedbackSheet(
-            onDismiss = { showFeedbackSheet = false },
-            initialKind = com.andriybobchuk.mooney.mooney.domain.feedback.FeedbackKind.GENERAL
+            onDismiss = { showFeedbackSheet = false }
         )
     }
     if (showRateFeedback) {
         com.andriybobchuk.mooney.core.feedback.FeedbackSheet(
-            onDismiss = { showRateFeedback = false },
-            initialKind = com.andriybobchuk.mooney.mooney.domain.feedback.FeedbackKind.GENERAL
+            onDismiss = { showRateFeedback = false }
         )
     }
 }

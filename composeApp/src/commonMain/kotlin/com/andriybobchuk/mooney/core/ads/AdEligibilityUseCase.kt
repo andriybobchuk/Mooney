@@ -73,10 +73,15 @@ class AdEligibilityUseCase(
         val prefs = dataStore.data.first()
 
         return when (placement) {
-            AdPlacement.SETTINGS_BANNER,
-            AdPlacement.ANALYTICS_BREAKDOWN_BANNER,
-            AdPlacement.CATEGORIES_BANNER,
             AdPlacement.TRANSACTIONS_NATIVE_ROW -> true
+
+            // Banners run on a per-placement time cooldown so a user who
+            // keeps re-opening Analytics doesn't get an ad every time. The
+            // cooldown is enforced at eligibility time; the call site is
+            // expected to invoke [markShown] right after rendering.
+            AdPlacement.SETTINGS_BANNER -> bannerCooledDown(prefs, PreferencesKeys.ADS_LAST_BANNER_SETTINGS, now)
+            AdPlacement.ANALYTICS_BREAKDOWN_BANNER -> bannerCooledDown(prefs, PreferencesKeys.ADS_LAST_BANNER_ANALYTICS, now)
+            AdPlacement.CATEGORIES_BANNER -> bannerCooledDown(prefs, PreferencesKeys.ADS_LAST_BANNER_CATEGORIES, now)
 
             AdPlacement.INTERSTITIAL_RETURN_TO_TRANSACTIONS -> {
                 // Hard cap: at most one interstitial per cold-start session.
@@ -96,14 +101,29 @@ class AdEligibilityUseCase(
 
     /** Call this after a placement actually showed, so counters update. */
     suspend fun markShown(placement: AdPlacement) {
+        val now = Clock.System.now().toEpochMilliseconds()
         when (placement) {
             AdPlacement.INTERSTITIAL_RETURN_TO_TRANSACTIONS -> {
                 interstitialsShownThisSession += 1
-                val now = Clock.System.now().toEpochMilliseconds()
                 dataStore.edit { it[PreferencesKeys.ADS_LAST_INTERSTITIAL_TIMESTAMP] = now }
             }
+            AdPlacement.SETTINGS_BANNER ->
+                dataStore.edit { it[PreferencesKeys.ADS_LAST_BANNER_SETTINGS] = now }
+            AdPlacement.ANALYTICS_BREAKDOWN_BANNER ->
+                dataStore.edit { it[PreferencesKeys.ADS_LAST_BANNER_ANALYTICS] = now }
+            AdPlacement.CATEGORIES_BANNER ->
+                dataStore.edit { it[PreferencesKeys.ADS_LAST_BANNER_CATEGORIES] = now }
             else -> Unit
         }
+    }
+
+    private fun bannerCooledDown(
+        prefs: Preferences,
+        key: androidx.datastore.preferences.core.Preferences.Key<Long>,
+        nowMs: Long
+    ): Boolean {
+        val last = prefs[key] ?: 0L
+        return (nowMs - last) >= BANNER_COOLDOWN_MS
     }
 
     private companion object {
@@ -116,5 +136,9 @@ class AdEligibilityUseCase(
         // closer to "once or twice per day for an engaged user".
         const val INTERSTITIAL_COOLDOWN_MS = 2L * 60L * 60L * 1000L
         const val MAX_INTERSTITIALS_PER_SESSION = 1
+        // Same-placement banner cooldown — keeps Analytics/Settings/Categories
+        // banners from feeling like every-screen interrupts. 12h means a heavy
+        // user sees a banner at most twice a day per surface.
+        const val BANNER_COOLDOWN_MS = 12L * 60L * 60L * 1000L
     }
 }

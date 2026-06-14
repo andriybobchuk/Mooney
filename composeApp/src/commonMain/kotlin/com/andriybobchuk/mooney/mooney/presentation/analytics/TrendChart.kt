@@ -84,8 +84,6 @@ fun TrendChart(
             modifier = modifier
                 .fillMaxWidth()
                 .height(200.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surface)
         )
         return
     }
@@ -97,8 +95,6 @@ fun TrendChart(
             // shared MonthSelector above the chart) so the container is a
             // touch shorter than before.
             .height(220.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surface)
             .padding(16.dp)
     ) {
         // Time Period Selector - Minimalistic centered design

@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -104,6 +106,7 @@ fun AnalyticsScreen(
     onNavigateToNetWorth: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    var showAnalyticsRequestSheet by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
 
     // Refresh data each time the screen appears
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
@@ -242,6 +245,7 @@ fun AnalyticsScreen(
                     .background(MaterialTheme.colorScheme.background)
                     .padding(paddingValues)
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .verticalScroll(androidx.compose.foundation.rememberScrollState())
             ) {
 
                 // Trend Chart — month picking lives in the toolbar's MonthSelector.
@@ -286,9 +290,21 @@ fun AnalyticsScreen(
                     // )
                 }
 
+                Spacer(modifier = Modifier.height(20.dp))
+
+                AnalyticsRequestCard(
+                    onClick = { showAnalyticsRequestSheet = true }
+                )
+
                 Spacer(modifier = Modifier.height(32.dp))
             }
             } // end if (!isEmpty)
+
+            if (showAnalyticsRequestSheet) {
+                com.andriybobchuk.mooney.core.feedback.FeedbackSheet(
+                    onDismiss = { showAnalyticsRequestSheet = false }
+                )
+            }
 
             // Subcategory Bottom Sheet (used from breakdown screens)
             if (state.isSubcategorySheetOpen) {
@@ -729,11 +745,18 @@ fun CategoryTransactionsSheet(
                     )
                 }
                 if (isExpanded) {
-                    items(items = txs, key = { tx -> "tx_${subcat.id}_${tx.id}" }) { transaction ->
-                        com.andriybobchuk.mooney.mooney.presentation.transaction.TransactionItem(
-                            transaction = transaction,
-                            accounts = emptyList()
-                        )
+                    // Group this subcategory's transactions by day so the user
+                    // can scan "what happened on March 14" at a glance, with
+                    // the description as the differentiator inside each row.
+                    val byDay: List<Pair<kotlinx.datetime.LocalDate, List<com.andriybobchuk.mooney.mooney.domain.Transaction>>> =
+                        txs.groupBy { it.date }.toList().sortedByDescending { (day, _) -> day }
+                    byDay.forEach { (day, dayTxs) ->
+                        item("day_${subcat.id}_$day") {
+                            DayHeaderRow(date = day)
+                        }
+                        items(items = dayTxs, key = { tx -> "tx_${subcat.id}_${tx.id}" }) { transaction ->
+                            TxDrilldownRow(transaction = transaction)
+                        }
                     }
                 }
             }
@@ -1431,5 +1454,99 @@ private fun localizedMetricSubtitle(rawSubtitle: String): String {
         stringResource(Res.string.pct_of_revenue, rawSubtitle.removePrefix(pctOfRevenuePrefix))
     } else {
         rawSubtitle
+    }
+}
+
+
+@Composable
+private fun AnalyticsRequestCard(onClick: () -> Unit) {
+    // Same shape, surface tint, padding and inner layout as EnhancedMetricCard
+    // so it visually slots in alongside the Revenue / Expenses / Net Income
+    // cards instead of looking like an afterthought.
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Colored circle indicator — keeps the visual rhythm with the
+            // metric cards above; uses primary so the row reads as an
+            // action prompt rather than just another data point.
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(MaterialTheme.colorScheme.primary)
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(Res.string.analytics_request_title),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = stringResource(Res.string.analytics_request_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DayHeaderRow(date: kotlinx.datetime.LocalDate) {
+    val day = date.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
+    Text(
+        text = "$day · ${date.dayOfMonth} ${date.month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }}",
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 4.dp)
+    )
+}
+
+@Composable
+private fun TxDrilldownRow(transaction: com.andriybobchuk.mooney.mooney.domain.Transaction) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            val description = transaction.description?.takeIf { it.isNotBlank() }
+            Text(
+                text = description ?: transaction.subcategory.title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = transaction.account.title,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Text(
+            text = "${transaction.amount.formatWithCommas()} ${transaction.account.currency.symbol}",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }

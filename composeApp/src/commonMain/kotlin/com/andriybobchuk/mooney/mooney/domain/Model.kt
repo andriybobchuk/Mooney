@@ -46,7 +46,15 @@ data class Transaction(
      * change. Null for non-transfers and for same-currency transfers (where
      * [amount] applies to both sides).
      */
-    val destinationAmount: Double? = null
+    val destinationAmount: Double? = null,
+    /**
+     * Optional free-text note the user adds while entering a transaction.
+     * Surfaces in the Analytics breakdown drilldown ("$42 grocery — pizza
+     * + wine for Andriy's bday") so the user can reconstruct context
+     * months later. Never displayed in the main Transactions list to keep
+     * that view tight.
+     */
+    val description: String? = null
 )
 
 data class Account(

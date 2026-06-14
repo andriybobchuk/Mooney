@@ -183,7 +183,8 @@ private fun SavedHero(savings: Double, savedPct: Double, avgMonthly: Double, mon
     val accent = if (isPositive) MaterialTheme.appColors.incomeColor else MaterialTheme.appColors.expenseColor
     com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyCard(
         modifier = Modifier.fillMaxWidth(),
-        variant = com.andriybobchuk.mooney.core.presentation.designsystem.components.CardVariant.FILLED
+        variant = com.andriybobchuk.mooney.core.presentation.designsystem.components.CardVariant.FILLED,
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
@@ -241,7 +242,8 @@ private fun TrajectoryCard(
 ) {
     com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyCard(
         modifier = Modifier.fillMaxWidth(),
-        variant = com.andriybobchuk.mooney.core.presentation.designsystem.components.CardVariant.FILLED
+        variant = com.andriybobchuk.mooney.core.presentation.designsystem.components.CardVariant.FILLED,
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
@@ -425,7 +427,8 @@ private fun Double.formatToShortStringSafe(): String {
 private fun EveryDollarCard(gross: Double, savings: Double, expenses: Double, savedPct: Double) {
     com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyCard(
         modifier = Modifier.fillMaxWidth(),
-        variant = com.andriybobchuk.mooney.core.presentation.designsystem.components.CardVariant.FILLED
+        variant = com.andriybobchuk.mooney.core.presentation.designsystem.components.CardVariant.FILLED,
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
@@ -536,7 +539,8 @@ private fun ForecastCard(
     val prefix = if (showSign && value >= 0) "+" else ""
     com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyCard(
         modifier = modifier,
-        variant = com.andriybobchuk.mooney.core.presentation.designsystem.components.CardVariant.FILLED
+        variant = com.andriybobchuk.mooney.core.presentation.designsystem.components.CardVariant.FILLED,
+        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(

@@ -39,7 +39,10 @@ data class TransactionEntity(
     val date: String,
     // For cross-currency transfers: the destination account credit amount.
     // Null = legacy / same-currency transfer (use `amount` for both sides).
-    val destinationAmount: Double? = null
+    val destinationAmount: Double? = null,
+    // Optional free-text note. Surfaces in the Analytics breakdown drilldown
+    // so users can answer "what was this $42 grocery run again?" months later.
+    val description: String? = null
 )
 
 @Entity(tableName = "category_usage")

@@ -62,7 +62,8 @@ fun MooneyTextField(
     variant: TextFieldVariant = TextFieldVariant.OUTLINED,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
-    visualTransformation: VisualTransformation = VisualTransformation.None
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    textStyle: androidx.compose.ui.text.TextStyle? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -77,7 +78,7 @@ fun MooneyTextField(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = enabled,
                     readOnly = readOnly,
-                    textStyle = MaterialTheme.typography.bodyLarge,
+                    textStyle = textStyle ?: MaterialTheme.typography.bodyLarge,
                     label = label?.let { { Text(it) } },
                     placeholder = placeholder?.let { {
                         Text(
@@ -141,7 +142,7 @@ fun MooneyTextField(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = enabled,
                     readOnly = readOnly,
-                    textStyle = MaterialTheme.typography.bodyLarge,
+                    textStyle = textStyle ?: MaterialTheme.typography.bodyLarge,
                     label = label?.let { { Text(it) } },
                     placeholder = placeholder?.let { {
                         Text(

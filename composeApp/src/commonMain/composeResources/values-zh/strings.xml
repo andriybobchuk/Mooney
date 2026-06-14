@@ -388,6 +388,8 @@
     <string name="paywall_benefit_accounts_sub">超出免费版 20 个账户的限制</string>
     <string name="paywall_benefit_categories_title">无限自定义分类</string>
     <string name="paywall_benefit_categories_sub">超出免费版 50 个分类的限制</string>
+    <string name="paywall_benefit_noads_title">永久无广告</string>
+    <string name="paywall_benefit_noads_sub">横幅与插屏广告均关闭</string>
 
     <!-- 价格 -->
     <string name="paywall_price_with">Mooney Pro · 每月 · %1$s / 月</string>

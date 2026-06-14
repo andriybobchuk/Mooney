@@ -388,6 +388,8 @@
     <string name="paywall_benefit_accounts_sub">Ponad bezpłatny limit 20 kont</string>
     <string name="paywall_benefit_categories_title">Nielimitowane własne kategorie</string>
     <string name="paywall_benefit_categories_sub">Ponad bezpłatny limit 50 kategorii</string>
+    <string name="paywall_benefit_noads_title">Bez reklam, na zawsze</string>
+    <string name="paywall_benefit_noads_sub">Banery i reklamy pełnoekranowe pozostają wyłączone</string>
 
     <!-- Cena -->
     <string name="paywall_price_with">Mooney Pro · Miesięcznie · %1$s / miesiąc</string>

@@ -388,6 +388,8 @@
     <string name="paywall_benefit_accounts_sub">بما يتجاوز حد 20 حسابًا المجاني</string>
     <string name="paywall_benefit_categories_title">فئات مخصصة بلا حدود</string>
     <string name="paywall_benefit_categories_sub">بما يتجاوز حد 50 فئة المجاني</string>
+    <string name="paywall_benefit_noads_title">بدون إعلانات نهائيًا</string>
+    <string name="paywall_benefit_noads_sub">تبقى إعلانات البانر والإعلانات البينية معطّلة</string>
 
     <!-- السعر -->
     <string name="paywall_price_with">Mooney Pro · شهريًا · %1$s / شهر</string>

@@ -363,6 +363,8 @@
     <string name="paywall_benefit_accounts_sub">Понад безкоштовний ліміт у 20 рахунків</string>
     <string name="paywall_benefit_categories_title">Безлімітні свої категорії</string>
     <string name="paywall_benefit_categories_sub">Понад безкоштовний ліміт у 50 категорій</string>
+    <string name="paywall_benefit_noads_title">Жодної реклами</string>
+    <string name="paywall_benefit_noads_sub">Банери та повноекранна реклама залишаються вимкненими</string>
 
     <!-- Ціна -->
     <string name="paywall_price_with">Mooney Pro · Щомісяця · %1$s / міс.</string>

@@ -388,6 +388,8 @@
     <string name="paywall_benefit_accounts_sub">Сверх бесплатного лимита в 20 счетов</string>
     <string name="paywall_benefit_categories_title">Безлимитные свои категории</string>
     <string name="paywall_benefit_categories_sub">Сверх бесплатного лимита в 50 категорий</string>
+    <string name="paywall_benefit_noads_title">Никакой рекламы</string>
+    <string name="paywall_benefit_noads_sub">Баннеры и межстраничные объявления отключены навсегда</string>
 
     <!-- Цена -->
     <string name="paywall_price_with">Mooney Pro · Ежемесячно · %1$s / мес.</string>

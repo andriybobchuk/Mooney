@@ -406,6 +406,8 @@
     <string name="paywall_benefit_accounts_sub">Beyond the 20-account free tier</string>
     <string name="paywall_benefit_categories_title">Unlimited custom categories</string>
     <string name="paywall_benefit_categories_sub">Beyond the 50-category free tier</string>
+    <string name="paywall_benefit_noads_title">No ads, ever</string>
+    <string name="paywall_benefit_noads_sub">Banner and interstitial ads stay off</string>
 
     <!-- Paywall price line -->
     <string name="paywall_price_with">Mooney Pro · Monthly · %1$s / month</string>

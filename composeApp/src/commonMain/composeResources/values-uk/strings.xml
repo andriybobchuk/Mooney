@@ -16,7 +16,7 @@
     <string name="save">Зберегти</string>
     <string name="back">Назад</string>
     <string name="version">Версія</string>
-    <string name="spent_in">Витрачено в %s</string>
+    <string name="spent_in">Витрачено в %1$s</string>
     <string name="no_transactions">Немає транзакцій</string>
     <string name="tap_to_add_transaction">Натисніть + щоб додати першу транзакцію</string>
     <string name="add_transaction">Додати транзакцію</string>
@@ -89,15 +89,15 @@
     <string name="about">Про додаток</string>
     <string name="confirm_import">Підтвердити імпорт</string>
     <string name="import_preview">Буде імпортовано наступні дані:</string>
-    <string name="transactions_count">%d транзакцій</string>
-    <string name="accounts_count">%d рахунків</string>
-    <string name="goals_count">%d цілей</string>
+    <string name="transactions_count">%1$d транзакцій</string>
+    <string name="accounts_count">%1$d рахунків</string>
+    <string name="goals_count">%1$d цілей</string>
     <string name="import_add_note">Дані будуть додані до існуючих записів.</string>
     <string name="import_btn">Імпортувати</string>
     <string name="light">Світла</string>
     <string name="dark">Темна</string>
     <string name="system">Системна</string>
-    <string name="select_up_to_categories">Оберіть до %d категорій</string>
+    <string name="select_up_to_categories">Оберіть до %1$d категорій</string>
     <string name="get_in_touch">Зв\'яжіться з нами</string>
     <string name="feedback_description">Mooney активно розробляється. Знайшли помилку? Маєте ідею? Напишіть — ваш відгук формує додаток.</string>
     <string name="add_goal">Додати ціль</string>
@@ -123,16 +123,16 @@
     <!-- Net Income / Аналітика -->
     <string name="last_12_months">Останні 12 місяців</string>
     <string name="last_6_months_label">Останні 6 місяців</string>
-    <string name="saved_last_n_months">ЗАОЩАДЖЕНО · ОСТАННІ %d МІС.</string>
-    <string name="of_gross_income">%s%% валового доходу</string>
-    <string name="per_month_avg">≈ %s/міс.</string>
+    <string name="saved_last_n_months">ЗАОЩАДЖЕНО · ОСТАННІ %1$d МІС.</string>
+    <string name="of_gross_income">%1$s%% валового доходу</string>
+    <string name="per_month_avg">≈ %1$s/міс.</string>
     <string name="net_worth_trajectory">Траєкторія чистого капіталу</string>
     <string name="today_marker">Сьогодні</string>
-    <string name="months_forward">+%d міс.</string>
+    <string name="months_forward">+%1$d міс.</string>
     <string name="actual_label">Факт</string>
     <string name="projected_label">Прогноз</string>
     <string name="of_every_dollar_earned">З кожної заробленої гривні</string>
-    <string name="n_gross">%s валовий</string>
+    <string name="n_gross">%1$s валовий</string>
     <string name="saved_label">Заощаджено</string>
     <string name="spent_label">Витрачено</string>
     <string name="if_you_keep_pace">Якщо триматимеш цей темп</string>
@@ -153,10 +153,10 @@
     <!-- CSV-імпорт -->
     <string name="import_csv">Імпортувати CSV з іншого застосунку</string>
     <string name="import_csv_desc">Mint, YNAB, Wallet, Money Manager або будь-який CSV з колонками Date і Amount</string>
-    <string name="csv_imported_n">Імпортовано %d транзакцій</string>
-    <string name="csv_imported_n_new_account">Імпортовано %d транзакцій у новий рахунок \'Імпортовано\'</string>
+    <string name="csv_imported_n">Імпортовано %1$d транзакцій</string>
+    <string name="csv_imported_n_new_account">Імпортовано %1$d транзакцій у новий рахунок \'Імпортовано\'</string>
     <string name="csv_columns_not_recognised">Не вдалося розпізнати колонки дати / суми в цьому файлі. Спробуйте експортувати ще раз або перейменуйте колонки на \'Date\' і \'Amount\'.</string>
-    <string name="csv_import_failed">Не вдалося імпортувати CSV: %s</string>
+    <string name="csv_import_failed">Не вдалося імпортувати CSV: %1$s</string>
 
     <!-- Підтримати Mooney -->
     <string name="support_mooney">Підтримати Mooney</string>
@@ -212,7 +212,7 @@
     <string name="tap_to_suggest">Натисни, щоб запропонувати</string>
 
     <!-- Онбординг -->
-    <string name="choose_currencies_up_to">Обери валюти, якими користуєшся (до %d)</string>
+    <string name="choose_currencies_up_to">Обери валюти, якими користуєшся (до %1$d)</string>
     <string name="continue_label">Далі</string>
     <string name="primary_currency">Основна валюта</string>
     <string name="primary_currency_desc">Усі підсумки й аналітика будуть показані в цій валюті</string>
@@ -236,8 +236,8 @@
     <string name="more">Більше</string>
 
     <!-- Категорії -->
-    <string name="confirm_delete_category">Видалити \"%s\"? Транзакції з цією категорією стануть незв\'язаними.</string>
-    <string name="confirm_delete_account">Видалити \"%s\"? Усі пов\'язані транзакції також буде видалено.</string>
+    <string name="confirm_delete_category">Видалити \"%1$s\"? Транзакції з цією категорією стануть незв\'язаними.</string>
+    <string name="confirm_delete_account">Видалити \"%1$s\"? Усі пов\'язані транзакції також буде видалено.</string>
     <string name="transaction_categories">Категорії транзакцій</string>
     <string name="asset_categories">Категорії активів</string>
     <string name="copy_action">Копіювати</string>
@@ -251,7 +251,7 @@
     <string name="six_month_total">Сума 6 міс.</string>
     <string name="six_month_average">Середнє 6 міс.</string>
     <string name="in_green_n_of_m">%1$d з %2$d місяців</string>
-    <string name="select_up_to_quick">Обери до %d категорій як швидкі ярлики</string>
+    <string name="select_up_to_quick">Обери до %1$d категорій як швидкі ярлики</string>
     <string name="pinned_n_of_m">Закріплено (%1$d/%2$d)</string>
     <string name="available_categories">Доступні категорії</string>
     <string name="active_alerts_section">Активні сповіщення</string>

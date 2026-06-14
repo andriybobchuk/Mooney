@@ -23,7 +23,7 @@
     <string name="version">版本</string>
 
     <!-- 交易 -->
-    <string name="spent_in">%s 已花费</string>
+    <string name="spent_in">%1$s 已花费</string>
     <string name="no_transactions">暂无交易</string>
     <string name="tap_to_add_transaction">点击 + 添加你的第一笔交易</string>
     <string name="add_transaction">添加交易</string>
@@ -104,15 +104,15 @@
     <string name="about">关于</string>
     <string name="confirm_import">确认导入</string>
     <string name="import_preview">将导入以下数据：</string>
-    <string name="transactions_count">%d 笔交易</string>
-    <string name="accounts_count">%d 个账户</string>
-    <string name="goals_count">%d 个目标</string>
+    <string name="transactions_count">%1$d 笔交易</string>
+    <string name="accounts_count">%1$d 个账户</string>
+    <string name="goals_count">%1$d 个目标</string>
     <string name="import_add_note">这将添加到你的现有数据。</string>
     <string name="import_btn">导入</string>
     <string name="light">浅色</string>
     <string name="dark">深色</string>
     <string name="system">跟随系统</string>
-    <string name="select_up_to_categories">最多选择 %d 个分类</string>
+    <string name="select_up_to_categories">最多选择 %1$d 个分类</string>
 
     <!-- 反馈 -->
     <string name="get_in_touch">联系我</string>
@@ -148,16 +148,16 @@
     <!-- 净收入 / 分析 -->
     <string name="last_12_months">过去 12 个月</string>
     <string name="last_6_months_label">过去 6 个月</string>
-    <string name="saved_last_n_months">已存 · 过去 %d 个月</string>
-    <string name="of_gross_income">%s%% 的总收入</string>
-    <string name="per_month_avg">≈ %s/月</string>
+    <string name="saved_last_n_months">已存 · 过去 %1$d 个月</string>
+    <string name="of_gross_income">%1$s%% 的总收入</string>
+    <string name="per_month_avg">≈ %1$s/月</string>
     <string name="net_worth_trajectory">净资产走势</string>
     <string name="today_marker">今天</string>
-    <string name="months_forward">+%d 个月</string>
+    <string name="months_forward">+%1$d 个月</string>
     <string name="actual_label">实际</string>
     <string name="projected_label">预测</string>
     <string name="of_every_dollar_earned">每赚一元中</string>
-    <string name="n_gross">%s 总额</string>
+    <string name="n_gross">%1$s 总额</string>
     <string name="saved_label">已存</string>
     <string name="spent_label">已花</string>
     <string name="if_you_keep_pace">如果保持当前节奏</string>
@@ -178,10 +178,10 @@
     <!-- CSV 导入 -->
     <string name="import_csv">从其他 App 导入 CSV</string>
     <string name="import_csv_desc">Mint、YNAB、Wallet、Money Manager 或任何含日期和金额列的 CSV</string>
-    <string name="csv_imported_n">已导入 %d 笔交易</string>
-    <string name="csv_imported_n_new_account">已导入 %d 笔交易到新账户「导入」</string>
+    <string name="csv_imported_n">已导入 %1$d 笔交易</string>
+    <string name="csv_imported_n_new_account">已导入 %1$d 笔交易到新账户「导入」</string>
     <string name="csv_columns_not_recognised">无法识别此 CSV 的日期 / 金额列。请尝试从源 App 重新导出，或将列重命名为 \'Date\' 和 \'Amount\'。</string>
-    <string name="csv_import_failed">无法导入 CSV：%s</string>
+    <string name="csv_import_failed">无法导入 CSV：%1$s</string>
 
     <!-- 支持 Mooney -->
     <string name="support_mooney">支持 Mooney</string>
@@ -237,7 +237,7 @@
     <string name="tap_to_suggest">点击提建议</string>
 
     <!-- 引导 -->
-    <string name="choose_currencies_up_to">选择你使用的货币（最多 %d 个）</string>
+    <string name="choose_currencies_up_to">选择你使用的货币（最多 %1$d 个）</string>
     <string name="continue_label">继续</string>
     <string name="primary_currency">主要货币</string>
     <string name="primary_currency_desc">所有总额和分析都将以此货币显示</string>
@@ -261,8 +261,8 @@
     <string name="more">更多</string>
 
     <!-- 分类管理 -->
-    <string name="confirm_delete_category">删除 \"%s\"？使用此分类的交易将变为未关联状态。</string>
-    <string name="confirm_delete_account">删除 \"%s\"？所有相关交易也会被删除。</string>
+    <string name="confirm_delete_category">删除 \"%1$s\"？使用此分类的交易将变为未关联状态。</string>
+    <string name="confirm_delete_account">删除 \"%1$s\"？所有相关交易也会被删除。</string>
     <string name="transaction_categories">交易分类</string>
     <string name="asset_categories">资产分类</string>
     <string name="copy_action">复制</string>
@@ -276,7 +276,7 @@
     <string name="six_month_total">六个月合计</string>
     <string name="six_month_average">六个月均值</string>
     <string name="in_green_n_of_m">%2$d 个月中有 %1$d 个</string>
-    <string name="select_up_to_quick">选择最多 %d 个分类作为快捷入口</string>
+    <string name="select_up_to_quick">选择最多 %1$d 个分类作为快捷入口</string>
     <string name="pinned_n_of_m">已置顶 (%1$d/%2$d)</string>
     <string name="available_categories">可用分类</string>
     <string name="active_alerts_section">活动提醒</string>

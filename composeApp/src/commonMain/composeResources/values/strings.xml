@@ -23,7 +23,7 @@
     <string name="version">Version</string>
 
     <!-- Transactions -->
-    <string name="spent_in">Spent in %s</string>
+    <string name="spent_in">Spent in %1$s</string>
     <string name="no_transactions">No transactions</string>
     <string name="tap_to_add_transaction">Tap + to add your first transaction</string>
     <string name="add_transaction">Add Transaction</string>
@@ -104,15 +104,15 @@
     <string name="about">About</string>
     <string name="confirm_import">Confirm Import</string>
     <string name="import_preview">The following data will be imported:</string>
-    <string name="transactions_count">%d transactions</string>
-    <string name="accounts_count">%d accounts</string>
-    <string name="goals_count">%d goals</string>
+    <string name="transactions_count">%1$d transactions</string>
+    <string name="accounts_count">%1$d accounts</string>
+    <string name="goals_count">%1$d goals</string>
     <string name="import_add_note">This will add to your existing data.</string>
     <string name="import_btn">Import</string>
     <string name="light">Light</string>
     <string name="dark">Dark</string>
     <string name="system">System</string>
-    <string name="select_up_to_categories">Select up to %d categories</string>
+    <string name="select_up_to_categories">Select up to %1$d categories</string>
 
     <!-- Feedback -->
     <string name="get_in_touch">Get in touch</string>
@@ -148,16 +148,16 @@
     <!-- Net Income / Analytics redesign -->
     <string name="last_12_months">Last 12 months</string>
     <string name="last_6_months_label">Last 6 months</string>
-    <string name="saved_last_n_months">SAVED · LAST %d MONTHS</string>
-    <string name="of_gross_income">%s%% of gross income</string>
-    <string name="per_month_avg">≈ %s/mo</string>
+    <string name="saved_last_n_months">SAVED · LAST %1$d MONTHS</string>
+    <string name="of_gross_income">%1$s%% of gross income</string>
+    <string name="per_month_avg">≈ %1$s/mo</string>
     <string name="net_worth_trajectory">Net worth trajectory</string>
     <string name="today_marker">Today</string>
-    <string name="months_forward">+%d mo</string>
+    <string name="months_forward">+%1$d mo</string>
     <string name="actual_label">Actual</string>
     <string name="projected_label">Projected</string>
     <string name="of_every_dollar_earned">Of every dollar earned</string>
-    <string name="n_gross">%s gross</string>
+    <string name="n_gross">%1$s gross</string>
     <string name="saved_label">Saved</string>
     <string name="spent_label">Spent</string>
     <string name="if_you_keep_pace">If you keep this pace</string>
@@ -178,10 +178,10 @@
     <!-- CSV import -->
     <string name="import_csv">Import CSV from another app</string>
     <string name="import_csv_desc">Mint, YNAB, Wallet, Money Manager, or any CSV with Date + Amount columns</string>
-    <string name="csv_imported_n">Imported %d transactions</string>
-    <string name="csv_imported_n_new_account">Imported %d transactions into a new \'Imported\' account</string>
+    <string name="csv_imported_n">Imported %1$d transactions</string>
+    <string name="csv_imported_n_new_account">Imported %1$d transactions into a new \'Imported\' account</string>
     <string name="csv_columns_not_recognised">Couldn\'t recognise date / amount columns in this CSV. Try exporting again from the source app, or rename the columns to include \'Date\' and \'Amount\'.</string>
-    <string name="csv_import_failed">Couldn\'t import CSV: %s</string>
+    <string name="csv_import_failed">Couldn\'t import CSV: %1$s</string>
 
     <!-- Settings — Support Mooney -->
     <string name="support_mooney">Support Mooney</string>
@@ -237,7 +237,7 @@
     <string name="tap_to_suggest">Tap to suggest</string>
 
     <!-- Onboarding flow -->
-    <string name="choose_currencies_up_to">Choose currencies you use (up to %d)</string>
+    <string name="choose_currencies_up_to">Choose currencies you use (up to %1$d)</string>
     <string name="continue_label">Continue</string>
     <string name="primary_currency">Primary Currency</string>
     <string name="primary_currency_desc">All totals and analytics will be shown in this currency</string>
@@ -261,8 +261,8 @@
     <string name="more">More</string>
 
     <!-- Categories management -->
-    <string name="confirm_delete_category">Delete \"%s\"? Transactions using this category will become unlinked.</string>
-    <string name="confirm_delete_account">Delete \"%s\"? This will also delete all related transactions.</string>
+    <string name="confirm_delete_category">Delete \"%1$s\"? Transactions using this category will become unlinked.</string>
+    <string name="confirm_delete_account">Delete \"%1$s\"? This will also delete all related transactions.</string>
 
     <!-- Categories screens -->
     <string name="transaction_categories">Transaction Categories</string>
@@ -286,7 +286,7 @@
     <string name="in_green_n_of_m">%1$d of %2$d months</string>
 
     <!-- Pinned categories section -->
-    <string name="select_up_to_quick">Select up to %d categories to appear as quick shortcuts</string>
+    <string name="select_up_to_quick">Select up to %1$d categories to appear as quick shortcuts</string>
     <string name="pinned_n_of_m">Pinned (%1$d/%2$d)</string>
     <string name="available_categories">Available Categories</string>
 

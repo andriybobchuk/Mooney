@@ -23,7 +23,7 @@
     <string name="version">الإصدار</string>
 
     <!-- المعاملات -->
-    <string name="spent_in">المنفق في %s</string>
+    <string name="spent_in">المنفق في %1$s</string>
     <string name="no_transactions">لا توجد معاملات</string>
     <string name="tap_to_add_transaction">اضغط + لإضافة أول معاملة</string>
     <string name="add_transaction">إضافة معاملة</string>
@@ -104,15 +104,15 @@
     <string name="about">حول</string>
     <string name="confirm_import">تأكيد الاستيراد</string>
     <string name="import_preview">سيتم استيراد البيانات التالية:</string>
-    <string name="transactions_count">%d معاملة</string>
-    <string name="accounts_count">%d حساب</string>
-    <string name="goals_count">%d هدف</string>
+    <string name="transactions_count">%1$d معاملة</string>
+    <string name="accounts_count">%1$d حساب</string>
+    <string name="goals_count">%1$d هدف</string>
     <string name="import_add_note">سيتم إضافة هذا إلى بياناتك الحالية.</string>
     <string name="import_btn">استيراد</string>
     <string name="light">فاتح</string>
     <string name="dark">داكن</string>
     <string name="system">النظام</string>
-    <string name="select_up_to_categories">اختر حتى %d فئة</string>
+    <string name="select_up_to_categories">اختر حتى %1$d فئة</string>
 
     <!-- ملاحظات -->
     <string name="get_in_touch">تواصل معنا</string>
@@ -148,16 +148,16 @@
     <!-- صافي الدخل / التحليلات -->
     <string name="last_12_months">آخر 12 شهراً</string>
     <string name="last_6_months_label">آخر 6 أشهر</string>
-    <string name="saved_last_n_months">مدّخر · آخر %d شهر</string>
-    <string name="of_gross_income">%s%% من الدخل الإجمالي</string>
-    <string name="per_month_avg">≈ %s/شهرياً</string>
+    <string name="saved_last_n_months">مدّخر · آخر %1$d شهر</string>
+    <string name="of_gross_income">%1$s%% من الدخل الإجمالي</string>
+    <string name="per_month_avg">≈ %1$s/شهرياً</string>
     <string name="net_worth_trajectory">مسار صافي الثروة</string>
     <string name="today_marker">اليوم</string>
-    <string name="months_forward">+%d شهر</string>
+    <string name="months_forward">+%1$d شهر</string>
     <string name="actual_label">فعلي</string>
     <string name="projected_label">متوقّع</string>
     <string name="of_every_dollar_earned">من كل ريال تكسبه</string>
-    <string name="n_gross">%s إجمالي</string>
+    <string name="n_gross">%1$s إجمالي</string>
     <string name="saved_label">المدّخر</string>
     <string name="spent_label">المنفق</string>
     <string name="if_you_keep_pace">إذا استمررت بهذا الإيقاع</string>
@@ -178,10 +178,10 @@
     <!-- استيراد CSV -->
     <string name="import_csv">استيراد CSV من تطبيق آخر</string>
     <string name="import_csv_desc">Mint أو YNAB أو Wallet أو Money Manager أو أي CSV يحتوي على عمودَي التاريخ والمبلغ</string>
-    <string name="csv_imported_n">تم استيراد %d معاملة</string>
-    <string name="csv_imported_n_new_account">تم استيراد %d معاملة إلى حساب جديد \'مستوردة\'</string>
+    <string name="csv_imported_n">تم استيراد %1$d معاملة</string>
+    <string name="csv_imported_n_new_account">تم استيراد %1$d معاملة إلى حساب جديد \'مستوردة\'</string>
     <string name="csv_columns_not_recognised">تعذّر التعرف على أعمدة التاريخ / المبلغ في هذا الملف. حاول التصدير مجدداً من التطبيق الأصلي أو أعد تسمية الأعمدة إلى \'Date\' و\'Amount\'.</string>
-    <string name="csv_import_failed">تعذّر استيراد ملف CSV: %s</string>
+    <string name="csv_import_failed">تعذّر استيراد ملف CSV: %1$s</string>
 
     <!-- ادعم Mooney -->
     <string name="support_mooney">ادعم Mooney</string>
@@ -237,7 +237,7 @@
     <string name="tap_to_suggest">اضغط لتقترح</string>
 
     <!-- التهيئة -->
-    <string name="choose_currencies_up_to">اختر العملات التي تستخدمها (حتى %d)</string>
+    <string name="choose_currencies_up_to">اختر العملات التي تستخدمها (حتى %1$d)</string>
     <string name="continue_label">متابعة</string>
     <string name="primary_currency">العملة الأساسية</string>
     <string name="primary_currency_desc">ستظهر جميع المجاميع والتحليلات بهذه العملة</string>
@@ -261,8 +261,8 @@
     <string name="more">المزيد</string>
 
     <!-- التصنيفات -->
-    <string name="confirm_delete_category">حذف \"%s\"؟ ستصبح المعاملات في هذه الفئة غير مرتبطة.</string>
-    <string name="confirm_delete_account">حذف \"%s\"؟ سيتم حذف كل المعاملات المرتبطة كذلك.</string>
+    <string name="confirm_delete_category">حذف \"%1$s\"؟ ستصبح المعاملات في هذه الفئة غير مرتبطة.</string>
+    <string name="confirm_delete_account">حذف \"%1$s\"؟ سيتم حذف كل المعاملات المرتبطة كذلك.</string>
     <string name="transaction_categories">فئات المعاملات</string>
     <string name="asset_categories">فئات الأصول</string>
     <string name="copy_action">نسخ</string>
@@ -276,7 +276,7 @@
     <string name="six_month_total">إجمالي 6 أشهر</string>
     <string name="six_month_average">متوسط 6 أشهر</string>
     <string name="in_green_n_of_m">%1$d من %2$d أشهر</string>
-    <string name="select_up_to_quick">اختر حتى %d فئة كاختصارات سريعة</string>
+    <string name="select_up_to_quick">اختر حتى %1$d فئة كاختصارات سريعة</string>
     <string name="pinned_n_of_m">المثبتة (%1$d/%2$d)</string>
     <string name="available_categories">الفئات المتاحة</string>
     <string name="active_alerts_section">التنبيهات النشطة</string>

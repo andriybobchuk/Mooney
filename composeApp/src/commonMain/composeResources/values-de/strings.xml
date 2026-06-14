@@ -23,7 +23,7 @@
     <string name="version">Version</string>
 
     <!-- Transaktionen -->
-    <string name="spent_in">Ausgegeben im %s</string>
+    <string name="spent_in">Ausgegeben im %1$s</string>
     <string name="no_transactions">Keine Transaktionen</string>
     <string name="tap_to_add_transaction">Tippe auf +, um deine erste Transaktion hinzuzufügen</string>
     <string name="add_transaction">Transaktion hinzufügen</string>
@@ -104,15 +104,15 @@
     <string name="about">Über</string>
     <string name="confirm_import">Import bestätigen</string>
     <string name="import_preview">Folgende Daten werden importiert:</string>
-    <string name="transactions_count">%d Transaktionen</string>
-    <string name="accounts_count">%d Konten</string>
-    <string name="goals_count">%d Ziele</string>
+    <string name="transactions_count">%1$d Transaktionen</string>
+    <string name="accounts_count">%1$d Konten</string>
+    <string name="goals_count">%1$d Ziele</string>
     <string name="import_add_note">Die Daten werden zu vorhandenen hinzugefügt.</string>
     <string name="import_btn">Importieren</string>
     <string name="light">Hell</string>
     <string name="dark">Dunkel</string>
     <string name="system">System</string>
-    <string name="select_up_to_categories">Wähle bis zu %d Kategorien</string>
+    <string name="select_up_to_categories">Wähle bis zu %1$d Kategorien</string>
 
     <!-- Feedback -->
     <string name="get_in_touch">Kontakt aufnehmen</string>
@@ -148,16 +148,16 @@
     <!-- Nettoeinkommen / Analyse -->
     <string name="last_12_months">Letzte 12 Monate</string>
     <string name="last_6_months_label">Letzte 6 Monate</string>
-    <string name="saved_last_n_months">GESPART · LETZTE %d MONATE</string>
-    <string name="of_gross_income">%s%% vom Bruttoeinkommen</string>
-    <string name="per_month_avg">≈ %s/Mon.</string>
+    <string name="saved_last_n_months">GESPART · LETZTE %1$d MONATE</string>
+    <string name="of_gross_income">%1$s%% vom Bruttoeinkommen</string>
+    <string name="per_month_avg">≈ %1$s/Mon.</string>
     <string name="net_worth_trajectory">Vermögensverlauf</string>
     <string name="today_marker">Heute</string>
-    <string name="months_forward">+%d Mon.</string>
+    <string name="months_forward">+%1$d Mon.</string>
     <string name="actual_label">Ist</string>
     <string name="projected_label">Prognose</string>
     <string name="of_every_dollar_earned">Von jedem verdienten Euro</string>
-    <string name="n_gross">%s brutto</string>
+    <string name="n_gross">%1$s brutto</string>
     <string name="saved_label">Gespart</string>
     <string name="spent_label">Ausgegeben</string>
     <string name="if_you_keep_pace">Wenn du das Tempo hältst</string>
@@ -178,10 +178,10 @@
     <!-- CSV-Import -->
     <string name="import_csv">CSV aus anderer App importieren</string>
     <string name="import_csv_desc">Mint, YNAB, Wallet, Money Manager oder jede CSV mit Spalten Datum + Betrag</string>
-    <string name="csv_imported_n">%d Transaktionen importiert</string>
-    <string name="csv_imported_n_new_account">%d Transaktionen in ein neues Konto \'Importiert\' importiert</string>
+    <string name="csv_imported_n">%1$d Transaktionen importiert</string>
+    <string name="csv_imported_n_new_account">%1$d Transaktionen in ein neues Konto \'Importiert\' importiert</string>
     <string name="csv_columns_not_recognised">Datum- / Betrag-Spalten in dieser CSV nicht erkannt. Versuche, erneut aus der Quell-App zu exportieren oder die Spalten in \'Date\' und \'Amount\' umzubenennen.</string>
-    <string name="csv_import_failed">CSV konnte nicht importiert werden: %s</string>
+    <string name="csv_import_failed">CSV konnte nicht importiert werden: %1$s</string>
 
     <!-- Mooney unterstützen -->
     <string name="support_mooney">Mooney unterstützen</string>
@@ -237,7 +237,7 @@
     <string name="tap_to_suggest">Antippen, um vorzuschlagen</string>
 
     <!-- Onboarding -->
-    <string name="choose_currencies_up_to">Wähle deine Währungen (bis zu %d)</string>
+    <string name="choose_currencies_up_to">Wähle deine Währungen (bis zu %1$d)</string>
     <string name="continue_label">Weiter</string>
     <string name="primary_currency">Hauptwährung</string>
     <string name="primary_currency_desc">Alle Summen und Analysen werden in dieser Währung angezeigt</string>
@@ -261,8 +261,8 @@
     <string name="more">Mehr</string>
 
     <!-- Kategorien -->
-    <string name="confirm_delete_category">\"%s\" löschen? Transaktionen mit dieser Kategorie werden unverknüpft.</string>
-    <string name="confirm_delete_account">\"%s\" löschen? Alle zugehörigen Transaktionen werden ebenfalls gelöscht.</string>
+    <string name="confirm_delete_category">\"%1$s\" löschen? Transaktionen mit dieser Kategorie werden unverknüpft.</string>
+    <string name="confirm_delete_account">\"%1$s\" löschen? Alle zugehörigen Transaktionen werden ebenfalls gelöscht.</string>
     <string name="transaction_categories">Transaktionskategorien</string>
     <string name="asset_categories">Vermögenskategorien</string>
     <string name="copy_action">Kopieren</string>
@@ -276,7 +276,7 @@
     <string name="six_month_total">6-Monats-Summe</string>
     <string name="six_month_average">6-Monats-Durchschnitt</string>
     <string name="in_green_n_of_m">%1$d von %2$d Monaten</string>
-    <string name="select_up_to_quick">Wähle bis zu %d Kategorien als Schnellzugriff</string>
+    <string name="select_up_to_quick">Wähle bis zu %1$d Kategorien als Schnellzugriff</string>
     <string name="pinned_n_of_m">Angeheftet (%1$d/%2$d)</string>
     <string name="available_categories">Verfügbare Kategorien</string>
     <string name="active_alerts_section">Aktive Hinweise</string>

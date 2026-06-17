@@ -182,7 +182,14 @@ fun AnalyticsScreen(
                 actions = emptyList()
             )
         },
-        bottomBar = { bottomNavbar() },
+        bottomBar = {
+            androidx.compose.foundation.layout.Column {
+                com.andriybobchuk.mooney.core.ads.AdBannerSlot(
+                    placement = com.andriybobchuk.mooney.core.ads.AdPlacement.ANALYTICS_BREAKDOWN_BANNER
+                )
+                bottomNavbar()
+            }
+        },
         content = { paddingValues ->
             val isEmpty = isEmptyState
 
@@ -239,13 +246,22 @@ fun AnalyticsScreen(
             }
 
             if (!isEmpty && !showShimmer) {
+            val analyticsScrollState = androidx.compose.foundation.rememberScrollState()
+            val scrollToTopBus: com.andriybobchuk.mooney.app.ScrollToTopBus = org.koin.compose.koinInject()
+            LaunchedEffect(scrollToTopBus) {
+                scrollToTopBus.events.collect { tab ->
+                    if (tab == com.andriybobchuk.mooney.app.ScrollToTopBus.Tab.ANALYTICS) {
+                        analyticsScrollState.animateScrollTo(0)
+                    }
+                }
+            }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background)
                     .padding(paddingValues)
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
-                    .verticalScroll(androidx.compose.foundation.rememberScrollState())
+                    .verticalScroll(analyticsScrollState)
             ) {
 
                 // Trend Chart — month picking lives in the toolbar's MonthSelector.

@@ -158,7 +158,10 @@ fun NavigationHost() {
         val screenName = route.substringAfterLast(".")
         analyticsTracker.trackScreenView(screenName)
         navTapCount += 1
-        if (screenName == "Analytics") {
+        if (
+            FeatureFlags.interstitialOnAnalyticsEnabled &&
+            screenName == "Analytics"
+        ) {
             analyticsVisitCount += 1
             if (interstitialEligibility.isEligible(
                     placement = com.andriybobchuk.mooney.core.ads.AdPlacement.INTERSTITIAL_RETURN_TO_TRANSACTIONS,
@@ -257,6 +260,27 @@ fun NavigationHost() {
             throw e
         } catch (_: Exception) {
             // Best-effort — never crash the app for recurring processing
+        }
+    }
+
+    // Daily expense-reminder notification — schedule once per cold-start if the
+    // user hasn't opted out. Cancelling and rescheduling on each launch keeps
+    // the local trigger fresh after OS reboots / app updates.
+    val notificationScheduler: com.andriybobchuk.mooney.core.notifications.NotificationScheduler = koinInject()
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(SECONDARY_WORK_DELAY_MS)
+        try {
+            val prefs = preferencesRepository.getCurrentPreferences()
+            if (prefs.notificationsEnabled) {
+                notificationScheduler.scheduleDailyReminder(
+                    hour = com.andriybobchuk.mooney.core.notifications.DAILY_REMINDER_HOUR,
+                    minute = com.andriybobchuk.mooney.core.notifications.DAILY_REMINDER_MINUTE
+                )
+            }
+        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Best-effort — never crash the app for reminder scheduling
         }
     }
 

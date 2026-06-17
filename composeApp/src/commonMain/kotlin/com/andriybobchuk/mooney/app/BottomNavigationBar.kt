@@ -15,6 +15,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.andriybobchuk.mooney.core.presentation.Icons
 import com.andriybobchuk.mooney.mooney.domain.FeatureFlags
+import kotlinx.datetime.Clock
+import org.koin.compose.koinInject
 import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.nav_analytics
 import mooney.composeapp.generated.resources.nav_assets
@@ -36,8 +39,17 @@ import org.jetbrains.compose.resources.stringResource
  * no pill backgrounds on individual items, no floating container. Adapts to
  * light and dark themes via `surface` / `onSurface`.
  */
+private const val DOUBLE_TAP_WINDOW_MS = 400L
+
 @Composable
 fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int) {
+    val scrollToTopBus: ScrollToTopBus = koinInject()
+    // One per slot — we only need the timestamp of the last tap on each tab.
+    val lastTap = remember { mutableStateOf(IntArray(5)) }
+    val lastTapTime = remember { mutableStateOf(LongArray(5)) }
+    @Suppress("UNUSED_VARIABLE")
+    val keep = lastTap // suppress unused-warning; the array is used by ref below
+
     val items = buildList {
         add(Triple(BottomNavigationItem(stringResource(Res.string.nav_transactions), Icons.TransactionsIcon(), Icons.TransactionsFilledIcon()), Route.Transactions, 0))
         add(Triple(BottomNavigationItem(stringResource(Res.string.nav_assets), Icons.AccountsIcon(), Icons.AccountsFilledIcon()), Route.Accounts, 1))
@@ -64,6 +76,23 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
                     onClick = {
                         if (!isSelected) {
                             navController.navigate(route) { popUpTo(Route.MooneyGraph) }
+                            lastTapTime.value[originalIndex] = Clock.System.now().toEpochMilliseconds()
+                            return@BottomNavTab
+                        }
+                        // Re-tap on the currently selected tab: detect a quick
+                        // second tap (≤400ms) and emit a scroll-to-top event.
+                        val now = Clock.System.now().toEpochMilliseconds()
+                        val last = lastTapTime.value[originalIndex]
+                        lastTapTime.value[originalIndex] = now
+                        if (last != 0L && now - last <= DOUBLE_TAP_WINDOW_MS) {
+                            val tab = when (originalIndex) {
+                                0 -> ScrollToTopBus.Tab.TRANSACTIONS
+                                1 -> ScrollToTopBus.Tab.ASSETS
+                                3 -> ScrollToTopBus.Tab.ANALYTICS
+                                4 -> ScrollToTopBus.Tab.SETTINGS
+                                else -> null
+                            }
+                            tab?.let { scrollToTopBus.fire(it) }
                         }
                     },
                     modifier = Modifier.weight(1f)

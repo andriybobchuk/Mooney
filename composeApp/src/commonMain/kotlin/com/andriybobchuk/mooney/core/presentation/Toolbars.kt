@@ -87,11 +87,24 @@ object Toolbars {
             navigationIcon = {
                 if (showBackButton) {
                     Spacer(modifier = Modifier.width(8.dp))
-                    CircleToolbarButton(
-                        painter = Icons.BackIcon(),
-                        contentDescription = "Back",
-                        onClick = onBackClick
-                    )
+                    // Back button uses a larger touch target than other toolbar
+                    // actions — it's the most-tapped chrome control and worth the
+                    // extra px (44dp box, 22dp icon vs. action buttons' 36/16).
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                            .clickable(onClick = onBackClick),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = Icons.BackIcon(),
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
             },
             actions = {

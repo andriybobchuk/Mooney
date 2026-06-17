@@ -63,7 +63,8 @@ class SettingsViewModel(
     // needs (parsing + DB writes) without the ViewModel having to wire
     // accounts/categories per-call.
     private val universalCsvImporter: com.andriybobchuk.mooney.mooney.domain.backup.UniversalCsvImporter,
-    private val importCsvUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.ImportCsvUseCase
+    private val importCsvUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.ImportCsvUseCase,
+    private val notificationScheduler: com.andriybobchuk.mooney.core.notifications.NotificationScheduler
 ) : ViewModel() {
 
     // Seed `isLoading` from the app cache so opening Settings while the cache
@@ -440,6 +441,14 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 preferencesRepository.updateNotificationsEnabled(enabled)
+                if (enabled) {
+                    notificationScheduler.scheduleDailyReminder(
+                        hour = com.andriybobchuk.mooney.core.notifications.DAILY_REMINDER_HOUR,
+                        minute = com.andriybobchuk.mooney.core.notifications.DAILY_REMINDER_MINUTE
+                    )
+                } else {
+                    notificationScheduler.cancelDailyReminder()
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

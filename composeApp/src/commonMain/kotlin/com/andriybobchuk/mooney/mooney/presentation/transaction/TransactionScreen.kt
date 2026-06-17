@@ -679,6 +679,14 @@ fun TransactionsScreenContent(
 
     val lazyListState = androidx.compose.foundation.lazy.rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    val scrollToTopBus: com.andriybobchuk.mooney.app.ScrollToTopBus = org.koin.compose.koinInject()
+    LaunchedEffect(scrollToTopBus) {
+        scrollToTopBus.events.collect { tab ->
+            if (tab == com.andriybobchuk.mooney.app.ScrollToTopBus.Tab.TRANSACTIONS) {
+                lazyListState.animateScrollToItem(0)
+            }
+        }
+    }
     val onDayClick: (LocalDate) -> Unit = { date ->
         // If the day has transactions, scroll to its header. If not, scroll to
         // the nearest date with entries (the first allDates entry whose date
@@ -1053,7 +1061,10 @@ fun TransactionsScreenContent(
             // the latest filled day so it lands inside the user's actual feed
             // rhythm rather than at the tail of an empty list. AdBannerSlot
             // self-gates: hidden for premium / grace-period / cooled-down users.
-            if (date == latestFilledDay) {
+            if (
+                com.andriybobchuk.mooney.mooney.domain.FeatureFlags.adsOnTransactionsEnabled &&
+                date == latestFilledDay
+            ) {
                 item(key = "native_ad_$date") {
                     NativeTransactionAdRow()
                 }
@@ -1538,6 +1549,19 @@ fun TransactionBottomSheet(
 
             Spacer(Modifier.height(12.dp))
 
+            // Optional description — placed right after Category so a quick
+            // note ("Costco run") sits next to what it tags. Single line.
+            MooneyTextField(
+                value = description,
+                onValueChange = { description = it },
+                label = stringResource(Res.string.tx_description_label),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodySmall
+            )
+
+            Spacer(Modifier.height(12.dp))
+
             // Date selector + Repeat toggle — compact single row
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1598,22 +1622,6 @@ fun TransactionBottomSheet(
                     variant = if (isRecurringEnabled) ButtonVariant.PRIMARY else ButtonVariant.SECONDARY
                 )
             }
-
-            Spacer(Modifier.height(8.dp))
-
-            // Optional description — shows up in the Analytics breakdown
-            // drilldown so the user can answer "what was this $42 again?"
-            // months later. Single line by design; we don't want this to
-            // become a journal field. Slightly smaller text to keep the
-            // sheet compact alongside the date row above it.
-            MooneyTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = stringResource(Res.string.tx_description_label),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                textStyle = MaterialTheme.typography.bodySmall
-            )
 
             } // end scrollable Column
 

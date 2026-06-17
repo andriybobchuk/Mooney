@@ -26,5 +26,20 @@ object FeatureFlags {
      * **Must be `false` for App Store submission.** Shipping with test ad
      * IDs violates AdMob ToS and gets Apple rejections.
      */
-    const val adsAlwaysShow = true
+    const val adsAlwaysShow = false
+
+    /**
+     * Hides the in-feed native-ad row on the Transactions list. Default off
+     * while we tune the placement (it was distracting alongside the user's
+     * own daily entries). Flip to true once the design lands and we want it
+     * back without a release.
+     */
+    const val adsOnTransactionsEnabled = false
+
+    /**
+     * Fires an interstitial when the user enters the Analytics tab. Default
+     * off — Analytics is a calm review surface, not the right beat for an
+     * interruption. The banner at the bottom of the screen is enough.
+     */
+    const val interstitialOnAnalyticsEnabled = false
 }

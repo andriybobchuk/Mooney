@@ -64,6 +64,13 @@ val sharedModule = module {
 
     singleOf(::DefaultCoreRepositoryImpl).bind<CoreRepository>()
 
+    // Bottom-nav double-tap → scroll-to-top channel. App-lifetime singleton.
+    single { com.andriybobchuk.mooney.app.ScrollToTopBus() }
+
+    // Daily reminder notification scheduler. Platform-specific actual under
+    // the hood; the schedule itself is triggered by the Settings toggle.
+    single { com.andriybobchuk.mooney.core.notifications.NotificationScheduler() }
+
     // App-wide data snapshot cache. Eager StateFlow over every reactive data
     // source — every screen reads the latest snapshot from here so tab
     // switches paint cached data on the first frame instead of flashing

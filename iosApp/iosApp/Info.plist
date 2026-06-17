@@ -105,9 +105,9 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-	</array>
+	<!-- TARGETED_DEVICE_FAMILY = 1 already restricts to iPhone. The `~ipad`
+	     override key was removed because Apple Review tested on iPad Air M3
+	     and saw content cutoff (Guideline 4); declaring iPad orientations
+	     contradicts iPhone-only and was confusing the layout. -->
 </dict>
 </plist>

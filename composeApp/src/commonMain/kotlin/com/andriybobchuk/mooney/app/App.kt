@@ -93,10 +93,15 @@ fun App() {
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.TopCenter
             ) {
+                // Cap content width on tablets / iPad so screens designed for
+                // a phone don't stretch and get cut off at the edges. iPhone
+                // viewports stay full-width because widthIn only enforces the
+                // upper bound. `fillMaxSize` ensures the inner column actually
+                // grabs the full available width up to the cap.
                 Box(
                     modifier = Modifier
                         .widthIn(max = 600.dp)
-                        .fillMaxHeight()
+                        .fillMaxSize()
                 ) {
                     val appLockManager: com.andriybobchuk.mooney.core.security.AppLockManager = koinInject()
                     var locked by remember { mutableStateOf<Boolean?>(null) }

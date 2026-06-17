@@ -183,8 +183,8 @@
     <string name="scroll_to_top">Scroll to top</string>
 
     <!-- CSV import -->
-    <string name="import_csv">Import CSV from another app</string>
-    <string name="import_csv_desc">Mint, YNAB, Wallet, Money Manager, or any CSV with Date + Amount columns</string>
+    <string name="import_csv">Import from CSV or Excel</string>
+    <string name="import_csv_desc">Excel users: save as CSV first (File → Save As → CSV). Works with Mint, YNAB, Wallet, Money Manager, or any sheet with Date + Amount columns.</string>
     <string name="csv_imported_n">Imported %1$d transactions</string>
     <string name="csv_imported_n_new_account">Imported %1$d transactions into a new 'Imported' account</string>
     <string name="csv_columns_not_recognised">Couldn't recognise date / amount columns in this CSV. Try exporting again from the source app, or rename the columns to include 'Date' and 'Amount'.</string>

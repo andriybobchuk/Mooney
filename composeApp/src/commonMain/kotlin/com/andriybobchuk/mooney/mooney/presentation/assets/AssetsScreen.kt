@@ -561,6 +561,14 @@ private fun AssetsScreenContent(
     }
 
     val lazyListState = rememberLazyListState()
+    val scrollToTopBus: com.andriybobchuk.mooney.app.ScrollToTopBus = org.koin.compose.koinInject()
+    androidx.compose.runtime.LaunchedEffect(scrollToTopBus) {
+        scrollToTopBus.events.collect { tab ->
+            if (tab == com.andriybobchuk.mooney.app.ScrollToTopBus.Tab.ASSETS) {
+                lazyListState.animateScrollToItem(0)
+            }
+        }
+    }
     val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
         // Use keys to find category indices — keys are "category_XXXX"
         val fromKey = from.key as? String ?: return@rememberReorderableLazyListState

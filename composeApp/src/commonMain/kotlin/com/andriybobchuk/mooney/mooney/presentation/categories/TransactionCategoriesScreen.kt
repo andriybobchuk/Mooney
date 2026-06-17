@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -415,7 +417,11 @@ private fun AddCategoryNameSheet(
         var showIconPicker by remember { mutableStateOf(false) }
         val canSave = name.isNotBlank()
 
-        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
             EditSheetTopBar(
                 title = "New ${if (type == CategoryType.EXPENSE) "expense" else "income"} category",
                 saveLabel = stringResource(Res.string.save),
@@ -481,7 +487,11 @@ private fun CategoryEditSheet(
         var showIconPicker by remember { mutableStateOf(false) }
         val emoji = category.resolveEmoji().ifBlank { DEFAULT_NEW_EMOJI }
 
-        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
             EditSheetTopBar(
                 title = "Edit category",
                 saveLabel = stringResource(Res.string.save),

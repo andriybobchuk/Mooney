@@ -304,25 +304,25 @@ private fun RecurringDayGroup(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         DayBadge(
             day = date.dayOfMonth,
             highlighted = isFirst,
-            modifier = Modifier.padding(top = 4.dp)
+            modifier = Modifier.padding(top = 2.dp)
         )
-        Spacer(Modifier.width(14.dp))
+        Spacer(Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "in $daysUntil days",
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = if (isFirst) {
                     MaterialTheme.colorScheme.primary
                 } else {
                     MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f)
                 },
-                modifier = Modifier.padding(bottom = 6.dp)
+                modifier = Modifier.padding(bottom = 2.dp)
             )
             items.forEach { recurring ->
                 Box(
@@ -343,8 +343,8 @@ private fun DayBadge(day: Int, highlighted: Boolean, modifier: Modifier = Modifi
     val suffix = ordinalSuffix(day)
     Column(
         modifier = modifier
-            .size(width = 52.dp, height = 56.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .size(width = 40.dp, height = 46.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(
                 if (highlighted) {
                     MaterialTheme.colorScheme.primary
@@ -357,7 +357,7 @@ private fun DayBadge(day: Int, highlighted: Boolean, modifier: Modifier = Modifi
     ) {
         Text(
             text = day.toString(),
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = if (highlighted) {
                 MaterialTheme.colorScheme.onPrimary
@@ -368,6 +368,7 @@ private fun DayBadge(day: Int, highlighted: Boolean, modifier: Modifier = Modifi
         Text(
             text = suffix,
             style = MaterialTheme.typography.labelSmall,
+            fontSize = 10.sp,
             color = if (highlighted) {
                 MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
             } else {
@@ -422,23 +423,23 @@ private fun RecurringTransactionItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp, horizontal = 16.dp),
+            .padding(vertical = 10.dp, horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(48.dp)
+                .size(44.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .background(MaterialTheme.appColors.transactionIcon),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 recurring.subcategory?.resolveEmoji() ?: "",
-                fontSize = 25.sp
+                fontSize = 22.sp
             )
         }
 
-        Spacer(Modifier.width(11.dp))
+        Spacer(Modifier.width(10.dp))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -456,25 +457,18 @@ private fun RecurringTransactionItem(
             )
         }
 
-        Column(horizontalAlignment = Alignment.End) {
-            Text(
-                "${recurring.amount.formatWithCommas()} ${recurring.account?.currency?.symbol ?: ""}",
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 14.5.sp
-                ),
-                color = when (recurring.subcategory?.type) {
-                    CategoryType.INCOME -> MaterialTheme.appColors.incomeColor
-                    CategoryType.EXPENSE -> MaterialTheme.appColors.expenseColor
-                    else -> MaterialTheme.colorScheme.onSurface
-                }
-            )
-            Text(
-                recurring.account?.title ?: "",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+        Text(
+            "${recurring.amount.formatWithCommas()} ${recurring.account?.currency?.symbol ?: ""}",
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.5.sp
+            ),
+            color = when (recurring.subcategory?.type) {
+                CategoryType.INCOME -> MaterialTheme.appColors.incomeColor
+                CategoryType.EXPENSE -> MaterialTheme.appColors.expenseColor
+                else -> MaterialTheme.colorScheme.onSurface
+            }
+        )
     }
 }
 

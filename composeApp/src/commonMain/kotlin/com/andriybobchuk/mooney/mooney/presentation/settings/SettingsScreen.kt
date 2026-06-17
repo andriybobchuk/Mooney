@@ -779,7 +779,17 @@ fun SettingsScreen(
                 CircularProgressIndicator()
             }
         } else {
+            val settingsListState = androidx.compose.foundation.lazy.rememberLazyListState()
+            val scrollToTopBus: com.andriybobchuk.mooney.app.ScrollToTopBus = org.koin.compose.koinInject()
+            LaunchedEffect(scrollToTopBus) {
+                scrollToTopBus.events.collect { tab ->
+                    if (tab == com.andriybobchuk.mooney.app.ScrollToTopBus.Tab.SETTINGS) {
+                        settingsListState.animateScrollToItem(0)
+                    }
+                }
+            }
             LazyColumn(
+                state = settingsListState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
@@ -1140,6 +1150,11 @@ fun SettingsScreen(
                         SettingsRow(
                             title = stringResource(Res.string.privacy_policy),
                             onClick = { uriHandler.openUri("https://andriybobchuk.github.io/Mooney/privacy-policy.html") }
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            title = stringResource(Res.string.terms_of_use),
+                            onClick = { uriHandler.openUri("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/") }
                         )
                         SettingsDivider()
                         SettingsRow(

@@ -205,7 +205,7 @@ fun SettingsScreen(
             title = { Text(stringResource(Res.string.update_categories_title)) },
             text = {
                 Column {
-                    Text("Get the latest categories without losing any data:")
+                    Text("Get the latest categories without losing any data:") // allow-hardcoded (dev option)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("• New categories from the latest version will be added", style = MaterialTheme.typography.bodySmall)
                     Text("• Existing categories get refreshed titles/emojis", style = MaterialTheme.typography.bodySmall)
@@ -1027,7 +1027,7 @@ fun SettingsScreen(
                     item {
                         SettingsGroup {
                             SettingsRow(
-                                title = "Exchange Rate Source",
+                                title = "Exchange Rate Source", // allow-hardcoded (dev option)
                                 value = when (state.exchangeRateSource) {
                                     ExchangeRateSource.EXTENDED -> "All currencies"
                                     ExchangeRateSource.HISTORICAL -> "Historical data"
@@ -1036,21 +1036,21 @@ fun SettingsScreen(
                             )
                             SettingsDivider()
                             SettingsRow(
-                                title = "Update Categories",
+                                title = "Update Categories", // allow-hardcoded (dev option)
                                 value = if (state.isUpdatingCategories) "Updating…" else "",
                                 onClick = { if (!state.isUpdatingCategories) showUpdateCategoriesConfirm = true }
                             )
                             SettingsDivider()
                             SettingsToggleRow(
-                                title = "Currency Insights",
-                                description = "Show exchange rate trends on foreign currency accounts",
+                                title = "Currency Insights", // allow-hardcoded (dev option)
+                                description = "Show exchange rate trends on foreign currency accounts", // allow-hardcoded (dev option)
                                 checked = state.currencyInsightsEnabled,
                                 onCheckedChange = { viewModel.toggleCurrencyInsights(it) }
                             )
                             SettingsDivider()
                             SettingsToggleRow(
-                                title = "Transactions Widget Pager",
-                                description = "Show the multi-widget pager (spending trend, currency rates, suggest) under the spending calendar",
+                                title = "Transactions Widget Pager", // allow-hardcoded (dev option)
+                                description = "Show the multi-widget pager (spending trend, currency rates, suggest) under the spending calendar", // allow-hardcoded (dev option)
                                 checked = state.widgetPagerEnabled,
                                 onCheckedChange = { viewModel.toggleWidgetPager(it) }
                             )
@@ -1075,7 +1075,7 @@ fun SettingsScreen(
                             )
                             SettingsDivider()
                             SettingsRow(
-                                title = "Force test crash",
+                                title = "Force test crash", // allow-hardcoded (dev option)
                                 value = "Tap to crash",
                                 onClick = { viewModel.forceTestCrash() }
                             )

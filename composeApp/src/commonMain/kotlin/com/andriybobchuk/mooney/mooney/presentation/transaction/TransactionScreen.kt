@@ -102,6 +102,7 @@ import com.andriybobchuk.mooney.core.data.database.PendingTransactionEntity
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.app.appColors
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
+import com.andriybobchuk.mooney.mooney.data.localizedCategoryTitle
 import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.AssetCategory
 import com.andriybobchuk.mooney.mooney.domain.Category
@@ -947,7 +948,7 @@ fun TransactionsScreenContent(
                                 .padding(horizontal = 20.dp, vertical = 16.dp)
                         ) {
                             Text(
-                                text = tx.subcategory.title,
+                                text = localizedCategoryTitle(tx.subcategory),
                                 style = MaterialTheme.typography.titleMedium,
                                 modifier = Modifier.padding(bottom = 4.dp)
                             )
@@ -1012,7 +1013,7 @@ fun TransactionsScreenContent(
                                 modifier = Modifier.padding(bottom = 4.dp)
                             )
                             Text(
-                                text = stringResource(Res.string.delete_tx_confirm, tx.subcategory.title, tx.amount.formatWithCommas(), tx.account.currency.symbol),
+                                text = stringResource(Res.string.delete_tx_confirm, localizedCategoryTitle(tx.subcategory), tx.amount.formatWithCommas(), tx.account.currency.symbol),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 16.dp)
@@ -1147,13 +1148,13 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
             } else {
                 // For regular transactions: show category title
                 Text(
-                    transaction.subcategory.title,
+                    localizedCategoryTitle(transaction.subcategory),
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, fontSize = 15.sp),
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 if (transaction.subcategory.isSubCategory()) {
                     Text(
-                        transaction.subcategory.parent?.title ?: "???",
+                        transaction.subcategory.parent?.let { localizedCategoryTitle(it) } ?: "???",
                         style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                     )
                 }
@@ -2652,7 +2653,7 @@ fun CategoryCard(
             modifier = Modifier.padding(end = 12.dp)
         )
         Text(
-            text = category.title,
+            text = localizedCategoryTitle(category),
             style = MaterialTheme.typography.bodyLarge,
             color = if (isSelected) MaterialTheme.colorScheme.primary
             else MaterialTheme.colorScheme.onSurface
@@ -2698,7 +2699,7 @@ private fun ReorderableCollectionItemScope.ReorderableCategoryRow(
             modifier = Modifier.padding(end = 12.dp)
         )
         Text(
-            text = category.title,
+            text = localizedCategoryTitle(category),
             style = MaterialTheme.typography.bodyLarge,
             color = if (isSelected) MaterialTheme.colorScheme.primary
             else MaterialTheme.colorScheme.onSurface
@@ -3660,7 +3661,7 @@ fun CategoryChip(
                 modifier = Modifier.padding(bottom = 2.dp)
             )
             Text(
-                text = category.title.take(7),
+                text = localizedCategoryTitle(category).take(7),
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,
                 fontSize = 10.sp,

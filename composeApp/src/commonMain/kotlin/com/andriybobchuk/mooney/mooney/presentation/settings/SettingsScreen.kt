@@ -32,6 +32,7 @@ import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import com.andriybobchuk.mooney.core.premium.PaywallSheet
 import com.andriybobchuk.mooney.core.premium.isBillingEnabled
+import com.andriybobchuk.mooney.mooney.data.localizedCategoryTitle
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.settings.ExchangeRateSource
@@ -412,7 +413,7 @@ fun SettingsScreen(
                                 Text(text = category.resolveEmoji(), fontSize = 24.sp)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = category.title,
+                                    text = localizedCategoryTitle(category),
                                     fontSize = 12.sp,
                                     color = if (canSelect) MaterialTheme.colorScheme.onSurfaceVariant
                                     else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),

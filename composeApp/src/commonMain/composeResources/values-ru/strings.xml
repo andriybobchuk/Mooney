@@ -521,4 +521,22 @@
     <string name="repeat_on_day">Повторять в день</string>
     <string name="repeat_on">Повторять</string>
     <string name="month_label">Месяц</string>
+
+    <!-- Reminders -->
+    <string name="reminder_settings_title">Напоминания</string>
+    <string name="reminder_body">Нажмите, чтобы записать сегодняшние траты.</string>
+    <string name="reminder_mode_off">Выкл.</string>
+    <string name="reminder_mode_daily">Ежедневно</string>
+    <string name="reminder_mode_weekly">Еженедельно</string>
+    <string name="reminder_time">Время</string>
+    <string name="reminder_day_of_week">День недели</string>
+    <string name="weekday_mon">Пн</string>
+    <string name="weekday_tue">Вт</string>
+    <string name="weekday_wed">Ср</string>
+    <string name="weekday_thu">Чт</string>
+    <string name="weekday_fri">Пт</string>
+    <string name="weekday_sat">Сб</string>
+    <string name="weekday_sun">Вс</string>
+    <string name="reminder_daily_at_value">Ежедневно в %1$s</string>
+    <string name="reminder_weekly_at_value">Еженедельно в %1$s в %2$s</string>
 </resources>

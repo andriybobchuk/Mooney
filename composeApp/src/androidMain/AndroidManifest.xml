@@ -26,14 +26,6 @@
             </intent-filter>
         </activity>
         
-        <receiver
-            android:name="com.andriybobchuk.mooney.core.notifications.DailyReminderReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.andriybobchuk.mooney.DAILY_REMINDER" />
-            </intent-filter>
-        </receiver>
-
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

@@ -521,4 +521,22 @@
     <string name="repeat_on_day">每月重复于</string>
     <string name="repeat_on">每周重复于</string>
     <string name="month_label">月份</string>
+
+    <!-- Reminders -->
+    <string name="reminder_settings_title">提醒</string>
+    <string name="reminder_body">点按记录今天的支出。</string>
+    <string name="reminder_mode_off">关闭</string>
+    <string name="reminder_mode_daily">每天</string>
+    <string name="reminder_mode_weekly">每周</string>
+    <string name="reminder_time">时间</string>
+    <string name="reminder_day_of_week">星期</string>
+    <string name="weekday_mon">周一</string>
+    <string name="weekday_tue">周二</string>
+    <string name="weekday_wed">周三</string>
+    <string name="weekday_thu">周四</string>
+    <string name="weekday_fri">周五</string>
+    <string name="weekday_sat">周六</string>
+    <string name="weekday_sun">周日</string>
+    <string name="reminder_daily_at_value">每天 %1$s</string>
+    <string name="reminder_weekly_at_value">每周%1$s %2$s</string>
 </resources>

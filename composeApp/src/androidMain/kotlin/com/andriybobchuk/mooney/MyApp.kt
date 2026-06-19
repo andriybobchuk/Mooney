@@ -1,6 +1,7 @@
 package com.andriybobchuk.mooney
 
 import android.app.Application
+import com.andriybobchuk.mooney.core.notifications.ensureReminderNotificationChannel
 import com.andriybobchuk.mooney.di.initKoin
 import com.andriybobchuk.mooney.di.warmStartupSingletons
 import org.koin.android.ext.koin.androidContext
@@ -15,5 +16,11 @@ class MyApp: Application() {
         // Kick the database + data cache off main so first composition doesn't
         // pay for Room.open() on the UI thread. See WarmStartup.kt.
         warmStartupSingletons()
+        // Notification channels must exist on Android O+ before the first
+        // notify() call. Creating it here means WorkManager's worker doesn't
+        // need to gamble on whether the channel was registered yet on cold
+        // start, and the channel shows up in system settings even before the
+        // user enables reminders.
+        ensureReminderNotificationChannel(this)
     }
 }

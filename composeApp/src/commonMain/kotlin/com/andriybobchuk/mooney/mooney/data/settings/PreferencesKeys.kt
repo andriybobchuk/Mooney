@@ -61,4 +61,12 @@ object PreferencesKeys {
      * user actually has liabilities; otherwise the two are equal.
      */
     val ASSETS_ONLY_IN_TOP_BAR = booleanPreferencesKey("assets_only_in_top_bar")
+    // Reminder notifications — opt-in. Mode is stored as the
+    // ReminderMode enum name ("OFF" / "DAILY" / "WEEKLY"). Hour/minute apply
+    // to both daily and weekly; weekday only applies when mode == WEEKLY
+    // and uses ISO numbering (1 = Mon … 7 = Sun).
+    val REMINDER_MODE = stringPreferencesKey("reminder_mode")
+    val REMINDER_HOUR = intPreferencesKey("reminder_hour")
+    val REMINDER_MINUTE = intPreferencesKey("reminder_minute")
+    val REMINDER_WEEKDAY = intPreferencesKey("reminder_weekday")
 }

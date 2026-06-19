@@ -114,6 +114,24 @@
     <string name="system">System</string>
     <string name="select_up_to_categories">Select up to %1$d categories</string>
 
+    <!-- Reminders -->
+    <string name="reminder_settings_title">Reminders</string>
+    <string name="reminder_body">Tap to log what you spent today.</string>
+    <string name="reminder_mode_off">Off</string>
+    <string name="reminder_mode_daily">Daily</string>
+    <string name="reminder_mode_weekly">Weekly</string>
+    <string name="reminder_time">Time</string>
+    <string name="reminder_day_of_week">Day of week</string>
+    <string name="weekday_mon">Mon</string>
+    <string name="weekday_tue">Tue</string>
+    <string name="weekday_wed">Wed</string>
+    <string name="weekday_thu">Thu</string>
+    <string name="weekday_fri">Fri</string>
+    <string name="weekday_sat">Sat</string>
+    <string name="weekday_sun">Sun</string>
+    <string name="reminder_daily_at_value">Daily at %1$s</string>
+    <string name="reminder_weekly_at_value">Weekly on %1$s at %2$s</string>
+
     <!-- Feedback -->
     <string name="get_in_touch">Get in touch</string>
     <string name="feedback_description">Mooney is actively being built. Found a bug? Have an idea? Reach out — your feedback shapes the app.</string>

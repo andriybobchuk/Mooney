@@ -263,19 +263,34 @@ fun NavigationHost() {
         }
     }
 
-    // Daily expense-reminder notification — schedule once per cold-start if the
-    // user hasn't opted out. Cancelling and rescheduling on each launch keeps
-    // the local trigger fresh after OS reboots / app updates.
-    val notificationScheduler: com.andriybobchuk.mooney.core.notifications.NotificationScheduler = koinInject()
+    // Spending reminder — re-schedule on cold-start if the user opted in.
+    // Reads the user's chosen mode/time directly from DataStore so the
+    // scheduler stays in sync after OS reboots, app upgrades, or device
+    // time changes.
+    val reminderScheduler: com.andriybobchuk.mooney.core.notifications.ReminderScheduler = koinInject()
+    val dataStoreForReminder: androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences> = koinInject()
     LaunchedEffect(Unit) {
         kotlinx.coroutines.delay(SECONDARY_WORK_DELAY_MS)
         try {
-            val prefs = preferencesRepository.getCurrentPreferences()
-            if (prefs.notificationsEnabled) {
-                notificationScheduler.scheduleDailyReminder(
-                    hour = com.andriybobchuk.mooney.core.notifications.DAILY_REMINDER_HOUR,
-                    minute = com.andriybobchuk.mooney.core.notifications.DAILY_REMINDER_MINUTE
-                )
+            val prefs = dataStoreForReminder.data.first()
+            val mode = com.andriybobchuk.mooney.core.notifications.ReminderMode.fromStorage(
+                prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.REMINDER_MODE]
+            )
+            val hour = prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.REMINDER_HOUR]
+                ?: com.andriybobchuk.mooney.core.notifications.DEFAULT_REMINDER_HOUR
+            val minute = prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.REMINDER_MINUTE]
+                ?: com.andriybobchuk.mooney.core.notifications.DEFAULT_REMINDER_MINUTE
+            val weekday = prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.REMINDER_WEEKDAY]
+                ?: com.andriybobchuk.mooney.core.notifications.DEFAULT_REMINDER_WEEKDAY
+            when (mode) {
+                com.andriybobchuk.mooney.core.notifications.ReminderMode.DAILY ->
+                    reminderScheduler.scheduleDaily(hour, minute)
+                com.andriybobchuk.mooney.core.notifications.ReminderMode.WEEKLY ->
+                    reminderScheduler.scheduleWeekly(weekday, hour, minute)
+                com.andriybobchuk.mooney.core.notifications.ReminderMode.OFF -> {
+                    // No-op — explicit cancel would clobber a schedule the
+                    // user just set this session and DataStore hasn't flushed.
+                }
             }
         } catch (e: kotlin.coroutines.cancellation.CancellationException) {
             throw e

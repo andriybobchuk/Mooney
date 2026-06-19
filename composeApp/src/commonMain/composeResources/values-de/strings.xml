@@ -521,4 +521,22 @@
     <string name="repeat_on_day">Wiederholen am Tag</string>
     <string name="repeat_on">Wiederholen am</string>
     <string name="month_label">Monat</string>
+
+    <!-- Reminders -->
+    <string name="reminder_settings_title">Erinnerungen</string>
+    <string name="reminder_body">Tippe, um deine heutigen Ausgaben einzutragen.</string>
+    <string name="reminder_mode_off">Aus</string>
+    <string name="reminder_mode_daily">Täglich</string>
+    <string name="reminder_mode_weekly">Wöchentlich</string>
+    <string name="reminder_time">Uhrzeit</string>
+    <string name="reminder_day_of_week">Wochentag</string>
+    <string name="weekday_mon">Mo</string>
+    <string name="weekday_tue">Di</string>
+    <string name="weekday_wed">Mi</string>
+    <string name="weekday_thu">Do</string>
+    <string name="weekday_fri">Fr</string>
+    <string name="weekday_sat">Sa</string>
+    <string name="weekday_sun">So</string>
+    <string name="reminder_daily_at_value">Täglich um %1$s</string>
+    <string name="reminder_weekly_at_value">Wöchentlich am %1$s um %2$s</string>
 </resources>

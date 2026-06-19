@@ -55,6 +55,7 @@ kotlin {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.billing.ktx)
             implementation(libs.androidx.core.splashscreen)
+            implementation(libs.google.ads)
         }
         commonMain.dependencies {
             implementation(compose.runtime)

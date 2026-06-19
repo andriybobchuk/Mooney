@@ -34,6 +34,7 @@ google-services = "4.4.2"
 firebase-bom = "33.7.0"
 firebase-crashlytics-plugin = "3.0.2"
 billing = "7.1.1"
+googleAds = "23.6.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -88,6 +89,7 @@ firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
 firebase-config = { group = "com.google.firebase", name = "firebase-config-ktx" }
 billing-ktx = { module = "com.android.billingclient:billing-ktx", version.ref = "billing" }
+google-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "googleAds" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

@@ -28,3 +28,7 @@
 
 # SQLite bundled driver
 -keep class androidx.sqlite.driver.bundled.** { *; }
+
+# Google Mobile Ads (AdMob)
+-keep public class com.google.android.gms.** { public *; }
+-dontwarn com.google.android.gms.**

@@ -443,7 +443,7 @@ private fun RecurringTransactionItem(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                recurring.title,
+                recurring.subcategory?.let { com.andriybobchuk.mooney.mooney.data.localizedCategoryTitle(it) } ?: recurring.title,
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.Normal,
                     fontSize = 15.sp

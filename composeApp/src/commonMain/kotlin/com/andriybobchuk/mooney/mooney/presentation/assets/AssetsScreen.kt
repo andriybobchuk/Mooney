@@ -78,6 +78,7 @@ import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.data.database.AssetCategoryEntity
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
+import com.andriybobchuk.mooney.mooney.data.localizedAssetCategoryTitle
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import com.andriybobchuk.mooney.mooney.domain.parseAmountInput
@@ -710,7 +711,7 @@ private fun AssetsScreenContent(
                             )
                     ) {
                         CollapsibleCategoryHeader(
-                            title = categoryInfo?.title ?: categoryId,
+                            title = categoryInfo?.let { localizedAssetCategoryTitle(it) } ?: categoryId,
                             color = categoryInfo?.color ?: 0xFF9E9E9E,
                             assetCount = categoryAssets.size,
                             totalAmount = categoryAssets.sumOf { it.baseCurrencyAmount },
@@ -1224,7 +1225,7 @@ private fun AssetSheet(
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(selectedCategoryInfo?.title ?: selectedCategoryId, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            Text(selectedCategoryInfo?.let { localizedAssetCategoryTitle(it) } ?: selectedCategoryId, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
             Icon(
                 painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
                 contentDescription = null,
@@ -1308,7 +1309,7 @@ private fun AssetSheet(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            category.title,
+                            localizedAssetCategoryTitle(category),
                             style = MaterialTheme.typography.bodyLarge,
                             color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f)

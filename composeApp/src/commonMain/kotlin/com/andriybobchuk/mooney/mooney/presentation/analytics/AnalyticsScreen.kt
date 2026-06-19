@@ -77,6 +77,7 @@ import com.andriybobchuk.mooney.core.presentation.designsystem.components.MeshGr
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
+import com.andriybobchuk.mooney.mooney.data.localizedCategoryTitle
 import com.andriybobchuk.mooney.mooney.domain.AnalyticsMetric
 import com.andriybobchuk.mooney.mooney.domain.CategorySheetType
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
@@ -393,13 +394,13 @@ fun CategoryItem(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                topCategorySummary.category.title,
+                localizedCategoryTitle(topCategorySummary.category),
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, fontSize = 15.sp),
                 color = MaterialTheme.colorScheme.onSurface
             )
             if (topCategorySummary.category.isSubCategory()) {
                 Text(
-                    topCategorySummary.category.parent?.title ?: "???",
+                    topCategorySummary.category.parent?.let { localizedCategoryTitle(it) } ?: "???",
                     style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                 )
             }
@@ -687,13 +688,13 @@ fun CategoryTransactionsSheet(
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = category.title,
+                    text = localizedCategoryTitle(category),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Medium
                 )
                 if (category.isSubCategory()) {
                     Text(
-                        text = category.parent?.title ?: "",
+                        text = category.parent?.let { localizedCategoryTitle(it) } ?: "",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -802,7 +803,7 @@ private fun SubcategoryGroupHeader(
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = subcategory.title,
+                text = localizedCategoryTitle(subcategory),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -1548,7 +1549,7 @@ private fun TxDrilldownRow(transaction: com.andriybobchuk.mooney.mooney.domain.T
         Column(modifier = Modifier.weight(1f)) {
             val description = transaction.description?.takeIf { it.isNotBlank() }
             Text(
-                text = description ?: transaction.subcategory.title,
+                text = description ?: localizedCategoryTitle(transaction.subcategory),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )

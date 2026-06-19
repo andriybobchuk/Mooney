@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.andriybobchuk.mooney.mooney.data.localizedCategoryTitle
 import com.andriybobchuk.mooney.mooney.domain.Category
 
 @Composable
@@ -43,7 +44,7 @@ fun FrequentCategoryFABs(
                         fontSize = 16.sp
                     )
                     Text(
-                        text = category.title,
+                        text = localizedCategoryTitle(category),
                         fontSize = 12.sp
                     )
                 }

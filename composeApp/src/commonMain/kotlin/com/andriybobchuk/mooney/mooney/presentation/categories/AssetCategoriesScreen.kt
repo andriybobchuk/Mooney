@@ -44,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.andriybobchuk.mooney.core.data.database.AssetCategoryEntity
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
+import com.andriybobchuk.mooney.mooney.data.localizedAssetCategoryTitle
 import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.add_asset_category
 import mooney.composeapp.generated.resources.add_liability_category
@@ -126,6 +127,7 @@ fun AssetCategoriesScreen(
     }
 
     editingCategory?.let { cat ->
+        val localizedName = localizedAssetCategoryTitle(cat)
         AssetCategoryEditSheet(
             category = cat,
             onDismiss = { editingCategory = null },
@@ -135,7 +137,7 @@ fun AssetCategoriesScreen(
             },
             onDelete = {
                 deleteId = cat.id
-                deleteName = cat.title
+                deleteName = localizedName
                 editingCategory = null
             }
         )
@@ -212,7 +214,7 @@ fun AssetCategoriesScreen(
                 items(visibleCats, key = { it.id }) { category ->
                     AssetCategoryListRow(
                         emoji = category.emoji.ifBlank { if (showAssets) "💰" else "📉" },
-                        title = category.title,
+                        title = localizedAssetCategoryTitle(category),
                         onClick = { editingCategory = category }
                     )
                 }
@@ -390,7 +392,8 @@ private fun AssetCategoryEditSheet(
     onDelete: () -> Unit
 ) {
     MooneyBottomSheet(onDismissRequest = onDismiss) {
-        var name by remember(category.id) { mutableStateOf(category.title) }
+        val localizedTitle = localizedAssetCategoryTitle(category)
+        var name by remember(category.id) { mutableStateOf(localizedTitle) }
         val emoji = category.emoji.ifBlank { if (category.isLiability) "📉" else "💰" }
 
         Column(
@@ -401,7 +404,7 @@ private fun AssetCategoryEditSheet(
             EditSheetTopBar(
                 title = "Edit category",
                 saveLabel = stringResource(Res.string.save),
-                saveEnabled = name.isNotBlank() && name.trim() != category.title,
+                saveEnabled = name.isNotBlank() && name.trim() != localizedTitle && name.trim() != category.title,
                 onCancel = onDismiss,
                 onSave = { onRename(name.trim()) }
             )
@@ -409,7 +412,7 @@ private fun AssetCategoryEditSheet(
             CategoryHero(emoji = emoji)
             Spacer(Modifier.height(8.dp))
             Text(
-                text = name.ifBlank { category.title },
+                text = name.ifBlank { localizedTitle },
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,

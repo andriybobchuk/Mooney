@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.andriybobchuk.mooney.mooney.data.localizedCategoryTitle
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.presentation.settings.SettingsAction
 import com.andriybobchuk.mooney.mooney.presentation.settings.SettingsState
@@ -124,9 +125,9 @@ private fun PinnedCategoryChip(
                 fontSize = 16.sp
             )
             Text(
-                text = category.title,
+                text = localizedCategoryTitle(category),
                 fontSize = 12.sp,
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimary 
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimary
                        else MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal
             )
@@ -172,9 +173,9 @@ private fun CategorySelectionCard(
             Spacer(modifier = Modifier.height(4.dp))
             
             Text(
-                text = category.title,
+                text = localizedCategoryTitle(category),
                 fontSize = 12.sp,
-                color = if (canSelect) MaterialTheme.colorScheme.onSurfaceVariant 
+                color = if (canSelect) MaterialTheme.colorScheme.onSurfaceVariant
                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                 fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
                 maxLines = 1

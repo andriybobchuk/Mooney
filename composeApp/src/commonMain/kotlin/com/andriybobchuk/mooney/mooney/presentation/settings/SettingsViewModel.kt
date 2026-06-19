@@ -64,7 +64,7 @@ class SettingsViewModel(
     // accounts/categories per-call.
     private val universalCsvImporter: com.andriybobchuk.mooney.mooney.domain.backup.UniversalCsvImporter,
     private val importCsvUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.ImportCsvUseCase,
-    private val notificationScheduler: com.andriybobchuk.mooney.core.notifications.NotificationScheduler
+    private val reminderScheduler: com.andriybobchuk.mooney.core.notifications.ReminderScheduler
 ) : ViewModel() {
 
     // Seed `isLoading` from the app cache so opening Settings while the cache
@@ -88,6 +88,27 @@ class SettingsViewModel(
         observeDeveloperOptions()
         observeAdsDisabled()
         observeDevPremiumFlag()
+        observeReminderConfig()
+    }
+
+    private fun observeReminderConfig() {
+        dataStore.data.onEach { prefs ->
+            val mode = prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.REMINDER_MODE] ?: "OFF"
+            val hour = prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.REMINDER_HOUR]
+                ?: com.andriybobchuk.mooney.core.notifications.DEFAULT_REMINDER_HOUR
+            val minute = prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.REMINDER_MINUTE]
+                ?: com.andriybobchuk.mooney.core.notifications.DEFAULT_REMINDER_MINUTE
+            val weekday = prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.REMINDER_WEEKDAY]
+                ?: com.andriybobchuk.mooney.core.notifications.DEFAULT_REMINDER_WEEKDAY
+            _state.update {
+                it.copy(
+                    reminderMode = mode,
+                    reminderHour = hour,
+                    reminderMinute = minute,
+                    reminderWeekday = weekday
+                )
+            }
+        }.launchIn(viewModelScope)
     }
 
     private fun observeDevPremiumFlag() {
@@ -258,7 +279,38 @@ class SettingsViewModel(
             is SettingsAction.OnPrimaryAccountChange -> handlePrimaryAccountChange(action.accountId)
             is SettingsAction.OnExcludeTaxesToggle -> handleExcludeTaxesToggle(action.enabled)
             is SettingsAction.OnExchangeRateSourceChange -> handleExchangeRateSourceChange(action.source)
+            is SettingsAction.OnReminderConfigChange -> handleReminderConfigChange(
+                mode = action.mode,
+                hour = action.hour,
+                minute = action.minute,
+                weekday = action.weekday
+            )
             is SettingsAction.OnBackClick -> {}
+        }
+    }
+
+    private fun handleReminderConfigChange(mode: String, hour: Int, minute: Int, weekday: Int) {
+        viewModelScope.launch {
+            try {
+                dataStore.edit { prefs ->
+                    prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.REMINDER_MODE] = mode
+                    prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.REMINDER_HOUR] = hour
+                    prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.REMINDER_MINUTE] = minute
+                    prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.REMINDER_WEEKDAY] = weekday
+                }
+                when (com.andriybobchuk.mooney.core.notifications.ReminderMode.fromStorage(mode)) {
+                    com.andriybobchuk.mooney.core.notifications.ReminderMode.DAILY ->
+                        reminderScheduler.scheduleDaily(hour, minute)
+                    com.andriybobchuk.mooney.core.notifications.ReminderMode.WEEKLY ->
+                        reminderScheduler.scheduleWeekly(weekday, hour, minute)
+                    com.andriybobchuk.mooney.core.notifications.ReminderMode.OFF ->
+                        reminderScheduler.cancel()
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(error = e.message) }
+            }
         }
     }
 
@@ -441,14 +493,9 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 preferencesRepository.updateNotificationsEnabled(enabled)
-                if (enabled) {
-                    notificationScheduler.scheduleDailyReminder(
-                        hour = com.andriybobchuk.mooney.core.notifications.DAILY_REMINDER_HOUR,
-                        minute = com.andriybobchuk.mooney.core.notifications.DAILY_REMINDER_MINUTE
-                    )
-                } else {
-                    notificationScheduler.cancelDailyReminder()
-                }
+                // The dedicated reminder flow (OnReminderConfigChange) handles
+                // scheduling now. This toggle just persists the legacy
+                // notifications-enabled flag for future use.
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

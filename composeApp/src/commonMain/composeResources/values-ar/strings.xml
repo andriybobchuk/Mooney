@@ -569,4 +569,22 @@
     <string name="cd_next_day">اليوم التالي</string>
     <string name="cd_add_transaction">إضافة معاملة</string>
     <string name="cd_scroll_to_top">الانتقال إلى الأعلى</string>
+
+    <!-- Reminders -->
+    <string name="reminder_settings_title">التذكيرات</string>
+    <string name="reminder_body">اضغط لتسجيل ما أنفقته اليوم.</string>
+    <string name="reminder_mode_off">إيقاف</string>
+    <string name="reminder_mode_daily">يوميًا</string>
+    <string name="reminder_mode_weekly">أسبوعيًا</string>
+    <string name="reminder_time">الوقت</string>
+    <string name="reminder_day_of_week">يوم الأسبوع</string>
+    <string name="weekday_mon">الإثنين</string>
+    <string name="weekday_tue">الثلاثاء</string>
+    <string name="weekday_wed">الأربعاء</string>
+    <string name="weekday_thu">الخميس</string>
+    <string name="weekday_fri">الجمعة</string>
+    <string name="weekday_sat">السبت</string>
+    <string name="weekday_sun">الأحد</string>
+    <string name="reminder_daily_at_value">يوميًا في %1$s</string>
+    <string name="reminder_weekly_at_value">أسبوعيًا يوم %1$s في %2$s</string>
 </resources>

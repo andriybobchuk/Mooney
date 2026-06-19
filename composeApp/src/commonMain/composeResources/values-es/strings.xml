@@ -569,4 +569,22 @@
     <string name="cd_next_day">Día siguiente</string>
     <string name="cd_add_transaction">Añadir transacción</string>
     <string name="cd_scroll_to_top">Ir arriba</string>
+
+    <!-- Reminders -->
+    <string name="reminder_settings_title">Recordatorios</string>
+    <string name="reminder_body">Toca para registrar lo que gastaste hoy.</string>
+    <string name="reminder_mode_off">Desactivado</string>
+    <string name="reminder_mode_daily">Diario</string>
+    <string name="reminder_mode_weekly">Semanal</string>
+    <string name="reminder_time">Hora</string>
+    <string name="reminder_day_of_week">Día de la semana</string>
+    <string name="weekday_mon">Lun</string>
+    <string name="weekday_tue">Mar</string>
+    <string name="weekday_wed">Mié</string>
+    <string name="weekday_thu">Jue</string>
+    <string name="weekday_fri">Vie</string>
+    <string name="weekday_sat">Sáb</string>
+    <string name="weekday_sun">Dom</string>
+    <string name="reminder_daily_at_value">Diario a las %1$s</string>
+    <string name="reminder_weekly_at_value">Semanal el %1$s a las %2$s</string>
 </resources>

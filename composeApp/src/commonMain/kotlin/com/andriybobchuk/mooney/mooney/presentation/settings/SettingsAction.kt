@@ -38,4 +38,16 @@ sealed interface SettingsAction {
     data class OnExcludeTaxesToggle(val enabled: Boolean) : SettingsAction
 
     data class OnExchangeRateSourceChange(val source: ExchangeRateSource) : SettingsAction
+
+    /**
+     * Atomically update the spending reminder configuration. The mode picks
+     * cadence (off / daily / weekly); hour/minute apply to both daily and
+     * weekly; weekday only applies when mode == WEEKLY (ISO: 1=Mon..7=Sun).
+     */
+    data class OnReminderConfigChange(
+        val mode: String,
+        val hour: Int,
+        val minute: Int,
+        val weekday: Int
+    ) : SettingsAction
 }

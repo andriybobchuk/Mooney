@@ -544,4 +544,22 @@
     <string name="cd_next_day">Наступний день</string>
     <string name="cd_add_transaction">Додати транзакцію</string>
     <string name="cd_scroll_to_top">До початку</string>
+
+    <!-- Reminders -->
+    <string name="reminder_settings_title">Нагадування</string>
+    <string name="reminder_body">Натисніть, щоб записати сьогоднішні витрати.</string>
+    <string name="reminder_mode_off">Вимкнено</string>
+    <string name="reminder_mode_daily">Щоденно</string>
+    <string name="reminder_mode_weekly">Щотижня</string>
+    <string name="reminder_time">Час</string>
+    <string name="reminder_day_of_week">День тижня</string>
+    <string name="weekday_mon">Пн</string>
+    <string name="weekday_tue">Вт</string>
+    <string name="weekday_wed">Ср</string>
+    <string name="weekday_thu">Чт</string>
+    <string name="weekday_fri">Пт</string>
+    <string name="weekday_sat">Сб</string>
+    <string name="weekday_sun">Нд</string>
+    <string name="reminder_daily_at_value">Щоденно о %1$s</string>
+    <string name="reminder_weekly_at_value">Щотижня в %1$s о %2$s</string>
 </resources>

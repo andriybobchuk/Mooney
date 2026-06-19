@@ -56,6 +56,9 @@ kotlin {
             implementation(libs.billing.ktx)
             implementation(libs.androidx.core.splashscreen)
             implementation(libs.google.ads)
+            // Reminder notifications — scheduled via WorkManager so the OS
+            // hosts the periodic trigger across reboots and app upgrades.
+            implementation("androidx.work:work-runtime-ktx:2.9.0")
         }
         commonMain.dependencies {
             implementation(compose.runtime)

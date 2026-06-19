@@ -2,6 +2,7 @@ package com.andriybobchuk.mooney
 
 import android.app.Application
 import com.andriybobchuk.mooney.core.ads.Ads
+import com.andriybobchuk.mooney.core.notifications.ensureReminderNotificationChannel
 import com.andriybobchuk.mooney.di.initKoin
 import com.andriybobchuk.mooney.di.warmStartupSingletons
 import org.koin.android.ext.koin.androidContext
@@ -21,5 +22,11 @@ class MyApp: Application() {
         // to be stashed up-front. Mirrors the iOS bridge wiring.
         Ads.setApplication(applicationContext)
         Ads.initialize()
+        // Notification channels must exist on Android O+ before the first
+        // notify() call. Creating it here means WorkManager's worker doesn't
+        // need to gamble on whether the channel was registered yet on cold
+        // start, and the channel shows up in system settings even before the
+        // user enables reminders.
+        ensureReminderNotificationChannel(this)
     }
 }

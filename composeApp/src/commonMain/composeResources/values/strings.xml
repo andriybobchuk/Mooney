@@ -456,6 +456,17 @@
     <!-- Asset / Liability toggle -->
     <string name="asset_label">Asset</string>
     <string name="liability_label">Liability</string>
+    <string name="asset_vs_liability_explainer">An asset is something you own (cash, savings, investments). A liability is something you owe (credit card balance, loan).</string>
+
+    <!-- Accessibility content descriptions -->
+    <string name="cd_previous_month">Previous month</string>
+    <string name="cd_next_month">Next month</string>
+    <string name="cd_previous_year">Previous year</string>
+    <string name="cd_next_year">Next year</string>
+    <string name="cd_previous_day">Previous day</string>
+    <string name="cd_next_day">Next day</string>
+    <string name="cd_add_transaction">Add Transaction</string>
+    <string name="cd_scroll_to_top">Scroll to top</string>
 
     <!-- Feedback hints -->
     <string name="feedback_hint_bug">What broke? What were you trying to do?</string>
@@ -559,4 +570,43 @@
     <string name="repeat_on_day">Repeat on day</string>
     <string name="repeat_on">Repeat on</string>
     <string name="month_label">Month</string>
+    <!-- Months + weekdays (locale-aware display) -->
+    <string name="month_long_01">January</string>
+    <string name="month_long_02">February</string>
+    <string name="month_long_03">March</string>
+    <string name="month_long_04">April</string>
+    <string name="month_long_05">May</string>
+    <string name="month_long_06">June</string>
+    <string name="month_long_07">July</string>
+    <string name="month_long_08">August</string>
+    <string name="month_long_09">September</string>
+    <string name="month_long_10">October</string>
+    <string name="month_long_11">November</string>
+    <string name="month_long_12">December</string>
+    <string name="month_short_01">Jan</string>
+    <string name="month_short_02">Feb</string>
+    <string name="month_short_03">Mar</string>
+    <string name="month_short_04">Apr</string>
+    <string name="month_short_05">May</string>
+    <string name="month_short_06">Jun</string>
+    <string name="month_short_07">Jul</string>
+    <string name="month_short_08">Aug</string>
+    <string name="month_short_09">Sep</string>
+    <string name="month_short_10">Oct</string>
+    <string name="month_short_11">Nov</string>
+    <string name="month_short_12">Dec</string>
+    <string name="weekday_long_1">Monday</string>
+    <string name="weekday_long_2">Tuesday</string>
+    <string name="weekday_long_3">Wednesday</string>
+    <string name="weekday_long_4">Thursday</string>
+    <string name="weekday_long_5">Friday</string>
+    <string name="weekday_long_6">Saturday</string>
+    <string name="weekday_long_7">Sunday</string>
+    <string name="weekday_short_1">Mon</string>
+    <string name="weekday_short_2">Tue</string>
+    <string name="weekday_short_3">Wed</string>
+    <string name="weekday_short_4">Thu</string>
+    <string name="weekday_short_5">Fri</string>
+    <string name="weekday_short_6">Sat</string>
+    <string name="weekday_short_7">Sun</string>
 </resources>

@@ -418,6 +418,7 @@
     <!-- Activo / Pasivo -->
     <string name="asset_label">Activo</string>
     <string name="liability_label">Pasivo</string>
+    <string name="asset_vs_liability_explainer">Un activo es algo que posees (efectivo, ahorros, inversiones). Un pasivo es algo que debes (saldo de tarjeta de crédito, préstamo).</string>
 
     <!-- Sugerencias de feedback -->
     <string name="feedback_hint_bug">¿Qué falló? ¿Qué estabas intentando hacer?</string>
@@ -521,4 +522,51 @@
     <string name="repeat_on_day">Repetir el día</string>
     <string name="repeat_on">Repetir el</string>
     <string name="month_label">Mes</string>
+    <!-- Months + weekdays (locale-aware display) -->
+    <string name="month_long_01">Enero</string>
+    <string name="month_long_02">Febrero</string>
+    <string name="month_long_03">Marzo</string>
+    <string name="month_long_04">Abril</string>
+    <string name="month_long_05">Mayo</string>
+    <string name="month_long_06">Junio</string>
+    <string name="month_long_07">Julio</string>
+    <string name="month_long_08">Agosto</string>
+    <string name="month_long_09">Septiembre</string>
+    <string name="month_long_10">Octubre</string>
+    <string name="month_long_11">Noviembre</string>
+    <string name="month_long_12">Diciembre</string>
+    <string name="month_short_01">Ene</string>
+    <string name="month_short_02">Feb</string>
+    <string name="month_short_03">Mar</string>
+    <string name="month_short_04">Abr</string>
+    <string name="month_short_05">May</string>
+    <string name="month_short_06">Jun</string>
+    <string name="month_short_07">Jul</string>
+    <string name="month_short_08">Ago</string>
+    <string name="month_short_09">Sep</string>
+    <string name="month_short_10">Oct</string>
+    <string name="month_short_11">Nov</string>
+    <string name="month_short_12">Dic</string>
+    <string name="weekday_long_1">Lunes</string>
+    <string name="weekday_long_2">Martes</string>
+    <string name="weekday_long_3">Miércoles</string>
+    <string name="weekday_long_4">Jueves</string>
+    <string name="weekday_long_5">Viernes</string>
+    <string name="weekday_long_6">Sábado</string>
+    <string name="weekday_long_7">Domingo</string>
+    <string name="weekday_short_1">Lun</string>
+    <string name="weekday_short_2">Mar</string>
+    <string name="weekday_short_3">Mié</string>
+    <string name="weekday_short_4">Jue</string>
+    <string name="weekday_short_5">Vie</string>
+    <string name="weekday_short_6">Sáb</string>
+    <string name="weekday_short_7">Dom</string>
+    <string name="cd_previous_month">Mes anterior</string>
+    <string name="cd_next_month">Mes siguiente</string>
+    <string name="cd_previous_year">Año anterior</string>
+    <string name="cd_next_year">Año siguiente</string>
+    <string name="cd_previous_day">Día anterior</string>
+    <string name="cd_next_day">Día siguiente</string>
+    <string name="cd_add_transaction">Añadir transacción</string>
+    <string name="cd_scroll_to_top">Ir arriba</string>
 </resources>

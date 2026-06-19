@@ -418,6 +418,7 @@
     <!-- Aktywa / Zobowiązania -->
     <string name="asset_label">Aktywo</string>
     <string name="liability_label">Zobowiązanie</string>
+    <string name="asset_vs_liability_explainer">Aktywo to coś, co posiadasz (gotówka, oszczędności, inwestycje). Zobowiązanie to coś, co jesteś winien (saldo karty kredytowej, pożyczka).</string>
 
     <!-- Podpowiedzi opinii -->
     <string name="feedback_hint_bug">Co się zepsuło? Co próbowałeś zrobić?</string>
@@ -521,4 +522,51 @@
     <string name="repeat_on_day">Powtarzaj w dniu</string>
     <string name="repeat_on">Powtarzaj w</string>
     <string name="month_label">Miesiąc</string>
+    <!-- Months + weekdays (locale-aware display) -->
+    <string name="month_long_01">Styczeń</string>
+    <string name="month_long_02">Luty</string>
+    <string name="month_long_03">Marzec</string>
+    <string name="month_long_04">Kwiecień</string>
+    <string name="month_long_05">Maj</string>
+    <string name="month_long_06">Czerwiec</string>
+    <string name="month_long_07">Lipiec</string>
+    <string name="month_long_08">Sierpień</string>
+    <string name="month_long_09">Wrzesień</string>
+    <string name="month_long_10">Październik</string>
+    <string name="month_long_11">Listopad</string>
+    <string name="month_long_12">Grudzień</string>
+    <string name="month_short_01">Sty</string>
+    <string name="month_short_02">Lut</string>
+    <string name="month_short_03">Mar</string>
+    <string name="month_short_04">Kwi</string>
+    <string name="month_short_05">Maj</string>
+    <string name="month_short_06">Cze</string>
+    <string name="month_short_07">Lip</string>
+    <string name="month_short_08">Sie</string>
+    <string name="month_short_09">Wrz</string>
+    <string name="month_short_10">Paź</string>
+    <string name="month_short_11">Lis</string>
+    <string name="month_short_12">Gru</string>
+    <string name="weekday_long_1">Poniedziałek</string>
+    <string name="weekday_long_2">Wtorek</string>
+    <string name="weekday_long_3">Środa</string>
+    <string name="weekday_long_4">Czwartek</string>
+    <string name="weekday_long_5">Piątek</string>
+    <string name="weekday_long_6">Sobota</string>
+    <string name="weekday_long_7">Niedziela</string>
+    <string name="weekday_short_1">Pon</string>
+    <string name="weekday_short_2">Wt</string>
+    <string name="weekday_short_3">Śr</string>
+    <string name="weekday_short_4">Czw</string>
+    <string name="weekday_short_5">Pt</string>
+    <string name="weekday_short_6">Sob</string>
+    <string name="weekday_short_7">Nd</string>
+    <string name="cd_previous_month">Poprzedni miesiąc</string>
+    <string name="cd_next_month">Następny miesiąc</string>
+    <string name="cd_previous_year">Poprzedni rok</string>
+    <string name="cd_next_year">Następny rok</string>
+    <string name="cd_previous_day">Poprzedni dzień</string>
+    <string name="cd_next_day">Następny dzień</string>
+    <string name="cd_add_transaction">Dodaj transakcję</string>
+    <string name="cd_scroll_to_top">Przewiń na górę</string>
 </resources>

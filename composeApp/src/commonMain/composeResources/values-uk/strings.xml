@@ -393,6 +393,7 @@
     <!-- Актив / Зобов'язання -->
     <string name="asset_label">Актив</string>
     <string name="liability_label">Зобов'язання</string>
+    <string name="asset_vs_liability_explainer">Актив — це те, чим ви володієте (готівка, заощадження, інвестиції). Зобов’язання — це те, що ви винні (баланс кредитної картки, кредит).</string>
 
     <!-- Підказки для відгуку -->
     <string name="feedback_hint_bug">Що зламалося? Що ви намагалися зробити?</string>
@@ -496,4 +497,51 @@
     <string name="repeat_on_day">Повторювати в день</string>
     <string name="repeat_on">Повторювати</string>
     <string name="month_label">Місяць</string>
+    <!-- Months + weekdays (locale-aware display) -->
+    <string name="month_long_01">Січень</string>
+    <string name="month_long_02">Лютий</string>
+    <string name="month_long_03">Березень</string>
+    <string name="month_long_04">Квітень</string>
+    <string name="month_long_05">Травень</string>
+    <string name="month_long_06">Червень</string>
+    <string name="month_long_07">Липень</string>
+    <string name="month_long_08">Серпень</string>
+    <string name="month_long_09">Вересень</string>
+    <string name="month_long_10">Жовтень</string>
+    <string name="month_long_11">Листопад</string>
+    <string name="month_long_12">Грудень</string>
+    <string name="month_short_01">Січ</string>
+    <string name="month_short_02">Лют</string>
+    <string name="month_short_03">Бер</string>
+    <string name="month_short_04">Кві</string>
+    <string name="month_short_05">Тра</string>
+    <string name="month_short_06">Чер</string>
+    <string name="month_short_07">Лип</string>
+    <string name="month_short_08">Сер</string>
+    <string name="month_short_09">Вер</string>
+    <string name="month_short_10">Жов</string>
+    <string name="month_short_11">Лис</string>
+    <string name="month_short_12">Гру</string>
+    <string name="weekday_long_1">Понеділок</string>
+    <string name="weekday_long_2">Вівторок</string>
+    <string name="weekday_long_3">Середа</string>
+    <string name="weekday_long_4">Четвер</string>
+    <string name="weekday_long_5">П’ятниця</string>
+    <string name="weekday_long_6">Субота</string>
+    <string name="weekday_long_7">Неділя</string>
+    <string name="weekday_short_1">Пн</string>
+    <string name="weekday_short_2">Вт</string>
+    <string name="weekday_short_3">Ср</string>
+    <string name="weekday_short_4">Чт</string>
+    <string name="weekday_short_5">Пт</string>
+    <string name="weekday_short_6">Сб</string>
+    <string name="weekday_short_7">Нд</string>
+    <string name="cd_previous_month">Попередній місяць</string>
+    <string name="cd_next_month">Наступний місяць</string>
+    <string name="cd_previous_year">Попередній рік</string>
+    <string name="cd_next_year">Наступний рік</string>
+    <string name="cd_previous_day">Попередній день</string>
+    <string name="cd_next_day">Наступний день</string>
+    <string name="cd_add_transaction">Додати транзакцію</string>
+    <string name="cd_scroll_to_top">До початку</string>
 </resources>

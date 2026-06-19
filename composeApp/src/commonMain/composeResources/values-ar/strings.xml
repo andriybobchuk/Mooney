@@ -418,6 +418,7 @@
     <!-- أصل / التزام -->
     <string name="asset_label">أصل</string>
     <string name="liability_label">التزام</string>
+    <string name="asset_vs_liability_explainer">الأصل هو ما تمتلكه (نقد، مدخرات، استثمارات). الالتزام هو ما تدين به (رصيد بطاقة ائتمان، قرض).</string>
 
     <!-- تلميحات الملاحظات -->
     <string name="feedback_hint_bug">ما الذي تعطّل؟ وما الذي كنت تحاول فعله؟</string>
@@ -521,4 +522,51 @@
     <string name="repeat_on_day">التكرار في يوم</string>
     <string name="repeat_on">التكرار في</string>
     <string name="month_label">الشهر</string>
+    <!-- Months + weekdays (locale-aware display) -->
+    <string name="month_long_01">يناير</string>
+    <string name="month_long_02">فبراير</string>
+    <string name="month_long_03">مارس</string>
+    <string name="month_long_04">أبريل</string>
+    <string name="month_long_05">مايو</string>
+    <string name="month_long_06">يونيو</string>
+    <string name="month_long_07">يوليو</string>
+    <string name="month_long_08">أغسطس</string>
+    <string name="month_long_09">سبتمبر</string>
+    <string name="month_long_10">أكتوبر</string>
+    <string name="month_long_11">نوفمبر</string>
+    <string name="month_long_12">ديسمبر</string>
+    <string name="month_short_01">ينا</string>
+    <string name="month_short_02">فبر</string>
+    <string name="month_short_03">مار</string>
+    <string name="month_short_04">أبر</string>
+    <string name="month_short_05">ماي</string>
+    <string name="month_short_06">يون</string>
+    <string name="month_short_07">يول</string>
+    <string name="month_short_08">أغس</string>
+    <string name="month_short_09">سبت</string>
+    <string name="month_short_10">أكت</string>
+    <string name="month_short_11">نوف</string>
+    <string name="month_short_12">ديس</string>
+    <string name="weekday_long_1">الإثنين</string>
+    <string name="weekday_long_2">الثلاثاء</string>
+    <string name="weekday_long_3">الأربعاء</string>
+    <string name="weekday_long_4">الخميس</string>
+    <string name="weekday_long_5">الجمعة</string>
+    <string name="weekday_long_6">السبت</string>
+    <string name="weekday_long_7">الأحد</string>
+    <string name="weekday_short_1">إثن</string>
+    <string name="weekday_short_2">ثلا</string>
+    <string name="weekday_short_3">أرب</string>
+    <string name="weekday_short_4">خمي</string>
+    <string name="weekday_short_5">جمع</string>
+    <string name="weekday_short_6">سبت</string>
+    <string name="weekday_short_7">أحد</string>
+    <string name="cd_previous_month">الشهر السابق</string>
+    <string name="cd_next_month">الشهر التالي</string>
+    <string name="cd_previous_year">السنة السابقة</string>
+    <string name="cd_next_year">السنة التالية</string>
+    <string name="cd_previous_day">اليوم السابق</string>
+    <string name="cd_next_day">اليوم التالي</string>
+    <string name="cd_add_transaction">إضافة معاملة</string>
+    <string name="cd_scroll_to_top">الانتقال إلى الأعلى</string>
 </resources>

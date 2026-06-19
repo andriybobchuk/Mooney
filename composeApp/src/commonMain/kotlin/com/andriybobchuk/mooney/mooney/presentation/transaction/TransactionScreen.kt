@@ -293,7 +293,7 @@ fun TransactionsScreen(
                         isBottomSheetOpen = true
                     },
                     content = {
-                        Icon(Icons.Outlined.Add, contentDescription = "Add Transaction")
+                        Icon(Icons.Outlined.Add, contentDescription = stringResource(Res.string.cd_add_transaction))
                     },
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     containerColor = MaterialTheme.colorScheme.primary
@@ -1099,7 +1099,7 @@ fun TransactionsScreenContent(
         ) {
             Icon(
                 imageVector = androidx.compose.material.icons.Icons.Outlined.KeyboardArrowDown,
-                contentDescription = "Scroll to top",
+                contentDescription = stringResource(Res.string.cd_scroll_to_top),
                 modifier = Modifier.rotate(180f)
             )
         }
@@ -1260,7 +1260,13 @@ fun TransactionBottomSheet(
     var newAccountValue by remember { mutableStateOf("") }
     var description by remember { mutableStateOf(transactionToEdit?.description ?: "") }
 
-    val defaultAccount = accounts.filterNotNull().toAccounts().find { it.isPrimary }
+    // Default account picker priority:
+    //   1. Edit mode — existing transaction's account
+    //   2. User's primary account if marked
+    //   3. The only account they have — saves a tap for single-account users
+    val realAccounts = accounts.filterNotNull().toAccounts()
+    val defaultAccount = realAccounts.find { it.isPrimary }
+        ?: realAccounts.singleOrNull()
     var selectedAccount by remember { mutableStateOf(transactionToEdit?.account ?: defaultAccount) }
     
     // For edit mode transfers, extract destination account from category ID
@@ -1578,7 +1584,7 @@ fun TransactionBottomSheet(
                     ) {
                         Icon(
                             painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronLeftIcon(),
-                            contentDescription = "Previous day",
+                            contentDescription = stringResource(Res.string.cd_previous_day),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -1602,7 +1608,7 @@ fun TransactionBottomSheet(
                     ) {
                         Icon(
                             painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
-                            contentDescription = "Next day",
+                            contentDescription = stringResource(Res.string.cd_next_day),
                             modifier = Modifier.size(20.dp)
                         )
                     }

@@ -418,6 +418,7 @@
     <!-- 资产 / 负债 -->
     <string name="asset_label">资产</string>
     <string name="liability_label">负债</string>
+    <string name="asset_vs_liability_explainer">资产是你拥有的东西（现金、存款、投资）。负债是你欠的东西（信用卡余额、贷款）。</string>
 
     <!-- 反馈提示 -->
     <string name="feedback_hint_bug">出了什么问题？您当时在做什么？</string>
@@ -521,4 +522,51 @@
     <string name="repeat_on_day">每月重复于</string>
     <string name="repeat_on">每周重复于</string>
     <string name="month_label">月份</string>
+    <!-- Months + weekdays (locale-aware display) -->
+    <string name="month_long_01">一月</string>
+    <string name="month_long_02">二月</string>
+    <string name="month_long_03">三月</string>
+    <string name="month_long_04">四月</string>
+    <string name="month_long_05">五月</string>
+    <string name="month_long_06">六月</string>
+    <string name="month_long_07">七月</string>
+    <string name="month_long_08">八月</string>
+    <string name="month_long_09">九月</string>
+    <string name="month_long_10">十月</string>
+    <string name="month_long_11">十一月</string>
+    <string name="month_long_12">十二月</string>
+    <string name="month_short_01">1月</string>
+    <string name="month_short_02">2月</string>
+    <string name="month_short_03">3月</string>
+    <string name="month_short_04">4月</string>
+    <string name="month_short_05">5月</string>
+    <string name="month_short_06">6月</string>
+    <string name="month_short_07">7月</string>
+    <string name="month_short_08">8月</string>
+    <string name="month_short_09">9月</string>
+    <string name="month_short_10">10月</string>
+    <string name="month_short_11">11月</string>
+    <string name="month_short_12">12月</string>
+    <string name="weekday_long_1">星期一</string>
+    <string name="weekday_long_2">星期二</string>
+    <string name="weekday_long_3">星期三</string>
+    <string name="weekday_long_4">星期四</string>
+    <string name="weekday_long_5">星期五</string>
+    <string name="weekday_long_6">星期六</string>
+    <string name="weekday_long_7">星期日</string>
+    <string name="weekday_short_1">周一</string>
+    <string name="weekday_short_2">周二</string>
+    <string name="weekday_short_3">周三</string>
+    <string name="weekday_short_4">周四</string>
+    <string name="weekday_short_5">周五</string>
+    <string name="weekday_short_6">周六</string>
+    <string name="weekday_short_7">周日</string>
+    <string name="cd_previous_month">上个月</string>
+    <string name="cd_next_month">下个月</string>
+    <string name="cd_previous_year">上一年</string>
+    <string name="cd_next_year">下一年</string>
+    <string name="cd_previous_day">前一天</string>
+    <string name="cd_next_day">后一天</string>
+    <string name="cd_add_transaction">添加交易</string>
+    <string name="cd_scroll_to_top">回到顶部</string>
 </resources>

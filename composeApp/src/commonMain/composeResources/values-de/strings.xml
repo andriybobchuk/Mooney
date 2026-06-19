@@ -418,6 +418,7 @@
     <!-- Vermögen / Verbindlichkeit -->
     <string name="asset_label">Vermögen</string>
     <string name="liability_label">Verbindlichkeit</string>
+    <string name="asset_vs_liability_explainer">Ein Vermögenswert ist etwas, das Ihnen gehört (Bargeld, Ersparnisse, Investitionen). Eine Verbindlichkeit ist etwas, das Sie schulden (Kreditkartensaldo, Kredit).</string>
 
     <!-- Feedback-Hinweise -->
     <string name="feedback_hint_bug">Was ist schiefgelaufen? Was wollten Sie tun?</string>
@@ -521,4 +522,51 @@
     <string name="repeat_on_day">Wiederholen am Tag</string>
     <string name="repeat_on">Wiederholen am</string>
     <string name="month_label">Monat</string>
+    <!-- Months + weekdays (locale-aware display) -->
+    <string name="month_long_01">Januar</string>
+    <string name="month_long_02">Februar</string>
+    <string name="month_long_03">März</string>
+    <string name="month_long_04">April</string>
+    <string name="month_long_05">Mai</string>
+    <string name="month_long_06">Juni</string>
+    <string name="month_long_07">Juli</string>
+    <string name="month_long_08">August</string>
+    <string name="month_long_09">September</string>
+    <string name="month_long_10">Oktober</string>
+    <string name="month_long_11">November</string>
+    <string name="month_long_12">Dezember</string>
+    <string name="month_short_01">Jan</string>
+    <string name="month_short_02">Feb</string>
+    <string name="month_short_03">Mär</string>
+    <string name="month_short_04">Apr</string>
+    <string name="month_short_05">Mai</string>
+    <string name="month_short_06">Jun</string>
+    <string name="month_short_07">Jul</string>
+    <string name="month_short_08">Aug</string>
+    <string name="month_short_09">Sep</string>
+    <string name="month_short_10">Okt</string>
+    <string name="month_short_11">Nov</string>
+    <string name="month_short_12">Dez</string>
+    <string name="weekday_long_1">Montag</string>
+    <string name="weekday_long_2">Dienstag</string>
+    <string name="weekday_long_3">Mittwoch</string>
+    <string name="weekday_long_4">Donnerstag</string>
+    <string name="weekday_long_5">Freitag</string>
+    <string name="weekday_long_6">Samstag</string>
+    <string name="weekday_long_7">Sonntag</string>
+    <string name="weekday_short_1">Mo</string>
+    <string name="weekday_short_2">Di</string>
+    <string name="weekday_short_3">Mi</string>
+    <string name="weekday_short_4">Do</string>
+    <string name="weekday_short_5">Fr</string>
+    <string name="weekday_short_6">Sa</string>
+    <string name="weekday_short_7">So</string>
+    <string name="cd_previous_month">Vorheriger Monat</string>
+    <string name="cd_next_month">Nächster Monat</string>
+    <string name="cd_previous_year">Vorheriges Jahr</string>
+    <string name="cd_next_year">Nächstes Jahr</string>
+    <string name="cd_previous_day">Vorheriger Tag</string>
+    <string name="cd_next_day">Nächster Tag</string>
+    <string name="cd_add_transaction">Transaktion hinzufügen</string>
+    <string name="cd_scroll_to_top">Nach oben</string>
 </resources>

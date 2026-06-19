@@ -418,6 +418,7 @@
     <!-- Актив / Обязательство -->
     <string name="asset_label">Актив</string>
     <string name="liability_label">Обязательство</string>
+    <string name="asset_vs_liability_explainer">Актив — это то, чем вы владеете (наличные, накопления, инвестиции). Обязательство — то, что вы должны (баланс кредитной карты, кредит).</string>
 
     <!-- Подсказки для отзыва -->
     <string name="feedback_hint_bug">Что сломалось? Что вы пытались сделать?</string>
@@ -521,4 +522,51 @@
     <string name="repeat_on_day">Повторять в день</string>
     <string name="repeat_on">Повторять</string>
     <string name="month_label">Месяц</string>
+    <!-- Months + weekdays (locale-aware display) -->
+    <string name="month_long_01">Январь</string>
+    <string name="month_long_02">Февраль</string>
+    <string name="month_long_03">Март</string>
+    <string name="month_long_04">Апрель</string>
+    <string name="month_long_05">Май</string>
+    <string name="month_long_06">Июнь</string>
+    <string name="month_long_07">Июль</string>
+    <string name="month_long_08">Август</string>
+    <string name="month_long_09">Сентябрь</string>
+    <string name="month_long_10">Октябрь</string>
+    <string name="month_long_11">Ноябрь</string>
+    <string name="month_long_12">Декабрь</string>
+    <string name="month_short_01">Янв</string>
+    <string name="month_short_02">Фев</string>
+    <string name="month_short_03">Мар</string>
+    <string name="month_short_04">Апр</string>
+    <string name="month_short_05">Май</string>
+    <string name="month_short_06">Июн</string>
+    <string name="month_short_07">Июл</string>
+    <string name="month_short_08">Авг</string>
+    <string name="month_short_09">Сен</string>
+    <string name="month_short_10">Окт</string>
+    <string name="month_short_11">Ноя</string>
+    <string name="month_short_12">Дек</string>
+    <string name="weekday_long_1">Понедельник</string>
+    <string name="weekday_long_2">Вторник</string>
+    <string name="weekday_long_3">Среда</string>
+    <string name="weekday_long_4">Четверг</string>
+    <string name="weekday_long_5">Пятница</string>
+    <string name="weekday_long_6">Суббота</string>
+    <string name="weekday_long_7">Воскресенье</string>
+    <string name="weekday_short_1">Пн</string>
+    <string name="weekday_short_2">Вт</string>
+    <string name="weekday_short_3">Ср</string>
+    <string name="weekday_short_4">Чт</string>
+    <string name="weekday_short_5">Пт</string>
+    <string name="weekday_short_6">Сб</string>
+    <string name="weekday_short_7">Вс</string>
+    <string name="cd_previous_month">Предыдущий месяц</string>
+    <string name="cd_next_month">Следующий месяц</string>
+    <string name="cd_previous_year">Предыдущий год</string>
+    <string name="cd_next_year">Следующий год</string>
+    <string name="cd_previous_day">Предыдущий день</string>
+    <string name="cd_next_day">Следующий день</string>
+    <string name="cd_add_transaction">Добавить транзакцию</string>
+    <string name="cd_scroll_to_top">К началу</string>
 </resources>

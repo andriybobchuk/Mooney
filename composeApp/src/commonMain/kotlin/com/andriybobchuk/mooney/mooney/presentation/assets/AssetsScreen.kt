@@ -324,6 +324,7 @@ fun AssetsScreen(
                     AssetSheet(
                         editingAsset = editingAsset,
                         assetCategories = state.assetCategories,
+                        hasAnyAsset = state.assets.any { !it.isLiability },
                         onEditCategories = onNavigateToAssetCategories,
                         onAdd = { title, emoji, amount, currency, categoryId, isLiability ->
                             viewModel.upsertAsset(
@@ -1103,6 +1104,7 @@ private fun AssetCard(
 private fun AssetSheet(
     editingAsset: UiAsset? = null,
     assetCategories: List<AssetCategoryEntity>,
+    hasAnyAsset: Boolean = true,
     onAdd: (String, String, Double, Currency, String, Boolean) -> Unit,
     onEditCategories: () -> Unit = {}
 ) {
@@ -1135,7 +1137,25 @@ private fun AssetSheet(
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        // Asset / Liability toggle
+        // Asset vs Liability explainer — surfaces near the toggle so new
+        // users grasp "asset = something you own / liability = something
+        // you owe" the first time they reach this sheet.
+        Text(
+            text = stringResource(Res.string.asset_vs_liability_explainer),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        // Asset / Liability toggle — hidden when the user has zero assets
+        // yet (you can't owe before you own anything in the app's model).
+        val showLiabilityToggle = hasAnyAsset || editingAsset != null
+        if (!showLiabilityToggle && isLiability) {
+            // Defensive: shouldn't happen since default is false, but reset
+            // if state somehow shows liability while the toggle is gone.
+            isLiability = false
+        }
+        if (showLiabilityToggle) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1167,6 +1187,7 @@ private fun AssetSheet(
                 }
             }
         }
+        } // end if (showLiabilityToggle)
 
         Spacer(Modifier.height(12.dp))
 

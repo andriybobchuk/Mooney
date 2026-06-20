@@ -22,11 +22,28 @@
 	<string>1</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- Force iPhone compatibility mode on iPad — disables Split View,
+	     Slide Over and Stage Manager so iPad reviewers always see the
+	     letterboxed iPhone layout we actually designed for. Apple
+	     Guideline 4 rejected v26.06 on iPad Air M3 with "content cut off"
+	     because iPad multitasking lets reviewers run the iPhone view in
+	     resizable windows; UIRequiresFullScreen=true blocks that. -->
+	<key>UIRequiresFullScreen</key>
+	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
 	</dict>
+	<!-- iPad orientation lock — even with TARGETED_DEVICE_FAMILY = 1 the
+	     iPhone build runs on iPad in compatibility mode, where landscape
+	     can be triggered unless we explicitly restrict ~ipad orientations
+	     to portrait. -->
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>ITSAppUsesNonExemptEncryption</key>
@@ -105,9 +122,5 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
-	<!-- TARGETED_DEVICE_FAMILY = 1 already restricts to iPhone. The `~ipad`
-	     override key was removed because Apple Review tested on iPad Air M3
-	     and saw content cutoff (Guideline 4); declaring iPad orientations
-	     contradicts iPhone-only and was confusing the layout. -->
 </dict>
 </plist>

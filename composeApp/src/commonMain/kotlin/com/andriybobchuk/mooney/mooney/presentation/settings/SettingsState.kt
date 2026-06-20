@@ -46,7 +46,15 @@ data class SettingsState(
      * preview the ad-free UX inside the same build that normally serves
      * ads. Persists across launches.
      */
-    val adsDisabled: Boolean = false
+    val adsDisabled: Boolean = false,
+    /** "OFF" / "DAILY" / "WEEKLY" — drives the Reminders sheet selection. */
+    val reminderMode: String = "OFF",
+    /** Local-time hour for the reminder (0–23). */
+    val reminderHour: Int = 20,
+    /** Local-time minute for the reminder (0–59). */
+    val reminderMinute: Int = 0,
+    /** ISO weekday for WEEKLY reminders: 1 = Mon … 7 = Sun. */
+    val reminderWeekday: Int = 7
 ) {
     val maxPinnedCategories: Int = 5
     val canAddMorePinned: Boolean = pinnedCategoryIds.size < maxPinnedCategories

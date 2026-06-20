@@ -50,6 +50,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.andriybobchuk.mooney.core.premium.PaywallSheet
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
+import com.andriybobchuk.mooney.mooney.data.localizedCategoryTitle
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import mooney.composeapp.generated.resources.Res
@@ -156,6 +157,7 @@ fun TransactionCategoriesScreen(
     }
 
     editingCategory?.let { cat ->
+        val localizedName = localizedCategoryTitle(cat)
         CategoryEditSheet(
             category = cat,
             subcategories = state.allCategories.filter { it.parent?.id == cat.id },
@@ -176,7 +178,7 @@ fun TransactionCategoriesScreen(
             },
             onDeleteCategory = {
                 deleteId = cat.id
-                deleteName = cat.title
+                deleteName = localizedName
                 editingCategory = null
             }
         )
@@ -272,7 +274,7 @@ fun TransactionCategoriesScreen(
                         val subCount = state.allCategories.count { it.parent?.id == category.id }
                         CategoryListRow(
                             emoji = category.resolveEmoji().ifBlank { DEFAULT_NEW_EMOJI },
-                            title = category.title,
+                            title = localizedCategoryTitle(category),
                             subcategoryCount = subCount,
                             onClick = { editingCategory = category }
                         )
@@ -482,7 +484,8 @@ private fun CategoryEditSheet(
     onDeleteCategory: () -> Unit
 ) {
     MooneyBottomSheet(onDismissRequest = onDismiss) {
-        var name by remember(category.id) { mutableStateOf(category.title) }
+        val localizedTitle = localizedCategoryTitle(category)
+        var name by remember(category.id) { mutableStateOf(localizedTitle) }
         var newSubName by remember { mutableStateOf("") }
         var showIconPicker by remember { mutableStateOf(false) }
         val emoji = category.resolveEmoji().ifBlank { DEFAULT_NEW_EMOJI }
@@ -495,7 +498,7 @@ private fun CategoryEditSheet(
             EditSheetTopBar(
                 title = "Edit category",
                 saveLabel = stringResource(Res.string.save),
-                saveEnabled = name.isNotBlank() && name.trim() != category.title,
+                saveEnabled = name.isNotBlank() && name.trim() != localizedTitle && name.trim() != category.title,
                 onCancel = onDismiss,
                 onSave = {
                     onSaveName(name.trim())
@@ -506,7 +509,7 @@ private fun CategoryEditSheet(
             CategoryHero(emoji = emoji)
             Spacer(Modifier.height(8.dp))
             Text(
-                text = name.ifBlank { category.title },
+                text = name.ifBlank { localizedTitle },
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -545,7 +548,7 @@ private fun CategoryEditSheet(
 
             subcategories.forEach { sub ->
                 SubcategoryChip(
-                    title = sub.title,
+                    title = localizedCategoryTitle(sub),
                     onDelete = { onDeleteSubcategory(sub.id) }
                 )
                 Spacer(Modifier.height(8.dp))

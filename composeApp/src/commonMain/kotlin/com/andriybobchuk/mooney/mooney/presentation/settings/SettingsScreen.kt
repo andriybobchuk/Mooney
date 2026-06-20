@@ -32,6 +32,7 @@ import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import com.andriybobchuk.mooney.core.premium.PaywallSheet
 import com.andriybobchuk.mooney.core.premium.isBillingEnabled
+import com.andriybobchuk.mooney.mooney.data.localizedCategoryTitle
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.settings.ExchangeRateSource
@@ -110,6 +111,7 @@ fun SettingsScreen(
     var showDefaultExpenseCategorySheet by remember { mutableStateOf(false) }
     var showDefaultIncomeCategorySheet by remember { mutableStateOf(false) }
     var showPrimaryAccountSheet by remember { mutableStateOf(false) }
+    var showRemindersSheet by remember { mutableStateOf(false) }
 
     // Handle events from ViewModel
     LaunchedEffect(Unit) {
@@ -204,7 +206,7 @@ fun SettingsScreen(
             title = { Text(stringResource(Res.string.update_categories_title)) },
             text = {
                 Column {
-                    Text("Get the latest categories without losing any data:")
+                    Text("Get the latest categories without losing any data:") // allow-hardcoded (dev option)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("• New categories from the latest version will be added", style = MaterialTheme.typography.bodySmall)
                     Text("• Existing categories get refreshed titles/emojis", style = MaterialTheme.typography.bodySmall)
@@ -412,7 +414,7 @@ fun SettingsScreen(
                                 Text(text = category.resolveEmoji(), fontSize = 24.sp)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = category.title,
+                                    text = localizedCategoryTitle(category),
                                     fontSize = 12.sp,
                                     color = if (canSelect) MaterialTheme.colorScheme.onSurfaceVariant
                                     else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
@@ -734,6 +736,27 @@ fun SettingsScreen(
         }
     }
 
+    if (showRemindersSheet) {
+        RemindersBottomSheet(
+            currentMode = state.reminderMode,
+            currentHour = state.reminderHour,
+            currentMinute = state.reminderMinute,
+            currentWeekday = state.reminderWeekday,
+            onDismiss = { showRemindersSheet = false },
+            onSave = { mode, hour, minute, weekday ->
+                viewModel.onAction(
+                    SettingsAction.OnReminderConfigChange(
+                        mode = mode,
+                        hour = hour,
+                        minute = minute,
+                        weekday = weekday
+                    )
+                )
+                showRemindersSheet = false
+            }
+        )
+    }
+
     if (state.showPaywall) {
         PaywallSheet(
             isLoading = state.isPurchasing,
@@ -847,6 +870,12 @@ fun SettingsScreen(
                             title = stringResource(Res.string.currencies),
                             value = state.userCurrencies.joinToString(", ") { it.code },
                             onClick = { showUserCurrenciesSheet = true }
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            title = stringResource(Res.string.reminder_settings_title),
+                            value = formatReminderValue(state),
+                            onClick = { showRemindersSheet = true }
                         )
                     }
                 }
@@ -999,7 +1028,7 @@ fun SettingsScreen(
                     item {
                         SettingsGroup {
                             SettingsRow(
-                                title = "Exchange Rate Source",
+                                title = "Exchange Rate Source", // allow-hardcoded (dev option)
                                 value = when (state.exchangeRateSource) {
                                     ExchangeRateSource.EXTENDED -> "All currencies"
                                     ExchangeRateSource.HISTORICAL -> "Historical data"
@@ -1008,21 +1037,21 @@ fun SettingsScreen(
                             )
                             SettingsDivider()
                             SettingsRow(
-                                title = "Update Categories",
+                                title = "Update Categories", // allow-hardcoded (dev option)
                                 value = if (state.isUpdatingCategories) "Updating…" else "",
                                 onClick = { if (!state.isUpdatingCategories) showUpdateCategoriesConfirm = true }
                             )
                             SettingsDivider()
                             SettingsToggleRow(
-                                title = "Currency Insights",
-                                description = "Show exchange rate trends on foreign currency accounts",
+                                title = "Currency Insights", // allow-hardcoded (dev option)
+                                description = "Show exchange rate trends on foreign currency accounts", // allow-hardcoded (dev option)
                                 checked = state.currencyInsightsEnabled,
                                 onCheckedChange = { viewModel.toggleCurrencyInsights(it) }
                             )
                             SettingsDivider()
                             SettingsToggleRow(
-                                title = "Transactions Widget Pager",
-                                description = "Show the multi-widget pager (spending trend, currency rates, suggest) under the spending calendar",
+                                title = "Transactions Widget Pager", // allow-hardcoded (dev option)
+                                description = "Show the multi-widget pager (spending trend, currency rates, suggest) under the spending calendar", // allow-hardcoded (dev option)
                                 checked = state.widgetPagerEnabled,
                                 onCheckedChange = { viewModel.toggleWidgetPager(it) }
                             )
@@ -1047,7 +1076,7 @@ fun SettingsScreen(
                             )
                             SettingsDivider()
                             SettingsRow(
-                                title = "Force test crash",
+                                title = "Force test crash", // allow-hardcoded (dev option)
                                 value = "Tap to crash",
                                 onClick = { viewModel.forceTestCrash() }
                             )
@@ -1225,6 +1254,212 @@ fun SettingsScreen(
         com.andriybobchuk.mooney.core.feedback.FeedbackSheet(
             onDismiss = { showRateFeedback = false }
         )
+    }
+}
+
+@Composable
+private fun formatReminderValue(state: SettingsState): String {
+    val time = formatTime(state.reminderHour, state.reminderMinute)
+    return when (state.reminderMode) {
+        "DAILY" -> stringResource(Res.string.reminder_daily_at_value, time)
+        "WEEKLY" -> {
+            val day = weekdayShortName(state.reminderWeekday)
+            stringResource(Res.string.reminder_weekly_at_value, day, time)
+        }
+        else -> stringResource(Res.string.reminder_mode_off)
+    }
+}
+
+private fun formatTime(hour: Int, minute: Int): String {
+    val h = hour.toString().padStart(2, '0')
+    val m = minute.toString().padStart(2, '0')
+    return "$h:$m"
+}
+
+@Composable
+private fun weekdayShortName(isoWeekday: Int): String = when (isoWeekday) {
+    1 -> stringResource(Res.string.weekday_mon)
+    2 -> stringResource(Res.string.weekday_tue)
+    3 -> stringResource(Res.string.weekday_wed)
+    4 -> stringResource(Res.string.weekday_thu)
+    5 -> stringResource(Res.string.weekday_fri)
+    6 -> stringResource(Res.string.weekday_sat)
+    7 -> stringResource(Res.string.weekday_sun)
+    else -> stringResource(Res.string.weekday_sun)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RemindersBottomSheet(
+    currentMode: String,
+    currentHour: Int,
+    currentMinute: Int,
+    currentWeekday: Int,
+    onDismiss: () -> Unit,
+    onSave: (mode: String, hour: Int, minute: Int, weekday: Int) -> Unit
+) {
+    // Local draft state — Save commits, dismiss discards.
+    var selectedMode by remember { mutableStateOf(currentMode) }
+    var selectedWeekday by remember { mutableStateOf(currentWeekday) }
+
+    val timePickerState = androidx.compose.material3.rememberTimePickerState(
+        initialHour = currentHour,
+        initialMinute = currentMinute,
+        is24Hour = true
+    )
+
+    // Request POST_NOTIFICATIONS lazily — only when the user actually flips
+    // from OFF → DAILY/WEEKLY. Denying still lets the sheet save (the OS
+    // just won't show the alert; users can re-grant in system settings).
+    val notificationPermissionLauncher =
+        com.andriybobchuk.mooney.core.notifications.rememberNotificationPermissionRequester { _ -> }
+
+    MooneyBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+        ) {
+            Text(
+                text = stringResource(Res.string.reminder_settings_title),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            // Mode selection (Off / Daily / Weekly) as radio rows.
+            ReminderModeOption(
+                label = stringResource(Res.string.reminder_mode_off),
+                selected = selectedMode == "OFF",
+                onClick = { selectedMode = "OFF" }
+            )
+            ReminderModeOption(
+                label = stringResource(Res.string.reminder_mode_daily),
+                selected = selectedMode == "DAILY",
+                onClick = {
+                    // First-time enable triggers the OS prompt on Android 13+.
+                    // iOS surfaces its prompt later in scheduleDaily().
+                    if (currentMode == "OFF") notificationPermissionLauncher()
+                    selectedMode = "DAILY"
+                }
+            )
+            ReminderModeOption(
+                label = stringResource(Res.string.reminder_mode_weekly),
+                selected = selectedMode == "WEEKLY",
+                onClick = {
+                    if (currentMode == "OFF") notificationPermissionLauncher()
+                    selectedMode = "WEEKLY"
+                }
+            )
+
+            if (selectedMode != "OFF") {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(Res.string.reminder_time),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    TimePicker(state = timePickerState)
+                }
+            }
+
+            if (selectedMode == "WEEKLY") {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(Res.string.reminder_day_of_week),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                WeekdayPicker(
+                    selected = selectedWeekday,
+                    onSelect = { selectedWeekday = it }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = {
+                    onSave(
+                        selectedMode,
+                        timePickerState.hour,
+                        timePickerState.minute,
+                        selectedWeekday
+                    )
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(Res.string.save))
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun ReminderModeOption(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(selected = selected, onClick = onClick)
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+private fun WeekdayPicker(
+    selected: Int,
+    onSelect: (Int) -> Unit
+) {
+    // 7-up segmented row of short weekday labels. ISO: 1=Mon..7=Sun.
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        for (iso in 1..7) {
+            val label = weekdayShortName(iso)
+            val isSelected = selected == iso
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = if (isSelected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(10.dp))
+                    .clickable { onSelect(iso) }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
     }
 }
 

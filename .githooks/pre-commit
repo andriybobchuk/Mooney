@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# Mooney pre-commit hook — catches hardcoded UI strings before they ship.
+#
+# Scans every staged *.kt file under composeApp/src/commonMain for the
+# most common "I forgot to localize this" patterns:
+#   - Text("Capitalized literal")
+#   - text = "Capitalized literal"
+#   - title = "Capitalized literal"
+#   - label = "Capitalized literal"
+#   - subtitle = "Capitalized literal"
+#   - description = "Capitalized literal" (long form, > 6 chars)
+#
+# Whitelisted: emojis, lone capital tokens ("Mooney", "PLN", "USD"),
+# strings that already pass through stringResource(...), and lines with
+# `// allow-hardcoded` if you really need to bypass.
+#
+# Install once: git config core.hooksPath .githooks
+
+set -uo pipefail
+
+RED=$'\033[31m'
+YEL=$'\033[33m'
+GRN=$'\033[32m'
+DIM=$'\033[2m'
+RST=$'\033[0m'
+
+# Only Kotlin files under common UI that are staged for commit
+staged_files=$(git diff --cached --name-only --diff-filter=ACM \
+    | grep -E '^composeApp/src/commonMain/.*\.kt$' \
+    | grep -v '/composeResources/' || true)
+
+if [ -z "$staged_files" ]; then
+    exit 0
+fi
+
+violations=0
+violation_lines=""
+
+# Pattern: hardcoded user-facing string in known prop slots.
+# Match `prop = "Capitalized..."` or `Text("Capitalized...")` where the
+# literal starts with an uppercase ASCII letter and is at least 5 chars.
+# We intentionally don't try to be too clever — false positives can be
+# silenced inline with `// allow-hardcoded`.
+pattern='(Text\(\s*"|text\s*=\s*"|title\s*=\s*"|label\s*=\s*"|subtitle\s*=\s*"|description\s*=\s*"|placeholder\s*=\s*"|contentDescription\s*=\s*")[A-Z][a-z][a-zA-Z0-9 .!?:,'\''\-]{4,}"'
+
+# Hardcoded markers we explicitly never flag (brand, tickers, internal IDs)
+allow_regex='"(Mooney|PLN|USD|EUR|UAH|RUB|GBP|JPY|CHF|CAD|AUD|AED|HKD|SGD|CNY|INR|BRL|KRW|MXN|NOK|SEK|DKK|TRY|ZAR|CZK|HUF|PLN|RON|BGN|ILS|IDR|MYR|NZD|PHP|THB|SAR|QAR|KWD|VND|BTC|ETH|DEV|FCM|GOOG)"'
+
+for file in $staged_files; do
+    # Read each matching line. -nE for line numbers + ERE.
+    while IFS= read -r match; do
+        # Skip if `// allow-hardcoded` is on the same line.
+        if echo "$match" | grep -q 'allow-hardcoded'; then
+            continue
+        fi
+        # Skip if already wrapped in stringResource(...)
+        if echo "$match" | grep -q 'stringResource'; then
+            continue
+        fi
+        # Skip whitelist tokens
+        if echo "$match" | grep -Eq "$allow_regex"; then
+            continue
+        fi
+        violations=$((violations + 1))
+        violation_lines="${violation_lines}${file}:${match}\n"
+    done < <(grep -nE "$pattern" "$file" 2>/dev/null || true)
+done
+
+if [ "$violations" -gt 0 ]; then
+    printf '%s\n' "${RED}✗ pre-commit: found ${violations} likely hardcoded UI string(s):${RST}"
+    printf '%b' "$violation_lines" | head -30 | while IFS= read -r line; do
+        [ -n "$line" ] && printf '  %s%s%s\n' "$DIM" "$line" "$RST"
+    done
+    printf '\n%s\n' "${YEL}If a match is intentional, append ${GRN}// allow-hardcoded${YEL} to the line."
+    printf '%s\n' "${YEL}Otherwise wrap it in stringResource(Res.string.X) and add the key to all 8 strings.xml files.${RST}"
+    exit 1
+fi
+
+printf '%s\n' "${GRN}✓ pre-commit: no hardcoded UI strings detected${RST}"
+exit 0

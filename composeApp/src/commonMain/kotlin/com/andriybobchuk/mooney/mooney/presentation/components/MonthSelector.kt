@@ -38,6 +38,10 @@ import androidx.compose.ui.unit.dp
 import com.andriybobchuk.mooney.core.presentation.Icons as MooneyIcons
 import com.andriybobchuk.mooney.mooney.domain.MonthKey
 import mooney.composeapp.generated.resources.Res
+import mooney.composeapp.generated.resources.cd_next_month
+import mooney.composeapp.generated.resources.cd_next_year
+import mooney.composeapp.generated.resources.cd_previous_month
+import mooney.composeapp.generated.resources.cd_previous_year
 import mooney.composeapp.generated.resources.months_n_below_caption
 import org.jetbrains.compose.resources.stringResource
 
@@ -67,7 +71,12 @@ fun MonthSelector(
             (selectedMonth.year == currentMonth.year && selectedMonth.month < currentMonth.month)
     }
     var showSheet by remember { mutableStateOf(false) }
-    val monthName = remember(selectedMonth) { selectedMonth.toShortDisplayString() }
+    // Build the chip label from localized month name + year so it follows
+    // the device language instead of always being English ("Jun 2026").
+    val localizedMonth = com.andriybobchuk.mooney.core.presentation.i18n.localizedMonthName(
+        selectedMonth.month, short = true
+    )
+    val monthName = "$localizedMonth ${selectedMonth.year}"
 
     Row(
         modifier = modifier,
@@ -77,7 +86,7 @@ fun MonthSelector(
         MonthStepperButton(
             onClick = { onMonthSelected(selectedMonth.previousMonth()) },
             painter = MooneyIcons.ChevronLeftIcon(),
-            contentDescription = "Previous month",
+            contentDescription = stringResource(Res.string.cd_previous_month),
             enabled = true
         )
 
@@ -106,7 +115,7 @@ fun MonthSelector(
         MonthStepperButton(
             onClick = { if (canGoForward) onMonthSelected(selectedMonth.nextMonth()) },
             painter = MooneyIcons.ChevronRightIcon(),
-            contentDescription = "Next month",
+            contentDescription = stringResource(Res.string.cd_next_month),
             enabled = canGoForward
         )
     }
@@ -185,7 +194,7 @@ private fun YearMonthPickerSheet(
                     MonthStepperButton(
                         onClick = { year-- },
                         painter = MooneyIcons.ChevronLeftIcon(),
-                        contentDescription = "Previous year",
+                        contentDescription = stringResource(Res.string.cd_previous_year),
                         enabled = true
                     )
                     Text(
@@ -196,17 +205,16 @@ private fun YearMonthPickerSheet(
                     MonthStepperButton(
                         onClick = { year++ },
                         painter = MooneyIcons.ChevronRightIcon(),
-                        contentDescription = "Next year",
+                        contentDescription = stringResource(Res.string.cd_next_year),
                         enabled = year < currentMonth.year
                     )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                val monthLabels = listOf(
-                    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-                )
+                val monthLabels = (1..12).map {
+                    com.andriybobchuk.mooney.core.presentation.i18n.localizedMonthName(it, short = true)
+                }
                 for (row in 0 until 4) {
                     Row(
                         modifier = Modifier

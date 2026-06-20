@@ -67,9 +67,10 @@ val sharedModule = module {
     // Bottom-nav double-tap → scroll-to-top channel. App-lifetime singleton.
     single { com.andriybobchuk.mooney.app.ScrollToTopBus() }
 
-    // Daily reminder notification scheduler. Platform-specific actual under
-    // the hood; the schedule itself is triggered by the Settings toggle.
-    single { com.andriybobchuk.mooney.core.notifications.NotificationScheduler() }
+    // Reminder notification scheduler. Platform-specific actual under the
+    // hood; the schedule itself is driven by Settings → Reminders (off /
+    // daily / weekly + time picker).
+    single { com.andriybobchuk.mooney.core.notifications.ReminderScheduler() }
 
     // App-wide data snapshot cache. Eager StateFlow over every reactive data
     // source — every screen reads the latest snapshot from here so tab

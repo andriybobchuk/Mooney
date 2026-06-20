@@ -78,6 +78,7 @@ import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.data.database.AssetCategoryEntity
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
+import com.andriybobchuk.mooney.mooney.data.localizedAssetCategoryTitle
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import com.andriybobchuk.mooney.mooney.domain.parseAmountInput
@@ -324,6 +325,7 @@ fun AssetsScreen(
                     AssetSheet(
                         editingAsset = editingAsset,
                         assetCategories = state.assetCategories,
+                        hasAnyAsset = state.assets.any { !it.isLiability },
                         onEditCategories = onNavigateToAssetCategories,
                         onAdd = { title, emoji, amount, currency, categoryId, isLiability ->
                             viewModel.upsertAsset(
@@ -709,7 +711,7 @@ private fun AssetsScreenContent(
                             )
                     ) {
                         CollapsibleCategoryHeader(
-                            title = categoryInfo?.title ?: categoryId,
+                            title = categoryInfo?.let { localizedAssetCategoryTitle(it) } ?: categoryId,
                             color = categoryInfo?.color ?: 0xFF9E9E9E,
                             assetCount = categoryAssets.size,
                             totalAmount = categoryAssets.sumOf { it.baseCurrencyAmount },
@@ -1103,6 +1105,7 @@ private fun AssetCard(
 private fun AssetSheet(
     editingAsset: UiAsset? = null,
     assetCategories: List<AssetCategoryEntity>,
+    hasAnyAsset: Boolean = true,
     onAdd: (String, String, Double, Currency, String, Boolean) -> Unit,
     onEditCategories: () -> Unit = {}
 ) {
@@ -1135,7 +1138,25 @@ private fun AssetSheet(
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        // Asset / Liability toggle
+        // Asset vs Liability explainer — surfaces near the toggle so new
+        // users grasp "asset = something you own / liability = something
+        // you owe" the first time they reach this sheet.
+        Text(
+            text = stringResource(Res.string.asset_vs_liability_explainer),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        // Asset / Liability toggle — hidden when the user has zero assets
+        // yet (you can't owe before you own anything in the app's model).
+        val showLiabilityToggle = hasAnyAsset || editingAsset != null
+        if (!showLiabilityToggle && isLiability) {
+            // Defensive: shouldn't happen since default is false, but reset
+            // if state somehow shows liability while the toggle is gone.
+            isLiability = false
+        }
+        if (showLiabilityToggle) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1167,6 +1188,7 @@ private fun AssetSheet(
                 }
             }
         }
+        } // end if (showLiabilityToggle)
 
         Spacer(Modifier.height(12.dp))
 
@@ -1203,7 +1225,7 @@ private fun AssetSheet(
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(selectedCategoryInfo?.title ?: selectedCategoryId, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            Text(selectedCategoryInfo?.let { localizedAssetCategoryTitle(it) } ?: selectedCategoryId, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
             Icon(
                 painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
                 contentDescription = null,
@@ -1287,7 +1309,7 @@ private fun AssetSheet(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            category.title,
+                            localizedAssetCategoryTitle(category),
                             style = MaterialTheme.typography.bodyLarge,
                             color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f)

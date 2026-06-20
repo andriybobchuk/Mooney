@@ -102,6 +102,7 @@ import com.andriybobchuk.mooney.core.data.database.PendingTransactionEntity
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.app.appColors
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
+import com.andriybobchuk.mooney.mooney.data.localizedCategoryTitle
 import com.andriybobchuk.mooney.mooney.domain.Account
 import com.andriybobchuk.mooney.mooney.domain.AssetCategory
 import com.andriybobchuk.mooney.mooney.domain.Category
@@ -293,7 +294,7 @@ fun TransactionsScreen(
                         isBottomSheetOpen = true
                     },
                     content = {
-                        Icon(Icons.Outlined.Add, contentDescription = "Add Transaction")
+                        Icon(Icons.Outlined.Add, contentDescription = stringResource(Res.string.cd_add_transaction))
                     },
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     containerColor = MaterialTheme.colorScheme.primary
@@ -947,7 +948,7 @@ fun TransactionsScreenContent(
                                 .padding(horizontal = 20.dp, vertical = 16.dp)
                         ) {
                             Text(
-                                text = tx.subcategory.title,
+                                text = localizedCategoryTitle(tx.subcategory),
                                 style = MaterialTheme.typography.titleMedium,
                                 modifier = Modifier.padding(bottom = 4.dp)
                             )
@@ -1012,7 +1013,7 @@ fun TransactionsScreenContent(
                                 modifier = Modifier.padding(bottom = 4.dp)
                             )
                             Text(
-                                text = stringResource(Res.string.delete_tx_confirm, tx.subcategory.title, tx.amount.formatWithCommas(), tx.account.currency.symbol),
+                                text = stringResource(Res.string.delete_tx_confirm, localizedCategoryTitle(tx.subcategory), tx.amount.formatWithCommas(), tx.account.currency.symbol),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 16.dp)
@@ -1099,7 +1100,7 @@ fun TransactionsScreenContent(
         ) {
             Icon(
                 imageVector = androidx.compose.material.icons.Icons.Outlined.KeyboardArrowDown,
-                contentDescription = "Scroll to top",
+                contentDescription = stringResource(Res.string.cd_scroll_to_top),
                 modifier = Modifier.rotate(180f)
             )
         }
@@ -1147,13 +1148,13 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
             } else {
                 // For regular transactions: show category title
                 Text(
-                    transaction.subcategory.title,
+                    localizedCategoryTitle(transaction.subcategory),
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, fontSize = 15.sp),
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 if (transaction.subcategory.isSubCategory()) {
                     Text(
-                        transaction.subcategory.parent?.title ?: "???",
+                        transaction.subcategory.parent?.let { localizedCategoryTitle(it) } ?: "???",
                         style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                     )
                 }
@@ -1260,7 +1261,13 @@ fun TransactionBottomSheet(
     var newAccountValue by remember { mutableStateOf("") }
     var description by remember { mutableStateOf(transactionToEdit?.description ?: "") }
 
-    val defaultAccount = accounts.filterNotNull().toAccounts().find { it.isPrimary }
+    // Default account picker priority:
+    //   1. Edit mode — existing transaction's account
+    //   2. User's primary account if marked
+    //   3. The only account they have — saves a tap for single-account users
+    val realAccounts = accounts.filterNotNull().toAccounts()
+    val defaultAccount = realAccounts.find { it.isPrimary }
+        ?: realAccounts.singleOrNull()
     var selectedAccount by remember { mutableStateOf(transactionToEdit?.account ?: defaultAccount) }
     
     // For edit mode transfers, extract destination account from category ID
@@ -1578,7 +1585,7 @@ fun TransactionBottomSheet(
                     ) {
                         Icon(
                             painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronLeftIcon(),
-                            contentDescription = "Previous day",
+                            contentDescription = stringResource(Res.string.cd_previous_day),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -1602,7 +1609,7 @@ fun TransactionBottomSheet(
                     ) {
                         Icon(
                             painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
-                            contentDescription = "Next day",
+                            contentDescription = stringResource(Res.string.cd_next_day),
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -2652,7 +2659,7 @@ fun CategoryCard(
             modifier = Modifier.padding(end = 12.dp)
         )
         Text(
-            text = category.title,
+            text = localizedCategoryTitle(category),
             style = MaterialTheme.typography.bodyLarge,
             color = if (isSelected) MaterialTheme.colorScheme.primary
             else MaterialTheme.colorScheme.onSurface
@@ -2698,7 +2705,7 @@ private fun ReorderableCollectionItemScope.ReorderableCategoryRow(
             modifier = Modifier.padding(end = 12.dp)
         )
         Text(
-            text = category.title,
+            text = localizedCategoryTitle(category),
             style = MaterialTheme.typography.bodyLarge,
             color = if (isSelected) MaterialTheme.colorScheme.primary
             else MaterialTheme.colorScheme.onSurface
@@ -3660,7 +3667,7 @@ fun CategoryChip(
                 modifier = Modifier.padding(bottom = 2.dp)
             )
             Text(
-                text = category.title.take(7),
+                text = localizedCategoryTitle(category).take(7),
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,
                 fontSize = 10.sp,

@@ -26,6 +26,15 @@ import com.andriybobchuk.mooney.mooney.domain.FeatureFlags
  * Empty until the Android Google Mobile Ads SDK is wired up. The Android
  * actual `Ads.kt` is a no-op so referencing these empty strings is safe.
  */
+/**
+ * Test/prod banner unit IDs are platform-specific in AdMob — an iOS unit ID
+ * silently fails on Android (the SDK never reports the mismatch, so the slot
+ * just stays blank). Implemented per-platform in [AdUnitIds.android.kt] and
+ * [AdUnitIds.ios.kt].
+ */
+expect val platformBannerTestId: String
+expect val platformBannerProdId: String
+
 object AdUnitIds {
 
     val appId: String
@@ -38,9 +47,9 @@ object AdUnitIds {
 
     val banner: String
         get() = if (FeatureFlags.isDebug || FeatureFlags.adsAlwaysShow) {
-            "ca-app-pub-3940256099942544/2934735716"
+            platformBannerTestId
         } else {
-            "ca-app-pub-7021633711522076/1005395834"
+            platformBannerProdId
         }
 
     val interstitial: String

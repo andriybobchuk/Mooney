@@ -3,6 +3,7 @@ package com.andriybobchuk.mooney.core.premium
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.withTimeoutOrNull
 import platform.Foundation.NSError
 import platform.Foundation.NSLocale
 import platform.Foundation.NSNumberFormatter
@@ -126,7 +127,14 @@ class IosBillingManager : BillingManager {
             val payment = SKPayment.paymentWithProduct(product)
             SKPaymentQueue.defaultQueue().addPayment(payment)
 
-            deferred.await()
+            // Timeout protects against the StoreKit purchase sheet never
+            // appearing (subscription pending review, sandbox account issue,
+            // network stall). Without this the UI spinner spins forever.
+            withTimeoutOrNull(PURCHASE_TIMEOUT_MS) { deferred.await() }
+                ?: run {
+                    purchaseDeferred = null
+                    PurchaseResult.Error("Purchase timed out. Please try again.")
+                }
         } catch (e: CancellationException) {
             purchaseDeferred = null
             throw e
@@ -148,6 +156,10 @@ class IosBillingManager : BillingManager {
         // On iOS, don't call restoreCompletedTransactions silently — it prompts for Apple ID.
         // Rely on the DataStore cache instead. Real verification happens when user taps "Restore".
         return _isSubscribed.value
+    }
+
+    private companion object {
+        const val PURCHASE_TIMEOUT_MS = 60_000L
     }
 }
 

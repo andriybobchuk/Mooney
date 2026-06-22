@@ -56,6 +56,14 @@ object PreferencesKeys {
     /** Developer kill-switch for all ads — read by AdEligibilityUseCase. */
     val ADS_DISABLED_DEV = booleanPreferencesKey("ads_disabled_dev")
     /**
+     * Developer force-show: bypass new-user grace + per-placement cooldown so
+     * every eligible surface fills immediately. Mirrors
+     * FeatureFlags.adsAlwaysShow but is toggleable at runtime, used when
+     * verifying ad placements on a freshly-installed build that's still inside
+     * the 3-session grace window.
+     */
+    val ADS_FORCE_SHOW_DEV = booleanPreferencesKey("ads_force_show_dev")
+    /**
      * When true, the Assets top-bar shows the gross-assets total instead of
      * net worth (assets − liabilities). Only takes visible effect when the
      * user actually has liabilities; otherwise the two are equal.

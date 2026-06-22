@@ -43,37 +43,42 @@ class AdEligibilityUseCase(
         sessionTapCount: Int,
         sessionCount: Int
     ): Boolean {
-        // Highest-priority gate: developer kill-switch from Settings → Developer
-        // Options. Wins over everything else (including FeatureFlags.adsAlwaysShow)
-        // so a dev can preview the ad-free UX inside the same build that
-        // normally serves ads. Read directly from DataStore — there's no
-        // separate observer because eligibility checks are async already.
         val prefsForKillSwitch = dataStore.data.first()
-        if (prefsForKillSwitch[PreferencesKeys.ADS_DISABLED_DEV] == true) return false
+        if (prefsForKillSwitch[PreferencesKeys.ADS_DISABLED_DEV] == true) {
+            println("[Ads] $placement DENY: ADS_DISABLED_DEV is on")
+            return false
+        }
 
-        // Test-everywhere bypass: skips grace + cooldown so dev/QA can verify
-        // every ad surface. Premium still denies. See FeatureFlags.adsAlwaysShow.
         // Premium gates ads — but ONLY when billing is actually enabled on
         // this platform. Android keeps `isBillingEnabled=false` and stubs
         // every user as Premium so the paywall stays hidden; without this
         // guard that stub would also silently hide every ad placement.
         val premiumGatesAds = isBillingEnabled && premiumManager.getIsPremium()
 
-        if (FeatureFlags.adsAlwaysShow) {
-            // Even in "always-show" mode, cap interstitials at 1 per session
-            // so you can verify the cap logic doesn't break — not for UX
-            // (this flag exists for verification, not production).
+        // Test-everywhere bypass — flag in FeatureFlags OR runtime dev toggle
+        // (ADS_FORCE_SHOW_DEV in Settings → Developer Options). Either one
+        // skips grace + cooldown so we can verify every ad surface immediately.
+        val forceShowDev = prefsForKillSwitch[PreferencesKeys.ADS_FORCE_SHOW_DEV] == true
+        if (FeatureFlags.adsAlwaysShow || forceShowDev) {
             if (placement == AdPlacement.INTERSTITIAL_RETURN_TO_TRANSACTIONS &&
                 interstitialsShownThisSession >= MAX_INTERSTITIALS_PER_SESSION
             ) {
+                println("[Ads] $placement DENY: interstitial cap hit (even with force-show)")
                 return false
             }
+            println("[Ads] $placement ALLOW: force-show on (premium=$premiumGatesAds)")
             return !premiumGatesAds
         }
 
-        if (premiumGatesAds) return false
+        if (premiumGatesAds) {
+            println("[Ads] $placement DENY: premium (billing=$isBillingEnabled)")
+            return false
+        }
 
-        if (sessionCount < NEW_USER_GRACE_SESSIONS) return false
+        if (sessionCount < NEW_USER_GRACE_SESSIONS) {
+            println("[Ads] $placement DENY: new-user grace ($sessionCount<$NEW_USER_GRACE_SESSIONS)")
+            return false
+        }
 
         val now = Clock.System.now().toEpochMilliseconds()
         val prefs = dataStore.data.first()

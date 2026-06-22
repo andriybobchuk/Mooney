@@ -28,17 +28,11 @@ class IosBillingManager : BillingManager {
     private val _isSubscribed = MutableStateFlow(false)
     override val isSubscribed: Flow<Boolean> = _isSubscribed
 
-    // StoreKit 2 bridge — set from Swift via [setBridge] in iOSApp.swift's
-    // `didFinishLaunchingWithOptions`. When present, purchase + fetch go
-    // through the Swift native async/await flow instead of StoreKit 1, which
-    // sidesteps the observer/deferred bridging issues that caused stuck
-    // spinners. Null = fall back to StoreKit 1 (current code below).
-    private var bridge: IosBillingBridge? = null
-
-    fun setBridge(bridge: IosBillingBridge) {
-        NSLog("[Billing] setBridge — StoreKit 2 native flow enabled")
-        this.bridge = bridge
-    }
+    // StoreKit 2 bridge — wired from Swift via [setIosBillingBridge] in
+    // iOSApp.swift's AppDelegate. Read lazily from [IosBillingBridgeHolder]
+    // because AppDelegate runs before Koin initializes the manager.
+    private val bridge: IosBillingBridge?
+        get() = IosBillingBridgeHolder.bridge
 
     private var purchaseDeferred: CompletableDeferred<PurchaseResult>? = null
     private var restoreDeferred: CompletableDeferred<Boolean>? = null

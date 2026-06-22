@@ -1,18 +1,27 @@
 package com.andriybobchuk.mooney.core.premium
 
-import org.koin.mp.KoinPlatform
+/**
+ * Global holder so [IosBillingManager] can pick up the Swift bridge even if
+ * `setIosBillingBridge` was called from `iOSApp.swift`'s AppDelegate before
+ * Koin finished bootstrapping (Koin inits inside `MainViewController.configure`).
+ * The manager reads this on its first `init` and the holder is set-once.
+ */
+internal object IosBillingBridgeHolder {
+    var bridge: IosBillingBridge? = null
+}
 
 /**
  * Top-level entry point for `iOSApp.swift` to attach the Swift StoreKit 2
  * bridge to the Koin-managed [IosBillingManager] singleton. Kept here so
  * Swift sees a single free function (`IosBillingBridgeKt.setIosBillingBridge`)
  * rather than having to fish into Koin's container directly.
+ *
+ * Safe to call from AppDelegate (before Koin starts) — the bridge is stashed
+ * in [IosBillingBridgeHolder] and picked up lazily when [IosBillingManager]
+ * is first instantiated by Koin.
  */
 fun setIosBillingBridge(bridge: IosBillingBridge) {
-    val manager = KoinPlatform.getKoin().get<BillingManager>()
-    if (manager is IosBillingManager) {
-        manager.setBridge(bridge)
-    }
+    IosBillingBridgeHolder.bridge = bridge
 }
 
 /**

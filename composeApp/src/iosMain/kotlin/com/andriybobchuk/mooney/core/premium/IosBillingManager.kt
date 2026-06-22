@@ -3,9 +3,11 @@ package com.andriybobchuk.mooney.core.premium
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import platform.Foundation.NSError
 import platform.Foundation.NSLocale
+import platform.Foundation.NSLog
 import platform.Foundation.NSNumberFormatter
 import platform.Foundation.NSNumberFormatterCurrencyStyle
 import kotlin.coroutines.cancellation.CancellationException
@@ -25,6 +27,18 @@ class IosBillingManager : BillingManager {
 
     private val _isSubscribed = MutableStateFlow(false)
     override val isSubscribed: Flow<Boolean> = _isSubscribed
+
+    // StoreKit 2 bridge — set from Swift via [setBridge] in iOSApp.swift's
+    // `didFinishLaunchingWithOptions`. When present, purchase + fetch go
+    // through the Swift native async/await flow instead of StoreKit 1, which
+    // sidesteps the observer/deferred bridging issues that caused stuck
+    // spinners. Null = fall back to StoreKit 1 (current code below).
+    private var bridge: IosBillingBridge? = null
+
+    fun setBridge(bridge: IosBillingBridge) {
+        NSLog("[Billing] setBridge — StoreKit 2 native flow enabled")
+        this.bridge = bridge
+    }
 
     private var purchaseDeferred: CompletableDeferred<PurchaseResult>? = null
     private var restoreDeferred: CompletableDeferred<Boolean>? = null
@@ -64,10 +78,29 @@ class IosBillingManager : BillingManager {
     )
 
     init {
+        NSLog("[Billing] IosBillingManager init — registering transaction observer")
         SKPaymentQueue.defaultQueue().addTransactionObserver(transactionObserver)
     }
 
     override suspend fun fetchProducts(): List<BillingProduct>? {
+        // Prefer the Swift StoreKit 2 bridge when available — single async
+        // call, no delegate/observer plumbing.
+        bridge?.let { bridge ->
+            NSLog("[Billing] fetchProducts via StoreKit 2 bridge")
+            return suspendCancellableCoroutine { cont ->
+                bridge.fetchPrice(PRODUCT_ID_MONTHLY) { price ->
+                    NSLog("[Billing] fetchProducts bridge result price=$price")
+                    if (price == null) {
+                        cont.resume(null) {}
+                    } else {
+                        cont.resume(
+                            listOf(BillingProduct(id = PRODUCT_ID_MONTHLY, localizedPrice = price))
+                        ) {}
+                    }
+                }
+            }
+        }
+
         val deferred = CompletableDeferred<List<SKProduct>?>()
 
         currentProductsDelegate = ProductsRequestDelegate(
@@ -103,48 +136,100 @@ class IosBillingManager : BillingManager {
 
     @Suppress("TooGenericExceptionCaught")
     override suspend fun purchase(productId: String): PurchaseResult {
-        // Wrap the whole flow — App Store review crashed on iPad Air M3 here
-        // (Submission 1f7ed921, June 2026). Surfaces the failure as an Error
-        // string in the paywall instead of taking down the process.
+        NSLog("[Billing] purchase() called productId=$productId, bridge=${bridge != null}")
+
+        // Prefer StoreKit 2 native flow when the Swift bridge is wired up.
+        bridge?.let { bridge ->
+            return purchaseViaBridge(bridge, productId)
+        }
+
         return try {
             if (!SKPaymentQueue.canMakePayments()) {
+                NSLog("[Billing] purchase: canMakePayments=false → return Error")
                 return PurchaseResult.Error("Payments not allowed on this device")
             }
 
             var product = cachedProducts.firstOrNull { it.productIdentifier == productId }
+            NSLog("[Billing] purchase: cachedProducts.size=${cachedProducts.size}, found=${product != null}")
 
             if (product == null) {
+                NSLog("[Billing] purchase: cache empty, fetching products")
                 fetchProducts()
                 product = cachedProducts.firstOrNull { it.productIdentifier == productId }
+                NSLog("[Billing] purchase: after fetch cachedProducts.size=${cachedProducts.size}, found=${product != null}")
             }
 
             if (product == null) {
-                return PurchaseResult.Error("Product not found")
+                NSLog("[Billing] purchase: product not found after fetch — return Error")
+                return PurchaseResult.Error("Product not found. Check internet & subscription approval.")
             }
 
             val deferred = CompletableDeferred<PurchaseResult>()
             purchaseDeferred = deferred
             val payment = SKPayment.paymentWithProduct(product)
+            NSLog("[Billing] purchase: addPayment for ${product.productIdentifier}")
             SKPaymentQueue.defaultQueue().addPayment(payment)
+            NSLog("[Billing] purchase: addPayment returned, awaiting observer (timeout=${PURCHASE_TIMEOUT_MS}ms)")
 
             // Timeout protects against the StoreKit purchase sheet never
             // appearing (subscription pending review, sandbox account issue,
             // network stall). Without this the UI spinner spins forever.
-            withTimeoutOrNull(PURCHASE_TIMEOUT_MS) { deferred.await() }
-                ?: run {
-                    purchaseDeferred = null
-                    PurchaseResult.Error("Purchase timed out. Please try again.")
-                }
+            val result = withTimeoutOrNull(PURCHASE_TIMEOUT_MS) { deferred.await() }
+            if (result == null) {
+                NSLog("[Billing] purchase: TIMED OUT after ${PURCHASE_TIMEOUT_MS}ms — observer never fired")
+                purchaseDeferred = null
+                PurchaseResult.Error(
+                    "Couldn't reach the App Store. Check you're signed into the App Store " +
+                        "and try again."
+                )
+            } else {
+                NSLog("[Billing] purchase: observer completed → $result")
+                result
+            }
         } catch (e: CancellationException) {
+            NSLog("[Billing] purchase: cancelled")
             purchaseDeferred = null
             throw e
         } catch (e: Throwable) {
+            NSLog("[Billing] purchase: threw ${e::class.simpleName}: ${e.message}")
             purchaseDeferred = null
             PurchaseResult.Error(e.message ?: "Purchase failed unexpectedly")
         }
     }
 
+    private suspend fun purchaseViaBridge(bridge: IosBillingBridge, productId: String): PurchaseResult {
+        NSLog("[Billing] purchaseViaBridge: starting")
+        return suspendCancellableCoroutine { cont ->
+            bridge.purchase(productId) { result ->
+                NSLog("[Billing] purchaseViaBridge: status=${result.status} message=${result.message}")
+                val mapped = when (result.status) {
+                    "success" -> {
+                        _isSubscribed.value = true
+                        PurchaseResult.Success
+                    }
+                    "cancelled" -> PurchaseResult.Cancelled
+                    else -> PurchaseResult.Error(result.message ?: "Purchase failed")
+                }
+                cont.resume(mapped) {}
+            }
+        }
+    }
+
     override suspend fun restorePurchases(): Boolean {
+        // StoreKit 2 bridge: query current entitlements directly. No "Sign in to
+        // Apple ID" prompt because Transaction.currentEntitlements reads what
+        // the user has, server-side.
+        bridge?.let { bridge ->
+            NSLog("[Billing] restorePurchases via StoreKit 2 bridge")
+            return suspendCancellableCoroutine { cont ->
+                bridge.checkEntitlement(PRODUCT_ID_MONTHLY) { entitled ->
+                    NSLog("[Billing] restorePurchases bridge result entitled=$entitled")
+                    if (entitled) _isSubscribed.value = true
+                    cont.resume(entitled) {}
+                }
+            }
+        }
+
         val deferred = CompletableDeferred<Boolean>()
         restoreDeferred = deferred
         _isSubscribed.value = false
@@ -159,7 +244,11 @@ class IosBillingManager : BillingManager {
     }
 
     private companion object {
-        const val PURCHASE_TIMEOUT_MS = 60_000L
+        // 20s — long enough to fetch products + show Apple's purchase sheet on
+        // a slow network, short enough that the user gets clear feedback if
+        // StoreKit never delivers a transaction (sandbox not signed in,
+        // subscription pending review, etc).
+        const val PURCHASE_TIMEOUT_MS = 20_000L
     }
 }
 

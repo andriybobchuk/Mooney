@@ -40,7 +40,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.coroutines.cancellation.CancellationException
 
-@Suppress("LongParameterList", "TooManyFunctions")
+@Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
 class SettingsViewModel(
     private val getUserPreferencesUseCase: GetUserPreferencesUseCase,
     private val updatePinnedCategoriesUseCase: UpdatePinnedCategoriesUseCase,
@@ -160,6 +160,12 @@ class SettingsViewModel(
         }.onEach { disabled ->
             _state.update { it.copy(adsDisabled = disabled) }
         }.launchIn(viewModelScope)
+
+        dataStore.data.map { prefs ->
+            prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.ADS_FORCE_SHOW_DEV] ?: false
+        }.onEach { forced ->
+            _state.update { it.copy(adsForceShow = forced) }
+        }.launchIn(viewModelScope)
     }
 
     fun toggleAdsDisabled(disabled: Boolean) {
@@ -168,6 +174,15 @@ class SettingsViewModel(
                 prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.ADS_DISABLED_DEV] = disabled
             }
             _state.update { it.copy(adsDisabled = disabled) }
+        }
+    }
+
+    fun toggleAdsForceShow(forced: Boolean) {
+        viewModelScope.launch {
+            dataStore.edit { prefs ->
+                prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.ADS_FORCE_SHOW_DEV] = forced
+            }
+            _state.update { it.copy(adsForceShow = forced) }
         }
     }
 

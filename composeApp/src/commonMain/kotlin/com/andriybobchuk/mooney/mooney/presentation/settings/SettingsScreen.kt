@@ -1063,6 +1063,13 @@ fun SettingsScreen(
                                 onCheckedChange = { viewModel.toggleAdsDisabled(it) }
                             )
                             SettingsDivider()
+                            SettingsToggleRow(
+                                title = "Force show ads", // allow-hardcoded (dev option)
+                                description = "Bypass first-3-sessions grace + banner cooldown so every placement fills immediately", // allow-hardcoded (dev option)
+                                checked = state.adsForceShow,
+                                onCheckedChange = { viewModel.toggleAdsForceShow(it) }
+                            )
+                            SettingsDivider()
                             SettingsRow(
                                 title = stringResource(Res.string.replay_onboarding),
                                 value = stringResource(Res.string.reset_view),

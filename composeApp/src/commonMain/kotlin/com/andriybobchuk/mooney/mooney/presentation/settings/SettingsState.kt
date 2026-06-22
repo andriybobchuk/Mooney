@@ -47,6 +47,11 @@ data class SettingsState(
      * ads. Persists across launches.
      */
     val adsDisabled: Boolean = false,
+    /**
+     * Developer Options: force-show ads — bypasses new-user grace + banner
+     * cooldown so every eligible placement fills immediately. Persists.
+     */
+    val adsForceShow: Boolean = false,
     /** "OFF" / "DAILY" / "WEEKLY" — drives the Reminders sheet selection. */
     val reminderMode: String = "OFF",
     /** Local-time hour for the reminder (0–23). */

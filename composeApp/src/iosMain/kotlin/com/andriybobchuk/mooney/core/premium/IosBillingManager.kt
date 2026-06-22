@@ -3,6 +3,7 @@ package com.andriybobchuk.mooney.core.premium
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import platform.Foundation.NSError
 import platform.Foundation.NSLocale
@@ -26,6 +27,18 @@ class IosBillingManager : BillingManager {
 
     private val _isSubscribed = MutableStateFlow(false)
     override val isSubscribed: Flow<Boolean> = _isSubscribed
+
+    // StoreKit 2 bridge — set from Swift via [setBridge] in iOSApp.swift's
+    // `didFinishLaunchingWithOptions`. When present, purchase + fetch go
+    // through the Swift native async/await flow instead of StoreKit 1, which
+    // sidesteps the observer/deferred bridging issues that caused stuck
+    // spinners. Null = fall back to StoreKit 1 (current code below).
+    private var bridge: IosBillingBridge? = null
+
+    fun setBridge(bridge: IosBillingBridge) {
+        NSLog("[Billing] setBridge — StoreKit 2 native flow enabled")
+        this.bridge = bridge
+    }
 
     private var purchaseDeferred: CompletableDeferred<PurchaseResult>? = null
     private var restoreDeferred: CompletableDeferred<Boolean>? = null
@@ -70,6 +83,24 @@ class IosBillingManager : BillingManager {
     }
 
     override suspend fun fetchProducts(): List<BillingProduct>? {
+        // Prefer the Swift StoreKit 2 bridge when available — single async
+        // call, no delegate/observer plumbing.
+        bridge?.let { bridge ->
+            NSLog("[Billing] fetchProducts via StoreKit 2 bridge")
+            return suspendCancellableCoroutine { cont ->
+                bridge.fetchPrice(PRODUCT_ID_MONTHLY) { price ->
+                    NSLog("[Billing] fetchProducts bridge result price=$price")
+                    if (price == null) {
+                        cont.resume(null) {}
+                    } else {
+                        cont.resume(
+                            listOf(BillingProduct(id = PRODUCT_ID_MONTHLY, localizedPrice = price))
+                        ) {}
+                    }
+                }
+            }
+        }
+
         val deferred = CompletableDeferred<List<SKProduct>?>()
 
         currentProductsDelegate = ProductsRequestDelegate(
@@ -105,7 +136,13 @@ class IosBillingManager : BillingManager {
 
     @Suppress("TooGenericExceptionCaught")
     override suspend fun purchase(productId: String): PurchaseResult {
-        NSLog("[Billing] purchase() called productId=$productId")
+        NSLog("[Billing] purchase() called productId=$productId, bridge=${bridge != null}")
+
+        // Prefer StoreKit 2 native flow when the Swift bridge is wired up.
+        bridge?.let { bridge ->
+            return purchaseViaBridge(bridge, productId)
+        }
+
         return try {
             if (!SKPaymentQueue.canMakePayments()) {
                 NSLog("[Billing] purchase: canMakePayments=false → return Error")
@@ -160,7 +197,39 @@ class IosBillingManager : BillingManager {
         }
     }
 
+    private suspend fun purchaseViaBridge(bridge: IosBillingBridge, productId: String): PurchaseResult {
+        NSLog("[Billing] purchaseViaBridge: starting")
+        return suspendCancellableCoroutine { cont ->
+            bridge.purchase(productId) { result ->
+                NSLog("[Billing] purchaseViaBridge: status=${result.status} message=${result.message}")
+                val mapped = when (result.status) {
+                    "success" -> {
+                        _isSubscribed.value = true
+                        PurchaseResult.Success
+                    }
+                    "cancelled" -> PurchaseResult.Cancelled
+                    else -> PurchaseResult.Error(result.message ?: "Purchase failed")
+                }
+                cont.resume(mapped) {}
+            }
+        }
+    }
+
     override suspend fun restorePurchases(): Boolean {
+        // StoreKit 2 bridge: query current entitlements directly. No "Sign in to
+        // Apple ID" prompt because Transaction.currentEntitlements reads what
+        // the user has, server-side.
+        bridge?.let { bridge ->
+            NSLog("[Billing] restorePurchases via StoreKit 2 bridge")
+            return suspendCancellableCoroutine { cont ->
+                bridge.checkEntitlement(PRODUCT_ID_MONTHLY) { entitled ->
+                    NSLog("[Billing] restorePurchases bridge result entitled=$entitled")
+                    if (entitled) _isSubscribed.value = true
+                    cont.resume(entitled) {}
+                }
+            }
+        }
+
         val deferred = CompletableDeferred<Boolean>()
         restoreDeferred = deferred
         _isSubscribed.value = false

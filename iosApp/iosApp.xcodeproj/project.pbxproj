@@ -20,6 +20,7 @@
 		52B50E402F76E82E001CF3FE /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 52B50E3F2F76E82E001CF3FE /* FirebaseCrashlytics */; };
 		52C0DE012F8597A000AAAAAA /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 52C0DE002F8597A000AAAAAA /* GoogleService-Info.plist */; };
 		52C0DE102F8600A000BBBBBB /* FirebaseAnalyticsBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52C0DE0F2F8600A000BBBBBB /* FirebaseAnalyticsBridge.swift */; };
+		52BB000A2FF0000000DDDDDD /* IosBillingBridgeImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52BB00092FF0000000DDDDDD /* IosBillingBridgeImpl.swift */; };
 		52C0DE202FA0000000CCCCCC /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 52C0DE1F2FA0000000CCCCCC /* PrivacyInfo.xcprivacy */; };
 		7555FF83242A565900829871 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7555FF82242A565900829871 /* ContentView.swift */; };
 /* End PBXBuildFile section */
@@ -32,6 +33,7 @@
 		52B39C272FDD87C9004AA7D3 /* AdMobBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdMobBridge.swift; sourceTree = "<group>"; };
 		52C0DE002F8597A000AAAAAA /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		52C0DE0F2F8600A000BBBBBB /* FirebaseAnalyticsBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseAnalyticsBridge.swift; sourceTree = "<group>"; };
+		52BB00092FF0000000DDDDDD /* IosBillingBridgeImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IosBillingBridgeImpl.swift; sourceTree = "<group>"; };
 		52C0DE1F2FA0000000CCCCCC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		7555FF7B242A565900829871 /* Mooney.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mooney.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7555FF82242A565900829871 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -97,6 +99,7 @@
 				7555FF82242A565900829871 /* ContentView.swift */,
 				52C0DE0F2F8600A000BBBBBB /* FirebaseAnalyticsBridge.swift */,
 				52234E152F9406BA00082B88 /* RemoteConfigBridge.swift */,
+				52BB00092FF0000000DDDDDD /* IosBillingBridgeImpl.swift */,
 				52C0DE002F8597A000AAAAAA /* GoogleService-Info.plist */,
 				7555FF8C242A565B00829871 /* Info.plist */,
 				52C0DE1F2FA0000000CCCCCC /* PrivacyInfo.xcprivacy */,
@@ -226,6 +229,7 @@
 				7555FF83242A565900829871 /* ContentView.swift in Sources */,
 				52234E162F9406BA00082B88 /* RemoteConfigBridge.swift in Sources */,
 				52C0DE102F8600A000BBBBBB /* FirebaseAnalyticsBridge.swift in Sources */,
+				52BB000A2FF0000000DDDDDD /* IosBillingBridgeImpl.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -371,7 +375,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 26.06.09;
+				MARKETING_VERSION = 26.06.10;
 				PRODUCT_BUNDLE_IDENTIFIER = "${BUNDLE_ID}${TEAM_ID}";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.andriybobchuk.mooney;
 				PRODUCT_NAME = "${APP_NAME}";
@@ -400,7 +404,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 26.06.09;
+				MARKETING_VERSION = 26.06.10;
 				PRODUCT_BUNDLE_IDENTIFIER = "${BUNDLE_ID}${TEAM_ID}";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.andriybobchuk.mooney;
 				PRODUCT_NAME = "${APP_NAME}";

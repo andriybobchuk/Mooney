@@ -15,6 +15,13 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // setBridge call is all that activates the SDK from app launch.
         Ads.shared.setBridge(bridge: AdMobBridge())
         Ads.shared.initialize()
+        // Billing — wire the Swift StoreKit 2 bridge into the Koin-managed
+        // IosBillingManager so purchase() uses native async/await instead of
+        // the Kotlin-side SKPaymentQueue path. Eliminates the stuck-spinner
+        // failure mode we hit on iPad. iOS 15+ required for StoreKit 2.
+        if #available(iOS 15.0, *) {
+            IosBillingBridgeKt.setIosBillingBridge(bridge: IosBillingBridgeImpl())
+        }
         return true
     }
 }

@@ -7,6 +7,7 @@ import platform.Foundation.NSError
 import platform.Foundation.NSLocale
 import platform.Foundation.NSNumberFormatter
 import platform.Foundation.NSNumberFormatterCurrencyStyle
+import kotlin.coroutines.cancellation.CancellationException
 import platform.StoreKit.SKPayment
 import platform.StoreKit.SKPaymentQueue
 import platform.StoreKit.SKPaymentTransaction
@@ -99,28 +100,40 @@ class IosBillingManager : BillingManager {
         }
     }
 
+    @Suppress("TooGenericExceptionCaught")
     override suspend fun purchase(productId: String): PurchaseResult {
-        if (!SKPaymentQueue.canMakePayments()) {
-            return PurchaseResult.Error("Payments not allowed on this device")
+        // Wrap the whole flow — App Store review crashed on iPad Air M3 here
+        // (Submission 1f7ed921, June 2026). Surfaces the failure as an Error
+        // string in the paywall instead of taking down the process.
+        return try {
+            if (!SKPaymentQueue.canMakePayments()) {
+                return PurchaseResult.Error("Payments not allowed on this device")
+            }
+
+            var product = cachedProducts.firstOrNull { it.productIdentifier == productId }
+
+            if (product == null) {
+                fetchProducts()
+                product = cachedProducts.firstOrNull { it.productIdentifier == productId }
+            }
+
+            if (product == null) {
+                return PurchaseResult.Error("Product not found")
+            }
+
+            val deferred = CompletableDeferred<PurchaseResult>()
+            purchaseDeferred = deferred
+            val payment = SKPayment.paymentWithProduct(product)
+            SKPaymentQueue.defaultQueue().addPayment(payment)
+
+            deferred.await()
+        } catch (e: CancellationException) {
+            purchaseDeferred = null
+            throw e
+        } catch (e: Throwable) {
+            purchaseDeferred = null
+            PurchaseResult.Error(e.message ?: "Purchase failed unexpectedly")
         }
-
-        var product = cachedProducts.firstOrNull { it.productIdentifier == productId }
-
-        if (product == null) {
-            fetchProducts()
-            product = cachedProducts.firstOrNull { it.productIdentifier == productId }
-        }
-
-        if (product == null) {
-            return PurchaseResult.Error("Product not found")
-        }
-
-        val deferred = CompletableDeferred<PurchaseResult>()
-        purchaseDeferred = deferred
-        val payment = SKPayment.paymentWithProduct(product)
-        SKPaymentQueue.defaultQueue().addPayment(payment)
-
-        return deferred.await()
     }
 
     override suspend fun restorePurchases(): Boolean {

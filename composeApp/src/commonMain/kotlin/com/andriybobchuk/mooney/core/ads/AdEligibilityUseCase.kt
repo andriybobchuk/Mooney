@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.andriybobchuk.mooney.core.premium.PremiumManager
+import com.andriybobchuk.mooney.core.premium.isBillingEnabled
 import com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys
 import com.andriybobchuk.mooney.mooney.domain.FeatureFlags
 import kotlinx.coroutines.flow.first
@@ -52,8 +53,13 @@ class AdEligibilityUseCase(
 
         // Test-everywhere bypass: skips grace + cooldown so dev/QA can verify
         // every ad surface. Premium still denies. See FeatureFlags.adsAlwaysShow.
+        // Premium gates ads — but ONLY when billing is actually enabled on
+        // this platform. Android keeps `isBillingEnabled=false` and stubs
+        // every user as Premium so the paywall stays hidden; without this
+        // guard that stub would also silently hide every ad placement.
+        val premiumGatesAds = isBillingEnabled && premiumManager.getIsPremium()
+
         if (FeatureFlags.adsAlwaysShow) {
-            val isPremium = premiumManager.getIsPremium()
             // Even in "always-show" mode, cap interstitials at 1 per session
             // so you can verify the cap logic doesn't break — not for UX
             // (this flag exists for verification, not production).
@@ -62,10 +68,10 @@ class AdEligibilityUseCase(
             ) {
                 return false
             }
-            return !isPremium
+            return !premiumGatesAds
         }
 
-        if (premiumManager.getIsPremium()) return false
+        if (premiumGatesAds) return false
 
         if (sessionCount < NEW_USER_GRACE_SESSIONS) return false
 

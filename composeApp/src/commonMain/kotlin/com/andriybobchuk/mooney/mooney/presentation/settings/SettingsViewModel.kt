@@ -652,10 +652,22 @@ class SettingsViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isPurchasing = true, purchaseError = null) }
             try {
-                when (val result = premiumManager.purchase(PRODUCT_ID_MONTHLY)) {
+                // Outer timeout — final safety net so the spinner ALWAYS clears
+                // even if every downstream layer's timeout fails. 25s is just
+                // longer than the billing manager's internal 20s timeout.
+                val result = kotlinx.coroutines.withTimeoutOrNull(25_000L) {
+                    premiumManager.purchase(PRODUCT_ID_MONTHLY)
+                }
+                when (result) {
                     is PurchaseResult.Success -> _state.update { it.copy(showPaywall = false, isPurchasing = false) }
                     is PurchaseResult.Cancelled -> _state.update { it.copy(isPurchasing = false) }
                     is PurchaseResult.Error -> _state.update { it.copy(isPurchasing = false, purchaseError = result.message) }
+                    null -> _state.update {
+                        it.copy(
+                            isPurchasing = false,
+                            purchaseError = "Purchase didn't respond in time. Please try again."
+                        )
+                    }
                 }
             } catch (e: kotlin.coroutines.cancellation.CancellationException) {
                 throw e

@@ -322,10 +322,19 @@ class AssetsViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isPurchasing = true, purchaseError = null) }
             try {
-                when (val result = premiumManager.purchase(PRODUCT_ID_MONTHLY)) {
+                val result = kotlinx.coroutines.withTimeoutOrNull(25_000L) {
+                    premiumManager.purchase(PRODUCT_ID_MONTHLY)
+                }
+                when (result) {
                     is PurchaseResult.Success -> _uiState.update { it.copy(showPaywall = false, isPurchasing = false) }
                     is PurchaseResult.Cancelled -> _uiState.update { it.copy(isPurchasing = false) }
                     is PurchaseResult.Error -> _uiState.update { it.copy(isPurchasing = false, purchaseError = result.message) }
+                    null -> _uiState.update {
+                        it.copy(
+                            isPurchasing = false,
+                            purchaseError = "Purchase didn't respond in time. Please try again."
+                        )
+                    }
                 }
             } catch (e: kotlin.coroutines.cancellation.CancellationException) {
                 throw e

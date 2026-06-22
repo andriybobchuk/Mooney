@@ -133,8 +133,20 @@ class IosBillingManager : BillingManager {
         NSLog("[Billing] purchase() called productId=$productId, bridge=${bridge != null}")
 
         // Prefer StoreKit 2 native flow when the Swift bridge is wired up.
+        // Wrap the bridge call in the same timeout used for StoreKit 1 — if
+        // Swift's Product.purchase() hangs (slow network, sandbox stall),
+        // the spinner still recovers with a clear error.
         bridge?.let { bridge ->
-            return purchaseViaBridge(bridge, productId)
+            val bridgeResult = withTimeoutOrNull(PURCHASE_TIMEOUT_MS) {
+                purchaseViaBridge(bridge, productId)
+            }
+            return bridgeResult ?: run {
+                NSLog("[Billing] purchase: bridge TIMED OUT after ${PURCHASE_TIMEOUT_MS}ms")
+                PurchaseResult.Error(
+                    "Couldn't reach the App Store. Check you're signed into the App Store " +
+                        "and try again."
+                )
+            }
         }
 
         return try {

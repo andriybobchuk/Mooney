@@ -41,12 +41,10 @@ tags:
     visible: "Groceries"
     timeout: 5000
 
-# Tap the amount BasicTextField directly to grab focus. Now that the tag
-# lives on the BasicTextField itself (not the outer padding Box), the tap
-# fires Compose's built-in field focus, races-free with the sheet's
-# 350ms auto-focus delay.
-- tapOn:
-    id: "txn_amount_field"
+# Tap on the placeholder "0.00" text to focus the amount field. Text
+# selectors on placeholders reliably land on the field's own composed
+# hit-target regardless of what semantics wrappers surround it.
+- tapOn: "0.00"
 
 - inputText: "100"
 

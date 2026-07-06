@@ -54,10 +54,21 @@ tags:
 - tapOn:
     id: "txn_save"
 
+# Give the sheet time to fully dismiss and the Compose recomposition to
+# publish the new balance across the AppDataCache. Without this beat we
+# race the emulator's paint and the tab tap can land on a stale frame.
+- extendedWaitUntil:
+    visible: "Transactions"
+    timeout: 5000
+- assertNotVisible:
+    id: "txn_save"
+
 # Post-condition on Accounts tab. If TransferHandler regressed and added
 # instead of subtracting, this assertion fails with a diff showing $5,100.
 - tapOn:
     id: "nav_accounts"
 - assertVisible: "Assets"
 - assertVisible: "Checking"
-- assertVisible: "4,900"
+- extendedWaitUntil:
+    visible: "4,900"
+    timeout: 5000

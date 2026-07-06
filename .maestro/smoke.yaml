@@ -1,20 +1,17 @@
 # Smoke-tier Mooney E2E — runs on every PR to `dev`.
 #
-# Trimmed to the two flows that reliably pass on the GitHub-hosted KVM
-# emulator today:
+# Composed of tap-only flows that reliably pass on the GitHub-hosted
+# KVM emulator. Text-input flows (add-transaction, transfer, etc.) run
+# in `full.yaml` only until the `inputText`-vs-`BasicTextField`-in-
+# `ModalBottomSheet` race is root-caused with an interactive emulator.
 #
-#   - 01_seeded_launch_smoke: proves the E2eBootstrap seam is working
-#     (fixture data reaches the UI, bottom nav navigates).
-#   - 24_bottom_nav_walk: exercises every top-level screen for at least
-#     one non-crashing composition.
+#   - 01_seeded_launch_smoke: fixture data reaches the UI.
+#   - 04_delete_transaction: balance math via long-press + confirm.
+#   - 09_multi_currency_net_worth: StubExchangeRateProvider math + Assets tab.
+#   - 24_bottom_nav_walk: every top-level screen renders.
 #
-# Flow 02 (add-transaction balance math) and other flows that interact
-# with Compose bottom-sheet text fields are currently kept in
-# `full.yaml` only — Maestro's `inputText` against a Compose
-# `BasicTextField` inside a `ModalBottomSheet` on the emulator has an
-# unresolved race with the sheet's auto-focus that produces silent
-# failures. Investigation is deferred to a session with an interactive
-# emulator + `maestro studio` for real-time hierarchy inspection.
+# Target: <5 min end-to-end. Adding new flows here is a load-bearing
+# decision — every one is 30-60s of CI cost per PR.
 #
 # Run locally:
 #   ./gradlew :composeApp:assembleE2e
@@ -24,4 +21,6 @@
 appId: com.andriybobchuk.mooney
 ---
 - runFlow: flows/01_seeded_launch_smoke.yaml
+- runFlow: flows/04_delete_transaction_reverses_balance.yaml
+- runFlow: flows/09_multi_currency_net_worth.yaml
 - runFlow: flows/24_bottom_nav_walk.yaml

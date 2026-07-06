@@ -71,7 +71,7 @@ Currently registered (`E2eBootstrap.FIXTURES`):
 | `single_account_usd`   | One USD Checking account at $5,000, onboarding skipped             |
 | `two_accounts_usd`     | Checking $3,000 + Savings $10,000 (same-currency transfer flows)   |
 | `multi_currency_user`  | USD/EUR/PLN accounts; net worth = $8,500 with stub rates           |
-| `mid_size_user`        | 3 accounts + 10 realistic transactions in July 2026                |
+| `mid_size_user`        | 3 accounts + 10 realistic transactions in the last two weeks (wall-clock-relative via `daysAgo(n)`) |
 | `recurring_ready`      | 1 account + 1 active monthly recurring on day 15                   |
 | `near_paywall_limit`   | 5 accounts (free-tier max — 6th tap triggers paywall)              |
 
@@ -89,12 +89,19 @@ Adding a fixture: create `src/androidE2e/kotlin/com/andriybobchuk/mooney/e2e/fix
 | 05  | `05_transfer_same_currency.yaml`               | Atomic dual-side account update |
 | 09  | `09_multi_currency_net_worth.yaml`             | `StubExchangeRateProvider` math + net-worth aggregation |
 | 10  | `10_change_base_currency_recomputes.yaml`      | Derived-state invalidation on base-currency change |
+| 11  | `11_add_account_persists.yaml`                 | Account write reliability across process death |
+| 12  | `12_analytics_metric_navigation.yaml`          | Analytics metric card handlers |
 | 13  | `13_account_limit_paywall.yaml`                | Free-tier account gate + paywall dismiss stability |
+| 14  | `14_goal_create_and_delete.yaml`               | `SaveGoalUseCase` reaches DAO; goal renders |
+| 15  | `15_recurring_render_smoke.yaml`               | Recurring transactions render + sheet open |
 | 16  | `16_theme_change_persists.yaml`                | DataStore write reliability across process death |
+| 17  | `17_theme_cycle.yaml`                          | Theme selector transition mechanic |
 | 21  | `21_process_death_mid_add_txn.yaml`            | No phantom-commit on in-flight sheet kill |
 | 22  | `22_double_tap_save_no_duplicate.yaml`         | Money-mutating concurrency / debounce |
+| 23  | `23_multiple_transactions_aggregate.yaml`      | Balance aggregation associativity |
+| 24  | `24_bottom_nav_walk.yaml`                      | All bottom-nav tabs render without crashing |
 
-`smoke.yaml` runs {01, 02, 13, 21} for every PR. `full.yaml` runs all flows nightly.
+`smoke.yaml` runs {01, 02, 24} for every PR — cheapest and highest signal. `full.yaml` runs the full 19-flow set nightly on `dev` and `master`.
 
 ## Test doubles (Koin overrides)
 

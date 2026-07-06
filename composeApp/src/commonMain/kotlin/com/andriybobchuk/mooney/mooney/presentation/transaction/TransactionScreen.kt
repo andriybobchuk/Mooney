@@ -123,6 +123,7 @@ import com.andriybobchuk.mooney.mooney.presentation.analytics.MonthPicker
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
 import com.andriybobchuk.mooney.core.testing.TestTags
 import com.andriybobchuk.mooney.core.testing.mooneyTestTag
+import com.andriybobchuk.mooney.core.testing.mooneyTestTagLeaf
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyTextField
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -2271,7 +2272,7 @@ private fun AmountHeroField(
                 modifier = Modifier
                     .focusRequester(focusRequester)
                     .width(fieldWidth)
-                    .mooneyTestTag(TestTags.TXN_AMOUNT_FIELD),
+                    .mooneyTestTagLeaf(TestTags.TXN_AMOUNT_FIELD),
                 decorationBox = { innerTextField ->
                     Box(contentAlignment = Alignment.CenterEnd) {
                         if (!hasValue) {

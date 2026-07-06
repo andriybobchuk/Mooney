@@ -24,6 +24,20 @@ fun Modifier.mooneyTestTag(tag: String): Modifier =
     }
 
 /**
+ * Non-merging variant for use on `BasicTextField` and other text-input
+ * primitives whose own `SetText`/`EditableText` semantics MUST stay
+ * discoverable to Maestro's `inputText`. `mergeDescendants=true` on a
+ * text field silently hides those actions inside the merged parent,
+ * making `inputText` fail without a clear error.
+ */
+@Composable
+fun Modifier.mooneyTestTagLeaf(tag: String): Modifier =
+    this.semantics {
+        testTag = tag
+        androidTestTagsAsResourceIdIfAvailable()
+    }
+
+/**
  * Enables `testTag → resource-id` surfacing at the composition-root level.
  * Kept as a passthrough on iOS; on Android it applies
  * `Modifier.semantics { testTagsAsResourceId = true }` to a full-size Box.

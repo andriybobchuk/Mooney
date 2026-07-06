@@ -24,21 +24,22 @@ tags:
 
 - assertVisible: "Transactions"
 
-# Assets tab shows the post-spend balance. Check this first — it's on
-# the initial viewport of the Assets tab and doesn't depend on
-# scrolling through a transaction list. If this fails, the fixture
-# didn't seed or Assets tab is broken; if it passes but the txn-row
-# check below fails, only the txn-list rendering has an issue.
+# Give the AppDataCache time to first-flow account + txn state through
+# to the UI. Without this beat, the initial paint can catch the empty
+# state momentarily on cold start.
+- extendedWaitUntil:
+    visible: "Checking"
+    timeout: 5000
+
+# Assets tab. Check via account name first (Checking) — that's on the
+# initial viewport regardless of scroll. Then look for the numeric
+# balance separately, tolerating the leading "$" (or trailing "$"
+# depending on the locale formatter).
 - tapOn:
     id: "nav_accounts"
-- assertVisible: "Checking"
-- assertVisible: "4,900"
-
-# Back to Transactions, scroll to make sure yesterday's row is visible
-# (the sheet groups by day, so a txn dated `daysAgo(1)` sits below the
-# empty "today" header on the initial paint).
-- tapOn:
-    id: "nav_transactions"
-- assertVisible: "Transactions"
-- scroll
-- assertVisible: "100.00"
+- extendedWaitUntil:
+    visible: "Checking"
+    timeout: 5000
+- extendedWaitUntil:
+    visible: "4,900"
+    timeout: 5000

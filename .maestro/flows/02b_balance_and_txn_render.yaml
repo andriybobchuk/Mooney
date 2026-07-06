@@ -24,11 +24,21 @@ tags:
 
 - assertVisible: "Transactions"
 
-# Transactions list shows the $100 coffee.
-- assertVisible: "100.00"
-
-# Assets tab shows the post-spend balance.
+# Assets tab shows the post-spend balance. Check this first — it's on
+# the initial viewport of the Assets tab and doesn't depend on
+# scrolling through a transaction list. If this fails, the fixture
+# didn't seed or Assets tab is broken; if it passes but the txn-row
+# check below fails, only the txn-list rendering has an issue.
 - tapOn:
     id: "nav_accounts"
 - assertVisible: "Checking"
 - assertVisible: "4,900"
+
+# Back to Transactions, scroll to make sure yesterday's row is visible
+# (the sheet groups by day, so a txn dated `daysAgo(1)` sits below the
+# empty "today" header on the initial paint).
+- tapOn:
+    id: "nav_transactions"
+- assertVisible: "Transactions"
+- scroll
+- assertVisible: "100.00"

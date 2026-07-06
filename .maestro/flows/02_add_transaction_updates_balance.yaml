@@ -37,9 +37,12 @@ tags:
       id: "txn_save"
     timeout: 5000
 
-# Type into the auto-focused amount field. Skip the explicit tap on
-# txn_amount_field — the outer Box tag has no clickable and can cause
-# focus contention with the inner BasicTextField that already has focus.
+# The sheet's LaunchedEffect delays 350ms before grabbing focus; without
+# this settle the inputText below can fire before the amount field owns
+# the cursor, and the 100 gets dropped.
+- tapOn:
+    id: "txn_amount_field"
+
 - inputText: "100"
 
 - tapOn:

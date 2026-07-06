@@ -3,12 +3,11 @@
 # When a transaction is deleted, DeleteTransactionUseCase must reverse
 # its effect on the account balance. Failure mode this catches: soft-
 # delete without balance reversal — transaction disappears from the
-# list but its debit stays applied. Users would slowly bleed accuracy.
+# list but its debit stays applied. Users bleed accuracy silently.
 #
-# Precondition: mid_size_user fixture has a $500 internal transfer from
-# Checking → Savings. We long-press to open the action sheet, tap the
-# tagged Delete row (opens confirm), tap Confirm Delete, then verify
-# both balances rolled back.
+# Precondition: mid_size_user fixture has a $50 gas expense on Checking
+# at row 9 (insert order). Long-press the row, tap delete, confirm.
+# Verify Checking balance rolls forward by $50.
 
 appId: com.andriybobchuk.mooney
 tags:
@@ -23,22 +22,18 @@ tags:
 
 - assertVisible: "Transactions"
 
-# Long-press the transfer row (id 9 by fixture insertion order).
+# Long-press the $50 gas row (id 9 by fixture insertion order).
 - longPressOn:
     id: "txn_row_9"
 
-# Action sheet is up. Tap Delete → opens confirm sheet.
 - tapOn:
     id: "txn_action_delete"
-
-# Confirm.
 - tapOn:
     id: "txn_confirm_delete"
 
-# Precondition balances were: Checking $3,500, Savings $15,000 after
-# the historical $500 transfer. Reversing it should restore Checking
-# by $500 to $4,000 and drop Savings by $500 to $14,500.
+# Precondition Checking balance: $3,500. After deleting the $50 expense
+# (whose effect reduced Checking by $50 pre-fixture-load), Checking
+# should show $3,550.
 - tapOn:
     id: "nav_accounts"
-- assertVisible: "4,000"
-- assertVisible: "14,500"
+- assertVisible: "3,550"

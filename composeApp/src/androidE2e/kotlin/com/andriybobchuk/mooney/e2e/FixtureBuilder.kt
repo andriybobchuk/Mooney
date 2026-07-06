@@ -5,6 +5,12 @@ import com.andriybobchuk.mooney.core.data.database.RecurringTransactionEntity
 import com.andriybobchuk.mooney.core.data.database.TransactionEntity
 import com.andriybobchuk.mooney.core.data.database.UserCurrencyEntity
 import com.andriybobchuk.mooney.mooney.domain.Currency
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
 
 /**
  * Kotlin DSL for E2E fixtures.
@@ -92,6 +98,25 @@ class FixtureBuilder internal constructor() {
 
     fun userCurrency(currency: Currency, sortOrder: Int) {
         userCurrencies += UserCurrencyEntity(code = currency.name, sortOrder = sortOrder)
+    }
+
+    /**
+     * Wall-clock-relative date shortcut for fixture entries that must
+     * fall in the current month (so the app's month-filtered lists
+     * actually surface them). Fixtures using this stay stable across
+     * CI runs regardless of the calendar.
+     *
+     * `today()` returns today at the system's default zone.
+     * `daysAgo(n)` returns n days before today.
+     */
+    fun today(): String = Clock.System.now()
+        .toLocalDateTime(TimeZone.currentSystemDefault()).date.toString()
+
+    fun daysAgo(days: Int): String {
+        val d: LocalDate = Clock.System.now()
+            .toLocalDateTime(TimeZone.currentSystemDefault()).date
+            .minus(days, DateTimeUnit.DAY)
+        return d.toString()
     }
 }
 

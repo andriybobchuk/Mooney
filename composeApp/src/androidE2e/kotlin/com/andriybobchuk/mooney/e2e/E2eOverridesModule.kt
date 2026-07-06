@@ -1,7 +1,9 @@
 package com.andriybobchuk.mooney.e2e
 
+import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.core.premium.BillingManager
 import com.andriybobchuk.mooney.e2e.doubles.FakeBillingManager
+import com.andriybobchuk.mooney.e2e.doubles.RecordingAnalyticsTracker
 import com.andriybobchuk.mooney.e2e.doubles.StubExchangeRateProvider
 import com.andriybobchuk.mooney.mooney.domain.ExchangeRateProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +31,10 @@ val koinE2eOverridesModule = module {
     single<BillingManager> {
         FakeBillingManager(startPremium = get<E2eFlags>().premium.value)
     }
+
+    // Silence Firebase Analytics + Crashlytics network/disk I/O and let
+    // flows assert on captured events later (not yet wired).
+    single<AnalyticsTracker> { RecordingAnalyticsTracker() }
 }
 
 /** Per-run runtime toggles set by [E2eBootstrap] before Koin resolves consumers. */

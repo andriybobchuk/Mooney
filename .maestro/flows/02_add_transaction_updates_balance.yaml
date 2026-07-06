@@ -29,21 +29,18 @@ tags:
 - tapOn:
     id: "fab_add_txn"
 
-# Wait for the sheet's LaunchedEffect delay(350) + focusRequester.requestFocus()
-# to complete AND for categories to load from Room. The default category
-# button text ("Groceries") is our proxy for both being ready — no
-# validation-fail race on Save.
+# Wait for the sheet to compose (Save button present is our signal).
+# The category button lives below the amount field and often sits outside
+# the viewport in the sheet, so we can't reliably use it as a wait
+# anchor — the placeholder "0.00" IS always in the visible area.
 - extendedWaitUntil:
     visible:
       id: "txn_save"
     timeout: 5000
-- extendedWaitUntil:
-    visible: "Groceries"
-    timeout: 5000
 
-# Tap on the placeholder "0.00" text to focus the amount field. Text
-# selectors on placeholders reliably land on the field's own composed
-# hit-target regardless of what semantics wrappers surround it.
+# Tap the placeholder to focus the amount field. Text selectors on
+# placeholders land on the field's composed hit-target regardless of
+# what semantics wrappers surround it.
 - tapOn: "0.00"
 
 - inputText: "100"

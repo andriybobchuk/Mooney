@@ -101,7 +101,7 @@ Adding a fixture: create `src/androidE2e/kotlin/com/andriybobchuk/mooney/e2e/fix
 | 23  | `23_multiple_transactions_aggregate.yaml`      | Balance aggregation associativity |
 | 24  | `24_bottom_nav_walk.yaml`                      | All bottom-nav tabs render without crashing |
 
-`smoke.yaml` runs {01, 02, 24} for every PR — cheapest and highest signal. `full.yaml` runs the full 19-flow set nightly on `dev` and `master`.
+`smoke.yaml` currently runs {01, 24} for every PR — the flows that reliably pass on the GitHub-hosted KVM emulator. Flow 02 (add-transaction balance math) and other text-input-heavy flows are kept in `full.yaml` only while the Maestro-`inputText`-vs-Compose-`BasicTextField`-in-`ModalBottomSheet` race gets root-caused with an interactive emulator. `full.yaml` runs the full 20-flow set nightly on `dev` and `master`.
 
 ## Test doubles (Koin overrides)
 
@@ -139,7 +139,8 @@ Currently `continue-on-error: true` during rollout — remove that once flake ra
 
 ## Known limitations
 
-- **iOS**: `isE2eBuild` returns `false`. Phase 6 wires the iOS side via `NSProcessInfo.processInfo.arguments`.
-- **Clock**: no FixedClock injection yet. Fixture dates like MidSizeUser's July-2026 range depend on CI wall clock being reasonably close. Follow-up: inject `Clock` via Koin so flows can specify `--now=<ISO-8601>`.
+- **iOS**: `isE2eBuild` reads `NSProcessInfo.processInfo.arguments` for `--e2e` but the iOS bootstrap (fixture seeding, Koin overrides) is not yet ported. Full iOS parity is Phase 6.
+- **Clock**: no FixedClock injection yet. Fixtures use `daysAgo(n)` helpers to compute wall-clock-relative dates, which stay stable across CI runs except when today's day-of-month is <5. Follow-up: inject `Clock` via Koin so flows can specify `--now=<ISO-8601>`.
 - **Reminder / Review**: `ReminderScheduler` and `ReviewPromptManager` are `expect class` in commonMain — no clean Koin subclass override without an interface refactor. In practice both silently no-op on the e2e emulator (no Play Services / no user gesture that triggers them).
 - **Migration data-loss guard**: the flagship "run a v8 snapshot through migrations and assert balances survive" flow is deferred to Phase 5. Current guard is a schema-integrity JVM test that catches "forgot to bump the version" but not silent data loss.
+- **Text-input flows failing on CI emulator**: `Maestro.inputText` against Compose's `BasicTextField` inside a `ModalBottomSheet` produces silent failures — the field appears to receive the tap but `inputText` doesn't reach the `onValueChange` callback, leaving the ViewModel's amount at `null` and Save disabled. All text-input-driven flows (02, 03, 05, 22, 23, and add-account flows) are currently blocked by this. Debugging strategy: run locally with `maestro studio` for interactive hierarchy inspection, and consider using semantic actions (`Modifier.semantics { setText { … } }`) as a workaround.

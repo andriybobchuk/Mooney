@@ -37,8 +37,14 @@ tags:
 - tapOn:
     id: "fab_add_txn"
 
-# The sheet auto-focuses the amount hero field ~350ms after opening
-# (Compose's ModalBottomSheet slide-in). Give it a beat, then type.
+# Wait for the sheet to slide in AND for the focusRequester to grab the
+# amount field (350ms delay in the sheet code). Asserting on the Save
+# button's presence is our proxy signal that the sheet is fully composed.
+- extendedWaitUntil:
+    visible:
+      id: "txn_save"
+    timeout: 5000
+
 - inputText: "100"
 
 # Save. Sheet dismisses, transaction lands on the list, balance updates.

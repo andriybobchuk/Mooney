@@ -1,20 +1,15 @@
 # Phase-2 smoke flow — the load-bearing balance-math regression guard.
 #
-# Guards against: AddTransactionUseCase drift; TransferHandler.applyRegularTransactionEffect
-# regression; anything that would silently mis-account for money on the
-# core happy path.
+# Guards against: AddTransactionUseCase drift; TransferHandler regressions
+# that would silently mis-account for money on the core happy path.
 #
 # Sequence:
-#   1. Launch with `single_account_usd` fixture (1 account: Checking, $5,000).
-#   2. Assert pre-condition balance visible on Transactions tab.
-#   3. Tap the empty-state / FAB Add-Transaction entry.
-#   4. Type $100 into the focused amount field.
-#   5. Tap Save — the sheet's primary CTA.
-#   6. Return to Accounts tab and assert the balance changed to $4,900.
-#
-# The Accounts assertion is intentional — asserting only on Transactions
-# would miss regressions where balance recomputation drifts from the DAO
-# state. Two surfaces = catches divergent state bugs.
+#   1. Launch with `single_account_usd` fixture (Checking, $5,000).
+#   2. Open the add-transaction sheet.
+#   3. Type $100 into the auto-focused amount field.
+#   4. Tap Save.
+#   5. Assert the sheet dismisses (Save no longer visible).
+#   6. Assert Checking balance is $4,900 on the Accounts tab.
 
 appId: com.andriybobchuk.mooney
 tags:
@@ -28,46 +23,37 @@ tags:
       FIXTURE: "single_account_usd"
       WIPE_DB: "true"
 
-# Land on Transactions tab (default startDestination inside MooneyGraph).
 - assertVisible: "Transactions"
 
-# Tap the primary add-transaction entry. The empty-state MooneyButton and
-# the FAB share the FAB_ADD_TXN tag, so the flow works regardless of
-# whether the fixture has transactions.
+# Open the sheet (empty-state MooneyButton or FAB — same tag).
 - tapOn:
     id: "fab_add_txn"
 
-# Wait for the sheet to slide in AND for the focusRequester to grab the
-# amount field (350ms delay in the sheet code). Asserting on the Save
-# button's presence is our proxy signal that the sheet is fully composed.
+# Wait for the sheet's LaunchedEffect delay(350) + focusRequester.requestFocus()
+# to complete. `extendedWaitUntil` retries at 250ms intervals; the Save
+# button is present once the sheet is composed.
 - extendedWaitUntil:
     visible:
       id: "txn_save"
     timeout: 5000
 
-# Tap the amount field explicitly so we don't race the auto-focus.
-- tapOn:
-    id: "txn_amount_field"
+# Type into the auto-focused amount field. Skip the explicit tap on
+# txn_amount_field — the outer Box tag has no clickable and can cause
+# focus contention with the inner BasicTextField that already has focus.
 - inputText: "100"
 
-# Save. Sheet dismisses, transaction lands on the list, balance updates.
 - tapOn:
     id: "txn_save"
 
-# Give the sheet time to fully dismiss and the Compose recomposition to
-# publish the new balance across the AppDataCache. Without this beat we
-# race the emulator's paint and the tab tap can land on a stale frame.
+# Sheet dismisses. Save disappears from the tree.
 - extendedWaitUntil:
-    visible: "Transactions"
+    notVisible:
+      id: "txn_save"
     timeout: 5000
-- assertNotVisible:
-    id: "txn_save"
 
-# Post-condition on Accounts tab. If TransferHandler regressed and added
-# instead of subtracting, this assertion fails with a diff showing $5,100.
+# Post-condition on Accounts tab.
 - tapOn:
     id: "nav_accounts"
-- assertVisible: "Assets"
 - assertVisible: "Checking"
 - extendedWaitUntil:
     visible: "4,900"

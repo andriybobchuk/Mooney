@@ -16,6 +16,7 @@ appId: com.andriybobchuk.mooney
 # ---- Smoke (also run by smoke.yaml) ----
 - runFlow: flows/01_seeded_launch_smoke.yaml
 - runFlow: flows/02_add_transaction_updates_balance.yaml
+- runFlow: flows/24_bottom_nav_walk.yaml
 
 # ---- Onboarding ----
 - runFlow: flows/01a_onboarding_complete.yaml
@@ -38,6 +39,9 @@ appId: com.andriybobchuk.mooney
 
 # ---- Goals ----
 - runFlow: flows/14_goal_create_and_delete.yaml
+
+# ---- Recurring ----
+- runFlow: flows/15_recurring_render_smoke.yaml
 
 # ---- Monetization ----
 - runFlow: flows/13_account_limit_paywall.yaml

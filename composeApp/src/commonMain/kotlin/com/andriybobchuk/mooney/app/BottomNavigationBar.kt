@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.andriybobchuk.mooney.core.presentation.Icons
+import com.andriybobchuk.mooney.core.testing.TestTags
+import com.andriybobchuk.mooney.core.testing.mooneyTestTag
 import com.andriybobchuk.mooney.mooney.domain.FeatureFlags
 import kotlinx.datetime.Clock
 import org.koin.compose.koinInject
@@ -70,6 +72,13 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
         ) {
             items.forEach { (item, route, originalIndex) ->
                 val isSelected = selectedItemIndex == originalIndex
+                val tag = when (originalIndex) {
+                    0 -> TestTags.NAV_TRANSACTIONS
+                    1 -> TestTags.NAV_ACCOUNTS
+                    3 -> TestTags.NAV_ANALYTICS
+                    4 -> TestTags.NAV_SETTINGS
+                    else -> null
+                }
                 BottomNavTab(
                     item = item,
                     isSelected = isSelected,
@@ -95,7 +104,7 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
                             tab?.let { scrollToTopBus.fire(it) }
                         }
                     },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).let { m -> if (tag != null) m.mooneyTestTag(tag) else m }
                 )
             }
         }

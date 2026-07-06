@@ -1,0 +1,42 @@
+# Full Mooney E2E suite — runs nightly on `dev` and `master`.
+#
+# Wall-clock budget on an Ubuntu KVM emulator: ~10 minutes across the
+# current flow set. Every listed flow must be:
+#   1. Deterministic given its fixture — no `assertVisible` on values
+#      that depend on wall-clock, network, or user locale.
+#   2. Isolated from previous flow state — every flow begins with
+#      `launch_seeded.yaml { wipeDb: true }` (or its own `stopApp`).
+#
+# Ordering: cheapest and most-likely-to-break flows first, so a broken
+# scaffolding shows up in seconds rather than after ten minutes of
+# unrelated flows have passed.
+
+appId: com.andriybobchuk.mooney
+---
+# ---- Smoke (also run by smoke.yaml) ----
+- runFlow: flows/01_seeded_launch_smoke.yaml
+- runFlow: flows/02_add_transaction_updates_balance.yaml
+
+# ---- Onboarding ----
+- runFlow: flows/01a_onboarding_complete.yaml
+
+# ---- Balance math ----
+- runFlow: flows/03_edit_transaction_reverses_balance.yaml
+- runFlow: flows/04_delete_transaction_reverses_balance.yaml
+- runFlow: flows/05_transfer_same_currency.yaml
+
+# ---- Currency & net worth ----
+- runFlow: flows/09_multi_currency_net_worth.yaml
+- runFlow: flows/10_change_base_currency_recomputes.yaml
+
+# ---- Accounts CRUD + aggregation ----
+- runFlow: flows/11_add_account_persists.yaml
+- runFlow: flows/23_multiple_transactions_aggregate.yaml
+
+# ---- Monetization ----
+- runFlow: flows/13_account_limit_paywall.yaml
+
+# ---- Persistence & resilience ----
+- runFlow: flows/16_theme_change_persists.yaml
+- runFlow: flows/21_process_death_mid_add_txn.yaml
+- runFlow: flows/22_double_tap_save_no_duplicate.yaml

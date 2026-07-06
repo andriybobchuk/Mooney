@@ -1,0 +1,54 @@
+# Phase-2 smoke flow — the load-bearing balance-math regression guard.
+#
+# Guards against: AddTransactionUseCase drift; TransferHandler.applyRegularTransactionEffect
+# regression; anything that would silently mis-account for money on the
+# core happy path.
+#
+# Sequence:
+#   1. Launch with `single_account_usd` fixture (1 account: Checking, $5,000).
+#   2. Assert pre-condition balance visible on Transactions tab.
+#   3. Tap the empty-state / FAB Add-Transaction entry.
+#   4. Type $100 into the focused amount field.
+#   5. Tap Save — the sheet's primary CTA.
+#   6. Return to Accounts tab and assert the balance changed to $4,900.
+#
+# The Accounts assertion is intentional — asserting only on Transactions
+# would miss regressions where balance recomputation drifts from the DAO
+# state. Two surfaces = catches divergent state bugs.
+
+appId: com.andriybobchuk.mooney
+tags:
+  - smoke
+  - transactions
+  - balance-math
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "single_account_usd"
+      WIPE_DB: "true"
+
+# Land on Transactions tab (default startDestination inside MooneyGraph).
+- assertVisible: "Transactions"
+
+# Tap the primary add-transaction entry. The empty-state MooneyButton and
+# the FAB share the FAB_ADD_TXN tag, so the flow works regardless of
+# whether the fixture has transactions.
+- tapOn:
+    id: "fab_add_txn"
+
+# The sheet auto-focuses the amount hero field ~350ms after opening
+# (Compose's ModalBottomSheet slide-in). Give it a beat, then type.
+- inputText: "100"
+
+# Save. Sheet dismisses, transaction lands on the list, balance updates.
+- tapOn:
+    id: "txn_save"
+
+# Post-condition on Accounts tab. If TransferHandler regressed and added
+# instead of subtracting, this assertion fails with a diff showing $5,100.
+- tapOn:
+    id: "nav_accounts"
+- assertVisible: "Assets"
+- assertVisible: "Checking"
+- assertVisible: "4,900"

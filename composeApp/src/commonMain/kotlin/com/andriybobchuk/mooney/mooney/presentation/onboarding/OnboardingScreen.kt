@@ -71,6 +71,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MeshGradientBackground
+import com.andriybobchuk.mooney.core.testing.TestTags
+import com.andriybobchuk.mooney.core.testing.mooneyTestTag
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import kotlinx.coroutines.launch
 import mooney.composeapp.generated.resources.Res
@@ -387,7 +389,8 @@ private fun BaseCurrencyContent(
             onClick = onGetStarted,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
+                .height(56.dp)
+                .mooneyTestTag(TestTags.ONBOARDING_GET_STARTED),
             enabled = state.canGetStarted && !state.isLoading,
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
@@ -576,7 +579,7 @@ private fun SwipeUpIndicator() {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Icon(
             imageVector = Icons.Default.KeyboardArrowUp,
-            contentDescription = "Swipe up",
+            contentDescription = "Swipe up", // allow-hardcoded
             modifier = Modifier
                 .size(36.dp)
                 .offset { IntOffset(0, offsetY.roundToInt()) },
@@ -611,7 +614,7 @@ private fun CurrencyChip(
     Surface(
         onClick = onClick,
         enabled = enabled,
-        modifier = Modifier.height(64.dp),
+        modifier = Modifier.height(64.dp).mooneyTestTag(TestTags.onboardingCurrency(currency.name)),
         shape = RoundedCornerShape(12.dp),
         color = backgroundColor,
         border = BorderStroke(1.dp, borderColor)

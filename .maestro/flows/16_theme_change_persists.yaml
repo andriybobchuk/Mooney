@@ -1,0 +1,48 @@
+# Theme persistence guard.
+#
+# Change theme mode via Settings; kill the app; relaunch; assert the
+# new mode is still applied. What this catches:
+#   - Theme write to DataStore lost between UI change and IO commit
+#     (missing await, wrong dispatcher).
+#   - StartupPrefs synchronous read not seeing the last-written value
+#     because ThemeMode.valueOf() throws on new enum entries.
+#
+# We can't visually assert dark-vs-light in Maestro (colors aren't
+# selectable). Proxy: the Settings row's `value =` reflects the
+# current mode as a localized string — that's what we assert on.
+
+appId: com.andriybobchuk.mooney
+tags:
+  - settings
+  - persistence
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "single_account_usd"
+      WIPE_DB: "true"
+
+- tapOn:
+    id: "nav_settings"
+
+# Open the theme sheet.
+- tapOn:
+    id: "settings_theme"
+
+# Pick Dark.
+- tapOn: "Dark"
+
+# The row's value updates in-place.
+- assertVisible: "Dark"
+
+# Kill the app cold. Relaunch WITHOUT wipeDb — we want to test that
+# DataStore preserves the write across a process death.
+- stopApp
+- launchApp:
+    arguments:
+      fixture: "single_account_usd"
+      wipeDb: false
+
+- tapOn:
+    id: "nav_settings"
+- assertVisible: "Dark"

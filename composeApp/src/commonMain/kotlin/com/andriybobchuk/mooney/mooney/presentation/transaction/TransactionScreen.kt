@@ -121,6 +121,8 @@ import com.andriybobchuk.mooney.mooney.presentation.account.UiAccount
 import com.andriybobchuk.mooney.mooney.presentation.account.toAccounts
 import com.andriybobchuk.mooney.mooney.presentation.analytics.MonthPicker
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
+import com.andriybobchuk.mooney.core.testing.TestTags
+import com.andriybobchuk.mooney.core.testing.mooneyTestTag
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyTextField
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -293,6 +295,7 @@ fun TransactionsScreen(
                         preselectedCategory = null
                         isBottomSheetOpen = true
                     },
+                    modifier = Modifier.mooneyTestTag(TestTags.FAB_ADD_TXN),
                     content = {
                         Icon(Icons.Outlined.Add, contentDescription = stringResource(Res.string.cd_add_transaction))
                     },
@@ -860,7 +863,8 @@ fun TransactionsScreenContent(
                             text = stringResource(Res.string.add_transaction),
                             onClick = onAddTransaction,
                             variant = ButtonVariant.PRIMARY,
-                            fullWidth = true
+                            fullWidth = true,
+                            modifier = Modifier.mooneyTestTag(TestTags.FAB_ADD_TXN)
                         )
                         Spacer(modifier = Modifier.height(32.dp))
                     }
@@ -932,10 +936,12 @@ fun TransactionsScreenContent(
                 var showDeleteConfirm by remember { mutableStateOf(false) }
 
                 Box(
-                    modifier = Modifier.combinedClickable(
-                        onClick = { onEdit(tx) },
-                        onLongClick = { showActionSheet = true }
-                    )
+                    modifier = Modifier
+                        .mooneyTestTag(TestTags.txnRow(tx.id.toLong()))
+                        .combinedClickable(
+                            onClick = { onEdit(tx) },
+                            onLongClick = { showActionSheet = true }
+                        )
                 ) {
                     TransactionItem(tx, accounts)
                 }
@@ -981,6 +987,7 @@ fun TransactionsScreenContent(
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(MaterialTheme.colorScheme.errorContainer)
+                                    .mooneyTestTag(TestTags.TXN_ACTION_DELETE)
                                     .clickable {
                                         showActionSheet = false
                                         showDeleteConfirm = true
@@ -1024,6 +1031,7 @@ fun TransactionsScreenContent(
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(MaterialTheme.colorScheme.errorContainer)
+                                    .mooneyTestTag(TestTags.TXN_CONFIRM_DELETE)
                                     .clickable {
                                         showDeleteConfirm = false
                                         onDelete(tx.id)
@@ -1224,10 +1232,17 @@ fun NativeTransactionAdRow() {
 
     if (!eligible) return
 
-    com.andriybobchuk.mooney.core.ads.MooneyBannerAdView(
-        adUnitId = com.andriybobchuk.mooney.core.ads.AdUnitIds.banner,
-        modifier = Modifier.fillMaxWidth()
-    )
+    val isDarkTheme = androidx.compose.foundation.isSystemInDarkTheme()
+    androidx.compose.foundation.layout.Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+    ) {
+        com.andriybobchuk.mooney.core.ads.MooneyBannerAdView(
+            adUnitId = com.andriybobchuk.mooney.core.ads.AdUnitIds.banner,
+            isDarkTheme = isDarkTheme
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1663,7 +1678,7 @@ fun TransactionBottomSheet(
             Spacer(Modifier.height(4.dp))
             MooneyButton(
                 text = if (transactionToEdit != null) stringResource(Res.string.update_transaction) else stringResource(Res.string.add_transaction),
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp).mooneyTestTag(TestTags.TXN_SAVE_BUTTON),
                 variant = ButtonVariant.PRIMARY,
                 enabled = validation !is TransactionValidation.Error,
                 onClick = {

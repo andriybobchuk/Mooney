@@ -1,0 +1,55 @@
+# Concurrency guard for money-mutating actions.
+#
+# What we protect: users tap Save too fast (or a laggy device fires the
+# same tap twice), and the ViewModel doesn't debounce — so two
+# `AddTransactionUseCase` invocations race and BOTH commit, producing
+# a duplicate transaction and double the debit. This is the single
+# highest-severity concurrency class of bug for a finance app.
+#
+# Precondition: single_account_usd fixture — $5,000 baseline. We add
+# a $100 expense with two rapid taps on Save. Expected balance is
+# $4,900 (single commit), not $4,800 (duplicated).
+#
+# NB: Maestro's `tapOn` is synchronous per step, so two consecutive
+# taps model the human "fat-fingered it" scenario more closely than a
+# platform-level double-tap event. If a future ViewModel adds tap
+# debouncing that requires <300ms between taps to fire the debounce,
+# this test still catches insufficient-debounce because it goes as
+# fast as Maestro's driver allows (typically <100ms per command).
+
+appId: com.andriybobchuk.mooney
+tags:
+  - transactions
+  - balance-math
+  - concurrency
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "single_account_usd"
+      WIPE_DB: "true"
+
+- assertVisible: "5,000"
+
+- tapOn:
+    id: "fab_add_txn"
+- inputText: "100"
+
+# Two rapid taps. If the second one lands on an already-dismissed
+# sheet Maestro throws — that's also a bug (the sheet should ignore
+# the second tap, not close and re-open something else).
+- tapOn:
+    id: "txn_save"
+- runFlow:
+    when:
+      visible:
+        id: "txn_save"
+    commands:
+      - tapOn:
+          id: "txn_save"
+
+# Balance should be $4,900. If the duplicate landed we'd see $4,800.
+- tapOn:
+    id: "nav_accounts"
+- assertVisible: "4,900"
+- assertNotVisible: "4,800"

@@ -36,6 +36,8 @@ import com.andriybobchuk.mooney.mooney.data.localizedCategoryTitle
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.settings.ExchangeRateSource
+import com.andriybobchuk.mooney.core.testing.TestTags
+import com.andriybobchuk.mooney.core.testing.mooneyTestTag
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
 import com.andriybobchuk.mooney.core.platform.FileHandler
 import kotlinx.coroutines.flow.collectLatest
@@ -854,7 +856,8 @@ fun SettingsScreen(
                                 ThemeMode.DARK -> stringResource(Res.string.dark)
                                 ThemeMode.SYSTEM -> stringResource(Res.string.system)
                             },
-                            onClick = { showThemeSheet = true }
+                            onClick = { showThemeSheet = true },
+                            modifier = Modifier.mooneyTestTag(TestTags.SETTINGS_THEME)
                         )
                         // TODO: Re-enable language selector once translations are verified
                         // SettingsDivider()
@@ -863,7 +866,8 @@ fun SettingsScreen(
                         SettingsRow(
                             title = stringResource(Res.string.default_currency),
                             value = "${state.defaultCurrency.symbol} ${state.defaultCurrency.name}",
-                            onClick = { showCurrencySheet = true }
+                            onClick = { showCurrencySheet = true },
+                            modifier = Modifier.mooneyTestTag(TestTags.SETTINGS_BASE_CURRENCY)
                         )
                         SettingsDivider()
                         SettingsRow(
@@ -1567,10 +1571,11 @@ private fun SettingsRow(
     value: String = "",
     onClick: () -> Unit = {},
     showChevron: Boolean = true,
-    showLoading: Boolean = false
+    showLoading: Boolean = false,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(enabled = !showLoading) { onClick() }
             .padding(vertical = 12.dp),

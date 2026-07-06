@@ -32,6 +32,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.andriybobchuk.mooney.core.testing.TestTags
+import com.andriybobchuk.mooney.core.testing.mooneyTestTag
 import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.auto_renews_monthly
 import mooney.composeapp.generated.resources.get_mooney_pro
@@ -129,6 +131,7 @@ fun PaywallSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.9f)
+                .mooneyTestTag(TestTags.PAYWALL_SHEET)
         ) {
             PaywallMeshBackground()
 

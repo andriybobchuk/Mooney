@@ -1,0 +1,44 @@
+# Process-death canary.
+#
+# Opens the add-transaction sheet, types an amount, then kills and
+# relaunches the app. What this asserts is deliberately narrow:
+#   - The relaunch does not crash.
+#   - The pre-crash balance is preserved (the in-flight, unsaved
+#     transaction did NOT accidentally get committed).
+#
+# This is the CANARY — a comprehensive SavedStateHandle test would
+# also assert the draft is restored, but the app doesn't ship that
+# feature and asserting it would fail every run. What we care about
+# is the "silent commit" class of bug: user typed into the field,
+# their process got killed, and the next launch shows a phantom
+# $NaN transaction.
+
+appId: com.andriybobchuk.mooney
+tags:
+  - resilience
+  - persistence
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "single_account_usd"
+      WIPE_DB: "true"
+
+- assertVisible: "5,000"
+
+# Open the add-txn sheet, type an amount, but DO NOT save.
+- tapOn:
+    id: "fab_add_txn"
+- inputText: "42.42"
+
+# Force process death.
+- stopApp
+- launchApp:
+    arguments:
+      fixture: "single_account_usd"
+      wipeDb: false
+
+# Post-condition: no crash (implicit — Maestro would exit here if the
+# app failed to launch) AND balance unchanged (no phantom commit).
+- assertVisible: "5,000"
+- assertNotVisible: "4,957.58"    # 5000 - 42.42

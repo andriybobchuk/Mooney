@@ -1,0 +1,63 @@
+# Free-tier account-limit paywall trigger.
+#
+# What we guard: users on the free tier get the paywall the moment they
+# try to save a 6th account, AND the paywall reliably dismisses. If
+# EITHER breaks:
+#   - Limit gate too permissive → users create unlimited accounts on
+#     free (revenue leak).
+#   - Paywall doesn't dismiss → user has to force-kill the app to get
+#     out, which is a 1-star review generator.
+#
+# Fixture: 5 pre-seeded accounts under a non-premium user
+# (`FakeBillingManager.startPremium = false` unless overridden).
+
+appId: com.andriybobchuk.mooney
+tags:
+  - paywall
+  - premium
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "near_paywall_limit"
+      WIPE_DB: "true"
+
+- tapOn:
+    id: "nav_accounts"
+
+# All five seed accounts render.
+- assertVisible: "Checking"
+- assertVisible: "Brokerage"
+
+# Try to add a sixth.
+- tapOn:
+    id: "fab_add_account"
+
+# Fill in title and amount so save is enabled.
+- tapOn:
+    id: "account_title_field"
+- inputText: "Overflow"
+- tapOn:
+    id: "account_amount_field"
+- inputText: "1"
+- tapOn:
+    id: "account_save"
+
+# Paywall must appear. Two independent selectors — an id and the
+# non-localized headline text — because whichever resolves first
+# gives the earliest signal about what went wrong.
+- assertVisible:
+    id: "paywall_sheet"
+- assertVisible: "Mooney. Without limits."
+
+# Dismiss by swiping down (ModalBottomSheet's built-in gesture).
+- swipe:
+    direction: DOWN
+    from:
+      id: "paywall_sheet"
+
+# We should be back on Accounts. The 6th account was NOT created —
+# only the five seed accounts show.
+- tapOn:
+    id: "nav_accounts"
+- assertNotVisible: "Overflow"

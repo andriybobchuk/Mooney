@@ -1,0 +1,51 @@
+# Same-currency transfer — the canonical money-moves-between-accounts
+# regression guard.
+#
+# Two USD accounts. Transfer $500 Checking → Savings. Net worth must
+# be identical before and after (same currency = no conversion drift).
+# Individual account balances must both change atomically.
+#
+# What can regress that this catches: TransferHandler treating the
+# destination as an add of the SOURCE amount when it should read the
+# same amount (redundant with cross-currency logic but the code path
+# is shared, so a regression there kills both).
+
+appId: com.andriybobchuk.mooney
+tags:
+  - transactions
+  - transfers
+  - balance-math
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "two_accounts_usd"
+      WIPE_DB: "true"
+
+# Baseline: Checking $3,000, Savings $10,000. Net worth $13,000.
+- tapOn:
+    id: "nav_accounts"
+- assertVisible: "3,000"
+- assertVisible: "10,000"
+
+# Return to Transactions and open the add sheet.
+- tapOn:
+    id: "nav_transactions"
+- tapOn:
+    id: "fab_add_txn"
+
+# Switch to Transfer via the type switch (text-anchored — the switch
+# labels are localized but stable in en-US).
+- tapOn: "Transfer"
+
+# Amount input auto-focuses. Type $500.
+- inputText: "500"
+
+- tapOn:
+    id: "txn_save"
+
+# Post-condition: Checking $2,500, Savings $10,500. Net worth still $13,000.
+- tapOn:
+    id: "nav_accounts"
+- assertVisible: "2,500"
+- assertVisible: "10,500"

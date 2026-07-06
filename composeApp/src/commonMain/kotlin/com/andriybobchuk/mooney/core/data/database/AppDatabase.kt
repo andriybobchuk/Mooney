@@ -40,5 +40,6 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         const val DB_NAME = "mooney.db"
         const val DB_NAME_DEV = "mooney_dev.db"
+        const val DB_NAME_E2E = "mooney_e2e.db"
     }
 }

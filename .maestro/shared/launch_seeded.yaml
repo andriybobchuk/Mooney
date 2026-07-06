@@ -1,0 +1,26 @@
+# Reusable launch step for e2e flows.
+#
+# Every flow that needs a deterministic starting state should `runFlow` this
+# file with parameter overrides. Do NOT call `launchApp` directly in flows —
+# going through this shared helper keeps the argument names consistent so a
+# rename of `wipeDb` etc. is a single-file change.
+#
+# Usage from a flow:
+#   - runFlow:
+#       file: ../shared/launch_seeded.yaml
+#       env:
+#         FIXTURE: "single_account_usd"
+#         WIPE_DB: "true"
+#
+# Supported env vars:
+#   FIXTURE    fixture map key (see E2eBootstrap.FIXTURES)
+#   WIPE_DB    "true" to delete the e2e Room DB before seeding
+#   NOW        ISO-8601 to inject a fixed clock (Phase 4 — currently ignored)
+#   PREMIUM    "true"/"false" for FakeBillingManager (Phase 3 — currently ignored)
+
+appId: com.andriybobchuk.mooney
+---
+- launchApp:
+    arguments:
+      fixture: ${FIXTURE}
+      wipeDb: ${WIPE_DB == "true"}

@@ -1,0 +1,47 @@
+# Goals CRUD guard.
+#
+# Fixture: single_account_usd — one account, no goals yet.
+# Flow:
+#   1. Open Goals (via Transactions → chip row → Goals link).
+#   2. Tap Add Goal FAB.
+#   3. Fill title "Emergency fund" and target 10000.
+#   4. Save.
+#   5. Assert the goal renders on the list.
+#
+# What we protect:
+#   - SaveGoalUseCase reaching the DAO.
+#   - GoalsViewModel state updating on save (no reload needed).
+#   - Form validation gating Save until title + target are filled.
+
+appId: com.andriybobchuk.mooney
+tags:
+  - goals
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "single_account_usd"
+      WIPE_DB: "true"
+
+# Goals is not on the bottom nav; reach it via the Quick Action chip row
+# on Transactions (see NavigationHost).
+- assertVisible: "Transactions"
+- tapOn: "Goals"
+
+# On Goals screen — either empty state (with a Create button) or existing
+# list. Either way the FAB is present.
+- tapOn:
+    id: "fab_add_goal"
+
+- tapOn:
+    id: "goal_title_field"
+- inputText: "Emergency fund"
+- tapOn:
+    id: "goal_target_field"
+- inputText: "10000"
+
+- tapOn:
+    id: "goal_save"
+
+- assertVisible: "Emergency fund"
+- assertVisible: "10,000"

@@ -519,7 +519,7 @@ private fun AddEditGoalSheet(
                 value = title,
                 onValueChange = { if (it.length <= 40) title = it },
                 label = stringResource(Res.string.title_label),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().mooneyTestTag(TestTags.GOAL_TITLE_FIELD),
                 singleLine = true
             )
 
@@ -529,7 +529,7 @@ private fun AddEditGoalSheet(
                 value = targetAmount,
                 onValueChange = { targetAmount = it },
                 label = stringResource(Res.string.target_amount_label),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().mooneyTestTag(TestTags.GOAL_TARGET_FIELD),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true
             )
@@ -616,7 +616,7 @@ private fun AddEditGoalSheet(
                     onSave(title, amount, selectedCurrency, trackingType, selectedAccountId)
                 },
                 enabled = isFormValid,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().mooneyTestTag(TestTags.GOAL_SAVE_BUTTON)
             )
         }
     }

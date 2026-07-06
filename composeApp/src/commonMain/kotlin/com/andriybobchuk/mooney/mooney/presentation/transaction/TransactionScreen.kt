@@ -2251,7 +2251,8 @@ private fun AmountHeroField(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp),
+            .padding(vertical = 16.dp)
+            .mooneyTestTag(TestTags.TXN_AMOUNT_FIELD),
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

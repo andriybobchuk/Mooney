@@ -59,6 +59,8 @@ import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.app.appColors
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
+import com.andriybobchuk.mooney.core.testing.TestTags
+import com.andriybobchuk.mooney.core.testing.mooneyTestTag
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.MonthKey
@@ -121,10 +123,11 @@ fun RecurringTransactionsScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddSheet = true },
+                modifier = Modifier.mooneyTestTag(TestTags.FAB_ADD_RECURRING),
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Recurring")
+                Icon(Icons.Default.Add, contentDescription = "Add Recurring") // allow-hardcoded
             }
         }
     ) { paddingValues ->

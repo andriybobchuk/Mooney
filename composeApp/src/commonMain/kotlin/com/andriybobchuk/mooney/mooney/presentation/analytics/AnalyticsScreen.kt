@@ -53,6 +53,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
+import com.andriybobchuk.mooney.core.testing.TestTags
+import com.andriybobchuk.mooney.core.testing.mooneyTestTag
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -535,9 +537,17 @@ fun EnhancedMetricCard(
     metric: AnalyticsMetric,
     onClick: () -> Unit = {}
 ) {
+    val tag = when (metric.title) {
+        METRIC_REVENUE -> TestTags.METRIC_REVENUE
+        METRIC_EXPENSES -> TestTags.METRIC_EXPENSES
+        METRIC_TAXES -> TestTags.METRIC_TAXES
+        METRIC_NET_INCOME -> TestTags.METRIC_NET_INCOME
+        else -> null
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .let { m -> if (tag != null) m.mooneyTestTag(tag) else m }
             .clickable(enabled = metric.isClickable) { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(

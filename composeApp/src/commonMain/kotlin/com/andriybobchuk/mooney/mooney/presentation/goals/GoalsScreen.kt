@@ -72,6 +72,8 @@ import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MeshGradientBackground
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
+import com.andriybobchuk.mooney.core.testing.TestTags
+import com.andriybobchuk.mooney.core.testing.mooneyTestTag
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyTextField
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
@@ -136,10 +138,11 @@ fun GoalsScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { viewModel.onAction(GoalsAction.ShowAddGoalSheet) },
+                modifier = Modifier.mooneyTestTag(TestTags.FAB_ADD_GOAL),
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
-                Icon(Icons.Outlined.Add, contentDescription = "Add Goal")
+                Icon(Icons.Outlined.Add, contentDescription = "Add Goal") // allow-hardcoded
             }
         }
     ) { paddingValues ->

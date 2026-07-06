@@ -46,4 +46,21 @@ object TestTags {
     const val SETTINGS_THEME = "settings_theme"
     const val SETTINGS_DARK_MODE_TOGGLE = "settings_dark_mode"
     const val SETTINGS_BASE_CURRENCY = "settings_base_currency"
+
+    // Analytics
+    const val METRIC_REVENUE = "metric_revenue"
+    const val METRIC_EXPENSES = "metric_expenses"
+    const val METRIC_TAXES = "metric_taxes"
+    const val METRIC_NET_INCOME = "metric_net_income"
+
+    // Goals
+    const val FAB_ADD_GOAL = "fab_add_goal"
+    const val GOAL_TITLE_FIELD = "goal_title_field"
+    const val GOAL_TARGET_FIELD = "goal_target_field"
+    const val GOAL_SAVE_BUTTON = "goal_save"
+    fun goalRow(id: Long): String = "goal_row_$id"
+
+    // Recurring
+    const val FAB_ADD_RECURRING = "fab_add_recurring"
+    fun recurringRow(id: Long): String = "recurring_row_$id"
 }

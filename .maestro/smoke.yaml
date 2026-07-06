@@ -1,11 +1,13 @@
 # Smoke-tier Mooney E2E — runs on every PR to `dev`.
 #
 # Target runtime: under 3 minutes on a KVM-accelerated Ubuntu emulator.
-# The smoke set stays narrow: seeded-launch + add-transaction balance
-# math + a paywall canary + a resilience canary. Adding flows here is
-# a load-bearing decision; every new one is 30-60s of CI cost per PR.
+# Deliberately narrow to keep CI reliable: seeded-launch + add-transaction
+# balance math + a bottom-nav sanity walk. Every added flow here is
+# 30-60s of CI cost per PR — new smoke additions are a load-bearing
+# decision.
 #
-# For everything else, see `full.yaml` (runs nightly).
+# For paywall, process-death, and heavier resilience flows, see full.yaml
+# (runs nightly).
 #
 # Run locally:
 #   ./gradlew :composeApp:assembleE2e
@@ -16,5 +18,4 @@ appId: com.andriybobchuk.mooney
 ---
 - runFlow: flows/01_seeded_launch_smoke.yaml
 - runFlow: flows/02_add_transaction_updates_balance.yaml
-- runFlow: flows/13_account_limit_paywall.yaml
-- runFlow: flows/21_process_death_mid_add_txn.yaml
+- runFlow: flows/24_bottom_nav_walk.yaml

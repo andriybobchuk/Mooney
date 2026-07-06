@@ -1,0 +1,39 @@
+# Theme selector cycle guard.
+#
+# Cycles through all three theme modes (LIGHT → DARK → SYSTEM) via the
+# Appearance sheet. Each selection must update the row's value text
+# in-place with no stuck sheet or crash.
+#
+# Complementary to flow 16 (persistence across restart) — this one
+# verifies the transition mechanic itself, without a process death.
+
+appId: com.andriybobchuk.mooney
+tags:
+  - settings
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "single_account_usd"
+      WIPE_DB: "true"
+
+- tapOn:
+    id: "nav_settings"
+
+# → Dark
+- tapOn:
+    id: "settings_theme"
+- tapOn: "Dark"
+- assertVisible: "Dark"
+
+# → Light
+- tapOn:
+    id: "settings_theme"
+- tapOn: "Light"
+- assertVisible: "Light"
+
+# → System (restore default)
+- tapOn:
+    id: "settings_theme"
+- tapOn: "System"
+- assertVisible: "System"

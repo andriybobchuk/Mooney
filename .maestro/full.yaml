@@ -48,5 +48,6 @@ appId: com.andriybobchuk.mooney
 
 # ---- Persistence & resilience ----
 - runFlow: flows/16_theme_change_persists.yaml
+- runFlow: flows/17_theme_cycle.yaml
 - runFlow: flows/21_process_death_mid_add_txn.yaml
 - runFlow: flows/22_double_tap_save_no_duplicate.yaml

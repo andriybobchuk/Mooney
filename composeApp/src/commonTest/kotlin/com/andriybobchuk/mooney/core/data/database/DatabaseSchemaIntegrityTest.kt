@@ -66,6 +66,46 @@ class DatabaseSchemaIntegrityTest {
         assertTrue(AppDatabase.DB_NAME_E2E.isNotBlank())
     }
 
+    /**
+     * If this fails, someone bumped `@Database(version)` and added a
+     * `MIGRATION_N_N+1` object but forgot to append it to
+     * [ALL_MIGRATIONS] — the DatabaseFactory would run without the new
+     * migration registered, and users on the previous version would
+     * hit Room's "no migration available" runtime crash on upgrade.
+     */
+    @Test
+    fun `ALL_MIGRATIONS length equals version - 1`() {
+        assertEquals(
+            EXPECTED_VERSION - 1,
+            ALL_MIGRATIONS.size,
+            "Expected ${EXPECTED_VERSION - 1} migrations for version $EXPECTED_VERSION; " +
+                "found ${ALL_MIGRATIONS.size}. Did you add MIGRATION_${EXPECTED_VERSION - 1}_$EXPECTED_VERSION " +
+                "and forget to append it to ALL_MIGRATIONS?"
+        )
+    }
+
+    /**
+     * Migrations must form a contiguous chain: each end version equals
+     * the next start version. A gap ("1→2, 2→3, 4→5") leaves Room
+     * unable to walk a v3-install user to v5.
+     */
+    @Test
+    fun `ALL_MIGRATIONS form a contiguous chain`() {
+        ALL_MIGRATIONS.zipWithNext().forEach { (a, b) ->
+            assertEquals(
+                a.endVersion,
+                b.startVersion,
+                "Chain break: ${a.startVersion}→${a.endVersion} then ${b.startVersion}→${b.endVersion}"
+            )
+        }
+        assertEquals(1, ALL_MIGRATIONS.first().startVersion, "First migration must start at 1")
+        assertEquals(
+            EXPECTED_VERSION,
+            ALL_MIGRATIONS.last().endVersion,
+            "Last migration must end at current version"
+        )
+    }
+
     companion object {
         /** Must be bumped in lockstep with `@Database(version = ?)` on [AppDatabase]. */
         private const val EXPECTED_VERSION = 17

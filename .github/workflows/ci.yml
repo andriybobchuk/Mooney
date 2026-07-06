@@ -105,7 +105,8 @@ jobs:
           script: |
             adb wait-for-device
             adb install -r composeApp/build/outputs/apk/e2e/composeApp-e2e.apk
-            maestro test .maestro/smoke.yaml --format junit --output smoke-report.xml
+            mkdir -p maestro-debug
+            maestro test .maestro/smoke.yaml --format junit --output smoke-report.xml --debug-output maestro-debug
       - name: Upload Maestro report + traces
         if: always()
         uses: actions/upload-artifact@v4
@@ -113,9 +114,8 @@ jobs:
           name: maestro-smoke-report
           path: |
             smoke-report.xml
+            maestro-debug/**/*
             ~/.maestro/tests/**/*
-            ~/.maestro/**/*.png
-            ~/.maestro/**/*.log
           if-no-files-found: warn
 
   deploy-testflight:

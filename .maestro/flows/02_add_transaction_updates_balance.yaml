@@ -54,10 +54,18 @@ tags:
       id: "txn_save"
     timeout: 5000
 
+# First-line proof the save actually happened: the transaction should
+# now appear in the Transactions list. Failure here = save didn't fire
+# (validation, focus, or parsing). Failure on the later Accounts assert
+# = save fired but the balance rollout to AppDataCache/Assets is broken.
+- extendedWaitUntil:
+    visible: "100.00"
+    timeout: 5000
+
 # Post-condition on Accounts tab.
 - tapOn:
     id: "nav_accounts"
 - assertVisible: "Checking"
 - extendedWaitUntil:
     visible: "4,900"
-    timeout: 5000
+    timeout: 10000

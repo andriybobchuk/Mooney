@@ -1,0 +1,34 @@
+# Balance + transaction-row render guard (add-transaction alternative).
+#
+# Same failure classes flow 02 protects, but via a pre-seeded fixture
+# state so we don't need the `inputText` path that flow 02 keeps racing
+# on. Passes with confidence on the CI emulator today; flow 02 gets
+# promoted back into smoke once the text-input race is root-caused.
+#
+# What we protect:
+#   - Account balance rendering ($4,900) on Assets tab.
+#   - Transaction row rendering ("100.00") on Transactions tab.
+#   - AppDataCache correctly threading fixture-seeded rows through
+#     both surfaces.
+
+appId: com.andriybobchuk.mooney
+tags:
+  - smoke
+  - balance-math
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "post_spend_usd"
+      WIPE_DB: "true"
+
+- assertVisible: "Transactions"
+
+# Transactions list shows the $100 coffee.
+- assertVisible: "100.00"
+
+# Assets tab shows the post-spend balance.
+- tapOn:
+    id: "nav_accounts"
+- assertVisible: "Checking"
+- assertVisible: "4,900"

@@ -21,6 +21,7 @@
 appId: com.andriybobchuk.mooney
 ---
 - runFlow: flows/01_seeded_launch_smoke.yaml
+- runFlow: flows/02b_balance_and_txn_render.yaml
 - runFlow: flows/04_delete_transaction_reverses_balance.yaml
 - runFlow: flows/09_multi_currency_net_worth.yaml
 - runFlow: flows/24_bottom_nav_walk.yaml

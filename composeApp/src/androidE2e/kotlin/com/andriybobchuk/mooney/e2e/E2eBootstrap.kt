@@ -9,6 +9,7 @@ import com.andriybobchuk.mooney.e2e.fixtures.Empty
 import com.andriybobchuk.mooney.e2e.fixtures.MidSizeUser
 import com.andriybobchuk.mooney.e2e.fixtures.MultiCurrencyUser
 import com.andriybobchuk.mooney.e2e.fixtures.NearPaywallLimit
+import com.andriybobchuk.mooney.e2e.fixtures.PostSpendUsd
 import com.andriybobchuk.mooney.e2e.fixtures.RecurringReady
 import com.andriybobchuk.mooney.e2e.fixtures.SingleAccountUsd
 import com.andriybobchuk.mooney.e2e.fixtures.TwoAccountsUsd
@@ -58,6 +59,7 @@ object E2eBootstrap {
         "mid_size_user" to MidSizeUser,
         "recurring_ready" to RecurringReady,
         "near_paywall_limit" to NearPaywallLimit,
+        "post_spend_usd" to PostSpendUsd,
     )
 
     fun onApplicationCreate(application: Application) {

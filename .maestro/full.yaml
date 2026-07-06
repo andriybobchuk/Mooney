@@ -22,6 +22,7 @@ appId: com.andriybobchuk.mooney
 - runFlow: flows/01a_onboarding_complete.yaml
 
 # ---- Balance math ----
+- runFlow: flows/02b_balance_and_txn_render.yaml
 - runFlow: flows/03_edit_transaction_reverses_balance.yaml
 - runFlow: flows/04_delete_transaction_reverses_balance.yaml
 - runFlow: flows/05_transfer_same_currency.yaml

@@ -30,11 +30,15 @@ tags:
     id: "fab_add_txn"
 
 # Wait for the sheet's LaunchedEffect delay(350) + focusRequester.requestFocus()
-# to complete. `extendedWaitUntil` retries at 250ms intervals; the Save
-# button is present once the sheet is composed.
+# to complete AND for categories to load from Room. The default category
+# button text ("Groceries") is our proxy for both being ready — no
+# validation-fail race on Save.
 - extendedWaitUntil:
     visible:
       id: "txn_save"
+    timeout: 5000
+- extendedWaitUntil:
+    visible: "Groceries"
     timeout: 5000
 
 # Tap the amount BasicTextField directly to grab focus. Now that the tag

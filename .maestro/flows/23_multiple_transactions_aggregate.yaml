@@ -32,6 +32,8 @@ tags:
     visible:
       id: "txn_save"
     timeout: 5000
+- tapOn:
+    id: "txn_amount_field"
 - inputText: "100"
 - tapOn:
     id: "txn_save"
@@ -44,6 +46,8 @@ tags:
     visible:
       id: "txn_save"
     timeout: 5000
+- tapOn:
+    id: "txn_amount_field"
 - inputText: "75"
 - tapOn:
     id: "txn_save"
@@ -56,6 +60,8 @@ tags:
     visible:
       id: "txn_save"
     timeout: 5000
+- tapOn:
+    id: "txn_amount_field"
 - inputText: "25"
 - tapOn:
     id: "txn_save"

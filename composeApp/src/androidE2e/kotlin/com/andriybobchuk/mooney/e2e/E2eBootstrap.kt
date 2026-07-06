@@ -12,6 +12,10 @@ import com.andriybobchuk.mooney.e2e.fixtures.NearPaywallLimit
 import com.andriybobchuk.mooney.e2e.fixtures.RecurringReady
 import com.andriybobchuk.mooney.e2e.fixtures.SingleAccountUsd
 import com.andriybobchuk.mooney.e2e.fixtures.TwoAccountsUsd
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys
 import com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository
 import kotlinx.coroutines.runBlocking
 import org.koin.core.context.loadKoinModules
@@ -116,6 +120,13 @@ object E2eBootstrap {
         fixture.accounts.forEach { db.accountDao.upsert(it) }
         fixture.transactions.forEach { db.transactionDao.upsert(it) }
         fixture.recurring.forEach { db.recurringTransactionDao.upsert(it) }
+
+        // Kill ads globally for every e2e run. Real ad banners never load on
+        // the CI emulator (no Play Services) but the AdBannerSlot still adds
+        // a Compose sub-tree, and any transient placement error would waste
+        // a Maestro flow's retry budget.
+        val dataStore: DataStore<Preferences> = koin.get()
+        dataStore.edit { it[PreferencesKeys.ADS_DISABLED_DEV] = true }
 
         if (fixture.skipOnboarding) {
             val prefs: PreferencesRepository = koin.get()

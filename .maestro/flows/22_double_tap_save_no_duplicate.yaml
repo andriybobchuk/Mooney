@@ -37,8 +37,6 @@ tags:
     visible:
       id: "txn_save"
     timeout: 5000
-- tapOn:
-    id: "txn_amount_field"
 - inputText: "100"
 
 # Two rapid taps. If the second one lands on an already-dismissed

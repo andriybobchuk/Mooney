@@ -37,9 +37,10 @@ tags:
       id: "txn_save"
     timeout: 5000
 
-# The sheet's LaunchedEffect delays 350ms before grabbing focus; without
-# this settle the inputText below can fire before the amount field owns
-# the cursor, and the 100 gets dropped.
+# Tap the amount BasicTextField directly to grab focus. Now that the tag
+# lives on the BasicTextField itself (not the outer padding Box), the tap
+# fires Compose's built-in field focus, races-free with the sheet's
+# 350ms auto-focus delay.
 - tapOn:
     id: "txn_amount_field"
 

@@ -2251,8 +2251,7 @@ private fun AmountHeroField(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp)
-            .mooneyTestTag(TestTags.TXN_AMOUNT_FIELD),
+            .padding(vertical = 16.dp),
         contentAlignment = Alignment.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -2271,7 +2270,8 @@ private fun AmountHeroField(
                 singleLine = true,
                 modifier = Modifier
                     .focusRequester(focusRequester)
-                    .width(fieldWidth),
+                    .width(fieldWidth)
+                    .mooneyTestTag(TestTags.TXN_AMOUNT_FIELD),
                 decorationBox = { innerTextField ->
                     Box(contentAlignment = Alignment.CenterEnd) {
                         if (!hasValue) {

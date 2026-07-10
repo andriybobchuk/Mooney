@@ -211,7 +211,11 @@
     <string name="rate_mooney">Oceń Mooney</string>
     <string name="share_feedback">Podziel się opinią</string>
     <string name="privacy_policy">Polityka prywatności</string>
-    <string name="categories_label">Kategorie</string>
+    <string name="categories_label">kategorii</string>
+    <string name="subcategories_label">podkategorii</string>
+    <string name="edit_category">Edytuj kategorię</string>
+    <string name="new_expense_category">Nowa kategoria wydatków</string>
+    <string name="new_income_category">Nowa kategoria przychodów</string>
     <string name="transactions_label">Transakcje</string>
 
     <!-- Opinie / oceny -->
@@ -266,8 +270,8 @@
     <string name="more">Więcej</string>
 
     <!-- Zarządzanie kategoriami -->
-    <string name="confirm_delete_category">Usunąć \"%1$s\"? Transakcje z tą kategorią staną się niepowiązane.</string>
-    <string name="confirm_delete_account">Usunąć \"%1$s\"? Wszystkie powiązane transakcje także zostaną usunięte.</string>
+    <string name="confirm_delete_category">Usunąć &quot;%1$s&quot;? Transakcje z tą kategorią staną się niepowiązane.</string>
+    <string name="confirm_delete_account">Usunąć &quot;%1$s&quot;? Wszystkie powiązane transakcje także zostaną usunięte.</string>
     <string name="transaction_categories">Kategorie transakcji</string>
     <string name="asset_categories">Kategorie aktywów</string>
     <string name="copy_action">Kopiuj</string>
@@ -295,8 +299,8 @@
     <string name="goal_reached">Cel osiągnięty!</string>
 
     <!-- Zarządzanie kategoriami -->
-    <string name="delete_asset_category_msg">Usunąć \"%1$s\"? Konta używające tej kategorii zachowają swoje dane, ale pojawią się w \"Inne\".</string>
-    <string name="delete_tx_category_msg">Usunąć \"%1$s\"? Transakcje używające tej kategorii staną się niepowiązane.</string>
+    <string name="delete_asset_category_msg">Usunąć &quot;%1$s&quot;? Konta używające tej kategorii zachowają swoje dane, ale pojawią się w &quot;Inne&quot;.</string>
+    <string name="delete_tx_category_msg">Usunąć &quot;%1$s&quot;? Transakcje używające tej kategorii staną się niepowiązane.</string>
     <string name="add_asset_category">Dodaj kategorię aktywa</string>
     <string name="add_liability_category">Dodaj kategorię zobowiązania</string>
     <string name="assets_section">Aktywa</string>
@@ -308,10 +312,10 @@
     <string name="close">Zamknij</string>
 
     <!-- Dialog usuwania transakcji -->
-    <string name="delete_tx_confirm">Usunąć transakcję \"%1$s\" na %2$s %3$s?</string>
+    <string name="delete_tx_confirm">Usunąć transakcję &quot;%1$s&quot; na %2$s %3$s?</string>
 
     <!-- Cele dialog -->
-    <string name="delete_goal_confirm">Usunąć \"%1$s\"? Tego nie można cofnąć.</string>
+    <string name="delete_goal_confirm">Usunąć &quot;%1$s&quot;? Tego nie można cofnąć.</string>
 
     <!-- Dialogi ustawień -->
     <string name="update_categories_title">Aktualizuj kategorie</string>
@@ -333,7 +337,7 @@
 
     <!-- Dialogi konta -->
     <string name="delete_account_title">Usuń konto</string>
-    <string name="delete_account_confirm">Usunąć \"%1$s\"? Tego nie można cofnąć.</string>
+    <string name="delete_account_confirm">Usunąć &quot;%1$s&quot;? Tego nie można cofnąć.</string>
 
     <!-- Cykliczne -->
     <string name="recurring_transactions_title">Transakcje cykliczne</string>

@@ -1,0 +1,42 @@
+# Base-currency change propagation guard.
+#
+# Fixture: multi_currency_user — USD base, net worth $8,500 with
+# StubExchangeRateProvider's canned rates.
+#
+# Change base currency in Settings from USD to EUR. Every derived
+# value must recompute:
+#   - Accounts screen net worth: $8,500 * 0.92 = €7,820
+#   - Analytics revenue/costs (no txns in this fixture, so N/A here)
+#
+# What we protect: a cached derived-state bug where the app reads the
+# net worth cache without invalidating on base-currency change.
+# Silent because the numbers still look plausible — just wrong.
+
+appId: com.andriybobchuk.mooney
+tags:
+  - currency
+  - persistence
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "multi_currency_user"
+      WIPE_DB: "true"
+
+- tapOn:
+    id: "nav_accounts"
+- assertVisible: "8,500"
+
+# Change base to EUR via Settings.
+- tapOn:
+    id: "nav_settings"
+- tapOn:
+    id: "settings_base_currency"
+- tapOn: "EUR"
+
+# Return to Accounts. Net worth is now €7,820 — the number shape
+# is chosen so any wrong-way conversion produces a very different
+# result (e.g. multiplying gives €9,240).
+- tapOn:
+    id: "nav_accounts"
+- assertVisible: "7,820"

@@ -6,13 +6,20 @@ import androidx.compose.ui.Modifier
 /**
  * Platform-specific banner ad view.
  *
- * - iOS: hosts a real `GADBannerView` via Compose Multiplatform's `UIKitView`.
- *   The view is built once per `adUnitId` and embedded directly; the
- *   GoogleMobileAds SDK handles its own measurement + reload cycle.
- * - Android: no-op until `play-services-ads` is wired post-launch.
+ * - iOS: hosts a real `BannerView` via Compose Multiplatform's `UIKitView`.
+ *   The `isDarkTheme` flag is applied as `overrideUserInterfaceStyle` on the
+ *   BannerView so ad creatives that respect the trait environment render in
+ *   the same mode as the app. Container background is transparent so the
+ *   Compose parent (which paints the app's surface color) shows through
+ *   before the ad load completes — no more white flash.
+ * - Android: hosts a `com.google.android.gms.ads.AdView`. Same rules apply.
  *
  * Place this inside an eligibility-gated wrapper like [AdBannerSlot] — don't
  * call directly from screens, or banners can show for premium / new users.
  */
 @Composable
-expect fun MooneyBannerAdView(adUnitId: String, modifier: Modifier = Modifier)
+expect fun MooneyBannerAdView(
+    adUnitId: String,
+    isDarkTheme: Boolean,
+    modifier: Modifier = Modifier
+)

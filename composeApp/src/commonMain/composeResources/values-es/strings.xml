@@ -212,6 +212,10 @@
     <string name="share_feedback">Compartir comentarios</string>
     <string name="privacy_policy">Política de privacidad</string>
     <string name="categories_label">Categorías</string>
+    <string name="subcategories_label">subcategorías</string>
+    <string name="edit_category">Editar categoría</string>
+    <string name="new_expense_category">Nueva categoría de gasto</string>
+    <string name="new_income_category">Nueva categoría de ingreso</string>
     <string name="transactions_label">Transacciones</string>
 
     <!-- Reseña -->
@@ -266,8 +270,8 @@
     <string name="more">Más</string>
 
     <!-- Categorías -->
-    <string name="confirm_delete_category">¿Eliminar \"%1$s\"? Las transacciones con esta categoría quedarán sin vincular.</string>
-    <string name="confirm_delete_account">¿Eliminar \"%1$s\"? También se eliminarán todas las transacciones relacionadas.</string>
+    <string name="confirm_delete_category">¿Eliminar &quot;%1$s&quot;? Las transacciones con esta categoría quedarán sin vincular.</string>
+    <string name="confirm_delete_account">¿Eliminar &quot;%1$s&quot;? También se eliminarán todas las transacciones relacionadas.</string>
     <string name="transaction_categories">Categorías de transacciones</string>
     <string name="asset_categories">Categorías de activos</string>
     <string name="copy_action">Copiar</string>
@@ -295,8 +299,8 @@
     <string name="goal_reached">¡Meta alcanzada!</string>
 
     <!-- Gestión de categorías -->
-    <string name="delete_asset_category_msg">¿Eliminar \"%1$s\"? Las cuentas que usan esta categoría conservarán sus datos, pero aparecerán bajo \"Otros\".</string>
-    <string name="delete_tx_category_msg">¿Eliminar \"%1$s\"? Las transacciones que usan esta categoría se desvincularán.</string>
+    <string name="delete_asset_category_msg">¿Eliminar &quot;%1$s&quot;? Las cuentas que usan esta categoría conservarán sus datos, pero aparecerán bajo &quot;Otros&quot;.</string>
+    <string name="delete_tx_category_msg">¿Eliminar &quot;%1$s&quot;? Las transacciones que usan esta categoría se desvincularán.</string>
     <string name="add_asset_category">Agregar categoría de activo</string>
     <string name="add_liability_category">Agregar categoría de pasivo</string>
     <string name="assets_section">Activos</string>
@@ -308,10 +312,10 @@
     <string name="close">Cerrar</string>
 
     <!-- Diálogo de eliminación de transacción -->
-    <string name="delete_tx_confirm">¿Eliminar la transacción \"%1$s\" por %2$s %3$s?</string>
+    <string name="delete_tx_confirm">¿Eliminar la transacción &quot;%1$s&quot; por %2$s %3$s?</string>
 
     <!-- Diálogo de metas -->
-    <string name="delete_goal_confirm">¿Eliminar \"%1$s\"? Esto no se puede deshacer.</string>
+    <string name="delete_goal_confirm">¿Eliminar &quot;%1$s&quot;? Esto no se puede deshacer.</string>
 
     <!-- Diálogos de ajustes -->
     <string name="update_categories_title">Actualizar categorías</string>
@@ -333,7 +337,7 @@
 
     <!-- Diálogos de cuenta -->
     <string name="delete_account_title">Eliminar cuenta</string>
-    <string name="delete_account_confirm">¿Eliminar \"%1$s\"? Esto no se puede deshacer.</string>
+    <string name="delete_account_confirm">¿Eliminar &quot;%1$s&quot;? Esto no se puede deshacer.</string>
 
     <!-- Recurrentes -->
     <string name="recurring_transactions_title">Transacciones recurrentes</string>

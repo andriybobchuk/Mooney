@@ -1,0 +1,71 @@
+# Phase-2 smoke flow — the load-bearing balance-math regression guard.
+#
+# Guards against: AddTransactionUseCase drift; TransferHandler regressions
+# that would silently mis-account for money on the core happy path.
+#
+# Sequence:
+#   1. Launch with `single_account_usd` fixture (Checking, $5,000).
+#   2. Open the add-transaction sheet.
+#   3. Type $100 into the auto-focused amount field.
+#   4. Tap Save.
+#   5. Assert the sheet dismisses (Save no longer visible).
+#   6. Assert Checking balance is $4,900 on the Accounts tab.
+
+appId: com.andriybobchuk.mooney
+tags:
+  - smoke
+  - transactions
+  - balance-math
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "single_account_usd"
+      WIPE_DB: "true"
+
+- assertVisible: "Transactions"
+
+# Open the sheet (empty-state MooneyButton or FAB — same tag).
+- tapOn:
+    id: "fab_add_txn"
+
+# Wait for the sheet to compose (Save button present is our signal).
+# The category button lives below the amount field and often sits outside
+# the viewport in the sheet, so we can't reliably use it as a wait
+# anchor — the placeholder "0.00" IS always in the visible area.
+- extendedWaitUntil:
+    visible:
+      id: "txn_save"
+    timeout: 5000
+
+# Tap the placeholder to focus the amount field. Text selectors on
+# placeholders land on the field's composed hit-target regardless of
+# what semantics wrappers surround it.
+- tapOn: "0.00"
+
+- inputText: "100"
+
+- tapOn:
+    id: "txn_save"
+
+# Sheet dismisses. Save disappears from the tree.
+- extendedWaitUntil:
+    notVisible:
+      id: "txn_save"
+    timeout: 5000
+
+# First-line proof the save actually happened: the transaction should
+# now appear in the Transactions list. Failure here = save didn't fire
+# (validation, focus, or parsing). Failure on the later Accounts assert
+# = save fired but the balance rollout to AppDataCache/Assets is broken.
+- extendedWaitUntil:
+    visible: "100.00"
+    timeout: 5000
+
+# Post-condition on Accounts tab.
+- tapOn:
+    id: "nav_accounts"
+- assertVisible: "Checking"
+- extendedWaitUntil:
+    visible: "4,900"
+    timeout: 10000

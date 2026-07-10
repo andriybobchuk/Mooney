@@ -57,12 +57,17 @@ import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.add_category
 import mooney.composeapp.generated.resources.add_subcategory
 import mooney.composeapp.generated.resources.cancel
+import mooney.composeapp.generated.resources.categories_label
 import mooney.composeapp.generated.resources.category_name
 import mooney.composeapp.generated.resources.delete
 import mooney.composeapp.generated.resources.delete_tx_category_msg
+import mooney.composeapp.generated.resources.edit_category
 import mooney.composeapp.generated.resources.expense
 import mooney.composeapp.generated.resources.income
+import mooney.composeapp.generated.resources.new_expense_category
+import mooney.composeapp.generated.resources.new_income_category
 import mooney.composeapp.generated.resources.save
+import mooney.composeapp.generated.resources.subcategories_label
 import mooney.composeapp.generated.resources.transaction_categories
 import org.jetbrains.compose.resources.stringResource
 
@@ -241,9 +246,10 @@ fun TransactionCategoriesScreen(
                 }
 
                 // Count line — mirrors the screenshot ("9 categories · 21
-                // subcategories"). The "Reorder" affordance is visible but
-                // disabled until drag-drop ships; better an honest dim label
-                // than a button that does nothing.
+                // subcategories"). The Reorder affordance was here previously
+                // as a disabled label; removed because it read to users as a
+                // broken button. Bring it back as a real drag-mode toggle
+                // when drag-drop ships for this screen.
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -251,15 +257,13 @@ fun TransactionCategoriesScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${generalCategories.size} categories · $subcategoryCount subcategories",
+                        text = "${generalCategories.size} " +
+                            stringResource(Res.string.categories_label) + " · " +
+                            "$subcategoryCount " +
+                            stringResource(Res.string.subcategories_label),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        text = "Reorder",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
                     )
                 }
 
@@ -408,7 +412,7 @@ private fun CategoryListRow(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddCategoryNameSheet(
+internal fun AddCategoryNameSheet(
     type: CategoryType,
     onDismiss: () -> Unit,
     onAdd: (name: String, emoji: String) -> Unit
@@ -425,7 +429,10 @@ private fun AddCategoryNameSheet(
                 .verticalScroll(rememberScrollState())
         ) {
             EditSheetTopBar(
-                title = "New ${if (type == CategoryType.EXPENSE) "expense" else "income"} category",
+                title = stringResource(
+                    if (type == CategoryType.EXPENSE) Res.string.new_expense_category
+                    else Res.string.new_income_category
+                ),
                 saveLabel = stringResource(Res.string.save),
                 saveEnabled = canSave,
                 onCancel = onDismiss,
@@ -496,7 +503,7 @@ private fun CategoryEditSheet(
                 .verticalScroll(rememberScrollState())
         ) {
             EditSheetTopBar(
-                title = "Edit category",
+                title = stringResource(Res.string.edit_category),
                 saveLabel = stringResource(Res.string.save),
                 saveEnabled = name.isNotBlank() && name.trim() != localizedTitle && name.trim() != category.title,
                 onCancel = onDismiss,

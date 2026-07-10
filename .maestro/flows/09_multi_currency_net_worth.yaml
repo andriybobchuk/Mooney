@@ -1,0 +1,42 @@
+# Multi-currency net worth — StubExchangeRateProvider math guard.
+#
+# Fixture has three accounts:
+#   Checking      USD $5,000
+#   Euro Savings  €2,300  (StubProvider: 0.92 EUR per USD → $2,500)
+#   Zloty Cash    4,000 zł (StubProvider: 4.00 PLN per USD → $1,000)
+# Total in USD: $8,500.
+#
+# What can regress that this catches:
+#   - CurrencyManagerUseCase converting foreign-account balances the
+#     wrong direction (multiplying instead of dividing).
+#   - CalculateNetWorthUseCase double-counting a liability as an asset.
+#   - StubExchangeRateProvider not actually replacing the production
+#     one (network fetch would give live rates and this assertion
+#     would flake by ~$100 per day).
+
+appId: com.andriybobchuk.mooney
+tags:
+  - net-worth
+  - currency
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "multi_currency_user"
+      WIPE_DB: "true"
+
+- tapOn:
+    id: "nav_accounts"
+
+# Each account still shows in its native currency.
+- assertVisible: "Checking"
+- assertVisible: "Euro Savings"
+- assertVisible: "Zloty Cash"
+- assertVisible: "5,000"
+- assertVisible: "2,300"
+- assertVisible: "4,000"
+
+# Net worth: $8,500 with the stub's canned rates. Exact digits chosen
+# so a wrong-way conversion would produce a very different number
+# (multiplying instead of dividing gives ~$18,700).
+- assertVisible: "8,500"

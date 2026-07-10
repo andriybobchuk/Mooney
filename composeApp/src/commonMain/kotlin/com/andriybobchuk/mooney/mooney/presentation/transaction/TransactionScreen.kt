@@ -121,6 +121,9 @@ import com.andriybobchuk.mooney.mooney.presentation.account.UiAccount
 import com.andriybobchuk.mooney.mooney.presentation.account.toAccounts
 import com.andriybobchuk.mooney.mooney.presentation.analytics.MonthPicker
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
+import com.andriybobchuk.mooney.core.testing.TestTags
+import com.andriybobchuk.mooney.core.testing.mooneyTestTag
+import com.andriybobchuk.mooney.core.testing.mooneyTestTagLeaf
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyTextField
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -293,6 +296,7 @@ fun TransactionsScreen(
                         preselectedCategory = null
                         isBottomSheetOpen = true
                     },
+                    modifier = Modifier.mooneyTestTag(TestTags.FAB_ADD_TXN),
                     content = {
                         Icon(Icons.Outlined.Add, contentDescription = stringResource(Res.string.cd_add_transaction))
                     },
@@ -860,7 +864,8 @@ fun TransactionsScreenContent(
                             text = stringResource(Res.string.add_transaction),
                             onClick = onAddTransaction,
                             variant = ButtonVariant.PRIMARY,
-                            fullWidth = true
+                            fullWidth = true,
+                            modifier = Modifier.mooneyTestTag(TestTags.FAB_ADD_TXN)
                         )
                         Spacer(modifier = Modifier.height(32.dp))
                     }
@@ -932,10 +937,12 @@ fun TransactionsScreenContent(
                 var showDeleteConfirm by remember { mutableStateOf(false) }
 
                 Box(
-                    modifier = Modifier.combinedClickable(
-                        onClick = { onEdit(tx) },
-                        onLongClick = { showActionSheet = true }
-                    )
+                    modifier = Modifier
+                        .mooneyTestTag(TestTags.txnRow(tx.id.toLong()))
+                        .combinedClickable(
+                            onClick = { onEdit(tx) },
+                            onLongClick = { showActionSheet = true }
+                        )
                 ) {
                     TransactionItem(tx, accounts)
                 }
@@ -981,6 +988,7 @@ fun TransactionsScreenContent(
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(MaterialTheme.colorScheme.errorContainer)
+                                    .mooneyTestTag(TestTags.TXN_ACTION_DELETE)
                                     .clickable {
                                         showActionSheet = false
                                         showDeleteConfirm = true
@@ -1024,6 +1032,7 @@ fun TransactionsScreenContent(
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(MaterialTheme.colorScheme.errorContainer)
+                                    .mooneyTestTag(TestTags.TXN_CONFIRM_DELETE)
                                     .clickable {
                                         showDeleteConfirm = false
                                         onDelete(tx.id)
@@ -1224,10 +1233,17 @@ fun NativeTransactionAdRow() {
 
     if (!eligible) return
 
-    com.andriybobchuk.mooney.core.ads.MooneyBannerAdView(
-        adUnitId = com.andriybobchuk.mooney.core.ads.AdUnitIds.banner,
-        modifier = Modifier.fillMaxWidth()
-    )
+    val isDarkTheme = androidx.compose.foundation.isSystemInDarkTheme()
+    androidx.compose.foundation.layout.Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+    ) {
+        com.andriybobchuk.mooney.core.ads.MooneyBannerAdView(
+            adUnitId = com.andriybobchuk.mooney.core.ads.AdUnitIds.banner,
+            isDarkTheme = isDarkTheme
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1538,13 +1554,9 @@ fun TransactionBottomSheet(
                 val subCat = currentSelectedSubCategory
                 val mainCat = currentSelectedCategory
                 val categoryText = when {
-                    subCat != null -> "${subCat.resolveEmoji()} ${subCat.title}"
-                    mainCat != null -> "${mainCat.emoji ?: ""} ${mainCat.title}"
-                    else -> when (selectedTransactionType) {
-                        CategoryType.EXPENSE -> "🛒 Groceries & Household"
-                        CategoryType.INCOME -> "💸 Salary"
-                        else -> stringResource(Res.string.select_category)
-                    }
+                    subCat != null -> "${subCat.resolveEmoji()} ${localizedCategoryTitle(subCat)}"
+                    mainCat != null -> "${mainCat.emoji ?: ""} ${localizedCategoryTitle(mainCat)}"
+                    else -> stringResource(Res.string.select_category)
                 }
                 MooneyButton(
                     text = categoryText,
@@ -1663,7 +1675,7 @@ fun TransactionBottomSheet(
             Spacer(Modifier.height(4.dp))
             MooneyButton(
                 text = if (transactionToEdit != null) stringResource(Res.string.update_transaction) else stringResource(Res.string.add_transaction),
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp).mooneyTestTag(TestTags.TXN_SAVE_BUTTON),
                 variant = ButtonVariant.PRIMARY,
                 enabled = validation !is TransactionValidation.Error,
                 onClick = {
@@ -2255,7 +2267,8 @@ private fun AmountHeroField(
                 singleLine = true,
                 modifier = Modifier
                     .focusRequester(focusRequester)
-                    .width(fieldWidth),
+                    .width(fieldWidth)
+                    .mooneyTestTagLeaf(TestTags.TXN_AMOUNT_FIELD),
                 decorationBox = { innerTextField ->
                     Box(contentAlignment = Alignment.CenterEnd) {
                         if (!hasValue) {
@@ -2478,13 +2491,20 @@ fun CategorySelectionBottomSheet(
     onReorder: (List<String>) -> Unit = {},
     onEditCategories: () -> Unit = {}
 ) {
-    var selectedTabIndex by remember { 
+    var selectedTabIndex by remember {
         mutableStateOf(
             if (initialSelectedCategory?.type == CategoryType.INCOME) 1 else 0
-        ) 
+        )
     }
     var showSubCategorySheet by remember { mutableStateOf(false) }
     var selectedParentCategory by remember { mutableStateOf<Category?>(null) }
+    // Inline add-category flow — pressing "+" shows the same
+    // AddCategoryNameSheet the Categories management screen uses. Previously
+    // this button navigated to the Categories screen entirely, ripping the
+    // user out of the add-transaction flow they were already in.
+    var showAddCategorySheet by remember { mutableStateOf(false) }
+    val categoriesViewModel: com.andriybobchuk.mooney.mooney.presentation.categories.TransactionCategoriesViewModel =
+        org.koin.compose.viewmodel.koinViewModel()
 
     MooneyBottomSheet(
         onDismissRequest = onDismiss,
@@ -2501,7 +2521,7 @@ fun CategorySelectionBottomSheet(
                     fontWeight = FontWeight.Medium,
                     fontSize = 20.sp
                 )
-                TextButton(onClick = { onDismiss(); onEditCategories() }) {
+                TextButton(onClick = { showAddCategorySheet = true }) {
                     Icon(
                         Icons.Outlined.Add,
                         contentDescription = null,
@@ -2630,6 +2650,26 @@ fun CategorySelectionBottomSheet(
             onParentSelected = {
                 onCategorySelected(parentCat, null)
                 showSubCategorySheet = false
+            }
+        )
+    }
+
+    if (showAddCategorySheet) {
+        val addType = if (selectedTabIndex == 0) CategoryType.EXPENSE else CategoryType.INCOME
+        com.andriybobchuk.mooney.mooney.presentation.categories.AddCategoryNameSheet(
+            type = addType,
+            onDismiss = { showAddCategorySheet = false },
+            onAdd = { name, emoji ->
+                categoriesViewModel.onAction(
+                    com.andriybobchuk.mooney.mooney.presentation.categories
+                        .TransactionCategoriesAction.AddCategory(
+                            title = name,
+                            type = addType.name,
+                            emoji = emoji.ifBlank { null },
+                            parentId = null
+                        )
+                )
+                showAddCategorySheet = false
             }
         )
     }

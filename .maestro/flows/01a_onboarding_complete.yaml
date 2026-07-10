@@ -1,0 +1,58 @@
+# Onboarding happy path.
+#
+# Guards against: onboarding-complete flag never persisted; navigation
+# stuck on the currency screen; base-currency selection not written to
+# preferences; the "Get Started" button gating logic drifting from its
+# spec (must be enabled only when at least one currency is selected and
+# a base is chosen).
+#
+# The `empty` fixture skips onboarding = false, so this cold-starts on
+# OnboardingScreen with no prior state.
+
+appId: com.andriybobchuk.mooney
+tags:
+  - onboarding
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "empty"
+      WIPE_DB: "true"
+
+# First screen: welcome. Advance via the CTA text (button is one-off,
+# not worth a tag for a single call site).
+- assertVisible: "Mooney"
+
+# The onboarding VM walks WELCOME → CURRENCY_MULTI_SELECT → BASE_CURRENCY.
+# On some flows welcome auto-forwards; either way we should end up on
+# the multi-select currency screen within a couple of taps.
+- runFlow:
+    when:
+      visible: "Get Started"
+    commands:
+      - tapOn: "Get Started"
+
+# Pick USD via its testTag. If we're on the multi-select step, this
+# toggles USD on. If we're already on BASE_CURRENCY, this selects USD
+# as the base — either way the app state ends valid.
+- tapOn:
+    id: "onboarding_currency_USD"
+
+# Advance until we're on the base-currency screen (button present).
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
+
+# Base currency: USD again — safe under both step layouts.
+- tapOn:
+    id: "onboarding_currency_USD"
+
+# Finalize.
+- tapOn:
+    id: "onboarding_get_started"
+
+# Post-condition: we're inside the main graph (bottom nav visible).
+- assertVisible: "Transactions"
+- assertVisible: "Assets"

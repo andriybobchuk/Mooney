@@ -72,6 +72,8 @@ import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MeshGradientBackground
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
+import com.andriybobchuk.mooney.core.testing.TestTags
+import com.andriybobchuk.mooney.core.testing.mooneyTestTag
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyTextField
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
 import com.andriybobchuk.mooney.mooney.data.GlobalConfig
@@ -136,10 +138,11 @@ fun GoalsScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { viewModel.onAction(GoalsAction.ShowAddGoalSheet) },
+                modifier = Modifier.mooneyTestTag(TestTags.FAB_ADD_GOAL),
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
-                Icon(Icons.Outlined.Add, contentDescription = "Add Goal")
+                Icon(Icons.Outlined.Add, contentDescription = "Add Goal") // allow-hardcoded
             }
         }
     ) { paddingValues ->
@@ -516,7 +519,7 @@ private fun AddEditGoalSheet(
                 value = title,
                 onValueChange = { if (it.length <= 40) title = it },
                 label = stringResource(Res.string.title_label),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().mooneyTestTag(TestTags.GOAL_TITLE_FIELD),
                 singleLine = true
             )
 
@@ -526,7 +529,7 @@ private fun AddEditGoalSheet(
                 value = targetAmount,
                 onValueChange = { targetAmount = it },
                 label = stringResource(Res.string.target_amount_label),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().mooneyTestTag(TestTags.GOAL_TARGET_FIELD),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true
             )
@@ -613,7 +616,7 @@ private fun AddEditGoalSheet(
                     onSave(title, amount, selectedCurrency, trackingType, selectedAccountId)
                 },
                 enabled = isFormValid,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().mooneyTestTag(TestTags.GOAL_SAVE_BUTTON)
             )
         }
     }

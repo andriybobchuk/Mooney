@@ -4,6 +4,7 @@ import com.andriybobchuk.mooney.core.data.database.MooneyDatabaseFactory
 import com.andriybobchuk.mooney.core.data.preferences.PreferencesDataStoreFactory
 import com.andriybobchuk.mooney.core.data.preferences.StartupPrefs
 import com.andriybobchuk.mooney.core.platform.FileHandler
+import com.andriybobchuk.mooney.core.platform.FilePickerLauncher
 import com.andriybobchuk.mooney.core.premium.ActivityProvider
 import com.andriybobchuk.mooney.core.premium.AndroidBillingManager
 import com.andriybobchuk.mooney.core.premium.BillingManager
@@ -19,7 +20,8 @@ actual val platformModule: Module
         single { MooneyDatabaseFactory(androidApplication()) }
         single { PreferencesDataStoreFactory(androidApplication()) }
         single { StartupPrefs(androidApplication()) }
-        single { FileHandler(androidApplication()) }
+        single { FilePickerLauncher() }
+        single { FileHandler(androidApplication(), get()) }
         single { ActivityProvider() }
         single<BillingManager> { AndroidBillingManager(androidApplication(), get()) }
     }

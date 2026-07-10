@@ -1,0 +1,30 @@
+# Phase-1 seeded-launch smoke.
+#
+# Proves the entire E2E infrastructure end-to-end:
+#   - The `e2e` Android build type assembles cleanly.
+#   - E2eBootstrap.onActivityCreate reads Intent extras and wipes+seeds the DB.
+#   - Fixture data reaches the Compose UI on the first frame.
+#   - Maestro's text-selector matching resolves the seeded content.
+#
+# Later phases will add richer assertions (balance math, tab navigation,
+# add-transaction, paywall) once more testTags are instrumented and the
+# add-transaction sheet's amount field / save button have identifiers.
+
+appId: com.andriybobchuk.mooney
+tags:
+  - smoke
+  - seed
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "single_account_usd"
+      WIPE_DB: "true"
+
+# The Assets tab shows the seeded "Checking" account. If either of these
+# assertions fires, either the DB wasn't seeded (bootstrap issue) or the
+# UI isn't reading the DAO (Koin wiring / AppDataCache issue).
+- assertVisible: "Assets"
+- tapOn: "Assets"
+
+- assertVisible: "Checking"

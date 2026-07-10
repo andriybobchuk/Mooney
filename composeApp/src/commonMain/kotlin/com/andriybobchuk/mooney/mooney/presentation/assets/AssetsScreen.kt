@@ -55,6 +55,8 @@ import com.andriybobchuk.mooney.core.presentation.designsystem.components.Mooney
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.ButtonVariant
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MeshGradientBackground
 import com.andriybobchuk.mooney.core.premium.PaywallSheet
+import com.andriybobchuk.mooney.core.testing.TestTags
+import com.andriybobchuk.mooney.core.testing.mooneyTestTag
 import androidx.compose.runtime.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -249,6 +251,7 @@ fun AssetsScreen(
             if (assets.isNotEmpty()) {
                 FloatingActionButton(
                     onClick = { showSheet = true },
+                    modifier = Modifier.mooneyTestTag(TestTags.FAB_ADD_ACCOUNT),
                     content = {
                         Icon(Icons.Outlined.Add, contentDescription = stringResource(Res.string.add_account))
                     },
@@ -629,7 +632,8 @@ private fun AssetsScreenContent(
                             text = stringResource(Res.string.add_first_account),
                             onClick = onAddAsset,
                             variant = ButtonVariant.PRIMARY,
-                            fullWidth = true
+                            fullWidth = true,
+                            modifier = Modifier.mooneyTestTag(TestTags.FAB_ADD_ACCOUNT)
                         )
                         Spacer(modifier = Modifier.height(32.dp))
                     }
@@ -1193,7 +1197,7 @@ private fun AssetSheet(
         Spacer(Modifier.height(12.dp))
 
         MooneyTextField(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().mooneyTestTag(TestTags.ACCOUNT_TITLE_FIELD),
             value = title,
             onValueChange = { if (it.length <= 24) title = it },
             label = stringResource(Res.string.title),
@@ -1203,7 +1207,7 @@ private fun AssetSheet(
         Spacer(Modifier.height(8.dp))
 
         MooneyTextField(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().mooneyTestTag(TestTags.ACCOUNT_AMOUNT_FIELD),
             value = amount,
             onValueChange = { amount = it },
             label = stringResource(Res.string.value),
@@ -1260,7 +1264,7 @@ private fun AssetSheet(
 
         MooneyButton(
             text = if (editingAsset != null) stringResource(Res.string.update_asset) else stringResource(Res.string.add_account),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().mooneyTestTag(TestTags.ACCOUNT_SAVE_BUTTON),
             variant = ButtonVariant.PRIMARY,
             onClick = {
                 val amt = amount.parseAmountInput() ?: 0.0

@@ -90,6 +90,7 @@ firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashly
 firebase-config = { group = "com.google.firebase", name = "firebase-config-ktx" }
 billing-ktx = { module = "com.android.billingclient:billing-ktx", version.ref = "billing" }
 google-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "googleAds" }
+play-review-ktx = { module = "com.google.android.play:review-ktx", version = "2.0.2" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

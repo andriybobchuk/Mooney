@@ -56,6 +56,10 @@ kotlin {
             implementation(libs.billing.ktx)
             implementation(libs.androidx.core.splashscreen)
             implementation(libs.google.ads)
+            implementation(libs.play.review.ktx)
+            // WebSettingsCompat.setAlgorithmicDarkeningAllowed — used to force
+            // the AdMob banner WebView to render dark creatives.
+            implementation("androidx.webkit:webkit:1.12.1")
             // Reminder notifications — scheduled via WorkManager so the OS
             // hosts the periodic trigger across reboots and app upgrades.
             implementation("androidx.work:work-runtime-ktx:2.9.0")
@@ -116,6 +120,12 @@ android {
         versionCode = (project.findProperty("app.versionCode") as String).toInt()
         versionName = project.findProperty("app.version") as String
     }
+    // BuildConfig gen enabled so isE2eBuild can key off BuildConfig.IS_E2E.
+    // Every build type declares IS_E2E so the actual-val reference compiles
+    // across debug, release, and e2e.
+    buildFeatures {
+        buildConfig = true
+    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -147,6 +157,9 @@ android {
         }
     }
     buildTypes {
+        getByName("debug") {
+            buildConfigField("boolean", "IS_E2E", "false")
+        }
         getByName("release") {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -157,6 +170,20 @@ android {
             if (releaseSigningAvailable) {
                 signingConfig = signingConfigs.getByName("release")
             }
+            buildConfigField("boolean", "IS_E2E", "false")
+        }
+        // Dedicated E2E test build. Uses the same applicationId as debug so
+        // google-services.json's package_name lookup succeeds; that means
+        // e2e and debug can't be installed side-by-side on one device, which
+        // is fine in CI (fresh image every run) and a mild local annoyance
+        // that a fresh emulator handles. Sources under KMP v2's `androidE2e`
+        // source set override same-package files from androidMain, so the
+        // real E2eBootstrap replaces the no-op stub only for this variant.
+        create("e2e") {
+            initWith(getByName("debug"))
+            matchingFallbacks += listOf("debug")
+            isMinifyEnabled = false
+            buildConfigField("boolean", "IS_E2E", "true")
         }
     }
     compileOptions {

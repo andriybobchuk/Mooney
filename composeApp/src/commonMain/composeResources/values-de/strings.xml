@@ -212,6 +212,10 @@
     <string name="share_feedback">Feedback teilen</string>
     <string name="privacy_policy">Datenschutzerklärung</string>
     <string name="categories_label">Kategorien</string>
+    <string name="subcategories_label">Unterkategorien</string>
+    <string name="edit_category">Kategorie bearbeiten</string>
+    <string name="new_expense_category">Neue Ausgabenkategorie</string>
+    <string name="new_income_category">Neue Einnahmenkategorie</string>
     <string name="transactions_label">Transaktionen</string>
 
     <!-- Feedback / Bewertung -->
@@ -266,8 +270,8 @@
     <string name="more">Mehr</string>
 
     <!-- Kategorien -->
-    <string name="confirm_delete_category">\"%1$s\" löschen? Transaktionen mit dieser Kategorie werden unverknüpft.</string>
-    <string name="confirm_delete_account">\"%1$s\" löschen? Alle zugehörigen Transaktionen werden ebenfalls gelöscht.</string>
+    <string name="confirm_delete_category">&quot;%1$s&quot; löschen? Transaktionen mit dieser Kategorie werden unverknüpft.</string>
+    <string name="confirm_delete_account">&quot;%1$s&quot; löschen? Alle zugehörigen Transaktionen werden ebenfalls gelöscht.</string>
     <string name="transaction_categories">Transaktionskategorien</string>
     <string name="asset_categories">Vermögenskategorien</string>
     <string name="copy_action">Kopieren</string>
@@ -295,8 +299,8 @@
     <string name="goal_reached">Ziel erreicht!</string>
 
     <!-- Kategorienverwaltung -->
-    <string name="delete_asset_category_msg">\"%1$s\" löschen? Konten mit dieser Kategorie behalten ihre Daten, erscheinen aber unter \"Sonstige\".</string>
-    <string name="delete_tx_category_msg">\"%1$s\" löschen? Transaktionen mit dieser Kategorie werden nicht mehr verknüpft.</string>
+    <string name="delete_asset_category_msg">&quot;%1$s&quot; löschen? Konten mit dieser Kategorie behalten ihre Daten, erscheinen aber unter &quot;Sonstige&quot;.</string>
+    <string name="delete_tx_category_msg">&quot;%1$s&quot; löschen? Transaktionen mit dieser Kategorie werden nicht mehr verknüpft.</string>
     <string name="add_asset_category">Vermögenskategorie hinzufügen</string>
     <string name="add_liability_category">Verbindlichkeitskategorie hinzufügen</string>
     <string name="assets_section">Vermögen</string>
@@ -308,10 +312,10 @@
     <string name="close">Schließen</string>
 
     <!-- Transaktions-Löschdialog -->
-    <string name="delete_tx_confirm">Transaktion \"%1$s\" über %2$s %3$s löschen?</string>
+    <string name="delete_tx_confirm">Transaktion &quot;%1$s&quot; über %2$s %3$s löschen?</string>
 
     <!-- Ziel-Dialog -->
-    <string name="delete_goal_confirm">\"%1$s\" löschen? Dies kann nicht rückgängig gemacht werden.</string>
+    <string name="delete_goal_confirm">&quot;%1$s&quot; löschen? Dies kann nicht rückgängig gemacht werden.</string>
 
     <!-- Einstellungs-Dialoge -->
     <string name="update_categories_title">Kategorien aktualisieren</string>
@@ -333,7 +337,7 @@
 
     <!-- Konto-Dialoge -->
     <string name="delete_account_title">Konto löschen</string>
-    <string name="delete_account_confirm">\"%1$s\" löschen? Dies kann nicht rückgängig gemacht werden.</string>
+    <string name="delete_account_confirm">&quot;%1$s&quot; löschen? Dies kann nicht rückgängig gemacht werden.</string>
 
     <!-- Wiederkehrend -->
     <string name="recurring_transactions_title">Wiederkehrende Transaktionen</string>

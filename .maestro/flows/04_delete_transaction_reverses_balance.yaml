@@ -1,0 +1,39 @@
+# Delete-transaction balance-math guard.
+#
+# When a transaction is deleted, DeleteTransactionUseCase must reverse
+# its effect on the account balance. Failure mode this catches: soft-
+# delete without balance reversal — transaction disappears from the
+# list but its debit stays applied. Users bleed accuracy silently.
+#
+# Precondition: mid_size_user fixture has a $50 gas expense on Checking
+# at row 9 (insert order). Long-press the row, tap delete, confirm.
+# Verify Checking balance rolls forward by $50.
+
+appId: com.andriybobchuk.mooney
+tags:
+  - transactions
+  - balance-math
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "mid_size_user"
+      WIPE_DB: "true"
+
+- assertVisible: "Transactions"
+
+# Long-press the $50 gas row (id 9 by fixture insertion order).
+- longPressOn:
+    id: "txn_row_9"
+
+- tapOn:
+    id: "txn_action_delete"
+- tapOn:
+    id: "txn_confirm_delete"
+
+# Precondition Checking balance: $3,500. After deleting the $50 expense
+# (whose effect reduced Checking by $50 pre-fixture-load), Checking
+# should show $3,550.
+- tapOn:
+    id: "nav_accounts"
+- assertVisible: "3,550"

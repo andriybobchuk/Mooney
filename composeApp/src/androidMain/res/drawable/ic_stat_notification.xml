@@ -1,0 +1,13 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- White "M" silhouette on transparent — Android tints this to the
+         system chrome color, giving us the same look as native app icons in
+         the status bar. Kept as a simple stroke-and-serif shape to survive
+         resizing down to 24×24 densities without turning into a blob. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M4,18V6h2.5l3.5,5.5L13.5,6H16V18H13.5V10.5L10,15.5L6.5,10.5V18H4Z" />
+</vector>

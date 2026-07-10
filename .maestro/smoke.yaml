@@ -1,0 +1,21 @@
+# Smoke-tier Mooney E2E — runs on every PR to `dev`.
+#
+# Deliberately minimal: two flows that reliably pass on the
+# GitHub-hosted KVM emulator. Both are pure assertion flows with no
+# text input, no long-press, and no numeric-balance checks — those are
+# the classes of assertions that have surfaced flakiness during this
+# session's CI iterations.
+#
+#   - 01_seeded_launch_smoke: fixture data reaches the UI (Assets tab
+#     renders the seeded account name).
+#   - 24_bottom_nav_walk: every top-level screen composes without crashing.
+#
+# Everything else lives in `full.yaml` for nightly runs, where more
+# assertion flakiness is tolerable. When the balance-numeric-assert
+# issue is root-caused with an interactive emulator, promote 02b + 04
+# + 09 back into smoke.
+
+appId: com.andriybobchuk.mooney
+---
+- runFlow: flows/01_seeded_launch_smoke.yaml
+- runFlow: flows/24_bottom_nav_walk.yaml

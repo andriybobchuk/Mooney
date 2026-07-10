@@ -141,18 +141,16 @@ class AdEligibilityUseCase(
     }
 
     private companion object {
-        const val NEW_USER_GRACE_SESSIONS = 3
-        // Was 5 — too low, fired after barely opening the app. Bumped so the
-        // user has to be meaningfully engaged (~scroll through Transactions,
-        // open Settings, tap a category) before an interstitial fires.
+        // Zero grace: banners are unobtrusive and pre-launch testers report
+        // that "no ads at all" is more disorienting than an ad on session 1.
+        // Interstitials still gated hard by INTERSTITIAL_MIN_TAPS.
+        const val NEW_USER_GRACE_SESSIONS = 0
         const val INTERSTITIAL_MIN_TAPS = 20
-        // Was 30 min — felt aggressive on heavy usage sessions. 2 hours is
-        // closer to "once or twice per day for an engaged user".
         const val INTERSTITIAL_COOLDOWN_MS = 2L * 60L * 60L * 1000L
         const val MAX_INTERSTITIALS_PER_SESSION = 1
-        // Same-placement banner cooldown — keeps Analytics/Settings/Categories
-        // banners from feeling like every-screen interrupts. 12h means a heavy
-        // user sees a banner at most twice a day per surface.
-        const val BANNER_COOLDOWN_MS = 12L * 60L * 60L * 1000L
+        // Was 12h — meant a screen showed a banner exactly once, then went
+        // dark for the rest of the day. Users read that as "ads broken" and
+        // reported it. 15 min is closer to "same session, keep it fresh".
+        const val BANNER_COOLDOWN_MS = 15L * 60L * 1000L
     }
 }

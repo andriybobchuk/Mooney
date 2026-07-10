@@ -1,3 +1,3 @@
 package com.andriybobchuk.mooney.core.premium
 
-actual val isBillingEnabled: Boolean = false
+actual val isBillingEnabled: Boolean = true

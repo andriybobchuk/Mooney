@@ -212,6 +212,10 @@
     <string name="share_feedback">Поделиться отзывом</string>
     <string name="privacy_policy">Политика конфиденциальности</string>
     <string name="categories_label">Категории</string>
+    <string name="subcategories_label">подкатегорий</string>
+    <string name="edit_category">Редактировать категорию</string>
+    <string name="new_expense_category">Новая категория расходов</string>
+    <string name="new_income_category">Новая категория доходов</string>
     <string name="transactions_label">Транзакции</string>
 
     <!-- Отзывы / оценка -->
@@ -266,8 +270,8 @@
     <string name="more">Ещё</string>
 
     <!-- Управление категориями -->
-    <string name="confirm_delete_category">Удалить \"%1$s\"? Транзакции с этой категорией станут несвязанными.</string>
-    <string name="confirm_delete_account">Удалить \"%1$s\"? Все связанные транзакции тоже будут удалены.</string>
+    <string name="confirm_delete_category">Удалить &quot;%1$s&quot;? Транзакции с этой категорией станут несвязанными.</string>
+    <string name="confirm_delete_account">Удалить &quot;%1$s&quot;? Все связанные транзакции тоже будут удалены.</string>
     <string name="transaction_categories">Категории транзакций</string>
     <string name="asset_categories">Категории активов</string>
     <string name="copy_action">Копировать</string>
@@ -295,8 +299,8 @@
     <string name="goal_reached">Цель достигнута!</string>
 
     <!-- Управление категориями -->
-    <string name="delete_asset_category_msg">Удалить \"%1$s\"? Счета, использующие эту категорию, сохранят свои данные, но появятся в \"Другое\".</string>
-    <string name="delete_tx_category_msg">Удалить \"%1$s\"? Транзакции, использующие эту категорию, станут несвязанными.</string>
+    <string name="delete_asset_category_msg">Удалить &quot;%1$s&quot;? Счета, использующие эту категорию, сохранят свои данные, но появятся в &quot;Другое&quot;.</string>
+    <string name="delete_tx_category_msg">Удалить &quot;%1$s&quot;? Транзакции, использующие эту категорию, станут несвязанными.</string>
     <string name="add_asset_category">Добавить категорию актива</string>
     <string name="add_liability_category">Добавить категорию обязательства</string>
     <string name="assets_section">Активы</string>
@@ -308,10 +312,10 @@
     <string name="close">Закрыть</string>
 
     <!-- Диалог удаления транзакции -->
-    <string name="delete_tx_confirm">Удалить транзакцию \"%1$s\" на %2$s %3$s?</string>
+    <string name="delete_tx_confirm">Удалить транзакцию &quot;%1$s&quot; на %2$s %3$s?</string>
 
     <!-- Диалог целей -->
-    <string name="delete_goal_confirm">Удалить \"%1$s\"? Это нельзя отменить.</string>
+    <string name="delete_goal_confirm">Удалить &quot;%1$s&quot;? Это нельзя отменить.</string>
 
     <!-- Диалоги настроек -->
     <string name="update_categories_title">Обновить категории</string>
@@ -333,7 +337,7 @@
 
     <!-- Диалоги счёта -->
     <string name="delete_account_title">Удалить счёт</string>
-    <string name="delete_account_confirm">Удалить \"%1$s\"? Это нельзя отменить.</string>
+    <string name="delete_account_confirm">Удалить &quot;%1$s&quot;? Это нельзя отменить.</string>
 
     <!-- Повторяющиеся -->
     <string name="recurring_transactions_title">Повторяющиеся транзакции</string>

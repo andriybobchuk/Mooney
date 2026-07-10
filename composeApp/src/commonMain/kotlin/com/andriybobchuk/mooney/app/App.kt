@@ -28,6 +28,7 @@ import com.andriybobchuk.mooney.core.presentation.theme.MooneyTypography
 import com.andriybobchuk.mooney.core.presentation.theme.ThemeManager
 import com.andriybobchuk.mooney.core.presentation.theme.getAppColorsForTheme
 import com.andriybobchuk.mooney.core.presentation.theme.getColorSchemeForTheme
+import com.andriybobchuk.mooney.core.testing.WithTestTagsAsResourceId
 import com.andriybobchuk.mooney.mooney.domain.FeatureFlags
 import com.andriybobchuk.mooney.mooney.domain.devtools.DevToolsManager
 import com.andriybobchuk.mooney.mooney.domain.settings.ThemeMode
@@ -89,6 +90,7 @@ fun App() {
             colorScheme = colorScheme,
             typography = typography
         ) {
+            WithTestTagsAsResourceId {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.TopCenter
@@ -136,6 +138,7 @@ fun App() {
                         )
                     }
                 }
+            }
             }
         }
     }

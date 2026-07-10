@@ -1,0 +1,34 @@
+Mooney is a beautifully simple money tracker for people who think in more than one currency.
+
+Track expenses across PLN, EUR, USD and 30+ other currencies. See your real net worth at a glance. Hit your savings goals faster.
+
+▸ MULTICURRENCY BY DESIGN
+Add accounts in any currency. Mooney converts everything to your base currency using live European Central Bank rates — no more spreadsheets, no more guessing.
+
+▸ ACCOUNTS, NOT JUST WALLETS
+Cash, debit, credit, savings — model every account you use. Move money between them with a single transfer, no double bookkeeping.
+
+▸ TRANSACTIONS THAT ACTUALLY MAKE SENSE
+Hand-picked categories. Recurring transactions for rent and subscriptions. Quick-add from the home screen. Filter and search by anything.
+
+▸ GOALS YOU'LL ACTUALLY REACH
+Set savings goals with deadlines. See live progress as you save. Group related goals — "Emergency fund + house deposit + vacation" — and watch them advance together.
+
+▸ PRIVACY-FIRST
+All your financial data stays on your device. We never see your transactions, balances, or accounts. No login. No account creation. No ads in your data.
+
+▸ DESIGNED TO FEEL GOOD
+Polished dark mode. Smooth animations. Designed by an indie developer who actually uses this app every day.
+
+— PRO FEATURES (optional subscription) —
+• Unlimited accounts and transactions
+• Advanced analytics and net-worth tracking
+• Custom categories
+• Priority support
+
+Built with Kotlin Multiplatform — the same code powers the iOS app. Built in public by a solo developer on a mission to make personal finance less painful.
+
+Questions, feedback, or feature requests? Email andriybobchuk@gmail.com — every message goes straight to me.
+
+Privacy policy: https://andriybobchuk.github.io/Mooney/privacy-policy.html
+Support: https://andriybobchuk.github.io/Mooney/support.html

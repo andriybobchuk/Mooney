@@ -1,0 +1,46 @@
+# Edit-transaction balance-math guard.
+#
+# When a transaction is edited, TransferHandler.reverseThenApply must:
+#   1. Reverse the OLD amount from the source account.
+#   2. Apply the NEW amount to the (possibly different) source account.
+#
+# The class of bug this guards against: partial application — reverses
+# the old but skips the new (silent debit), or reverses twice, or
+# applies twice. All fail this assertion.
+#
+# Precondition: mid_size_user fixture puts a $34.99 "streaming" expense
+# in Checking. We open it, change amount to $99.99, save, and verify
+# the delta ($65 more debited) shows on Accounts.
+
+appId: com.andriybobchuk.mooney
+tags:
+  - transactions
+  - balance-math
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "mid_size_user"
+      WIPE_DB: "true"
+
+- assertVisible: "Transactions"
+
+# Tap the specific transaction row. IDs are assigned in fixture insert
+# order — streaming ($34.99) is the 8th txn call → id 8.
+- tapOn:
+    id: "txn_row_8"
+
+# The edit sheet reuses the same AmountHeroField as add-txn; it opens
+# with the existing amount pre-filled. Overwriting via double-tap +
+# type isn't reliable across Compose versions, so use eraseText.
+- eraseText: 10
+- inputText: "99.99"
+- tapOn:
+    id: "txn_save"
+
+# Original Checking balance: $3,500. After the +$65 edit delta the
+# account is $65 lighter → $3,435. If reverseThenApply skipped the
+# reverse, we'd see $3,435 - $34.99 instead.
+- tapOn:
+    id: "nav_accounts"
+- assertVisible: "3,435"

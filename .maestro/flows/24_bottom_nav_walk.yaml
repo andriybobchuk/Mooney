@@ -1,0 +1,41 @@
+# Bottom navigation sanity walk.
+#
+# Cycles through every tab in the bottom nav under the mid_size_user
+# fixture. Each tab must:
+#   - Render at least one non-crashing frame.
+#   - Show its canonical label text (Transactions, Assets, Analytics,
+#     Settings).
+#
+# What we protect: a Compose regression on any single screen that
+# throws during composition would crash the whole app; this catches
+# it in 20s instead of shipping to users.
+
+appId: com.andriybobchuk.mooney
+tags:
+  - navigation
+  - smoke-adjacent
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "mid_size_user"
+      WIPE_DB: "true"
+
+- assertVisible: "Transactions"
+
+- tapOn:
+    id: "nav_accounts"
+- assertVisible: "Assets"
+
+- tapOn:
+    id: "nav_analytics"
+- assertVisible: "Analytics"
+
+- tapOn:
+    id: "nav_settings"
+- assertVisible: "Settings"
+
+# Return to Transactions — the round trip should also not lose state.
+- tapOn:
+    id: "nav_transactions"
+- assertVisible: "Transactions"

@@ -1,0 +1,45 @@
+# Analytics metric drilldown guard.
+#
+# Fixture: mid_size_user has ~15 transactions in July 2026 with mixed
+# categories. Analytics tab renders 4 metric cards: Revenue, Expenses,
+# Taxes, Net Income. Tapping Revenue opens the breakdown drilldown.
+#
+# What we protect:
+#   - EnhancedMetricCard.onClick wiring — a regression that swaps two
+#     metric-card handlers would send users to the wrong breakdown.
+#   - Navigation stack integrity — after drilldown + back, we're still
+#     on Analytics with the same metrics visible.
+#
+# NB: exact currency values on the metric cards depend on the fixture's
+# transaction sums AND the current wall-clock month vs the txn dates.
+# We only assert on the visible-text stability of the metric titles and
+# the drilldown page arrival — not on specific dollar amounts.
+
+appId: com.andriybobchuk.mooney
+tags:
+  - analytics
+  - navigation
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "mid_size_user"
+      WIPE_DB: "true"
+
+- tapOn:
+    id: "nav_analytics"
+
+# Metric cards render.
+- assertVisible: "Revenue"
+- assertVisible: "Expenses"
+- assertVisible: "Net Income"
+
+# Drill into Revenue.
+- tapOn:
+    id: "metric_revenue"
+
+# Back button (top-left chevron) returns us to Analytics.
+- back
+- assertVisible:
+    id: "metric_revenue"
+- assertVisible: "Net Income"

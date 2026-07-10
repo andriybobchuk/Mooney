@@ -1,0 +1,45 @@
+# Balance + transaction-row render guard (add-transaction alternative).
+#
+# Same failure classes flow 02 protects, but via a pre-seeded fixture
+# state so we don't need the `inputText` path that flow 02 keeps racing
+# on. Passes with confidence on the CI emulator today; flow 02 gets
+# promoted back into smoke once the text-input race is root-caused.
+#
+# What we protect:
+#   - Account balance rendering ($4,900) on Assets tab.
+#   - Transaction row rendering ("100.00") on Transactions tab.
+#   - AppDataCache correctly threading fixture-seeded rows through
+#     both surfaces.
+
+appId: com.andriybobchuk.mooney
+tags:
+  - smoke
+  - balance-math
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "post_spend_usd"
+      WIPE_DB: "true"
+
+- assertVisible: "Transactions"
+
+# Give the AppDataCache time to first-flow account + txn state through
+# to the UI. Without this beat, the initial paint can catch the empty
+# state momentarily on cold start.
+- extendedWaitUntil:
+    visible: "Checking"
+    timeout: 5000
+
+# Assets tab. Check via account name first (Checking) — that's on the
+# initial viewport regardless of scroll. Then look for the numeric
+# balance separately, tolerating the leading "$" (or trailing "$"
+# depending on the locale formatter).
+- tapOn:
+    id: "nav_accounts"
+- extendedWaitUntil:
+    visible: "Checking"
+    timeout: 5000
+- extendedWaitUntil:
+    visible: "4,900"
+    timeout: 5000

@@ -1,0 +1,56 @@
+# Add-account write persistence guard.
+#
+# Precondition: single_account_usd fixture (1 account). Add a second
+# account, kill the app, relaunch WITHOUT wipeDb, verify both
+# accounts are still there.
+#
+# What we protect:
+#   - Room `.upsert(...)` completes without leaving the account in
+#     an in-memory-only state (write-through vs write-back).
+#   - `AppDataCache` doesn't cache a "no second account" snapshot that
+#     survives the process death.
+#   - The account creation flow doesn't consume the paywall gate on
+#     a free-tier user with only 1 account (5 max).
+
+appId: com.andriybobchuk.mooney
+tags:
+  - accounts
+  - persistence
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "single_account_usd"
+      WIPE_DB: "true"
+
+- tapOn:
+    id: "nav_accounts"
+- assertVisible: "Checking"
+
+- tapOn:
+    id: "fab_add_account"
+- tapOn:
+    id: "account_title_field"
+- inputText: "Emergency Fund"
+- tapOn:
+    id: "account_amount_field"
+- inputText: "1500"
+- tapOn:
+    id: "account_save"
+
+# Both accounts visible after write.
+- assertVisible: "Checking"
+- assertVisible: "Emergency Fund"
+
+# Cold-kill the app; relaunch without wiping DB.
+- stopApp
+- launchApp:
+    arguments:
+      fixture: "single_account_usd"
+      wipeDb: false
+
+- tapOn:
+    id: "nav_accounts"
+- assertVisible: "Checking"
+- assertVisible: "Emergency Fund"
+- assertVisible: "1,500"

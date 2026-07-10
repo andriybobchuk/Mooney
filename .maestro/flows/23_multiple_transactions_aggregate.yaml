@@ -1,0 +1,74 @@
+# Multi-transaction aggregation guard.
+#
+# What we protect: the balance derivation function that sums all
+# transaction effects on an account should stay associative. Add three
+# expenses in a row, restart, verify the total delta.
+#
+# Precondition: single_account_usd, $5,000.
+# Add $100, $75, $25 expenses (three separate saves).
+# Expected balance after all three: $4,800.
+#
+# Off-by-one bugs in balance aggregation would show a wrong final
+# number here that's very close (e.g. $4,825 if the last txn didn't
+# apply, or $4,700 if one applied twice).
+
+appId: com.andriybobchuk.mooney
+tags:
+  - transactions
+  - balance-math
+---
+- runFlow:
+    file: ../shared/launch_seeded.yaml
+    env:
+      FIXTURE: "single_account_usd"
+      WIPE_DB: "true"
+
+- assertVisible: "5,000"
+
+# First: $100
+- tapOn:
+    id: "fab_add_txn"
+- extendedWaitUntil:
+    visible:
+      id: "txn_save"
+    timeout: 5000
+- tapOn:
+    id: "txn_amount_field"
+- inputText: "100"
+- tapOn:
+    id: "txn_save"
+- assertVisible: "4,900"
+
+# Second: $75
+- tapOn:
+    id: "fab_add_txn"
+- extendedWaitUntil:
+    visible:
+      id: "txn_save"
+    timeout: 5000
+- tapOn:
+    id: "txn_amount_field"
+- inputText: "75"
+- tapOn:
+    id: "txn_save"
+- assertVisible: "4,825"
+
+# Third: $25
+- tapOn:
+    id: "fab_add_txn"
+- extendedWaitUntil:
+    visible:
+      id: "txn_save"
+    timeout: 5000
+- tapOn:
+    id: "txn_amount_field"
+- inputText: "25"
+- tapOn:
+    id: "txn_save"
+- assertVisible: "4,800"
+
+# Cross-check on Accounts tab — divergence from the Transactions
+# summary would indicate a cache-invalidation bug between screens.
+- tapOn:
+    id: "nav_accounts"
+- assertVisible: "4,800"

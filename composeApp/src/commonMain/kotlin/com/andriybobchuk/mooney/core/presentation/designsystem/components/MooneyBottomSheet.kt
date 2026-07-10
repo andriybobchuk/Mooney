@@ -2,6 +2,7 @@ package com.andriybobchuk.mooney.core.presentation.designsystem.components
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -17,6 +18,11 @@ import com.andriybobchuk.mooney.core.presentation.designsystem.MooneyDesignSyste
  * - surfaceVariant background (light grey in light / dark grey in dark)
  * - 20dp top rounded corners
  * - 0dp tonal elevation (flat)
+ *
+ * Uses [WindowInsets.navigationBars] as the content inset so the primary
+ * action button never sits underneath Android's gesture-nav pill — users
+ * were previously bouncing the app or accidentally dismissing the sheet
+ * because the CTA overlapped the system swipe area.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,8 +39,8 @@ fun MooneyBottomSheet(
         shape = MooneyDesignSystem.Shapes.bottomSheet,
         containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp,
+        contentWindowInsets = { WindowInsets.navigationBars },
         scrimColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f),
-        contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
         content = content
     )
 }

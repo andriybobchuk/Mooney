@@ -1,5 +1,12 @@
 # Mooney UI tests (Maestro)
 
+> There are **two Maestro suites** in this folder. This README covers the
+> shimmer/empty-state contract flows that run against an already-installed
+> production/debug build. The **seeded E2E suite** — deterministic
+> whole-app flows against a dedicated `.e2etest` variant with wiped-and-seeded
+> Room state — is documented separately in [README-seeded.md](./README-seeded.md).
+> Run its smoke via `maestro test .maestro/smoke.yaml`.
+
 These flows enforce the **cache-first / shimmer / empty-state** contract:
 
 1. **Cold start** never flashes an empty-state placeholder. The first frame is

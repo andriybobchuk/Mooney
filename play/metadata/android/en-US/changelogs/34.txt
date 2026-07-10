@@ -1,0 +1,1 @@
+First Google Play release of Mooney. Multicurrency money tracker — track expenses, accounts, goals, and recurring transactions across 30+ currencies, all stored privately on your device.

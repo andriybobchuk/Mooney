@@ -7,10 +7,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.andriybobchuk.mooney.core.presentation.Icons
+import com.andriybobchuk.mooney.core.testing.TestTags
+import com.andriybobchuk.mooney.core.testing.mooneyTestTag
 import com.andriybobchuk.mooney.mooney.domain.FeatureFlags
 import kotlinx.datetime.Clock
 import org.koin.compose.koinInject
@@ -70,6 +75,13 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
         ) {
             items.forEach { (item, route, originalIndex) ->
                 val isSelected = selectedItemIndex == originalIndex
+                val tag = when (originalIndex) {
+                    0 -> TestTags.NAV_TRANSACTIONS
+                    1 -> TestTags.NAV_ACCOUNTS
+                    3 -> TestTags.NAV_ANALYTICS
+                    4 -> TestTags.NAV_SETTINGS
+                    else -> null
+                }
                 BottomNavTab(
                     item = item,
                     isSelected = isSelected,
@@ -95,12 +107,18 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
                             tab?.let { scrollToTopBus.fire(it) }
                         }
                     },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).let { m -> if (tag != null) m.mooneyTestTag(tag) else m }
                 )
             }
         }
-        // Reserve room for the iOS home indicator so the icons don't sit on it.
-        Spacer(modifier = Modifier.height(20.dp))
+        // Reserve room for the system nav-bar / iOS home indicator so the tab
+        // icons never sit under the swipe area. Falls back to 20dp on devices
+        // that don't report a bottom inset (matches the old fixed-height look).
+        Spacer(
+            modifier = Modifier
+                .windowInsetsBottomHeight(WindowInsets.navigationBars)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
     }
 }
 

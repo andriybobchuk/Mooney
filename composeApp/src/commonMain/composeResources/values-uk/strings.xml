@@ -187,6 +187,10 @@
     <string name="share_feedback">Поділитися відгуком</string>
     <string name="privacy_policy">Політика конфіденційності</string>
     <string name="categories_label">Категорії</string>
+    <string name="subcategories_label">підкатегорій</string>
+    <string name="edit_category">Редагувати категорію</string>
+    <string name="new_expense_category">Нова категорія витрат</string>
+    <string name="new_income_category">Нова категорія доходів</string>
     <string name="transactions_label">Транзакції</string>
 
     <!-- Відгук -->
@@ -241,8 +245,8 @@
     <string name="more">Більше</string>
 
     <!-- Категорії -->
-    <string name="confirm_delete_category">Видалити \"%1$s\"? Транзакції з цією категорією стануть незв'язаними.</string>
-    <string name="confirm_delete_account">Видалити \"%1$s\"? Усі пов'язані транзакції також буде видалено.</string>
+    <string name="confirm_delete_category">Видалити &quot;%1$s&quot;? Транзакції з цією категорією стануть незв'язаними.</string>
+    <string name="confirm_delete_account">Видалити &quot;%1$s&quot;? Усі пов'язані транзакції також буде видалено.</string>
     <string name="transaction_categories">Категорії транзакцій</string>
     <string name="asset_categories">Категорії активів</string>
     <string name="copy_action">Копіювати</string>
@@ -270,8 +274,8 @@
     <string name="goal_reached">Ціль досягнуто!</string>
 
     <!-- Керування категоріями -->
-    <string name="delete_asset_category_msg">Видалити \"%1$s\"? Рахунки, що використовують цю категорію, збережуть свої дані, але з'являться в \"Інше\".</string>
-    <string name="delete_tx_category_msg">Видалити \"%1$s\"? Транзакції, що використовують цю категорію, стануть незв'язаними.</string>
+    <string name="delete_asset_category_msg">Видалити &quot;%1$s&quot;? Рахунки, що використовують цю категорію, збережуть свої дані, але з'являться в &quot;Інше&quot;.</string>
+    <string name="delete_tx_category_msg">Видалити &quot;%1$s&quot;? Транзакції, що використовують цю категорію, стануть незв'язаними.</string>
     <string name="add_asset_category">Додати категорію активу</string>
     <string name="add_liability_category">Додати категорію зобов'язання</string>
     <string name="assets_section">Активи</string>
@@ -283,10 +287,10 @@
     <string name="close">Закрити</string>
 
     <!-- Діалог видалення транзакції -->
-    <string name="delete_tx_confirm">Видалити транзакцію \"%1$s\" на %2$s %3$s?</string>
+    <string name="delete_tx_confirm">Видалити транзакцію &quot;%1$s&quot; на %2$s %3$s?</string>
 
     <!-- Діалог цілей -->
-    <string name="delete_goal_confirm">Видалити \"%1$s\"? Цього не можна скасувати.</string>
+    <string name="delete_goal_confirm">Видалити &quot;%1$s&quot;? Цього не можна скасувати.</string>
 
     <!-- Діалоги налаштувань -->
     <string name="update_categories_title">Оновити категорії</string>
@@ -308,7 +312,7 @@
 
     <!-- Діалоги рахунку -->
     <string name="delete_account_title">Видалити рахунок</string>
-    <string name="delete_account_confirm">Видалити \"%1$s\"? Цього не можна скасувати.</string>
+    <string name="delete_account_confirm">Видалити &quot;%1$s&quot;? Цього не можна скасувати.</string>
 
     <!-- Повторювані -->
     <string name="recurring_transactions_title">Повторювані транзакції</string>

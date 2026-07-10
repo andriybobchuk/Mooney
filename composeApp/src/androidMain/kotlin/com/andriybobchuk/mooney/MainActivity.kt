@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.andriybobchuk.mooney.app.App
 import com.andriybobchuk.mooney.core.premium.ActivityProvider
+import com.andriybobchuk.mooney.e2e.E2eBootstrap
 import com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
 import org.koin.android.ext.android.inject
 
@@ -14,6 +15,10 @@ class MainActivity : ComponentActivity() {
     private val appDataCache: AppDataCache by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // E2E bootstrap: no-op on debug/release, real on the e2e variant.
+        // Runs BEFORE splashScreen so DB wipe + fixture seeding happen while
+        // the system splash is still displayed.
+        E2eBootstrap.onActivityCreate(intent)
         // installSplashScreen() MUST be called before super.onCreate so the
         // system keeps the splash visible across the launch → first-frame
         // transition. Without setKeepOnScreenCondition, the splash dismisses

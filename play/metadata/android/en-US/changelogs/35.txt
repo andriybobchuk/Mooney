@@ -1,0 +1,5 @@
+Bug fixes and UX polish:
+• Bottom action buttons no longer overlap the Android gesture-nav pill.
+• Adding a category from inside the add-transaction flow now works inline instead of navigating away.
+• Delete-confirmation and category names show up in the correct language.
+• Ads render more consistently with the app's dark/light theme.

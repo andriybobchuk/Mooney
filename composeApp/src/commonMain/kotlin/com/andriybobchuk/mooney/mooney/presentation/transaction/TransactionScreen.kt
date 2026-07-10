@@ -1554,13 +1554,9 @@ fun TransactionBottomSheet(
                 val subCat = currentSelectedSubCategory
                 val mainCat = currentSelectedCategory
                 val categoryText = when {
-                    subCat != null -> "${subCat.resolveEmoji()} ${subCat.title}"
-                    mainCat != null -> "${mainCat.emoji ?: ""} ${mainCat.title}"
-                    else -> when (selectedTransactionType) {
-                        CategoryType.EXPENSE -> "🛒 Groceries & Household"
-                        CategoryType.INCOME -> "💸 Salary"
-                        else -> stringResource(Res.string.select_category)
-                    }
+                    subCat != null -> "${subCat.resolveEmoji()} ${localizedCategoryTitle(subCat)}"
+                    mainCat != null -> "${mainCat.emoji ?: ""} ${localizedCategoryTitle(mainCat)}"
+                    else -> stringResource(Res.string.select_category)
                 }
                 MooneyButton(
                     text = categoryText,
@@ -2495,13 +2491,20 @@ fun CategorySelectionBottomSheet(
     onReorder: (List<String>) -> Unit = {},
     onEditCategories: () -> Unit = {}
 ) {
-    var selectedTabIndex by remember { 
+    var selectedTabIndex by remember {
         mutableStateOf(
             if (initialSelectedCategory?.type == CategoryType.INCOME) 1 else 0
-        ) 
+        )
     }
     var showSubCategorySheet by remember { mutableStateOf(false) }
     var selectedParentCategory by remember { mutableStateOf<Category?>(null) }
+    // Inline add-category flow — pressing "+" shows the same
+    // AddCategoryNameSheet the Categories management screen uses. Previously
+    // this button navigated to the Categories screen entirely, ripping the
+    // user out of the add-transaction flow they were already in.
+    var showAddCategorySheet by remember { mutableStateOf(false) }
+    val categoriesViewModel: com.andriybobchuk.mooney.mooney.presentation.categories.TransactionCategoriesViewModel =
+        org.koin.compose.viewmodel.koinViewModel()
 
     MooneyBottomSheet(
         onDismissRequest = onDismiss,
@@ -2518,7 +2521,7 @@ fun CategorySelectionBottomSheet(
                     fontWeight = FontWeight.Medium,
                     fontSize = 20.sp
                 )
-                TextButton(onClick = { onDismiss(); onEditCategories() }) {
+                TextButton(onClick = { showAddCategorySheet = true }) {
                     Icon(
                         Icons.Outlined.Add,
                         contentDescription = null,
@@ -2647,6 +2650,26 @@ fun CategorySelectionBottomSheet(
             onParentSelected = {
                 onCategorySelected(parentCat, null)
                 showSubCategorySheet = false
+            }
+        )
+    }
+
+    if (showAddCategorySheet) {
+        val addType = if (selectedTabIndex == 0) CategoryType.EXPENSE else CategoryType.INCOME
+        com.andriybobchuk.mooney.mooney.presentation.categories.AddCategoryNameSheet(
+            type = addType,
+            onDismiss = { showAddCategorySheet = false },
+            onAdd = { name, emoji ->
+                categoriesViewModel.onAction(
+                    com.andriybobchuk.mooney.mooney.presentation.categories
+                        .TransactionCategoriesAction.AddCategory(
+                            title = name,
+                            type = addType.name,
+                            emoji = emoji.ifBlank { null },
+                            parentId = null
+                        )
+                )
+                showAddCategorySheet = false
             }
         )
     }

@@ -212,6 +212,10 @@
     <string name="share_feedback">شارك بملاحظاتك</string>
     <string name="privacy_policy">سياسة الخصوصية</string>
     <string name="categories_label">الفئات</string>
+    <string name="subcategories_label">فئات فرعية</string>
+    <string name="edit_category">تعديل الفئة</string>
+    <string name="new_expense_category">فئة نفقات جديدة</string>
+    <string name="new_income_category">فئة دخل جديدة</string>
     <string name="transactions_label">المعاملات</string>
 
     <!-- المراجعة -->
@@ -266,8 +270,8 @@
     <string name="more">المزيد</string>
 
     <!-- التصنيفات -->
-    <string name="confirm_delete_category">حذف \"%1$s\"؟ ستصبح المعاملات في هذه الفئة غير مرتبطة.</string>
-    <string name="confirm_delete_account">حذف \"%1$s\"؟ سيتم حذف كل المعاملات المرتبطة كذلك.</string>
+    <string name="confirm_delete_category">حذف &quot;%1$s&quot;؟ ستصبح المعاملات في هذه الفئة غير مرتبطة.</string>
+    <string name="confirm_delete_account">حذف &quot;%1$s&quot;؟ سيتم حذف كل المعاملات المرتبطة كذلك.</string>
     <string name="transaction_categories">فئات المعاملات</string>
     <string name="asset_categories">فئات الأصول</string>
     <string name="copy_action">نسخ</string>
@@ -295,8 +299,8 @@
     <string name="goal_reached">تم تحقيق الهدف!</string>
 
     <!-- إدارة الفئات -->
-    <string name="delete_asset_category_msg">حذف \"%1$s\"؟ ستحتفظ الحسابات التي تستخدم هذه الفئة ببياناتها لكنها ستظهر تحت \"أخرى\".</string>
-    <string name="delete_tx_category_msg">حذف \"%1$s\"؟ المعاملات التي تستخدم هذه الفئة ستصبح غير مرتبطة.</string>
+    <string name="delete_asset_category_msg">حذف &quot;%1$s&quot;؟ ستحتفظ الحسابات التي تستخدم هذه الفئة ببياناتها لكنها ستظهر تحت &quot;أخرى&quot;.</string>
+    <string name="delete_tx_category_msg">حذف &quot;%1$s&quot;؟ المعاملات التي تستخدم هذه الفئة ستصبح غير مرتبطة.</string>
     <string name="add_asset_category">إضافة فئة أصل</string>
     <string name="add_liability_category">إضافة فئة التزام</string>
     <string name="assets_section">الأصول</string>
@@ -308,10 +312,10 @@
     <string name="close">إغلاق</string>
 
     <!-- مربع حوار حذف المعاملة -->
-    <string name="delete_tx_confirm">حذف معاملة \"%1$s\" بقيمة %2$s %3$s؟</string>
+    <string name="delete_tx_confirm">حذف معاملة &quot;%1$s&quot; بقيمة %2$s %3$s؟</string>
 
     <!-- مربع حوار الأهداف -->
-    <string name="delete_goal_confirm">حذف \"%1$s\"؟ لا يمكن التراجع عن هذا الإجراء.</string>
+    <string name="delete_goal_confirm">حذف &quot;%1$s&quot;؟ لا يمكن التراجع عن هذا الإجراء.</string>
 
     <!-- مربعات حوار الإعدادات -->
     <string name="update_categories_title">تحديث الفئات</string>
@@ -333,7 +337,7 @@
 
     <!-- مربعات حوار الحساب -->
     <string name="delete_account_title">حذف الحساب</string>
-    <string name="delete_account_confirm">حذف \"%1$s\"؟ لا يمكن التراجع عن هذا الإجراء.</string>
+    <string name="delete_account_confirm">حذف &quot;%1$s&quot;؟ لا يمكن التراجع عن هذا الإجراء.</string>
 
     <!-- متكررة -->
     <string name="recurring_transactions_title">المعاملات المتكررة</string>

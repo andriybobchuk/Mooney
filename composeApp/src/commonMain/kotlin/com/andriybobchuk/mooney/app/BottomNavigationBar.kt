@@ -7,10 +7,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -108,8 +111,14 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
                 )
             }
         }
-        // Reserve room for the iOS home indicator so the icons don't sit on it.
-        Spacer(modifier = Modifier.height(20.dp))
+        // Reserve room for the system nav-bar / iOS home indicator so the tab
+        // icons never sit under the swipe area. Falls back to 20dp on devices
+        // that don't report a bottom inset (matches the old fixed-height look).
+        Spacer(
+            modifier = Modifier
+                .windowInsetsBottomHeight(WindowInsets.navigationBars)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
     }
 }
 

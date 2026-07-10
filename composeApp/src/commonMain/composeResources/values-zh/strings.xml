@@ -212,6 +212,10 @@
     <string name="share_feedback">分享反馈</string>
     <string name="privacy_policy">隐私政策</string>
     <string name="categories_label">分类</string>
+    <string name="subcategories_label">子类别</string>
+    <string name="edit_category">编辑类别</string>
+    <string name="new_expense_category">新支出类别</string>
+    <string name="new_income_category">新收入类别</string>
     <string name="transactions_label">交易</string>
 
     <!-- 评价 -->
@@ -266,8 +270,8 @@
     <string name="more">更多</string>
 
     <!-- 分类管理 -->
-    <string name="confirm_delete_category">删除 \"%1$s\"？使用此分类的交易将变为未关联状态。</string>
-    <string name="confirm_delete_account">删除 \"%1$s\"？所有相关交易也会被删除。</string>
+    <string name="confirm_delete_category">删除 &quot;%1$s&quot;？使用此分类的交易将变为未关联状态。</string>
+    <string name="confirm_delete_account">删除 &quot;%1$s&quot;？所有相关交易也会被删除。</string>
     <string name="transaction_categories">交易分类</string>
     <string name="asset_categories">资产分类</string>
     <string name="copy_action">复制</string>
@@ -295,8 +299,8 @@
     <string name="goal_reached">达成目标！</string>
 
     <!-- 分类管理 -->
-    <string name="delete_asset_category_msg">删除 \"%1$s\"？使用此分类的账户将保留数据，但会显示在 \"其他\" 下。</string>
-    <string name="delete_tx_category_msg">删除 \"%1$s\"？使用此分类的交易将变为未关联。</string>
+    <string name="delete_asset_category_msg">删除 &quot;%1$s&quot;？使用此分类的账户将保留数据，但会显示在 &quot;其他&quot; 下。</string>
+    <string name="delete_tx_category_msg">删除 &quot;%1$s&quot;？使用此分类的交易将变为未关联。</string>
     <string name="add_asset_category">添加资产分类</string>
     <string name="add_liability_category">添加负债分类</string>
     <string name="assets_section">资产</string>
@@ -308,10 +312,10 @@
     <string name="close">关闭</string>
 
     <!-- 交易删除对话框 -->
-    <string name="delete_tx_confirm">删除 \"%1$s\" 交易，金额 %2$s %3$s？</string>
+    <string name="delete_tx_confirm">删除 &quot;%1$s&quot; 交易，金额 %2$s %3$s？</string>
 
     <!-- 目标对话框 -->
-    <string name="delete_goal_confirm">删除 \"%1$s\"？此操作无法撤销。</string>
+    <string name="delete_goal_confirm">删除 &quot;%1$s&quot;？此操作无法撤销。</string>
 
     <!-- 设置对话框 -->
     <string name="update_categories_title">更新分类</string>
@@ -333,7 +337,7 @@
 
     <!-- 账户对话框 -->
     <string name="delete_account_title">删除账户</string>
-    <string name="delete_account_confirm">删除 \"%1$s\"？此操作无法撤销。</string>
+    <string name="delete_account_confirm">删除 &quot;%1$s&quot;？此操作无法撤销。</string>
 
     <!-- 周期性 -->
     <string name="recurring_transactions_title">周期性交易</string>

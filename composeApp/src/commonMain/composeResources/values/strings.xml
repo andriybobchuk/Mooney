@@ -231,7 +231,11 @@
     <string name="rate_mooney">Rate Mooney</string>
     <string name="share_feedback">Contact</string>
     <string name="privacy_policy">Privacy Policy</string>
-    <string name="categories_label">Categories</string>
+    <string name="categories_label">categories</string>
+    <string name="subcategories_label">subcategories</string>
+    <string name="edit_category">Edit category</string>
+    <string name="new_expense_category">New expense category</string>
+    <string name="new_income_category">New income category</string>
     <string name="transactions_label">Transactions</string>
 
     <!-- Feedback / Review -->
@@ -286,8 +290,8 @@
     <string name="more">More</string>
 
     <!-- Categories management -->
-    <string name="confirm_delete_category">Delete \"%1$s\"? Transactions using this category will become unlinked.</string>
-    <string name="confirm_delete_account">Delete \"%1$s\"? This will also delete all related transactions.</string>
+    <string name="confirm_delete_category">Delete &quot;%1$s&quot;? Transactions using this category will become unlinked.</string>
+    <string name="confirm_delete_account">Delete &quot;%1$s&quot;? This will also delete all related transactions.</string>
 
     <!-- Categories screens -->
     <string name="transaction_categories">Transaction Categories</string>
@@ -333,8 +337,8 @@
     <string name="goal_reached">Goal reached!</string>
 
     <!-- Categories management -->
-    <string name="delete_asset_category_msg">Delete \"%1$s\"? Accounts using this category will keep their data but appear under \"Other\".</string>
-    <string name="delete_tx_category_msg">Delete \"%1$s\"? Transactions using this category will become unlinked.</string>
+    <string name="delete_asset_category_msg">Delete &quot;%1$s&quot;? Accounts using this category will keep their data but appear under &quot;Other&quot;.</string>
+    <string name="delete_tx_category_msg">Delete &quot;%1$s&quot;? Transactions using this category will become unlinked.</string>
     <string name="add_asset_category">Add Asset Category</string>
     <string name="add_liability_category">Add Liability Category</string>
     <string name="assets_section">Assets</string>
@@ -346,10 +350,10 @@
     <string name="close">Close</string>
 
     <!-- Transaction delete dialog -->
-    <string name="delete_tx_confirm">Delete \"%1$s\" transaction for %2$s %3$s?</string>
+    <string name="delete_tx_confirm">Delete &quot;%1$s&quot; transaction for %2$s %3$s?</string>
 
     <!-- Goals dialog -->
-    <string name="delete_goal_confirm">Delete \"%1$s\"? This cannot be undone.</string>
+    <string name="delete_goal_confirm">Delete &quot;%1$s&quot;? This cannot be undone.</string>
 
     <!-- Settings dialogs -->
     <string name="update_categories_title">Update Categories</string>
@@ -371,7 +375,7 @@
 
     <!-- Asset / Account dialogs -->
     <string name="delete_account_title">Delete Account</string>
-    <string name="delete_account_confirm">Delete \"%1$s\"? This cannot be undone.</string>
+    <string name="delete_account_confirm">Delete &quot;%1$s&quot;? This cannot be undone.</string>
 
     <!-- Recurring -->
     <string name="recurring_transactions_title">Recurring Transactions</string>

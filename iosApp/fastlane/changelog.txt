@@ -1,1 +1,1 @@
-Cleaner Transactions screen: the month picker now sits below the top bar with a clearer "Spent in March" label, the widgets panel is replaced by a single spending calendar (no more page slider), and the cold-start loading state now actually shows the shimmer.
+Bug fixes and UX polish: bottom action buttons no longer sit under the Android gesture area, adding a category from the transaction sheet works inline, delete-confirmation and category names localize correctly, and banner ads track the app's dark/light theme.

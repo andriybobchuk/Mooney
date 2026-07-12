@@ -41,6 +41,10 @@ fun AdBannerSlot(
             sessionTapCount = session.tapCount,
             sessionCount = session.sessionCount
         )
+        println(
+            "[MooneyAds] AdBannerSlot $placement eligibility check: " +
+                "eligible=$eligible session=$session"
+        )
         if (eligible) {
             eligibility.markShown(placement)
         }
@@ -48,6 +52,10 @@ fun AdBannerSlot(
 
     if (!eligible) return
 
+    println(
+        "[MooneyAds] AdBannerSlot $placement rendering: " +
+            "adUnitId=${AdUnitIds.banner} dark=$isDarkTheme"
+    )
     Box(
         modifier = modifier
             .fillMaxWidth()

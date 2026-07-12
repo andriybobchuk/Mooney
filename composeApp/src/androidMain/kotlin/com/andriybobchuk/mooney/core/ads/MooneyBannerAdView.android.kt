@@ -1,7 +1,7 @@
 package com.andriybobchuk.mooney.core.ads
 
 import android.graphics.Color
-import android.webkit.WebSettings
+import android.util.Log
 import android.webkit.WebView
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -11,28 +11,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
+import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.LoadAdError
 
 /**
  * Android banner ad — wraps a Google Mobile Ads [AdView] inside [AndroidView].
+ * Uses [AdSize.BANNER] (320x50) so the slot reserves a predictable Compose
+ * height up-front and avoids layout jumps when the ad loads. Container
+ * background is transparent so the Compose parent (which paints the app's
+ * surface color) shows through — no white flash before load.
  *
- * Uses [AdSize.BANNER] (320x50) rather than `SMART_BANNER` / adaptive sizes so
- * the slot reserves a predictable Compose height up-front and avoids layout
- * jumps when the ad loads. Eligibility / placement gating is handled by
- * [AdBannerSlot].
- *
- * `AdView` defaults to a solid white background. In dark mode that white shows
- * as a full-width flash between when the slot appears and when the ad creative
- * paints. Setting the AdView background to transparent lets the Compose parent
- * (which paints the app's surface color) show through instead.
- *
- * Ad creatives themselves are HTML rendered inside a WebView the SDK owns. On
- * Android 10+ we ask WebViewCompat to force-dark that WebView so creatives
- * that don't explicitly opt into dark mode still render darker greys instead
- * of pure white. It's a best-effort hint — some publishers ignore it — but
- * it's the closest lever AdMob gives us today.
+ * Every SDK event is logged with the `MooneyAds` tag so `adb logcat -s
+ * MooneyAds` shows the full lifecycle (load requested → success/failure →
+ * impression/click).
  */
 @Composable
 actual fun MooneyBannerAdView(
@@ -45,17 +39,41 @@ actual fun MooneyBannerAdView(
             .fillMaxWidth()
             .height(STANDARD_BANNER_HEIGHT_DP.dp),
         factory = { context ->
+            Log.i(TAG, "banner factory: creating AdView adUnitId=$adUnitId dark=$isDarkTheme")
             AdView(context).apply {
                 setAdSize(AdSize.BANNER)
                 this.adUnitId = adUnitId
                 setBackgroundColor(Color.TRANSPARENT)
+                adListener = object : AdListener() {
+                    override fun onAdLoaded() {
+                        Log.i(TAG, "banner LOADED adUnitId=$adUnitId")
+                    }
+                    override fun onAdFailedToLoad(error: LoadAdError) {
+                        Log.w(
+                            TAG,
+                            "banner FAILED code=${error.code} msg=${error.message} " +
+                                "domain=${error.domain} responseInfo=${error.responseInfo}"
+                        )
+                    }
+                    override fun onAdImpression() {
+                        Log.i(TAG, "banner IMPRESSION adUnitId=$adUnitId")
+                    }
+                    override fun onAdClicked() {
+                        Log.i(TAG, "banner CLICK adUnitId=$adUnitId")
+                    }
+                    override fun onAdOpened() {
+                        Log.i(TAG, "banner OPENED adUnitId=$adUnitId")
+                    }
+                    override fun onAdClosed() {
+                        Log.i(TAG, "banner CLOSED adUnitId=$adUnitId")
+                    }
+                }
+                Log.i(TAG, "banner loadAd() called for $adUnitId")
                 loadAd(AdRequest.Builder().build())
             }
         },
         update = { view ->
             view.setBackgroundColor(Color.TRANSPARENT)
-            // The ad creative lives in a WebView inside the AdView. Walk the
-            // hierarchy and force-dark it on Android 10+ where the API exists.
             applyWebViewDarkMode(view, isDarkTheme)
         }
     )
@@ -81,3 +99,4 @@ private fun findWebViews(view: android.view.View): List<WebView> {
 }
 
 private const val STANDARD_BANNER_HEIGHT_DP = 50
+private const val TAG = "MooneyAds"

@@ -1,1 +1,1 @@
-Bug fixes and UX polish: bottom action buttons no longer sit under the Android gesture area, adding a category from the transaction sheet works inline, delete-confirmation and category names localize correctly, and banner ads track the app's dark/light theme.
+Hotfix: iOS home indicator visible again and sheet bottom padding no longer doubled (the previous Android-only inset fix leaked cross-platform).

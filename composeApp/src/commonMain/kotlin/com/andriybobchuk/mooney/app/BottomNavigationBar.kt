@@ -7,13 +7,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.windowInsetsBottomHeight
+import com.andriybobchuk.mooney.core.presentation.BottomBarBottomSpacer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -111,14 +109,9 @@ fun BottomNavigationBar(navController: NavHostController, selectedItemIndex: Int
                 )
             }
         }
-        // Reserve room for the system nav-bar / iOS home indicator so the tab
-        // icons never sit under the swipe area. Falls back to 20dp on devices
-        // that don't report a bottom inset (matches the old fixed-height look).
-        Spacer(
-            modifier = Modifier
-                .windowInsetsBottomHeight(WindowInsets.navigationBars)
-        )
-        Spacer(modifier = Modifier.height(4.dp))
+        // Bottom reserve is platform-specific: auto-sized to navigationBars on
+        // Android (edge-to-edge on SDK 35), fixed 20dp on iOS (original look).
+        BottomBarBottomSpacer()
     }
 }
 

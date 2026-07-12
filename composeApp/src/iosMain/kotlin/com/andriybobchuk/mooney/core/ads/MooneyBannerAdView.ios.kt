@@ -21,7 +21,15 @@ actual fun MooneyBannerAdView(
     val container = remember(adUnitId) {
         val v = UIView()
         v.backgroundColor = UIColor.clearColor
-        Ads.bridge?.attachBanner(v, adUnitId)
+        val bridge = Ads.bridge
+        println(
+            "[MooneyAds] iOS banner factory: bridge=${bridge != null} " +
+                "adUnitId=$adUnitId"
+        )
+        if (bridge == null) {
+            println("[MooneyAds] iOS banner: bridge is NULL — no ad will render")
+        }
+        bridge?.attachBanner(v, adUnitId)
         v
     }
     UIKitView(

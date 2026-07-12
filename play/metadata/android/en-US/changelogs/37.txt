@@ -1,0 +1,1 @@
+Hotfix: restored the iOS bottom bar reserve so the home indicator is visible again and sheets don't have doubled bottom padding. Android edge-to-edge behavior kept. Added detailed ad-pipeline logging to diagnose banner render issues.

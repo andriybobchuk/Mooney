@@ -51,14 +51,21 @@ actual object Ads {
     }
 
     actual fun initialize() {
-        if (initialized) return
+        if (initialized) {
+            Log.i(TAG, "initialize(): already done, skipping")
+            return
+        }
         val ctx = appContext
         if (ctx == null) {
             Log.w(TAG, "initialize() called before setApplication() — skipping")
             return
         }
+        Log.i(TAG, "initialize(): calling MobileAds.initialize()")
         MobileAds.initialize(ctx) { status ->
-            Log.i(TAG, "MobileAds initialized: ${status.adapterStatusMap}")
+            val summary = status.adapterStatusMap.entries.joinToString {
+                "${it.key}=${it.value.initializationState}"
+            }
+            Log.i(TAG, "MobileAds initialized: $summary")
         }
         initialized = true
     }

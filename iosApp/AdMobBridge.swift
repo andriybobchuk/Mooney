@@ -34,8 +34,24 @@ class AdMobBridge: NSObject, IosAdsBridge, FullScreenContentDelegate, BannerView
 
     private var pendingRewardedOnDismissed: (() -> Void)?
 
+    // Track SDK readiness so banner attaches that arrive before
+    // MobileAds.start() completes can defer their load() call instead of
+    // silently failing. AdMob 13.x will still create the view but the
+    // network request drops on the floor if the SDK isn't running yet.
+    private var isSdkReady = false
+    private var pendingBanners: [(UIView, String)] = []
+
     func initialize() {
-        MobileAds.shared.start(completionHandler: nil)
+        MobileAds.shared.start { [weak self] _ in
+            guard let self = self else { return }
+            NSLog("[Ads] MobileAds.start completion")
+            self.isSdkReady = true
+            let queued = self.pendingBanners
+            self.pendingBanners.removeAll()
+            for (container, adUnitId) in queued {
+                self.attachBanner(container: container, adUnitId: adUnitId)
+            }
+        }
     }
 
     func preloadInterstitial(adUnitId: String) {
@@ -98,10 +114,17 @@ class AdMobBridge: NSObject, IosAdsBridge, FullScreenContentDelegate, BannerView
     }
 
     func attachBanner(container: UIView, adUnitId: String) {
-        NSLog("[Ads] attachBanner: adUnitId=\(adUnitId), container=\(container)")
+        NSLog("[Ads] attachBanner: adUnitId=\(adUnitId), container=\(container), sdkReady=\(isSdkReady)")
+        // If the SDK isn't up yet, park the request and replay after start().
+        // Without this, load() is called against a non-running SDK and the
+        // request is silently dropped (no delegate callback fires).
+        if !isSdkReady {
+            NSLog("[Ads] attachBanner deferred: SDK not ready yet")
+            pendingBanners.append((container, adUnitId))
+            return
+        }
         let bannerView = BannerView(adSize: AdSizeBanner)
         bannerView.adUnitID = adUnitId
-        bannerView.rootViewController = topMostViewController()
         bannerView.delegate = self
         bannerView.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(bannerView)
@@ -109,9 +132,23 @@ class AdMobBridge: NSObject, IosAdsBridge, FullScreenContentDelegate, BannerView
             bannerView.centerXAnchor.constraint(equalTo: container.centerXAnchor),
             bannerView.centerYAnchor.constraint(equalTo: container.centerYAnchor)
         ])
-        NSLog("[Ads] banner rootVC=\(String(describing: bannerView.rootViewController))")
-        bannerView.load(Request())
-        NSLog("[Ads] banner load() requested")
+        // Root VC needs a real window before the SDK will actually request
+        // fill. If it's nil right now (first frame after cold start), retry
+        // once the run loop settles — same trick we already do for the SDK.
+        if let rootVC = topMostViewController() {
+            bannerView.rootViewController = rootVC
+            NSLog("[Ads] banner rootVC=\(rootVC)")
+            bannerView.load(Request())
+            NSLog("[Ads] banner load() requested")
+        } else {
+            NSLog("[Ads] banner rootVC=nil, retrying in 0.5s")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self, weak bannerView] in
+                guard let self = self, let banner = bannerView else { return }
+                banner.rootViewController = self.topMostViewController()
+                NSLog("[Ads] banner retry rootVC=\(String(describing: banner.rootViewController))")
+                banner.load(Request())
+            }
+        }
     }
 
     // MARK: - FullScreenContentDelegate

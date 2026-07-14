@@ -483,6 +483,43 @@ val MIGRATION_16_17 = object : Migration(16, 17) {
     }
 }
 
+/**
+ * v17 → v18.
+ *  - Adds `currentMarketValue` to AccountEntity for Vehicle / Real Estate
+ *    holdings whose ledger amount is a cost basis and needs an "what it's
+ *    worth today" companion. Nullable so every other account type is unaffected.
+ *  - Reworks the seeded asset categories: drops `BUSINESS` (was a flavor,
+ *    not a real category — users kept miscategorising) and `COLLECTIBLES`
+ *    (rare enough that "Other" covers it), adds `VEHICLE` and `RECEIVABLES`.
+ *  - DELETE FROM asset_categories only removes the seed rows; users'
+ *    accounts still keep their stringified assetCategory value ("BUSINESS"
+ *    etc.) and render via the localization fallback until the user re-edits.
+ */
+val MIGRATION_17_18 = object : Migration(17, 18) {
+    override fun migrate(connection: SQLiteConnection) {
+        if (!hasColumn(connection, "AccountEntity", "currentMarketValue")) {
+            connection.execSQL(
+                "ALTER TABLE AccountEntity ADD COLUMN currentMarketValue REAL"
+            )
+        }
+        connection.execSQL(
+            "DELETE FROM asset_categories WHERE id IN ('BUSINESS', 'COLLECTIBLES')"
+        )
+        connection.execSQL(
+            "INSERT OR IGNORE INTO asset_categories " +
+                "(id, title, emoji, description, color, sortOrder, isLiability) VALUES " +
+                "('VEHICLE', 'Vehicle', '🚗', 'Cars, motorcycles, boats — anything with a title', " +
+                "${0xFF607D8B}, 8, 0)"
+        )
+        connection.execSQL(
+            "INSERT OR IGNORE INTO asset_categories " +
+                "(id, title, emoji, description, color, sortOrder, isLiability) VALUES " +
+                "('RECEIVABLES', 'Receivables', '🧾', 'Money owed to you by others', " +
+                "${0xFFFF5722}, 9, 0)"
+        )
+    }
+}
+
 val MIGRATION_14_15 = object : Migration(14, 15) {
     override fun migrate(connection: SQLiteConnection) {
         connection.execSQL("""
@@ -523,6 +560,7 @@ val ALL_MIGRATIONS = listOf(
     MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9,
     MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13,
     MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17,
+    MIGRATION_17_18,
 )
 
 /**
@@ -712,8 +750,8 @@ fun seedAssetCategories(connection: SQLiteConnection) {
     connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('CRYPTO', 'Cryptocurrency', '₿', 'Digital assets and cryptocurrencies', ${0xFFF57C00}, 5, 0)")
     connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('PRECIOUS_METALS', 'Precious Metals', '🥇', 'Gold, silver, and other precious metals', ${0xFFFFD700}, 6, 0)")
     connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('RETIREMENT', 'Retirement Fund', '🏖️', '401k, IRA, pension funds', ${0xFF00BCD4}, 7, 0)")
-    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('BUSINESS', 'Business Assets', '💼', 'Business ownership and investments', ${0xFF607D8B}, 8, 0)")
-    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('COLLECTIBLES', 'Collectibles', '🎨', 'Art, antiques, and collectible items', ${0xFFFF5722}, 9, 0)")
+    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('VEHICLE', 'Vehicle', '🚗', 'Cars, motorcycles, boats — anything with a title', ${0xFF607D8B}, 8, 0)")
+    connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('RECEIVABLES', 'Receivables', '🧾', 'Money owed to you by others', ${0xFFFF5722}, 9, 0)")
     connection.execSQL("INSERT OR IGNORE INTO asset_categories (id, title, emoji, description, color, sortOrder, isLiability) VALUES ('OTHER', 'Other Assets', '📦', 'Miscellaneous assets', ${0xFF9E9E9E}, 10, 0)")
 
     // Liability categories

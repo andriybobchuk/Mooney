@@ -778,8 +778,8 @@
     <string name="category_asset_crypto">加密货币</string>
     <string name="category_asset_precious_metals">贵金属</string>
     <string name="category_asset_retirement">退休金</string>
-    <string name="category_asset_business">企业资产</string>
-    <string name="category_asset_collectibles">收藏品</string>
+    <string name="category_asset_vehicle">车辆</string>
+    <string name="category_asset_receivables">应收款</string>
     <string name="category_asset_other">其他资产</string>
     <string name="category_asset_mortgage">房贷</string>
     <string name="category_asset_loan">贷款</string>

@@ -19,7 +19,7 @@ import androidx.room.RoomDatabase
         HistoricalRateEntity::class,
         RateWatchAlertEntity::class
     ],
-    version = 17,
+    version = 18,
     exportSchema = true
 )
 @ConstructedBy(AppDatabaseConstructor::class)

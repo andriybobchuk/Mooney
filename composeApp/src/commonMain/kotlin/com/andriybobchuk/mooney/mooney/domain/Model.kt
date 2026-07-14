@@ -66,7 +66,11 @@ data class Account(
     val assetCategory: AssetCategory = AssetCategory.BANK_ACCOUNT,
     val assetCategoryId: String = assetCategory.name,
     val isPrimary: Boolean = false,
-    val isLiability: Boolean = false
+    val isLiability: Boolean = false,
+    // Optional user-set "worth today" for cost-basis assets (Vehicle / Real
+    // Estate). Null for everything else. When present, UI shows unrealized
+    // gain/loss = currentMarketValue - amount.
+    val currentMarketValue: Double? = null
 )
 
 data class UserCurrency(

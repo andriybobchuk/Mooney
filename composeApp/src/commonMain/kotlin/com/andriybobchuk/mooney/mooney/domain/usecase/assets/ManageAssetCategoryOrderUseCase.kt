@@ -41,13 +41,13 @@ class ManageAssetCategoryOrderUseCase(
         "CASH",
         "BANK_ACCOUNT",
         "REAL_ESTATE",
+        "VEHICLE",
         "PRECIOUS_METALS",
         "BONDS",
         "RETIREMENT",
         "STOCKS",
-        "BUSINESS",
-        "COLLECTIBLES",
         "CRYPTO",
+        "RECEIVABLES",
         "OTHER"
     )
 

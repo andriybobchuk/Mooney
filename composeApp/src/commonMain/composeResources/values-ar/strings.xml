@@ -79,7 +79,7 @@
     <string name="go_to_transactions">انتقل إلى المعاملات</string>
     <string name="revenue">الإيرادات</string>
     <string name="taxes">الضرائب</string>
-    <string name="operating_costs">المصروفات التشغيلية</string>
+    <string name="operating_costs">المصروفات</string>
     <string name="net_income">صافي الدخل</string>
     <string name="revenue_breakdown">تفصيل الإيرادات</string>
     <string name="operating_costs_breakdown">تفصيل المصروفات</string>
@@ -778,8 +778,8 @@
     <string name="category_asset_crypto">عملة رقمية</string>
     <string name="category_asset_precious_metals">معادن نفيسة</string>
     <string name="category_asset_retirement">صندوق تقاعد</string>
-    <string name="category_asset_business">أصول تجارية</string>
-    <string name="category_asset_collectibles">مقتنيات</string>
+    <string name="category_asset_vehicle">مركبة</string>
+    <string name="category_asset_receivables">مستحقات</string>
     <string name="category_asset_other">أصول أخرى</string>
     <string name="category_asset_mortgage">قرض عقاري</string>
     <string name="category_asset_loan">قرض</string>

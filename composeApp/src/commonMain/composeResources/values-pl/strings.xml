@@ -79,7 +79,7 @@
     <string name="go_to_transactions">Przejdź do transakcji</string>
     <string name="revenue">Przychód</string>
     <string name="taxes">Podatki</string>
-    <string name="operating_costs">Koszty operacyjne</string>
+    <string name="operating_costs">Wydatki</string>
     <string name="net_income">Dochód netto</string>
     <string name="revenue_breakdown">Podział przychodów</string>
     <string name="operating_costs_breakdown">Podział kosztów</string>
@@ -778,8 +778,8 @@
     <string name="category_asset_crypto">Kryptowaluty</string>
     <string name="category_asset_precious_metals">Metale szlachetne</string>
     <string name="category_asset_retirement">Emerytura</string>
-    <string name="category_asset_business">Aktywa firmy</string>
-    <string name="category_asset_collectibles">Kolekcje</string>
+    <string name="category_asset_vehicle">Pojazd</string>
+    <string name="category_asset_receivables">Należności</string>
     <string name="category_asset_other">Inne aktywa</string>
     <string name="category_asset_mortgage">Kredyt hipoteczny</string>
     <string name="category_asset_loan">Pożyczka</string>

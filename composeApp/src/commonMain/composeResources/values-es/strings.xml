@@ -778,8 +778,8 @@
     <string name="category_asset_crypto">Criptomoneda</string>
     <string name="category_asset_precious_metals">Metales preciosos</string>
     <string name="category_asset_retirement">Fondo de jubilación</string>
-    <string name="category_asset_business">Activos empresariales</string>
-    <string name="category_asset_collectibles">Coleccionables</string>
+    <string name="category_asset_vehicle">Vehículo</string>
+    <string name="category_asset_receivables">Cuentas por cobrar</string>
     <string name="category_asset_other">Otros activos</string>
     <string name="category_asset_mortgage">Hipoteca</string>
     <string name="category_asset_loan">Préstamo</string>

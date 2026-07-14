@@ -778,8 +778,8 @@
     <string name="category_asset_crypto">Kryptowährung</string>
     <string name="category_asset_precious_metals">Edelmetalle</string>
     <string name="category_asset_retirement">Altersvorsorge</string>
-    <string name="category_asset_business">Geschäftsvermögen</string>
-    <string name="category_asset_collectibles">Sammlerstücke</string>
+    <string name="category_asset_vehicle">Fahrzeug</string>
+    <string name="category_asset_receivables">Forderungen</string>
     <string name="category_asset_other">Sonstige Vermögenswerte</string>
     <string name="category_asset_mortgage">Hypothek</string>
     <string name="category_asset_loan">Darlehen</string>

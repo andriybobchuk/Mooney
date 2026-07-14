@@ -79,10 +79,10 @@
     <string name="go_to_transactions">Go to Transactions</string>
     <string name="revenue">Revenue</string>
     <string name="taxes">Taxes</string>
-    <string name="operating_costs">Operating Costs</string>
+    <string name="operating_costs">Expenses</string>
     <string name="net_income">Net Income</string>
     <string name="revenue_breakdown">Revenue Breakdown</string>
-    <string name="operating_costs_breakdown">Operating Costs Breakdown</string>
+    <string name="operating_costs_breakdown">Expenses Breakdown</string>
     <string name="tax_breakdown">Tax Breakdown</string>
     <string name="partial_month_note">Showing partial data — month is still in progress</string>
     <string name="profit_over_6_months">Profit over 6 months</string>
@@ -818,8 +818,12 @@
     <string name="category_asset_crypto">Cryptocurrency</string>
     <string name="category_asset_precious_metals">Precious Metals</string>
     <string name="category_asset_retirement">Retirement Fund</string>
-    <string name="category_asset_business">Business Assets</string>
-    <string name="category_asset_collectibles">Collectibles</string>
+    <string name="category_asset_vehicle">Vehicle</string>
+    <string name="category_asset_receivables">Receivables</string>
+    <string name="asset_purchase_price">Purchase price</string>
+    <string name="asset_current_market_value">Current market value</string>
+    <string name="asset_unrealized_gain">Gain %1$s</string>
+    <string name="asset_unrealized_loss">Loss %1$s</string>
     <string name="category_asset_other">Other Assets</string>
     <string name="category_asset_mortgage">Mortgage</string>
     <string name="category_asset_loan">Loan</string>

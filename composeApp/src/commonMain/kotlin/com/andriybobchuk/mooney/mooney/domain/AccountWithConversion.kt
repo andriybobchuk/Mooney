@@ -11,7 +11,11 @@ data class AccountWithConversion(
     val assetCategory: AssetCategory = AssetCategory.BANK_ACCOUNT,
     val assetCategoryId: String = assetCategory.name,
     val isPrimary: Boolean = false,
-    val isLiability: Boolean = false
+    val isLiability: Boolean = false,
+    // Optional "worth today" for cost-basis assets. Kept in the source
+    // account currency (same as [originalAmount]) so the UI can compute a
+    // gain/loss delta without any FX round-trip.
+    val currentMarketValue: Double? = null
 ) {
     fun toAccount(): Account = Account(
         id = id,
@@ -22,6 +26,7 @@ data class AccountWithConversion(
         assetCategory = assetCategory,
         assetCategoryId = assetCategoryId,
         isPrimary = isPrimary,
-        isLiability = isLiability
+        isLiability = isLiability,
+        currentMarketValue = currentMarketValue
     )
 }

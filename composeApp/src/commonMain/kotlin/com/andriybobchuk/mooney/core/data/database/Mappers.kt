@@ -21,7 +21,8 @@ fun AccountEntity.toDomain(): Account = Account(
     assetCategory = AssetCategory.fromString(assetCategory),
     assetCategoryId = assetCategory,
     isPrimary = isPrimary,
-    isLiability = isLiability
+    isLiability = isLiability,
+    currentMarketValue = currentMarketValue
 )
 
 fun CategoryEntity.toDomain(parent: Category? = null): Category = Category(

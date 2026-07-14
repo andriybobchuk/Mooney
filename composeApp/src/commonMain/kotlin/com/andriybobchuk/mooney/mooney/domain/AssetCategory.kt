@@ -10,49 +10,49 @@ enum class AssetCategory(
     BANK_ACCOUNT(
         displayName = "Bank Account",
         emoji = "🏦",
-        description = "Traditional bank accounts and deposits",
+        description = "Traditional bank accounts and deposits", // allow-hardcoded
         color = 0xFF4285F4, // Blue
         riskLevel = RiskLevel.LOW
     ),
     CASH(
         displayName = "Cash Reserve",
         emoji = "💵",
-        description = "Physical cash holdings",
+        description = "Physical cash holdings", // allow-hardcoded
         color = 0xFF34A853, // Green
         riskLevel = RiskLevel.VERY_LOW
     ),
     REAL_ESTATE(
         displayName = "Real Estate",
         emoji = "🏠",
-        description = "Property and real estate investments",
+        description = "Property and real estate investments", // allow-hardcoded
         color = 0xFF795548, // Brown
         riskLevel = RiskLevel.LOW
     ),
     STOCKS(
         displayName = "Stocks",
         emoji = "📈",
-        description = "Stock market investments",
+        description = "Stock market investments", // allow-hardcoded
         color = 0xFFE91E63, // Pink
         riskLevel = RiskLevel.HIGH
     ),
     BONDS(
         displayName = "Bonds",
         emoji = "📜",
-        description = "Government and corporate bonds",
+        description = "Government and corporate bonds", // allow-hardcoded
         color = 0xFF9C27B0, // Purple
         riskLevel = RiskLevel.LOW
     ),
     CRYPTO(
         displayName = "Cryptocurrency",
         emoji = "₿",
-        description = "Digital assets and cryptocurrencies",
+        description = "Digital assets and cryptocurrencies", // allow-hardcoded
         color = 0xFFF57C00, // Orange
         riskLevel = RiskLevel.VERY_HIGH
     ),
     PRECIOUS_METALS(
         displayName = "Precious Metals",
         emoji = "🥇",
-        description = "Gold, silver, and other precious metals",
+        description = "Gold, silver, and other precious metals", // allow-hardcoded
         color = 0xFFFFD700, // Gold
         riskLevel = RiskLevel.MEDIUM
     ),
@@ -63,24 +63,24 @@ enum class AssetCategory(
         color = 0xFF00BCD4, // Cyan
         riskLevel = RiskLevel.MEDIUM
     ),
-    BUSINESS(
-        displayName = "Business Assets",
-        emoji = "💼",
-        description = "Business ownership and investments",
+    VEHICLE(
+        displayName = "Vehicle",
+        emoji = "🚗",
+        description = "Cars, motorcycles, boats — anything with a title", // allow-hardcoded
         color = 0xFF607D8B, // Blue Grey
-        riskLevel = RiskLevel.HIGH
+        riskLevel = RiskLevel.MEDIUM
     ),
-    COLLECTIBLES(
-        displayName = "Collectibles",
-        emoji = "🎨",
-        description = "Art, antiques, and collectible items",
+    RECEIVABLES(
+        displayName = "Receivables",
+        emoji = "🧾",
+        description = "Money owed to you by others", // allow-hardcoded
         color = 0xFFFF5722, // Deep Orange
         riskLevel = RiskLevel.MEDIUM
     ),
     OTHER(
         displayName = "Other Assets",
         emoji = "📦",
-        description = "Miscellaneous assets",
+        description = "Miscellaneous assets", // allow-hardcoded
         color = 0xFF9E9E9E, // Grey
         riskLevel = RiskLevel.MEDIUM
     );

@@ -12,7 +12,11 @@ data class AccountEntity(
     val emoji: String,
     val assetCategory: String = "BANK_ACCOUNT",
     val isPrimary: Boolean = false,
-    val isLiability: Boolean = false
+    val isLiability: Boolean = false,
+    // Optional "what it's worth today" for illiquid holdings whose ledger
+    // value is a cost basis (Real Estate, Vehicle). Null for everything else;
+    // when present, the UI can show an unrealized gain/loss delta vs `amount`.
+    val currentMarketValue: Double? = null
 )
 
 @Entity(tableName = "categories")

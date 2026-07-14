@@ -66,7 +66,7 @@
     <string name="go_to_transactions">Перейти до транзакцій</string>
     <string name="revenue">Дохід</string>
     <string name="taxes">Податки</string>
-    <string name="operating_costs">Операційні витрати</string>
+    <string name="operating_costs">Витрати</string>
     <string name="net_income">Чистий прибуток</string>
     <string name="revenue_breakdown">Розподіл доходу</string>
     <string name="operating_costs_breakdown">Розподіл витрат</string>
@@ -753,8 +753,8 @@
     <string name="category_asset_crypto">Криптовалюта</string>
     <string name="category_asset_precious_metals">Дорогоцінні метали</string>
     <string name="category_asset_retirement">Пенсійний фонд</string>
-    <string name="category_asset_business">Активи бізнесу</string>
-    <string name="category_asset_collectibles">Колекціонування</string>
+    <string name="category_asset_vehicle">Транспорт</string>
+    <string name="category_asset_receivables">Дебіторська заборгованість</string>
     <string name="category_asset_other">Інші активи</string>
     <string name="category_asset_mortgage">Іпотека</string>
     <string name="category_asset_loan">Позика</string>

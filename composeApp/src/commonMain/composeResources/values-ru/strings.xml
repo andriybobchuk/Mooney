@@ -778,8 +778,8 @@
     <string name="category_asset_crypto">Криптовалюта</string>
     <string name="category_asset_precious_metals">Драгметаллы</string>
     <string name="category_asset_retirement">Пенсионный фонд</string>
-    <string name="category_asset_business">Бизнес-активы</string>
-    <string name="category_asset_collectibles">Коллекционное</string>
+    <string name="category_asset_vehicle">Транспорт</string>
+    <string name="category_asset_receivables">Дебиторская задолженность</string>
     <string name="category_asset_other">Прочие активы</string>
     <string name="category_asset_mortgage">Ипотека</string>
     <string name="category_asset_loan">Кредит</string>

@@ -48,6 +48,7 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.*
+import com.andriybobchuk.mooney.app.appColors
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyButton
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyTextField
@@ -330,7 +331,7 @@ fun AssetsScreen(
                         assetCategories = state.assetCategories,
                         hasAnyAsset = state.assets.any { !it.isLiability },
                         onEditCategories = onNavigateToAssetCategories,
-                        onAdd = { title, emoji, amount, currency, categoryId, isLiability ->
+                        onAdd = { title, emoji, amount, currency, categoryId, isLiability, marketValue ->
                             viewModel.upsertAsset(
                                 editingAsset?.id ?: 0,
                                 title,
@@ -338,7 +339,8 @@ fun AssetsScreen(
                                 amount,
                                 currency,
                                 categoryId,
-                                isLiability
+                                isLiability,
+                                marketValue
                             )
                             // Switch to the matching tab so user sees the new account
                             viewModel.selectTab(
@@ -932,8 +934,16 @@ private fun AssetCard(
                             }
                         }
 
-                        // Sparkline — only in currency insights mode
-                        if (isForeign && historicalRates != null && historicalRates.size > 2) {
+                        // Sparkline — only for Cash / Bank Account holdings
+                        // where the FX rate movement is the interesting
+                        // story. Illiquid categories (Real Estate, Vehicle)
+                        // suppress it because the exchange-rate history isn't
+                        // meaningful next to a cost-basis number.
+                        val isCashLike = asset.assetCategoryId == "CASH" ||
+                            asset.assetCategoryId == "BANK_ACCOUNT"
+                        val hasEnoughRates = historicalRates != null && historicalRates.size > 2
+                        val showSparkline = isCashLike && isForeign && hasEnoughRates
+                        if (showSparkline && historicalRates != null) {
                             Spacer(Modifier.height(4.dp))
                             val sMin = historicalRates.minOf { it.rate }
                             val sMax = historicalRates.maxOf { it.rate }
@@ -971,11 +981,35 @@ private fun AssetCard(
                         if (isForeign) {
                             Text("${asset.originalAmount.formatWithCommas()} ${asset.originalCurrency.symbol}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
+                        // Unrealized gain/loss for cost-basis categories.
+                        // `amount` is the purchase price; `currentMarketValue`
+                        // is what the user says it's worth today.
+                        val supportsMarketValue = asset.assetCategoryId == "VEHICLE" ||
+                            asset.assetCategoryId == "REAL_ESTATE"
+                        val mv = asset.currentMarketValue
+                        if (supportsMarketValue && mv != null) {
+                            val delta = mv - asset.originalAmount
+                            val sign = if (delta >= 0) "+" else "−"
+                            val magnitude = kotlin.math.abs(delta).formatWithCommas()
+                            val color = if (delta >= 0) {
+                                MaterialTheme.appColors.incomeColor
+                            } else {
+                                MaterialTheme.appColors.expenseColor
+                            }
+                            Text(
+                                text = "$sign$magnitude ${asset.originalCurrency.symbol}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = color
+                            )
+                        }
                     }
                 }
 
-                // Low / Now / High tags — only in currency insights mode
-                val showRateTags = isForeign && historicalRates != null && historicalRates.size > 2 && currentRate != null
+                // Low / Now / High tags — only in currency insights mode,
+                // and only for Cash / Bank (same reasoning as the sparkline).
+                val isCashLikeForTags = asset.assetCategoryId == "CASH" ||
+                    asset.assetCategoryId == "BANK_ACCOUNT"
+                val showRateTags = isCashLikeForTags && isForeign && historicalRates != null && historicalRates.size > 2 && currentRate != null
                 if (showRateTags) {
                     val minR = historicalRates.minOf { it.rate }
                     val maxR = historicalRates.maxOf { it.rate }
@@ -1110,16 +1144,24 @@ private fun AssetSheet(
     editingAsset: UiAsset? = null,
     assetCategories: List<AssetCategoryEntity>,
     hasAnyAsset: Boolean = true,
-    onAdd: (String, String, Double, Currency, String, Boolean) -> Unit,
+    onAdd: (String, String, Double, Currency, String, Boolean, Double?) -> Unit,
     onEditCategories: () -> Unit = {}
 ) {
     var title by remember { mutableStateOf(editingAsset?.title ?: "") }
     var amount by remember { mutableStateOf(editingAsset?.originalAmount?.formatWithCommas() ?: "") }
+    var marketValue by remember {
+        mutableStateOf(editingAsset?.currentMarketValue?.formatWithCommas() ?: "")
+    }
     var selectedCurrency by remember { mutableStateOf(editingAsset?.originalCurrency ?: GlobalConfig.baseCurrency) }
     var selectedCategoryId by remember { mutableStateOf(editingAsset?.assetCategoryId ?: "BANK_ACCOUNT") }
     var isLiability by remember { mutableStateOf(editingAsset?.isLiability ?: false) }
     var showCategorySheet by remember { mutableStateOf(false) }
     var showCurrencySheet by remember { mutableStateOf(false) }
+    // Vehicle & Real Estate carry a cost-basis "amount" plus a user-set
+    // "current market value" so the app can render unrealized gain/loss. All
+    // other categories keep the simple single-value model.
+    val supportsMarketValue = selectedCategoryId == "VEHICLE" ||
+        selectedCategoryId == "REAL_ESTATE"
 
     // Filter categories by asset/liability type
     val filteredCategories = assetCategories.filter { it.isLiability == isLiability }
@@ -1210,10 +1252,26 @@ private fun AssetSheet(
             modifier = Modifier.fillMaxWidth().mooneyTestTag(TestTags.ACCOUNT_AMOUNT_FIELD),
             value = amount,
             onValueChange = { amount = it },
-            label = stringResource(Res.string.value),
+            label = if (supportsMarketValue) {
+                stringResource(Res.string.asset_purchase_price)
+            } else {
+                stringResource(Res.string.value)
+            },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal),
             singleLine = true
         )
+
+        if (supportsMarketValue) {
+            Spacer(Modifier.height(8.dp))
+            MooneyTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = marketValue,
+                onValueChange = { marketValue = it },
+                label = stringResource(Res.string.asset_current_market_value),
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal),
+                singleLine = true
+            )
+        }
 
         Spacer(Modifier.height(12.dp))
 
@@ -1268,7 +1326,8 @@ private fun AssetSheet(
             variant = ButtonVariant.PRIMARY,
             onClick = {
                 val amt = amount.parseAmountInput() ?: 0.0
-                onAdd(title, "", amt, selectedCurrency, selectedCategoryId, isLiability)
+                val mv = if (supportsMarketValue) marketValue.parseAmountInput() else null
+                onAdd(title, "", amt, selectedCurrency, selectedCategoryId, isLiability, mv)
             },
             enabled = title.isNotBlank() && amount.isNotBlank()
         )

@@ -25,7 +25,8 @@ class ConvertAccountsToUiUseCase(
                     assetCategory = account.assetCategory,
                     assetCategoryId = account.assetCategoryId,
                     isPrimary = account.isPrimary,
-                    isLiability = account.isLiability
+                    isLiability = account.isLiability,
+                    currentMarketValue = account.currentMarketValue
                 )
             } else {
                 account?.let {

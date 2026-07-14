@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Mooney</string>
     <string name="nav_transactions">Транзакції</string>
-    <string name="nav_assets">Активи</string>
+    <string name="nav_assets">Баланс</string>
     <string name="nav_exchange">Обмін</string>
     <string name="nav_analytics">Аналітика</string>
     <string name="nav_goals">Цілі</string>

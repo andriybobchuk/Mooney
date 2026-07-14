@@ -15,7 +15,8 @@ data class AccountWithConversion(
     // Optional "worth today" for cost-basis assets. Kept in the source
     // account currency (same as [originalAmount]) so the UI can compute a
     // gain/loss delta without any FX round-trip.
-    val currentMarketValue: Double? = null
+    val currentMarketValue: Double? = null,
+    val includeInNetWorth: Boolean = true
 ) {
     fun toAccount(): Account = Account(
         id = id,
@@ -27,6 +28,7 @@ data class AccountWithConversion(
         assetCategoryId = assetCategoryId,
         isPrimary = isPrimary,
         isLiability = isLiability,
-        currentMarketValue = currentMarketValue
+        currentMarketValue = currentMarketValue,
+        includeInNetWorth = includeInNetWorth
     )
 }

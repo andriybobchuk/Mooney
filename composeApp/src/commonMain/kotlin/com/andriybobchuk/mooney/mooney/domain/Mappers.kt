@@ -13,7 +13,8 @@ fun Account.toEntity(): AccountEntity = AccountEntity(
     assetCategory = assetCategoryId,
     isPrimary = isPrimary,
     isLiability = isLiability,
-    currentMarketValue = currentMarketValue
+    currentMarketValue = currentMarketValue,
+    includeInNetWorth = includeInNetWorth
 )
 
 fun Transaction.toEntity(): TransactionEntity = TransactionEntity(

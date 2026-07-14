@@ -4,7 +4,7 @@
 
     <!-- التنقل -->
     <string name="nav_transactions">المعاملات</string>
-    <string name="nav_assets">الأصول</string>
+    <string name="nav_assets">الرصيد</string>
     <string name="nav_exchange">صرف العملات</string>
     <string name="nav_analytics">التحليلات</string>
     <string name="nav_goals">الأهداف</string>

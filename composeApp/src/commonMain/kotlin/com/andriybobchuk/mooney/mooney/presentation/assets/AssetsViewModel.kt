@@ -370,7 +370,8 @@ class AssetsViewModel(
         currency: Currency,
         assetCategoryId: String,
         isLiability: Boolean = false,
-        currentMarketValue: Double? = null
+        currentMarketValue: Double? = null,
+        includeInNetWorth: Boolean = true
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             // Gate: check account limit for new accounts (id == 0 means new)
@@ -408,7 +409,8 @@ class AssetsViewModel(
                 assetCategoryId = assetCategoryId,
                 isPrimary = existingIsPrimary,
                 isLiability = existingIsLiability,
-                currentMarketValue = currentMarketValue
+                currentMarketValue = currentMarketValue,
+                includeInNetWorth = includeInNetWorth
             )
 
             try {

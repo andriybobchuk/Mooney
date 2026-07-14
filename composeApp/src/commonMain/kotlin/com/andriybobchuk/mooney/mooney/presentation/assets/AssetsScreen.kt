@@ -331,7 +331,7 @@ fun AssetsScreen(
                         assetCategories = state.assetCategories,
                         hasAnyAsset = state.assets.any { !it.isLiability },
                         onEditCategories = onNavigateToAssetCategories,
-                        onAdd = { title, emoji, amount, currency, categoryId, isLiability, marketValue ->
+                        onAdd = { title, emoji, amount, currency, categoryId, isLiability, marketValue, inNetWorth ->
                             viewModel.upsertAsset(
                                 editingAsset?.id ?: 0,
                                 title,
@@ -340,7 +340,8 @@ fun AssetsScreen(
                                 currency,
                                 categoryId,
                                 isLiability,
-                                marketValue
+                                marketValue,
+                                inNetWorth
                             )
                             // Switch to the matching tab so user sees the new account
                             viewModel.selectTab(
@@ -369,6 +370,7 @@ fun AssetsScreen(
                 historicalRates = state.historicalRates[asset.originalCurrency] ?: emptyList(),
                 currentRate = state.currentRates[asset.originalCurrency],
                 percentile = state.percentiles[asset.originalCurrency],
+                baseNetWorth = state.baseNetWorth,
                 onEdit = {
                     detailAsset = null
                     editingAsset = asset
@@ -905,11 +907,18 @@ private fun AssetCard(
                 ) {
                     // Left: title + sparkline
                     Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
-                        // Title + currency tag on same line when possible
+                        // Title + currency tag on same line when possible.
+                        // Leading emoji is the asset-category icon (car for
+                        // Vehicle, house for Real Estate, etc.) so the row
+                        // type reads at a glance without opening detail.
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
+                            Text(
+                                text = asset.assetCategory.emoji,
+                                fontSize = 14.sp
+                            )
                             Text(
                                 text = asset.title,
                                 style = MaterialTheme.typography.titleSmall,
@@ -1144,7 +1153,7 @@ private fun AssetSheet(
     editingAsset: UiAsset? = null,
     assetCategories: List<AssetCategoryEntity>,
     hasAnyAsset: Boolean = true,
-    onAdd: (String, String, Double, Currency, String, Boolean, Double?) -> Unit,
+    onAdd: (String, String, Double, Currency, String, Boolean, Double?, Boolean) -> Unit,
     onEditCategories: () -> Unit = {}
 ) {
     var title by remember { mutableStateOf(editingAsset?.title ?: "") }
@@ -1155,6 +1164,7 @@ private fun AssetSheet(
     var selectedCurrency by remember { mutableStateOf(editingAsset?.originalCurrency ?: GlobalConfig.baseCurrency) }
     var selectedCategoryId by remember { mutableStateOf(editingAsset?.assetCategoryId ?: "BANK_ACCOUNT") }
     var isLiability by remember { mutableStateOf(editingAsset?.isLiability ?: false) }
+    var includeInNetWorth by remember { mutableStateOf(editingAsset?.includeInNetWorth ?: true) }
     var showCategorySheet by remember { mutableStateOf(false) }
     var showCurrencySheet by remember { mutableStateOf(false) }
     // Vehicle & Real Estate carry a cost-basis "amount" plus a user-set
@@ -1320,6 +1330,38 @@ private fun AssetSheet(
 
         Spacer(Modifier.height(20.dp))
 
+        // Opt-out toggle — keeps the account visible in the list but drops it
+        // from the Total Net Worth summary. Sits above the CTA so users see
+        // the switch before committing.
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                .clickable { includeInNetWorth = !includeInNetWorth }
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    stringResource(Res.string.asset_include_in_net_worth),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    stringResource(Res.string.asset_include_in_net_worth_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = includeInNetWorth,
+                onCheckedChange = { includeInNetWorth = it }
+            )
+        }
+
+        Spacer(Modifier.height(20.dp))
+
         MooneyButton(
             text = if (editingAsset != null) stringResource(Res.string.update_asset) else stringResource(Res.string.add_account),
             modifier = Modifier.fillMaxWidth().mooneyTestTag(TestTags.ACCOUNT_SAVE_BUTTON),
@@ -1327,7 +1369,7 @@ private fun AssetSheet(
             onClick = {
                 val amt = amount.parseAmountInput() ?: 0.0
                 val mv = if (supportsMarketValue) marketValue.parseAmountInput() else null
-                onAdd(title, "", amt, selectedCurrency, selectedCategoryId, isLiability, mv)
+                onAdd(title, "", amt, selectedCurrency, selectedCategoryId, isLiability, mv, includeInNetWorth)
             },
             enabled = title.isNotBlank() && amount.isNotBlank()
         )

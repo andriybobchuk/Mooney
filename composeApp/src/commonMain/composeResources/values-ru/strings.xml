@@ -4,7 +4,7 @@
 
     <!-- Навигация -->
     <string name="nav_transactions">Транзакции</string>
-    <string name="nav_assets">Активы</string>
+    <string name="nav_assets">Баланс</string>
     <string name="nav_exchange">Обмен</string>
     <string name="nav_analytics">Аналитика</string>
     <string name="nav_goals">Цели</string>

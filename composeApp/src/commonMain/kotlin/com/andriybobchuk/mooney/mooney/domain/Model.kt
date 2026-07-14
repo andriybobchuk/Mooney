@@ -70,7 +70,10 @@ data class Account(
     // Optional user-set "worth today" for cost-basis assets (Vehicle / Real
     // Estate). Null for everything else. When present, UI shows unrealized
     // gain/loss = currentMarketValue - amount.
-    val currentMarketValue: Double? = null
+    val currentMarketValue: Double? = null,
+    // Opt-out flag: false = still visible in the list but excluded from the
+    // Total Net Worth summary. Default true keeps the pre-existing behavior.
+    val includeInNetWorth: Boolean = true
 )
 
 data class UserCurrency(

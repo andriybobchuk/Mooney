@@ -555,12 +555,27 @@ val MIGRATION_14_15 = object : Migration(14, 15) {
  * it here. `DatabaseSchemaIntegrityTest` asserts the length matches
  * the version drift so nothing gets forgotten.
  */
+/**
+ * v18 → v19. Adds `includeInNetWorth` (Boolean) to AccountEntity. Default 1
+ * (true) so every existing account stays in the total until the user
+ * explicitly opts one out.
+ */
+val MIGRATION_18_19 = object : Migration(18, 19) {
+    override fun migrate(connection: SQLiteConnection) {
+        if (!hasColumn(connection, "AccountEntity", "includeInNetWorth")) {
+            connection.execSQL(
+                "ALTER TABLE AccountEntity ADD COLUMN includeInNetWorth INTEGER NOT NULL DEFAULT 1"
+            )
+        }
+    }
+}
+
 val ALL_MIGRATIONS = listOf(
     MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
     MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9,
     MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13,
     MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17,
-    MIGRATION_17_18,
+    MIGRATION_17_18, MIGRATION_18_19,
 )
 
 /**

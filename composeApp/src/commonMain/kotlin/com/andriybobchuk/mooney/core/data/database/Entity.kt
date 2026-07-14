@@ -16,7 +16,11 @@ data class AccountEntity(
     // Optional "what it's worth today" for illiquid holdings whose ledger
     // value is a cost basis (Real Estate, Vehicle). Null for everything else;
     // when present, the UI can show an unrealized gain/loss delta vs `amount`.
-    val currentMarketValue: Double? = null
+    val currentMarketValue: Double? = null,
+    // User-facing toggle: opt an account out of the "Total Net Worth" number
+    // without deleting it (e.g. an emergency stash you don't want padding
+    // the daily total). Default true so existing accounts stay counted.
+    val includeInNetWorth: Boolean = true
 )
 
 @Entity(tableName = "categories")

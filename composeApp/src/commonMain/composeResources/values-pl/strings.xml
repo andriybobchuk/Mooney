@@ -4,7 +4,7 @@
 
     <!-- Nawigacja -->
     <string name="nav_transactions">Transakcje</string>
-    <string name="nav_assets">Aktywa</string>
+    <string name="nav_assets">Saldo</string>
     <string name="nav_exchange">Wymiana</string>
     <string name="nav_analytics">Analityka</string>
     <string name="nav_goals">Cele</string>

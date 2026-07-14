@@ -4,7 +4,7 @@
 
     <!-- 导航 -->
     <string name="nav_transactions">交易</string>
-    <string name="nav_assets">资产</string>
+    <string name="nav_assets">余额</string>
     <string name="nav_exchange">汇率</string>
     <string name="nav_analytics">分析</string>
     <string name="nav_goals">目标</string>

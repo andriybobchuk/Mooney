@@ -22,7 +22,8 @@ fun AccountEntity.toDomain(): Account = Account(
     assetCategoryId = assetCategory,
     isPrimary = isPrimary,
     isLiability = isLiability,
-    currentMarketValue = currentMarketValue
+    currentMarketValue = currentMarketValue,
+    includeInNetWorth = includeInNetWorth
 )
 
 fun CategoryEntity.toDomain(parent: Category? = null): Category = Category(

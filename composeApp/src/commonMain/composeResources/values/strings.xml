@@ -4,7 +4,7 @@
 
     <!-- Navigation -->
     <string name="nav_transactions">Transactions</string>
-    <string name="nav_assets">Assets</string>
+    <string name="nav_assets">Balance</string>
     <string name="nav_exchange">Exchange</string>
     <string name="nav_analytics">Analytics</string>
     <string name="nav_goals">Goals</string>
@@ -824,6 +824,15 @@
     <string name="asset_current_market_value">Current market value</string>
     <string name="asset_unrealized_gain">Gain %1$s</string>
     <string name="asset_unrealized_loss">Loss %1$s</string>
+    <string name="asset_include_in_net_worth">Include in total net worth</string>
+    <string name="asset_include_in_net_worth_hint">Turn off to keep this account visible but out of the summary.</string>
+    <string name="asset_detail_purchase_price">Purchase price</string>
+    <string name="asset_detail_market_value">Current market value</string>
+    <string name="asset_detail_unrealized">Unrealized %1$s</string>
+    <string name="asset_detail_pct_of_networth">%1$s%% of net worth</string>
+    <string name="asset_detail_excluded_from_networth">Excluded from total net worth</string>
+    <string name="asset_detail_primary_note">Primary account · used for defaults</string>
+    <string name="asset_detail_liability_note">Reduces your net worth by this amount</string>
     <string name="category_asset_other">Other Assets</string>
     <string name="category_asset_mortgage">Mortgage</string>
     <string name="category_asset_loan">Loan</string>

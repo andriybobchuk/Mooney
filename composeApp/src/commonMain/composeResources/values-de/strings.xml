@@ -4,7 +4,7 @@
 
     <!-- Navigation -->
     <string name="nav_transactions">Transaktionen</string>
-    <string name="nav_assets">Vermögen</string>
+    <string name="nav_assets">Kontostand</string>
     <string name="nav_exchange">Wechsel</string>
     <string name="nav_analytics">Analyse</string>
     <string name="nav_goals">Ziele</string>

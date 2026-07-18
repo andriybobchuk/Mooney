@@ -257,13 +257,16 @@ class AssetsViewModel(
             baseCurrency = GlobalConfig.baseCurrency
         )
 
-        // Compute totals per type for percentage bars
+        // Compute totals per type for percentage bars. Opted-out accounts
+        // ("Include in total net worth" toggle) drop out of these totals so
+        // the summary at the top of the Balance screen honors the flag.
         val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
         val base = GlobalConfig.baseCurrency
-        val assetsBase = allAccounts.filter { !it.isLiability }.sumOf { a ->
+        val countedAccounts = allAccounts.filter { it.includeInNetWorth }
+        val assetsBase = countedAccounts.filter { !it.isLiability }.sumOf { a ->
             if (a.currency != base) exchangeRates.convert(a.amount, a.currency, base) else a.amount
         }
-        val liabilitiesBase = allAccounts.filter { it.isLiability }.sumOf { a ->
+        val liabilitiesBase = countedAccounts.filter { it.isLiability }.sumOf { a ->
             if (a.currency != base) exchangeRates.convert(a.amount, a.currency, base) else a.amount
         }
 

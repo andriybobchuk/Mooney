@@ -831,6 +831,7 @@
     <string name="asset_detail_unrealized">Unrealized %1$s</string>
     <string name="asset_detail_pct_of_networth">%1$s%% of net worth</string>
     <string name="asset_detail_excluded_from_networth">Excluded from total net worth</string>
+    <string name="asset_not_counted_badge">Not counted</string>
     <string name="asset_detail_primary_note">Primary account · used for defaults</string>
     <string name="asset_detail_liability_note">Reduces your net worth by this amount</string>
     <string name="category_asset_other">Other Assets</string>

@@ -197,19 +197,6 @@ class SettingsViewModel(
     }
 
     /**
-     * Dev-only: throw an unchecked exception so we can verify Crashlytics is
-     * actually receiving and symbolicating crashes end-to-end. The throw
-     * happens off the main thread so iOS doesn't get stuck on the launch
-     * screen if Crashlytics finishes uploading during the crash.
-     */
-    @Suppress("TooGenericExceptionThrown")
-    fun forceTestCrash() {
-        viewModelScope.launch {
-            throw RuntimeException("Mooney dev test crash — Crashlytics wiring check")
-        }
-    }
-
-    /**
      * Resets the onboarding flag and signals the UI to navigate to the
      * onboarding flow. Lets us re-test the onboarding screens without
      * reinstalling or wiping all app data. Dev-only.

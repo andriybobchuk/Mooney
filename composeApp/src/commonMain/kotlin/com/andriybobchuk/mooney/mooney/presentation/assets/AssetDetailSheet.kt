@@ -14,11 +14,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.andriybobchuk.mooney.app.appColors
 import com.andriybobchuk.mooney.core.presentation.CurrencyRateChart
 import com.andriybobchuk.mooney.mooney.data.CategoryLocalization
 import com.andriybobchuk.mooney.mooney.domain.AccountWithConversion
-import com.andriybobchuk.mooney.mooney.domain.AssetCategory
 import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.HistoricalRate
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
@@ -57,11 +57,14 @@ fun AssetDetailSheet(
             .verticalScroll(rememberScrollState())
             .padding(20.dp)
     ) {
-        // Type badge — small pill with the category emoji and localized name.
+        // Type badge — small pill with the category icon and localized name.
         // Anchors the sheet so the user knows what kind of account they're
         // looking at without reading the value first.
         val categoryLabel = assetCategoryDisplayName(asset)
-        AssetTypeBadge(emoji = asset.assetCategory.emoji, label = categoryLabel)
+        AssetTypeBadge(
+            icon = assetCategoryIcon(asset.assetCategoryId),
+            label = categoryLabel
+        )
 
         Spacer(Modifier.height(12.dp))
 
@@ -163,7 +166,7 @@ fun AssetDetailSheet(
 }
 
 @Composable
-private fun AssetTypeBadge(emoji: String, label: String) {
+private fun AssetTypeBadge(icon: ImageVector, label: String) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
@@ -171,7 +174,12 @@ private fun AssetTypeBadge(emoji: String, label: String) {
             .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(emoji, fontSize = 14.sp)
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.size(14.dp)
+        )
         Spacer(Modifier.width(6.dp))
         Text(
             label,

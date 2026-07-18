@@ -79,6 +79,9 @@ fun SettingsScreen(
     var showExchangeRateSourceSheet by remember { mutableStateOf(false) }
     var showFeedbackSheet by remember { mutableStateOf(false) }
     var versionTapCount by remember { mutableStateOf(0) }
+    var showDevPasscodePrompt by remember { mutableStateOf(false) }
+    var devPasscodeEntry by remember { mutableStateOf("") }
+    var devPasscodeError by remember { mutableStateOf(false) }
     // Rate Mooney pre-prompt flow.
     var showRatePrePrompt by remember { mutableStateOf(false) }
     var showRateFeedback by remember { mutableStateOf(false) }
@@ -1085,12 +1088,6 @@ fun SettingsScreen(
                                 value = if (state.devForcePremium) stringResource(Res.string.pro_label) else stringResource(Res.string.free_label),
                                 onClick = { viewModel.setDevPlanPro(!state.devForcePremium) }
                             )
-                            SettingsDivider()
-                            SettingsRow(
-                                title = "Force test crash", // allow-hardcoded (dev option)
-                                value = "Tap to crash",
-                                onClick = { viewModel.forceTestCrash() }
-                            )
                         }
                     }
                 }
@@ -1170,8 +1167,13 @@ fun SettingsScreen(
                                 if (!state.developerOptionsEnabled) {
                                     versionTapCount += 1
                                     if (versionTapCount >= 5) {
-                                        viewModel.enableDeveloperOptions()
                                         versionTapCount = 0
+                                        // Passcode gate — keeps release users from
+                                        // stumbling into dev options if the version
+                                        // row is ever tapped 5x by accident.
+                                        devPasscodeEntry = ""
+                                        devPasscodeError = false
+                                        showDevPasscodePrompt = true
                                     }
                                 }
                             }
@@ -1266,6 +1268,82 @@ fun SettingsScreen(
             onDismiss = { showRateFeedback = false }
         )
     }
+
+    if (showDevPasscodePrompt) {
+        DevPasscodeDialog(
+            entry = devPasscodeEntry,
+            error = devPasscodeError,
+            onEntryChange = {
+                if (it.all { c -> c.isDigit() } && it.length <= DEV_PASSCODE.length) {
+                    devPasscodeEntry = it
+                    devPasscodeError = false
+                }
+            },
+            onDismiss = { showDevPasscodePrompt = false },
+            onSubmit = {
+                if (devPasscodeEntry == DEV_PASSCODE) {
+                    showDevPasscodePrompt = false
+                    viewModel.enableDeveloperOptions()
+                } else {
+                    devPasscodeError = true
+                }
+            }
+        )
+    }
+}
+
+private const val DEV_PASSCODE = "534551"
+
+@Composable
+private fun DevPasscodeDialog(
+    entry: String,
+    error: Boolean,
+    onEntryChange: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onSubmit: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Developer options") }, // allow-hardcoded (dev-only surface)
+        text = {
+            Column {
+                Text(
+                    text = "Enter the 6-digit code to unlock.", // allow-hardcoded (dev-only surface)
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = entry,
+                    onValueChange = onEntryChange,
+                    singleLine = true,
+                    isError = error,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions.Default.copy(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword
+                    ),
+                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (error) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = "Incorrect code.", // allow-hardcoded (dev-only surface)
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onSubmit,
+                enabled = entry.length == DEV_PASSCODE.length
+            ) { Text(stringResource(Res.string.done)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.cancel)) }
+        }
+    )
 }
 
 @Composable

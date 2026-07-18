@@ -908,16 +908,18 @@ private fun AssetCard(
                     // Left: title + sparkline
                     Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                         // Title + currency tag on same line when possible.
-                        // Leading emoji is the asset-category icon (car for
+                        // Leading icon is the asset-category vector (car for
                         // Vehicle, house for Real Estate, etc.) so the row
                         // type reads at a glance without opening detail.
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Text(
-                                text = asset.assetCategory.emoji,
-                                fontSize = 14.sp
+                            Icon(
+                                imageVector = assetCategoryIcon(asset.assetCategoryId),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(16.dp)
                             )
                             Text(
                                 text = asset.title,
@@ -940,6 +942,29 @@ private fun AssetCard(
                             Spacer(Modifier.height(3.dp))
                             Box(modifier = Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
                                 Text(stringResource(Res.string.primary_account).uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontSize = 9.sp, letterSpacing = 0.5.sp)
+                            }
+                        }
+
+                        // Opted-out of net worth — small muted chip so the
+                        // user sees at a glance which accounts are excluded
+                        // without opening the detail sheet.
+                        if (!asset.includeInNetWorth) {
+                            Spacer(Modifier.height(3.dp))
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                                        RoundedCornerShape(4.dp)
+                                    )
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(Res.string.asset_not_counted_badge).uppercase(),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 9.sp,
+                                    letterSpacing = 0.5.sp
+                                )
                             }
                         }
 

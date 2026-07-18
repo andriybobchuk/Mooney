@@ -68,6 +68,9 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
+            // Extended Material Icons — used for per-asset-category icons on
+            // the Balance list (DirectionsCar, Home, AccountBalance, etc.).
+            implementation(compose.materialIconsExtended)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)

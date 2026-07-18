@@ -1,7 +1,19 @@
 package com.andriybobchuk.mooney.mooney.domain
 
+/**
+ * Formats a Double as "1,234.56" with:
+ *   - proper rounding to 2 decimals (not truncation — 21.10 stayed 21.09 before
+ *     because `(21.10 * 100).toLong()` bit-hits 2109.999… and truncates to 2109),
+ *   - a single leading minus for negatives (was rendering "-21.-10" because
+ *     both quotient and remainder inherited the sign),
+ *   - comma every 3 digits in the integer part.
+ */
 fun Double.formatWithCommas(): String {
-    val rounded = (this * 100).toLong()
+    // Guard against NaN / infinities — they'd blow up the round path below.
+    if (!this.isFinite()) return "0.00"
+    val negative = this < 0
+    val absValue = kotlin.math.abs(this)
+    val rounded = kotlin.math.round(absValue * 100).toLong()
     val integerPart = (rounded / 100).toString()
     val decimalPart = (rounded % 100).toString().padStart(2, '0')
 
@@ -11,7 +23,8 @@ fun Double.formatWithCommas(): String {
         .joinToString(",")
         .reversed()
 
-    return "$withCommas.$decimalPart"
+    val prefix = if (negative && rounded > 0L) "-" else ""
+    return "$prefix$withCommas.$decimalPart"
 }
 
 fun Int.formatWithCommas(): String {

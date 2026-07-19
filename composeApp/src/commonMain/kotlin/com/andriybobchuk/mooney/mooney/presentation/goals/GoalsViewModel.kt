@@ -63,11 +63,12 @@ class GoalsViewModel(
     private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
 ) : ViewModel() {
 
-    // Seed isInitialLoading from the cache so first-frame already knows
-    // whether shimmer or content is appropriate.
-    private val _uiState = MutableStateFlow(
-        GoalsState(isInitialLoading = !appDataCache.snapshot.value.isReady)
-    )
+    // Always start with isInitialLoading=true. Seeding from cache.isReady
+    // let a warm-cache screen entry skip the shimmer and paint the empty-
+    // state CTA directly — user reported the "no shimmer, just empty" flash
+    // on Transactions and the same anti-pattern lived here too. Shimmer →
+    // content (or empty) is the required order.
+    private val _uiState = MutableStateFlow(GoalsState(isInitialLoading = true))
     val state = _uiState
         .onStart { observeFromCache() }
         .stateIn(

@@ -77,9 +77,10 @@ class TransactionCategoriesViewModel(
     private val manageOrderUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.ManageTransactionCategoryOrderUseCase
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(
-        TransactionCategoriesState(isInitialLoading = !appDataCache.snapshot.value.isReady)
-    )
+    // Always start with isInitialLoading=true so the first frame never
+    // skips the shimmer just because the cache happened to warm up before
+    // the VM was constructed. See TransactionViewModel for the full note.
+    private val _state = MutableStateFlow(TransactionCategoriesState(isInitialLoading = true))
     val state: StateFlow<TransactionCategoriesState> = _state
 
     init {

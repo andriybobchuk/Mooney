@@ -95,16 +95,12 @@ class TransactionViewModel(
     private var excludeTaxes: Boolean = true
     private var allPendingTransactions: List<PendingTransactionEntity> = emptyList()
 
-    // Seed initial state from the app cache so we never start with empty
-    // transactions/accounts on a screen revisit. If the cache hasn't warmed
-    // yet (true cold start), [TransactionState.isInitialLoading] stays true
-    // and the shimmer takes over until the first cache emission lands.
-    private val _uiState = MutableStateFlow(seedFromCache())
-
-    private fun seedFromCache(): TransactionState {
-        val cached = appDataCache.snapshot.value
-        return TransactionState(isInitialLoading = !cached.isReady)
-    }
+    // Always start with isInitialLoading=true (same pattern as Assets and
+    // Analytics). Seeding from cache.isReady was letting the "empty state"
+    // paint the CTA directly when the cache had raced to Ready in the same
+    // frame the VM was constructed — user saw the empty CTA flash BEFORE
+    // any shimmer. Shimmer → data (or empty) is the required order.
+    private val _uiState = MutableStateFlow(TransactionState())
 
     val state = _uiState
         .onStart {

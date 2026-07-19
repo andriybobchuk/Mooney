@@ -29,6 +29,19 @@ object FeatureFlags {
     const val adsAlwaysShow = false
 
     /**
+     * Master kill switch for all ads (banner + interstitial + rewarded + the
+     * in-feed native row). When `false`, every ad placement returns nothing,
+     * the AdMob SDK is not initialized, and no unit ID lookup runs — so the
+     * app can ship without any ad plumbing even mattering.
+     *
+     * Turned off for the first store release so ads never render before
+     * we've confirmed AdMob-console app + unit approval on both platforms.
+     * Flip to `true` once real Android AdMob IDs are wired AND the iOS log
+     * capture proves banners fill correctly on device.
+     */
+    const val adsEnabled = false
+
+    /**
      * Hides the in-feed native-ad row on the Transactions list. Default off
      * while we tune the placement (it was distracting alongside the user's
      * own daily entries). Flip to true once the design lands and we want it

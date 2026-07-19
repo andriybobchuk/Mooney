@@ -1216,6 +1216,8 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
  */
 @Composable
 fun NativeTransactionAdRow() {
+    // Master kill switch. Same idea as AdBannerSlot — bail before touching Koin.
+    if (!com.andriybobchuk.mooney.mooney.domain.FeatureFlags.adsEnabled) return
     val eligibility: com.andriybobchuk.mooney.core.ads.AdEligibilityUseCase = org.koin.compose.koinInject()
     val session = com.andriybobchuk.mooney.core.ads.LocalAdSession.current
     var eligible by remember { mutableStateOf(false) }

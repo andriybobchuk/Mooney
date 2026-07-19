@@ -30,6 +30,9 @@ fun AdBannerSlot(
     placement: AdPlacement,
     modifier: Modifier = Modifier
 ) {
+    // Master kill switch — every ad slot bails out here before touching Koin
+    // or the eligibility use case. Keeps first-launch release surfaces clean.
+    if (!com.andriybobchuk.mooney.mooney.domain.FeatureFlags.adsEnabled) return
     val eligibility: AdEligibilityUseCase = koinInject()
     val session = LocalAdSession.current
     val isDarkTheme = isSystemInDarkTheme()

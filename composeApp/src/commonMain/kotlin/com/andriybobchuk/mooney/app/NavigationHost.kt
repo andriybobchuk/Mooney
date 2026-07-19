@@ -159,6 +159,7 @@ fun NavigationHost() {
         analyticsTracker.trackScreenView(screenName)
         navTapCount += 1
         if (
+            FeatureFlags.adsEnabled &&
             FeatureFlags.interstitialOnAnalyticsEnabled &&
             screenName == "Analytics"
         ) {
@@ -330,12 +331,16 @@ fun NavigationHost() {
             // doesn't have to wait on the network. Both are cheap no-ops
             // when the bridge isn't wired (Android, or pre-SDK iOS builds).
             kotlinx.coroutines.delay(SECONDARY_WORK_DELAY_MS)
-            com.andriybobchuk.mooney.core.ads.Ads.preloadInterstitial(
-                com.andriybobchuk.mooney.core.ads.AdUnitIds.interstitial
-            )
-            com.andriybobchuk.mooney.core.ads.Ads.preloadRewarded(
-                com.andriybobchuk.mooney.core.ads.AdUnitIds.rewarded
-            )
+            // Master kill switch — skip preload entirely when the app-level
+            // ads flag is off. Keeps the SDK cold and the network idle.
+            if (FeatureFlags.adsEnabled) {
+                com.andriybobchuk.mooney.core.ads.Ads.preloadInterstitial(
+                    com.andriybobchuk.mooney.core.ads.AdUnitIds.interstitial
+                )
+                com.andriybobchuk.mooney.core.ads.Ads.preloadRewarded(
+                    com.andriybobchuk.mooney.core.ads.AdUnitIds.rewarded
+                )
+            }
         } catch (e: kotlin.coroutines.cancellation.CancellationException) {
             throw e
         } catch (_: Exception) {

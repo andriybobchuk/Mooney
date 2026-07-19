@@ -32,6 +32,12 @@ data class TransactionCategoriesState(
      * hasn't reordered yet — screen falls back to natural cache order.
      */
     val categoryOrder: List<String> = emptyList(),
+    /**
+     * Flips to true after the first DataStore emission. The screen holds
+     * the list off until then so users don't see a brief render-in-cache-
+     * order → jump-to-saved-order flash.
+     */
+    val isOrderLoaded: Boolean = false,
     val showPaywall: Boolean = false,
     val isPurchasing: Boolean = false,
     val purchaseError: String? = null,
@@ -85,12 +91,14 @@ class TransactionCategoriesViewModel(
         viewModelScope.launch {
             try {
                 manageOrderUseCase.getCategoryOrder().collect { order ->
-                    _state.update { it.copy(categoryOrder = order) }
+                    _state.update { it.copy(categoryOrder = order, isOrderLoaded = true) }
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
-                /* keep last */
+                // Even if reading pref fails, unblock the UI so users can
+                // interact — worst case they see cache-natural order.
+                _state.update { it.copy(isOrderLoaded = true) }
             }
         }
     }

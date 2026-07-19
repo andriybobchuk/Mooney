@@ -1530,34 +1530,47 @@ fun TransactionBottomSheet(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
-                AccountField(selectedAccount, accounts.filterNotNull(), assetCategories, categoryOrder, expandedCategories, onToggleAccountCategory, { selectedAccount = it })
-
-                // Swap accounts — small centered icon between From and To
-                // rows. Cheap way to fix "I picked the wrong direction" —
-                // one tap flips source ↔ destination instead of two picker
-                // sheets and re-selects.
+                // From row + inline swap button. The swap sits inside a
+                // square-with-rounded-corner that matches the AccountField
+                // chrome (same surfaceVariant background, 12dp radius) so
+                // both feel like one control cluster.
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = {
-                            val tmp = selectedAccount
-                            selectedAccount = destinationAccount
-                            destinationAccount = tmp
-                        },
-                        modifier = Modifier.size(32.dp)
+                    Box(modifier = Modifier.weight(1f)) {
+                        AccountField(
+                            selectedAccount,
+                            accounts.filterNotNull(),
+                            assetCategories,
+                            categoryOrder,
+                            expandedCategories,
+                            onToggleAccountCategory,
+                            { selectedAccount = it }
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .clickable {
+                                val tmp = selectedAccount
+                                selectedAccount = destinationAccount
+                                destinationAccount = tmp
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
-                        // Text glyph instead of a Material Icon — the swap-up
-                        // -and-down arrow character is available everywhere
-                        // without pulling in an icon-extended dep.
                         Text(
                             text = "⇅",
-                            fontSize = 18.sp,
+                            fontSize = 20.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
+
+                Spacer(Modifier.height(12.dp))
 
                 Text(
                     text = stringResource(Res.string.to_account),

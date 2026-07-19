@@ -345,13 +345,29 @@ class AnalyticsViewModel(
 
     fun loadCategoriesForSheetType(sheetType: CategorySheetType) {
         viewModelScope.launch {
-            val currentTransactions = _state.value.transactionsForMonth.filterNotNull()
+            // Fetch fresh for the currently-selected month instead of leaning
+            // on `transactionsForMonth` — that state slot is populated by
+            // loadMetricsForMonth which races with this call whenever the
+            // user changes the month on the breakdown screen. Stale reads
+            // produced wrong spent/budget numbers per the user's bug.
+            val month = _state.value.selectedMonth
+            val analyticsResult = try {
+                calculateMonthlyAnalyticsUseCase(
+                    month.firstDay(),
+                    month.firstDayOfNextMonth(),
+                    baseCurrency
+                )
+            } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            } ?: return@launch
             val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
-            val previousMonthTransactions = getPreviousMonthTransactionsUseCase(_state.value.selectedMonth)
+            val previousMonthTransactions = getPreviousMonthTransactionsUseCase(month)
 
             val categories = loadCategoriesForSheetTypeUseCase(
                 sheetType = sheetType,
-                currentTransactions = currentTransactions,
+                currentTransactions = analyticsResult.transactions,
                 previousMonthTransactions = previousMonthTransactions,
                 baseCurrency = baseCurrency,
                 exchangeRates = exchangeRates

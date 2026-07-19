@@ -233,7 +233,9 @@ fun TransactionCategoriesScreen(
     }
 
     val body: @Composable (PaddingValues) -> Unit = { paddingValues ->
-        if (state.isInitialLoading) {
+        // Gate on `isOrderLoaded` too so we don't render categories in cache-
+        // natural order for a frame and then jump when the DataStore emits.
+        if (state.isInitialLoading || !state.isOrderLoaded) {
             Box(
                 modifier = Modifier.fillMaxSize().padding(paddingValues),
                 contentAlignment = Alignment.Center

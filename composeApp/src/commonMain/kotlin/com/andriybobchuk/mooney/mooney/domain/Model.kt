@@ -10,7 +10,9 @@ data class Category(
     val title: String,
     val type: CategoryType,
     val emoji: String? = null,
-    val parent: Category? = null
+    val parent: Category? = null,
+    /** Optional monthly budget in base currency. Null = no budget set. */
+    val monthlyLimit: Double? = null
 ) {
     // Category Type
     fun isTypeCategory(): Boolean = parent == null
@@ -73,7 +75,12 @@ data class Account(
     val currentMarketValue: Double? = null,
     // Opt-out flag: false = still visible in the list but excluded from the
     // Total Net Worth summary. Default true keeps the pre-existing behavior.
-    val includeInNetWorth: Boolean = true
+    val includeInNetWorth: Boolean = true,
+    // Role-split of `isPrimary`. Users wanted separate defaults for spending
+    // vs receiving so the Add Transaction sheet can preselect the right
+    // account per type without hunting. VM enforces "at most one per role".
+    val isPrimaryForExpenses: Boolean = false,
+    val isPrimaryForIncome: Boolean = false
 )
 
 data class UserCurrency(

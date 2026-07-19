@@ -51,13 +51,21 @@ import com.andriybobchuk.mooney.core.premium.PaywallSheet
 import com.andriybobchuk.mooney.core.presentation.Toolbars
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import com.andriybobchuk.mooney.mooney.data.localizedCategoryTitle
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Switch
+import androidx.compose.ui.text.input.KeyboardType
 import com.andriybobchuk.mooney.mooney.domain.Category
 import com.andriybobchuk.mooney.mooney.domain.CategoryType
+import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
+import com.andriybobchuk.mooney.mooney.domain.parseAmountInput
 import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.add_category
 import mooney.composeapp.generated.resources.add_subcategory
 import mooney.composeapp.generated.resources.cancel
 import mooney.composeapp.generated.resources.categories_label
+import mooney.composeapp.generated.resources.category_budget_placeholder
+import mooney.composeapp.generated.resources.category_budget_section
+import mooney.composeapp.generated.resources.category_budget_toggle
 import mooney.composeapp.generated.resources.category_name
 import mooney.composeapp.generated.resources.delete
 import mooney.composeapp.generated.resources.delete_tx_category_msg
@@ -167,7 +175,16 @@ fun TransactionCategoriesScreen(
             category = cat,
             subcategories = state.allCategories.filter { it.parent?.id == cat.id },
             onDismiss = { editingCategory = null },
-            onSaveName = { /* future: rename support — VM lacks it today */ },
+            onSaveName = { newTitle ->
+                viewModel.onAction(
+                    TransactionCategoriesAction.RenameCategory(cat.id, newTitle)
+                )
+            },
+            onSaveMonthlyLimit = { limit ->
+                viewModel.onAction(
+                    TransactionCategoriesAction.SetMonthlyLimit(cat.id, limit)
+                )
+            },
             onAddSubcategory = { subTitle ->
                 viewModel.onAction(
                     TransactionCategoriesAction.AddCategory(
@@ -486,6 +503,7 @@ private fun CategoryEditSheet(
     subcategories: List<Category>,
     onDismiss: () -> Unit,
     onSaveName: (String) -> Unit,
+    onSaveMonthlyLimit: (Double?) -> Unit,
     onAddSubcategory: (String) -> Unit,
     onDeleteSubcategory: (String) -> Unit,
     onDeleteCategory: () -> Unit
@@ -495,7 +513,18 @@ private fun CategoryEditSheet(
         var name by remember(category.id) { mutableStateOf(localizedTitle) }
         var newSubName by remember { mutableStateOf("") }
         var showIconPicker by remember { mutableStateOf(false) }
+        var budgetEnabled by remember(category.id) {
+            mutableStateOf(category.monthlyLimit != null)
+        }
+        var budgetAmount by remember(category.id) {
+            mutableStateOf(category.monthlyLimit?.formatWithCommas() ?: "")
+        }
         val emoji = category.resolveEmoji().ifBlank { DEFAULT_NEW_EMOJI }
+
+        val nameChanged = name.isNotBlank() &&
+            name.trim() != localizedTitle && name.trim() != category.title
+        val newLimit: Double? = if (budgetEnabled) budgetAmount.parseAmountInput() else null
+        val budgetChanged = newLimit != category.monthlyLimit
 
         Column(
             modifier = Modifier
@@ -505,10 +534,11 @@ private fun CategoryEditSheet(
             EditSheetTopBar(
                 title = stringResource(Res.string.edit_category),
                 saveLabel = stringResource(Res.string.save),
-                saveEnabled = name.isNotBlank() && name.trim() != localizedTitle && name.trim() != category.title,
+                saveEnabled = nameChanged || budgetChanged,
                 onCancel = onDismiss,
                 onSave = {
-                    onSaveName(name.trim())
+                    if (nameChanged) onSaveName(name.trim())
+                    if (budgetChanged) onSaveMonthlyLimit(newLimit)
                     onDismiss()
                 }
             )
@@ -548,6 +578,45 @@ private fun CategoryEditSheet(
             if (showIconPicker) {
                 Spacer(Modifier.height(12.dp))
                 EmojiGrid(selected = emoji, onSelect = { /* preview-only */ })
+            }
+
+            // Monthly budget — only exposed for expense categories; income
+            // categories don't have a "cap" concept and would confuse users
+            // if a Budget checkbox appeared there.
+            if (category.type == CategoryType.EXPENSE) {
+                Spacer(Modifier.height(20.dp))
+                FormSectionLabel(stringResource(Res.string.category_budget_section))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { budgetEnabled = !budgetEnabled }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        stringResource(Res.string.category_budget_toggle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Switch(
+                        checked = budgetEnabled,
+                        onCheckedChange = { budgetEnabled = it }
+                    )
+                }
+                if (budgetEnabled) {
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = budgetAmount,
+                        onValueChange = { budgetAmount = it },
+                        placeholder = { Text(stringResource(Res.string.category_budget_placeholder)) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            keyboardType = KeyboardType.Decimal
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
 
             Spacer(Modifier.height(20.dp))

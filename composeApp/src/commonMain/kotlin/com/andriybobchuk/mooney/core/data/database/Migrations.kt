@@ -556,6 +556,36 @@ val MIGRATION_14_15 = object : Migration(14, 15) {
  * the version drift so nothing gets forgotten.
  */
 /**
+ * v19 → v20.
+ *  - `categories.monthlyLimit` (nullable) — per-category monthly budget.
+ *  - `AccountEntity.isPrimaryForExpenses` + `isPrimaryForIncome` — splits
+ *    the old single "primary" concept into two roles. Existing primary
+ *    accounts get both flags set so behavior is preserved for current users.
+ */
+val MIGRATION_19_20 = object : Migration(19, 20) {
+    override fun migrate(connection: SQLiteConnection) {
+        if (!hasColumn(connection, "categories", "monthlyLimit")) {
+            connection.execSQL("ALTER TABLE categories ADD COLUMN monthlyLimit REAL")
+        }
+        if (!hasColumn(connection, "AccountEntity", "isPrimaryForExpenses")) {
+            connection.execSQL(
+                "ALTER TABLE AccountEntity ADD COLUMN isPrimaryForExpenses INTEGER NOT NULL DEFAULT 0"
+            )
+        }
+        if (!hasColumn(connection, "AccountEntity", "isPrimaryForIncome")) {
+            connection.execSQL(
+                "ALTER TABLE AccountEntity ADD COLUMN isPrimaryForIncome INTEGER NOT NULL DEFAULT 0"
+            )
+        }
+        // Copy legacy single-primary into both new roles so the user's current
+        // default account keeps working for both expense and income entries.
+        connection.execSQL(
+            "UPDATE AccountEntity SET isPrimaryForExpenses = 1, isPrimaryForIncome = 1 WHERE isPrimary = 1"
+        )
+    }
+}
+
+/**
  * v18 → v19. Adds `includeInNetWorth` (Boolean) to AccountEntity. Default 1
  * (true) so every existing account stays in the total until the user
  * explicitly opts one out.
@@ -575,7 +605,7 @@ val ALL_MIGRATIONS = listOf(
     MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9,
     MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13,
     MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17,
-    MIGRATION_17_18, MIGRATION_18_19,
+    MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20,
 )
 
 /**

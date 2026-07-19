@@ -44,6 +44,7 @@ import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -375,6 +376,7 @@ fun CategoryItem(
     topCategorySummary: TopCategorySummary,
     onClick: () -> Unit = {}
 ) {
+  Column(modifier = Modifier.fillMaxWidth()) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -439,6 +441,56 @@ fun CategoryItem(
                 }
             }
         }
+    }
+    // Budget progress — only expense categories with a monthlyLimit render
+    // this. Bar color escalates green → amber → red as the user closes in on
+    // and past the limit, and the tail text reads "spent / budget" so the
+    // number is legible without doing mental math.
+    val limit = topCategorySummary.category.monthlyLimit
+    if (topCategorySummary.category.type == CategoryType.EXPENSE && limit != null && limit > 0.0) {
+        BudgetProgressRow(
+            spent = topCategorySummary.amount,
+            limit = limit,
+            currency = GlobalConfig.baseCurrency
+        )
+    }
+  }
+}
+
+@Composable
+private fun BudgetProgressRow(
+    spent: Double,
+    limit: Double,
+    currency: com.andriybobchuk.mooney.mooney.domain.Currency
+) {
+    val ratio = (spent / limit).toFloat().coerceIn(0f, 1.25f)
+    val displayRatio = ratio.coerceAtMost(1f)
+    val color = when {
+        ratio >= 1f -> Color(0xFFE53935)
+        ratio >= 0.7f -> Color(0xFFD4A017)
+        else -> Color(0xFF43A047)
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 74.dp, end = 16.dp, bottom = 8.dp)
+    ) {
+        LinearProgressIndicator(
+            progress = { displayRatio },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp)
+                .clip(RoundedCornerShape(3.dp)),
+            color = color,
+            trackColor = color.copy(alpha = 0.15f),
+            drawStopIndicator = {}
+        )
+        Spacer(Modifier.height(3.dp))
+        Text(
+            text = "${spent.formatWithCommas()} / ${limit.formatWithCommas()} ${currency.symbol}",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

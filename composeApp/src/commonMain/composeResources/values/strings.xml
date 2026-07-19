@@ -832,6 +832,13 @@
     <string name="asset_detail_pct_of_networth">%1$s%% of net worth</string>
     <string name="asset_detail_excluded_from_networth">Excluded from total net worth</string>
     <string name="asset_not_counted_badge">Not counted</string>
+    <string name="category_budget_section">MONTHLY BUDGET</string>
+    <string name="category_budget_toggle">Set a monthly budget</string>
+    <string name="category_budget_placeholder">Amount per month</string>
+    <string name="asset_primary_expense_toggle">Primary account for expenses</string>
+    <string name="asset_primary_income_toggle">Primary account for income</string>
+    <string name="transaction_budget_over">You've already spent %1$s of your %2$s %3$s budget this month.</string>
+    <string name="analytics_expenses_budget">Expenses / Budget</string>
     <string name="asset_detail_primary_note">Primary account · used for defaults</string>
     <string name="asset_detail_liability_note">Reduces your net worth by this amount</string>
     <string name="category_asset_other">Other Assets</string>

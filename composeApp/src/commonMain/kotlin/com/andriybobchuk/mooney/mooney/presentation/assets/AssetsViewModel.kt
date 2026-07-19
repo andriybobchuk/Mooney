@@ -374,7 +374,9 @@ class AssetsViewModel(
         assetCategoryId: String,
         isLiability: Boolean = false,
         currentMarketValue: Double? = null,
-        includeInNetWorth: Boolean = true
+        includeInNetWorth: Boolean = true,
+        isPrimaryForExpenses: Boolean = false,
+        isPrimaryForIncome: Boolean = false
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             // Gate: check account limit for new accounts (id == 0 means new)
@@ -413,8 +415,31 @@ class AssetsViewModel(
                 isPrimary = existingIsPrimary,
                 isLiability = existingIsLiability,
                 currentMarketValue = currentMarketValue,
-                includeInNetWorth = includeInNetWorth
+                includeInNetWorth = includeInNetWorth,
+                isPrimaryForExpenses = isPrimaryForExpenses,
+                isPrimaryForIncome = isPrimaryForIncome
             )
+
+            // Single-primary-per-role invariant. If this account is being
+            // promoted to primary-for-expenses or primary-for-income, clear
+            // the same flag on every other account first — otherwise the UI
+            // would show two "primary" badges for the same role.
+            if (isPrimaryForExpenses || isPrimaryForIncome) {
+                val allAccounts = getAccountsUseCase().first().filterNotNull()
+                allAccounts.forEach { other ->
+                    if (other.id == id) return@forEach
+                    val newE = if (isPrimaryForExpenses) false else other.isPrimaryForExpenses
+                    val newI = if (isPrimaryForIncome) false else other.isPrimaryForIncome
+                    if (newE != other.isPrimaryForExpenses || newI != other.isPrimaryForIncome) {
+                        addAccountUseCase(
+                            other.copy(
+                                isPrimaryForExpenses = newE,
+                                isPrimaryForIncome = newI
+                            )
+                        )
+                    }
+                }
+            }
 
             try {
                 addAccountUseCase(account)

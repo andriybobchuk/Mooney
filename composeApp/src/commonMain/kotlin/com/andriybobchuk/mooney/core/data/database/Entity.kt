@@ -20,7 +20,13 @@ data class AccountEntity(
     // User-facing toggle: opt an account out of the "Total Net Worth" number
     // without deleting it (e.g. an emergency stash you don't want padding
     // the daily total). Default true so existing accounts stay counted.
-    val includeInNetWorth: Boolean = true
+    val includeInNetWorth: Boolean = true,
+    // Split of the legacy `isPrimary`: users wanted to pick different default
+    // accounts for expenses vs income (e.g. debit card for spending, savings
+    // for salary). The invariant "at most one account per role" is enforced
+    // by the ViewModel — no DB check, keeps the flag simple.
+    val isPrimaryForExpenses: Boolean = false,
+    val isPrimaryForIncome: Boolean = false
 )
 
 @Entity(tableName = "categories")
@@ -29,7 +35,12 @@ data class CategoryEntity(
     val title: String,
     val type: String,
     val emoji: String? = null,
-    val parentId: String? = null
+    val parentId: String? = null,
+    // Optional monthly budget for this category (base currency). When set,
+    // the Add Transaction sheet warns if the running month total for the
+    // category would push over the limit; Analytics renders a spent/limit
+    // progress bar in the breakdown.
+    val monthlyLimit: Double? = null
 )
 
 @Entity(tableName = "user_currencies")

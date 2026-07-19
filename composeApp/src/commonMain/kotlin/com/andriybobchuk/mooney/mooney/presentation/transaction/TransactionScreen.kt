@@ -1270,6 +1270,7 @@ fun TransactionBottomSheet(
     validateUseCase: ValidateTransactionUseCase = koinInject(),
     preferencesRepository: com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository = koinInject(),
     currencyManagerUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase = koinInject(),
+    getTransactionsUseCase: GetTransactionsUseCase = koinInject(),
 ) {
     val isEditMode = transactionToEdit != null
 
@@ -1279,10 +1280,19 @@ fun TransactionBottomSheet(
 
     // Default account picker priority:
     //   1. Edit mode — existing transaction's account
-    //   2. User's primary account if marked
-    //   3. The only account they have — saves a tap for single-account users
+    //   2. Role-specific primary (Expense → isPrimaryForExpenses, etc.)
+    //   3. Legacy general `isPrimary` for pre-v20 users
+    //   4. The only account they have — saves a tap for single-account users
     val realAccounts = accounts.filterNotNull().toAccounts()
-    val defaultAccount = realAccounts.find { it.isPrimary }
+    val initialType = transactionToEdit?.subcategory?.type
+        ?: preselectedCategory?.type
+        ?: CategoryType.EXPENSE
+    val defaultAccount = when (initialType) {
+        CategoryType.EXPENSE -> realAccounts.find { it.isPrimaryForExpenses }
+        CategoryType.INCOME -> realAccounts.find { it.isPrimaryForIncome }
+        CategoryType.TRANSFER -> null
+    }
+        ?: realAccounts.find { it.isPrimary }
         ?: realAccounts.singleOrNull()
     var selectedAccount by remember { mutableStateOf(transactionToEdit?.account ?: defaultAccount) }
     
@@ -1659,6 +1669,54 @@ fun TransactionBottomSheet(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                 )
+            }
+
+            // Budget alert — surface a yellow warning when the running month
+            // total (converted to base currency) already exceeds the selected
+            // category's monthlyLimit. Purely informational; the CTA stays
+            // enabled so users can override consciously.
+            val rootCategoryForBudget: Category? = when {
+                currentSelectedCategory == null -> null
+                currentSelectedCategory?.type != CategoryType.EXPENSE -> null
+                currentSelectedCategory?.monthlyLimit != null -> currentSelectedCategory
+                // Sub-category doesn't carry a limit; fall back to the parent
+                // (the "root" expense category, e.g. Food) which does.
+                currentSelectedSubCategory?.parent?.monthlyLimit != null ->
+                    currentSelectedSubCategory?.parent
+                else -> null
+            }
+            val budgetLimit = rootCategoryForBudget?.monthlyLimit
+            if (budgetLimit != null) {
+                val txForBudget by remember { getTransactionsUseCase() }
+                    .collectAsStateWithLifecycle(initialValue = emptyList())
+                val baseCurrency = com.andriybobchuk.mooney.mooney.data.GlobalConfig.baseCurrency
+                val rates = currencyManagerUseCase.getCurrentExchangeRates()
+                val nowMonth = MonthKey.current()
+                val spentBase = remember(txForBudget, rootCategoryForBudget, nowMonth) {
+                    txForBudget.filterNotNull().filter { tx ->
+                        val monthKey = MonthKey(tx.date.year, tx.date.monthNumber)
+                        val cat = tx.subcategory
+                        val touchesRoot = cat == rootCategoryForBudget ||
+                            cat.parent == rootCategoryForBudget
+                        monthKey == nowMonth && touchesRoot
+                    }.sumOf {
+                        rates.convert(it.amount, it.account.currency, baseCurrency)
+                    }
+                }
+                if (spentBase >= budgetLimit) {
+                    Text(
+                        text = stringResource(
+                            Res.string.transaction_budget_over,
+                            "${spentBase.formatWithCommas()} ${baseCurrency.symbol}",
+                            "${budgetLimit.formatWithCommas()} ${baseCurrency.symbol}",
+                            localizedCategoryTitle(rootCategoryForBudget)
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFD4A017),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                    )
+                }
             }
             // Error: red text centered above disabled CTA (only for business rule errors, not missing selections)
             if (validation is TransactionValidation.Error && !validation.message.startsWith("Select") && !validation.message.startsWith("Enter")) {

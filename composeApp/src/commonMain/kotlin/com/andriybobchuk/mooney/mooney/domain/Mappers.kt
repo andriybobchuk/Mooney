@@ -14,7 +14,9 @@ fun Account.toEntity(): AccountEntity = AccountEntity(
     isPrimary = isPrimary,
     isLiability = isLiability,
     currentMarketValue = currentMarketValue,
-    includeInNetWorth = includeInNetWorth
+    includeInNetWorth = includeInNetWorth,
+    isPrimaryForExpenses = isPrimaryForExpenses,
+    isPrimaryForIncome = isPrimaryForIncome
 )
 
 fun Transaction.toEntity(): TransactionEntity = TransactionEntity(

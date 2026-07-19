@@ -38,7 +38,7 @@ fun AnalyticsBreakdownScreen(
 
     val title = when (sheetType) {
         CategorySheetType.REVENUE -> stringResource(Res.string.revenue_breakdown)
-        CategorySheetType.OPERATING_COSTS -> stringResource(Res.string.operating_costs_breakdown)
+        CategorySheetType.OPERATING_COSTS -> stringResource(Res.string.analytics_expenses_budget)
         CategorySheetType.TAXES -> stringResource(Res.string.tax_breakdown)
     }
 

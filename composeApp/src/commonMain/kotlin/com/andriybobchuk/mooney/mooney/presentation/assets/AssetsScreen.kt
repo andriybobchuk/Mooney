@@ -331,7 +331,7 @@ fun AssetsScreen(
                         assetCategories = state.assetCategories,
                         hasAnyAsset = state.assets.any { !it.isLiability },
                         onEditCategories = onNavigateToAssetCategories,
-                        onAdd = { title, emoji, amount, currency, categoryId, isLiability, marketValue, inNetWorth ->
+                        onAdd = { title, emoji, amount, currency, categoryId, isLiability, marketValue, inNetWorth, pExpense, pIncome ->
                             viewModel.upsertAsset(
                                 editingAsset?.id ?: 0,
                                 title,
@@ -341,7 +341,9 @@ fun AssetsScreen(
                                 categoryId,
                                 isLiability,
                                 marketValue,
-                                inNetWorth
+                                inNetWorth,
+                                pExpense,
+                                pIncome
                             )
                             // Switch to the matching tab so user sees the new account
                             viewModel.selectTab(
@@ -375,6 +377,14 @@ fun AssetsScreen(
                     detailAsset = null
                     editingAsset = asset
                     showSheet = true
+                },
+                onSetPrimary = {
+                    viewModel.setPrimaryAccount(asset.id)
+                    detailAsset = null
+                },
+                onDelete = {
+                    viewModel.deleteAsset(asset.id)
+                    detailAsset = null
                 }
             )
         }
@@ -871,18 +881,13 @@ private fun AssetCard(
     onDelete: (UiAsset) -> Unit,
     onSetPrimary: (UiAsset) -> Unit
 ) {
-    var showActionSheet by remember { mutableStateOf(false) }
-    var showDeleteConfirm by remember { mutableStateOf(false) }
     val isForeign = asset.originalCurrency != baseCurrency
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = { showActionSheet = true }
-            ),
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
@@ -1064,111 +1069,28 @@ private fun AssetCard(
         }
     }
 
-    if (showActionSheet) {
-        MooneyBottomSheet(onDismissRequest = { showActionSheet = false }) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 16.dp)
-            ) {
-                Text(
-                    text = asset.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-                Text(
-                    text = "${asset.originalAmount.formatWithCommas()} ${asset.originalCurrency.symbol}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+}
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .clickable {
-                            showActionSheet = false
-                            onEdit(asset)
-                        }
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(stringResource(Res.string.edit), style = MaterialTheme.typography.bodyLarge)
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            if (asset.isPrimary) MaterialTheme.colorScheme.primaryContainer
-                            else MaterialTheme.colorScheme.surfaceVariant
-                        )
-                        .clickable {
-                            showActionSheet = false
-                            if (!asset.isPrimary) onSetPrimary(asset)
-                        }
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        if (asset.isPrimary) "✓ ${stringResource(Res.string.primary_account)}"
-                        else stringResource(Res.string.set_as_primary),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = if (asset.isPrimary) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.errorContainer)
-                        .clickable {
-                            showActionSheet = false
-                            showDeleteConfirm = true
-                        }
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        stringResource(Res.string.delete),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-        }
-    }
-
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text(stringResource(Res.string.delete_account_title)) },
-            text = { Text(stringResource(Res.string.delete_account_confirm, asset.title)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    showDeleteConfirm = false
-                    onDelete(asset)
-                }) {
-                    Text(stringResource(Res.string.delete), color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text(stringResource(Res.string.cancel))
-                }
-            }
+@Composable
+private fun CompactToggleRow(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
         )
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 
@@ -1178,7 +1100,7 @@ private fun AssetSheet(
     editingAsset: UiAsset? = null,
     assetCategories: List<AssetCategoryEntity>,
     hasAnyAsset: Boolean = true,
-    onAdd: (String, String, Double, Currency, String, Boolean, Double?, Boolean) -> Unit,
+    onAdd: (String, String, Double, Currency, String, Boolean, Double?, Boolean, Boolean, Boolean) -> Unit,
     onEditCategories: () -> Unit = {}
 ) {
     var title by remember { mutableStateOf(editingAsset?.title ?: "") }
@@ -1190,6 +1112,12 @@ private fun AssetSheet(
     var selectedCategoryId by remember { mutableStateOf(editingAsset?.assetCategoryId ?: "BANK_ACCOUNT") }
     var isLiability by remember { mutableStateOf(editingAsset?.isLiability ?: false) }
     var includeInNetWorth by remember { mutableStateOf(editingAsset?.includeInNetWorth ?: true) }
+    var isPrimaryExpense by remember {
+        mutableStateOf(editingAsset?.isPrimaryForExpenses ?: false)
+    }
+    var isPrimaryIncome by remember {
+        mutableStateOf(editingAsset?.isPrimaryForIncome ?: false)
+    }
     var showCategorySheet by remember { mutableStateOf(false) }
     var showCurrencySheet by remember { mutableStateOf(false) }
     // Vehicle & Real Estate carry a cost-basis "amount" plus a user-set
@@ -1353,39 +1281,35 @@ private fun AssetSheet(
             )
         }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(16.dp))
 
-        // Opt-out toggle — keeps the account visible in the list but drops it
-        // from the Total Net Worth summary. Sits above the CTA so users see
-        // the switch before committing.
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
-                .clickable { includeInNetWorth = !includeInNetWorth }
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    stringResource(Res.string.asset_include_in_net_worth),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    stringResource(Res.string.asset_include_in_net_worth_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Switch(
-                checked = includeInNetWorth,
-                onCheckedChange = { includeInNetWorth = it }
+        // Compact opt-out toggle — the hint / large surface was overkill for a
+        // single boolean. Now a single-line row with a small Switch keeps it
+        // visible without stealing focus from the primary fields.
+        CompactToggleRow(
+            label = stringResource(Res.string.asset_include_in_net_worth),
+            checked = includeInNetWorth,
+            onCheckedChange = { includeInNetWorth = it }
+        )
+
+        // Primary-for-role toggles — only shown when this account is an asset
+        // (liabilities can't be a "default account for expenses/income"). Users
+        // toggle independently; the VM enforces "at most one primary per role"
+        // by clearing the flag on other accounts at save time.
+        if (!isLiability) {
+            CompactToggleRow(
+                label = stringResource(Res.string.asset_primary_expense_toggle),
+                checked = isPrimaryExpense,
+                onCheckedChange = { isPrimaryExpense = it }
+            )
+            CompactToggleRow(
+                label = stringResource(Res.string.asset_primary_income_toggle),
+                checked = isPrimaryIncome,
+                onCheckedChange = { isPrimaryIncome = it }
             )
         }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(16.dp))
 
         MooneyButton(
             text = if (editingAsset != null) stringResource(Res.string.update_asset) else stringResource(Res.string.add_account),
@@ -1394,7 +1318,14 @@ private fun AssetSheet(
             onClick = {
                 val amt = amount.parseAmountInput() ?: 0.0
                 val mv = if (supportsMarketValue) marketValue.parseAmountInput() else null
-                onAdd(title, "", amt, selectedCurrency, selectedCategoryId, isLiability, mv, includeInNetWorth)
+                // Liabilities can't be "primary for income/expense"; scrub
+                // both flags off before persisting.
+                val pe = if (isLiability) false else isPrimaryExpense
+                val pi = if (isLiability) false else isPrimaryIncome
+                onAdd(
+                    title, "", amt, selectedCurrency, selectedCategoryId,
+                    isLiability, mv, includeInNetWorth, pe, pi
+                )
             },
             enabled = title.isNotBlank() && amount.isNotBlank()
         )

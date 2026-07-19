@@ -16,7 +16,9 @@ data class AccountWithConversion(
     // account currency (same as [originalAmount]) so the UI can compute a
     // gain/loss delta without any FX round-trip.
     val currentMarketValue: Double? = null,
-    val includeInNetWorth: Boolean = true
+    val includeInNetWorth: Boolean = true,
+    val isPrimaryForExpenses: Boolean = false,
+    val isPrimaryForIncome: Boolean = false
 ) {
     fun toAccount(): Account = Account(
         id = id,
@@ -29,6 +31,8 @@ data class AccountWithConversion(
         isPrimary = isPrimary,
         isLiability = isLiability,
         currentMarketValue = currentMarketValue,
-        includeInNetWorth = includeInNetWorth
+        includeInNetWorth = includeInNetWorth,
+        isPrimaryForExpenses = isPrimaryForExpenses,
+        isPrimaryForIncome = isPrimaryForIncome
     )
 }

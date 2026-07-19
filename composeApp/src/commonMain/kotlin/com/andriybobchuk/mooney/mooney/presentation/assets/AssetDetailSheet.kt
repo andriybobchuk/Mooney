@@ -30,7 +30,11 @@ import mooney.composeapp.generated.resources.asset_detail_pct_of_networth
 import mooney.composeapp.generated.resources.asset_detail_primary_note
 import mooney.composeapp.generated.resources.asset_detail_purchase_price
 import mooney.composeapp.generated.resources.asset_detail_unrealized
+import mooney.composeapp.generated.resources.delete
 import mooney.composeapp.generated.resources.edit
+import mooney.composeapp.generated.resources.primary_account
+import mooney.composeapp.generated.resources.set_as_primary
+import androidx.compose.foundation.clickable
 import kotlin.math.abs
 import org.jetbrains.compose.resources.stringResource
 
@@ -43,7 +47,9 @@ fun AssetDetailSheet(
     percentile: Int?,
     /** Total net worth in base currency. Drives the "% of net worth" line. */
     baseNetWorth: Double,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onSetPrimary: () -> Unit = {},
+    onDelete: () -> Unit = {}
 ) {
     val isForeign = asset.originalCurrency != baseCurrency
     val supportsMarketValue = asset.assetCategoryId == "VEHICLE" ||
@@ -152,13 +158,65 @@ fun AssetDetailSheet(
 
         Spacer(Modifier.height(24.dp))
 
-        // Edit button
+        // Action rows — Edit (default), Set as Primary (unless already
+        // primary), Delete (destructive). Kept flat so every account
+        // management operation is one tap deep instead of needing a
+        // long-press menu.
         OutlinedButton(
             onClick = onEdit,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(stringResource(Res.string.edit), modifier = Modifier.padding(vertical = 4.dp))
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        // Set as primary row — disabled when already primary, still shown
+        // (with a filled tint) so users see the current role at a glance.
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(
+                    if (asset.isPrimary) MaterialTheme.colorScheme.primaryContainer
+                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                )
+                .clickable(enabled = !asset.isPrimary, onClick = onSetPrimary)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (asset.isPrimary) {
+                    "✓ " + stringResource(Res.string.primary_account)
+                } else {
+                    stringResource(Res.string.set_as_primary)
+                },
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (asset.isPrimary) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
+            )
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.errorContainer)
+                .clickable(onClick = onDelete)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                stringResource(Res.string.delete),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.error
+            )
         }
 
         Spacer(Modifier.height(16.dp))

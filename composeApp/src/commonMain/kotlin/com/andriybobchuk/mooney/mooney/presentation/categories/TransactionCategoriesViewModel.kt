@@ -38,6 +38,10 @@ data class TransactionCategoriesState(
 sealed interface TransactionCategoriesAction {
     data class AddCategory(val title: String, val type: String, val emoji: String?, val parentId: String?) : TransactionCategoriesAction
     data class DeleteCategory(val categoryId: String) : TransactionCategoriesAction
+    /** Rename an existing category (seed or custom). Emoji/parent/type stay put. */
+    data class RenameCategory(val categoryId: String, val newTitle: String) : TransactionCategoriesAction
+    /** Set (or clear with null) the monthly budget on a category. */
+    data class SetMonthlyLimit(val categoryId: String, val limit: Double?) : TransactionCategoriesAction
     data object DismissPaywall : TransactionCategoriesAction
     data object Subscribe : TransactionCategoriesAction
     data object RestorePurchases : TransactionCategoriesAction
@@ -94,9 +98,33 @@ class TransactionCategoriesViewModel(
         when (action) {
             is TransactionCategoriesAction.AddCategory -> addCategory(action.title, action.type, action.emoji, action.parentId)
             is TransactionCategoriesAction.DeleteCategory -> deleteCategory(action.categoryId)
+            is TransactionCategoriesAction.RenameCategory -> renameCategory(action.categoryId, action.newTitle)
+            is TransactionCategoriesAction.SetMonthlyLimit -> setMonthlyLimit(action.categoryId, action.limit)
             is TransactionCategoriesAction.DismissPaywall -> _state.update { it.copy(showPaywall = false, purchaseError = null) }
             is TransactionCategoriesAction.Subscribe -> onSubscribe()
             is TransactionCategoriesAction.RestorePurchases -> onRestorePurchases()
+        }
+    }
+
+    private fun renameCategory(categoryId: String, newTitle: String) {
+        val trimmed = newTitle.trim()
+        if (trimmed.isEmpty()) return
+        viewModelScope.launch {
+            val existing = categoryDao.getById(categoryId) ?: return@launch
+            if (existing.title == trimmed) return@launch
+            categoryDao.upsert(existing.copy(title = trimmed))
+            repository.reloadCategories()
+            _state.update { it.copy(allCategories = getCategoriesUseCase()) }
+        }
+    }
+
+    private fun setMonthlyLimit(categoryId: String, limit: Double?) {
+        viewModelScope.launch {
+            val existing = categoryDao.getById(categoryId) ?: return@launch
+            if (existing.monthlyLimit == limit) return@launch
+            categoryDao.upsert(existing.copy(monthlyLimit = limit))
+            repository.reloadCategories()
+            _state.update { it.copy(allCategories = getCategoriesUseCase()) }
         }
     }
 

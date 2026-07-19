@@ -16,6 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.items
@@ -104,9 +107,14 @@ fun TransactionCategoriesScreen(
     var deleteId by remember { mutableStateOf<String?>(null) }
     var deleteName by remember { mutableStateOf("") }
 
-    val generalCategories by remember(state.allCategories, selectedType) {
+    val generalCategories by remember(state.allCategories, selectedType, state.categoryOrder) {
         derivedStateOf {
-            state.allCategories.filter { it.isGeneralCategory() && it.type == selectedType }
+            val filtered = state.allCategories.filter { it.isGeneralCategory() && it.type == selectedType }
+            // Sort by the user's saved custom order (mirrored from Transaction
+            // picker). Unknown / new categories keep their cache order, sorted
+            // to the end so nothing disappears when the ordering pref is empty.
+            val orderIndex = state.categoryOrder.withIndex().associate { it.value to it.index }
+            filtered.sortedBy { orderIndex[it.id] ?: Int.MAX_VALUE }
         }
     }
 
@@ -284,7 +292,24 @@ fun TransactionCategoriesScreen(
                     )
                 }
 
+                val orderedIds = remember(generalCategories) {
+                    androidx.compose.runtime.mutableStateListOf<String>().apply {
+                        addAll(generalCategories.map { it.id })
+                    }
+                }
+                val listState = rememberLazyListState()
+                val reorderState = rememberReorderableLazyListState(listState) { from, to ->
+                    val fromKey = from.key as? String ?: return@rememberReorderableLazyListState
+                    val toKey = to.key as? String ?: return@rememberReorderableLazyListState
+                    val fromIdx = orderedIds.indexOf(fromKey)
+                    val toIdx = orderedIds.indexOf(toKey)
+                    if (fromIdx >= 0 && toIdx >= 0) {
+                        orderedIds.add(toIdx, orderedIds.removeAt(fromIdx))
+                        viewModel.updateCategoryOrder(orderedIds.toList())
+                    }
+                }
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth(),
@@ -293,12 +318,15 @@ fun TransactionCategoriesScreen(
                 ) {
                     items(generalCategories, key = { it.id }) { category ->
                         val subCount = state.allCategories.count { it.parent?.id == category.id }
-                        CategoryListRow(
-                            emoji = category.resolveEmoji().ifBlank { DEFAULT_NEW_EMOJI },
-                            title = localizedCategoryTitle(category),
-                            subcategoryCount = subCount,
-                            onClick = { editingCategory = category }
-                        )
+                        ReorderableItem(reorderState, key = category.id) {
+                            CategoryListRow(
+                                emoji = category.resolveEmoji().ifBlank { DEFAULT_NEW_EMOJI },
+                                title = localizedCategoryTitle(category),
+                                subcategoryCount = subCount,
+                                onClick = { editingCategory = category },
+                                dragModifier = Modifier.longPressDraggableHandle()
+                            )
+                        }
                     }
                 }
 
@@ -376,13 +404,15 @@ private fun CategoryListRow(
     emoji: String,
     title: String,
     subcategoryCount: Int,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    dragModifier: Modifier = Modifier
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .clickable { onClick() }
+            .then(dragModifier)
             .padding(vertical = 10.dp, horizontal = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

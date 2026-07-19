@@ -154,7 +154,7 @@
     <string name="last_12_months">Ostatnie 12 miesięcy</string>
     <string name="last_6_months_label">Ostatnie 6 miesięcy</string>
     <string name="saved_last_n_months">ZAOSZCZĘDZONO · OSTATNIE %1$d MIES.</string>
-    <string name="of_gross_income">%1$s%% przychodu brutto</string>
+    <string name="of_gross_income">%1$s% przychodu brutto</string>
     <string name="per_month_avg">≈ %1$s/mies.</string>
     <string name="net_worth_trajectory">Trajektoria wartości netto</string>
     <string name="today_marker">Dziś</string>
@@ -345,8 +345,8 @@
     <!-- Prognoza -->
     <string name="nw_in_6_mo">Wartość netto za 6 mies.</string>
     <string name="nw_in_12_mo">Wartość netto za 12 mies.</string>
-    <string name="saved_dot_pct">Zaoszczędzone · %1$s%%</string>
-    <string name="spent_dot_pct">Wydane · %1$s%%</string>
+    <string name="saved_dot_pct">Zaoszczędzone · %1$s%</string>
+    <string name="spent_dot_pct">Wydane · %1$s%</string>
 
     <!-- Formularz celu -->
     <string name="title_label">Tytuł</string>
@@ -487,7 +487,7 @@
     <string name="period_lifetime">Cały czas</string>
 
     <!-- Wskaźnik -->
-    <string name="pct_of_revenue">%1$s%% przychodu</string>
+    <string name="pct_of_revenue">%1$s% przychodu</string>
 
     <!-- Transfer -->
     <string name="transfer_from_to">%1$s → %2$s</string>

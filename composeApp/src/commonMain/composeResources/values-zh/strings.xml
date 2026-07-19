@@ -154,7 +154,7 @@
     <string name="last_12_months">过去 12 个月</string>
     <string name="last_6_months_label">过去 6 个月</string>
     <string name="saved_last_n_months">已存 · 过去 %1$d 个月</string>
-    <string name="of_gross_income">%1$s%% 的总收入</string>
+    <string name="of_gross_income">%1$s% 的总收入</string>
     <string name="per_month_avg">≈ %1$s/月</string>
     <string name="net_worth_trajectory">净资产走势</string>
     <string name="today_marker">今天</string>
@@ -345,8 +345,8 @@
     <!-- 预测 -->
     <string name="nw_in_6_mo">6 个月后的净资产</string>
     <string name="nw_in_12_mo">12 个月后的净资产</string>
-    <string name="saved_dot_pct">已储蓄 · %1$s%%</string>
-    <string name="spent_dot_pct">已支出 · %1$s%%</string>
+    <string name="saved_dot_pct">已储蓄 · %1$s%</string>
+    <string name="spent_dot_pct">已支出 · %1$s%</string>
 
     <!-- 目标表单 -->
     <string name="title_label">标题</string>
@@ -487,7 +487,7 @@
     <string name="period_lifetime">全部</string>
 
     <!-- 指标 -->
-    <string name="pct_of_revenue">%1$s%% 收入</string>
+    <string name="pct_of_revenue">%1$s% 收入</string>
 
     <!-- 转账 -->
     <string name="transfer_from_to">%1$s → %2$s</string>

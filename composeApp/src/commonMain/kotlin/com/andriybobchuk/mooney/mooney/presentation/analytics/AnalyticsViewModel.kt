@@ -57,6 +57,7 @@ data class AnalyticsState(
     val currentNetWorth: Double = 0.0
 )
 
+@Suppress("LongParameterList")
 class AnalyticsViewModel(
     private val calculateMonthlyAnalyticsUseCase: CalculateMonthlyAnalyticsUseCase,
     private val calculateSubcategoriesUseCase: CalculateSubcategoriesUseCase,
@@ -70,7 +71,12 @@ class AnalyticsViewModel(
     // sources cheap; observing accounts via the cache means the card updates
     // when balances change without an extra subscription.
     private val getAccountsUseCase: GetAccountsUseCase,
-    private val calculateNetWorthUseCase: CalculateNetWorthUseCase
+    private val calculateNetWorthUseCase: CalculateNetWorthUseCase,
+    // Direct DAO access so the "Set a limit" button in the category-detail
+    // sheet can persist without a round-trip through a dedicated use case.
+    // The list refresh cascades via CoreRepository.reloadCategories().
+    private val categoryDao: com.andriybobchuk.mooney.core.data.database.CategoryDao,
+    private val coreRepository: com.andriybobchuk.mooney.mooney.domain.CoreRepository
 ) : ViewModel() {
     private var baseCurrency: Currency = GlobalConfig.baseCurrency
 
@@ -252,6 +258,29 @@ class AnalyticsViewModel(
                 selectedCategory = null,
                 subcategories = emptyList()
             )
+        }
+    }
+
+    /** Set (or clear with null) the monthly budget on a category from the
+     *  transactions detail sheet. Sheet stays open — user might tweak the
+     *  value and re-save. */
+    fun setCategoryMonthlyLimit(categoryId: String, limit: Double?) {
+        viewModelScope.launch {
+            try {
+                val existing = categoryDao.getById(categoryId) ?: return@launch
+                if (existing.monthlyLimit == limit) return@launch
+                categoryDao.upsert(existing.copy(monthlyLimit = limit))
+                coreRepository.reloadCategories()
+                // Refresh the currently-open breakdown so the row shows the
+                // new budget bar immediately.
+                _state.value.categorySheetType?.let { sheetType ->
+                    loadCategoriesForSheetType(sheetType)
+                }
+            } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Best-effort — sheet stays open, user can retry
+            }
         }
     }
 

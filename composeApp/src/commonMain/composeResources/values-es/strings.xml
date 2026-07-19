@@ -154,7 +154,7 @@
     <string name="last_12_months">Últimos 12 meses</string>
     <string name="last_6_months_label">Últimos 6 meses</string>
     <string name="saved_last_n_months">AHORRADO · ÚLTIMOS %1$d MESES</string>
-    <string name="of_gross_income">%1$s%% de ingresos brutos</string>
+    <string name="of_gross_income">%1$s% de ingresos brutos</string>
     <string name="per_month_avg">≈ %1$s/mes</string>
     <string name="net_worth_trajectory">Trayectoria del patrimonio</string>
     <string name="today_marker">Hoy</string>
@@ -345,8 +345,8 @@
     <!-- Pronóstico -->
     <string name="nw_in_6_mo">Patrimonio en 6 meses</string>
     <string name="nw_in_12_mo">Patrimonio en 12 meses</string>
-    <string name="saved_dot_pct">Ahorrado · %1$s%%</string>
-    <string name="spent_dot_pct">Gastado · %1$s%%</string>
+    <string name="saved_dot_pct">Ahorrado · %1$s%</string>
+    <string name="spent_dot_pct">Gastado · %1$s%</string>
 
     <!-- Formulario de meta -->
     <string name="title_label">Título</string>
@@ -487,7 +487,7 @@
     <string name="period_lifetime">Total</string>
 
     <!-- Métrica -->
-    <string name="pct_of_revenue">%1$s%% de ingresos</string>
+    <string name="pct_of_revenue">%1$s% de ingresos</string>
 
     <!-- Transferencia -->
     <string name="transfer_from_to">%1$s → %2$s</string>

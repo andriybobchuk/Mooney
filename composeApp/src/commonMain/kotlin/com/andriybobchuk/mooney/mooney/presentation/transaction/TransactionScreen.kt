@@ -1532,7 +1532,32 @@ fun TransactionBottomSheet(
                 )
                 AccountField(selectedAccount, accounts.filterNotNull(), assetCategories, categoryOrder, expandedCategories, onToggleAccountCategory, { selectedAccount = it })
 
-                Spacer(Modifier.height(12.dp))
+                // Swap accounts — small centered icon between From and To
+                // rows. Cheap way to fix "I picked the wrong direction" —
+                // one tap flips source ↔ destination instead of two picker
+                // sheets and re-selects.
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    IconButton(
+                        onClick = {
+                            val tmp = selectedAccount
+                            selectedAccount = destinationAccount
+                            destinationAccount = tmp
+                        },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        // Text glyph instead of a Material Icon — the swap-up
+                        // -and-down arrow character is available everywhere
+                        // without pulling in an icon-extended dep.
+                        Text(
+                            text = "⇅",
+                            fontSize = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
 
                 Text(
                     text = stringResource(Res.string.to_account),
@@ -1580,13 +1605,15 @@ fun TransactionBottomSheet(
 
             // Optional description — placed right after Category so a quick
             // note ("Costco run") sits next to what it tags. Single line.
+            // Body medium (was bodySmall) — the smaller size read as an
+            // afterthought and users kept missing the field.
             MooneyTextField(
                 value = description,
                 onValueChange = { description = it },
                 label = stringResource(Res.string.tx_description_label),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                textStyle = MaterialTheme.typography.bodySmall
+                textStyle = MaterialTheme.typography.bodyMedium
             )
 
             Spacer(Modifier.height(12.dp))

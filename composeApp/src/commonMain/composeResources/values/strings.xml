@@ -174,7 +174,7 @@
     <string name="last_12_months">Last 12 months</string>
     <string name="last_6_months_label">Last 6 months</string>
     <string name="saved_last_n_months">SAVED · LAST %1$d MONTHS</string>
-    <string name="of_gross_income">%1$s%% of gross income</string>
+    <string name="of_gross_income">%1$s% of gross income</string>
     <string name="per_month_avg">≈ %1$s/mo</string>
     <string name="net_worth_trajectory">Net worth trajectory</string>
     <string name="today_marker">Today</string>
@@ -383,8 +383,8 @@
     <!-- Net income forecast -->
     <string name="nw_in_6_mo">Net worth in 6 mo</string>
     <string name="nw_in_12_mo">Net worth in 12 mo</string>
-    <string name="saved_dot_pct">Saved · %1$s%%</string>
-    <string name="spent_dot_pct">Spent · %1$s%%</string>
+    <string name="saved_dot_pct">Saved · %1$s%</string>
+    <string name="spent_dot_pct">Spent · %1$s%</string>
 
     <!-- Goals form -->
     <string name="title_label">Title</string>
@@ -553,7 +553,7 @@
     <string name="period_lifetime">Lifetime</string>
 
     <!-- Metric subtitle -->
-    <string name="pct_of_revenue">%1$s%% of revenue</string>
+    <string name="pct_of_revenue">%1$s% of revenue</string>
 
     <!-- Transfer list display -->
     <string name="transfer_from_to">%1$s → %2$s</string>
@@ -829,7 +829,7 @@
     <string name="asset_detail_purchase_price">Purchase price</string>
     <string name="asset_detail_market_value">Current market value</string>
     <string name="asset_detail_unrealized">Unrealized %1$s</string>
-    <string name="asset_detail_pct_of_networth">%1$s%% of net worth</string>
+    <string name="asset_detail_pct_of_networth">%1$s% of net worth</string>
     <string name="asset_detail_excluded_from_networth">Excluded from total net worth</string>
     <string name="asset_not_counted_badge">Not counted</string>
     <string name="category_budget_section">MONTHLY BUDGET</string>
@@ -839,6 +839,8 @@
     <string name="asset_primary_income_toggle">Primary account for income</string>
     <string name="transaction_budget_over">You've already spent %1$s of your %2$s %3$s budget this month.</string>
     <string name="analytics_expenses_budget">Expenses / Budget</string>
+    <string name="category_set_limit_button">Set a limit</string>
+    <string name="clear">Clear</string>
     <string name="asset_detail_primary_note">Primary account · used for defaults</string>
     <string name="asset_detail_liability_note">Reduces your net worth by this amount</string>
     <string name="category_asset_other">Other Assets</string>

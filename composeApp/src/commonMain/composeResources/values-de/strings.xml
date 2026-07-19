@@ -154,7 +154,7 @@
     <string name="last_12_months">Letzte 12 Monate</string>
     <string name="last_6_months_label">Letzte 6 Monate</string>
     <string name="saved_last_n_months">GESPART · LETZTE %1$d MONATE</string>
-    <string name="of_gross_income">%1$s%% vom Bruttoeinkommen</string>
+    <string name="of_gross_income">%1$s% vom Bruttoeinkommen</string>
     <string name="per_month_avg">≈ %1$s/Mon.</string>
     <string name="net_worth_trajectory">Vermögensverlauf</string>
     <string name="today_marker">Heute</string>
@@ -345,8 +345,8 @@
     <!-- Prognose -->
     <string name="nw_in_6_mo">Vermögen in 6 Mon.</string>
     <string name="nw_in_12_mo">Vermögen in 12 Mon.</string>
-    <string name="saved_dot_pct">Gespart · %1$s%%</string>
-    <string name="spent_dot_pct">Ausgegeben · %1$s%%</string>
+    <string name="saved_dot_pct">Gespart · %1$s%</string>
+    <string name="spent_dot_pct">Ausgegeben · %1$s%</string>
 
     <!-- Zielformular -->
     <string name="title_label">Titel</string>
@@ -487,7 +487,7 @@
     <string name="period_lifetime">Gesamt</string>
 
     <!-- Kennzahl -->
-    <string name="pct_of_revenue">%1$s%% des Umsatzes</string>
+    <string name="pct_of_revenue">%1$s% des Umsatzes</string>
 
     <!-- Überweisung -->
     <string name="transfer_from_to">%1$s → %2$s</string>

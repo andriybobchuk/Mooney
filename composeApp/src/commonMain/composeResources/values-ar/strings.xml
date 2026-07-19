@@ -154,7 +154,7 @@
     <string name="last_12_months">آخر 12 شهراً</string>
     <string name="last_6_months_label">آخر 6 أشهر</string>
     <string name="saved_last_n_months">مدّخر · آخر %1$d شهر</string>
-    <string name="of_gross_income">%1$s%% من الدخل الإجمالي</string>
+    <string name="of_gross_income">%1$s% من الدخل الإجمالي</string>
     <string name="per_month_avg">≈ %1$s/شهرياً</string>
     <string name="net_worth_trajectory">مسار صافي الثروة</string>
     <string name="today_marker">اليوم</string>
@@ -345,8 +345,8 @@
     <!-- التوقع -->
     <string name="nw_in_6_mo">صافي الثروة خلال 6 أشهر</string>
     <string name="nw_in_12_mo">صافي الثروة خلال 12 شهرًا</string>
-    <string name="saved_dot_pct">المحفوظ · %1$s%%</string>
-    <string name="spent_dot_pct">المنفق · %1$s%%</string>
+    <string name="saved_dot_pct">المحفوظ · %1$s%</string>
+    <string name="spent_dot_pct">المنفق · %1$s%</string>
 
     <!-- نموذج الهدف -->
     <string name="title_label">العنوان</string>
@@ -487,7 +487,7 @@
     <string name="period_lifetime">منذ البداية</string>
 
     <!-- مؤشر -->
-    <string name="pct_of_revenue">%1$s%% من الإيرادات</string>
+    <string name="pct_of_revenue">%1$s% من الإيرادات</string>
 
     <!-- التحويل -->
     <string name="transfer_from_to">%1$s → %2$s</string>

@@ -154,7 +154,7 @@
     <string name="last_12_months">Последние 12 месяцев</string>
     <string name="last_6_months_label">Последние 6 месяцев</string>
     <string name="saved_last_n_months">СБЕРЕЖЕНО · ПОСЛЕДНИЕ %1$d МЕС.</string>
-    <string name="of_gross_income">%1$s%% от валового дохода</string>
+    <string name="of_gross_income">%1$s% от валового дохода</string>
     <string name="per_month_avg">≈ %1$s/мес.</string>
     <string name="net_worth_trajectory">Траектория чистой стоимости</string>
     <string name="today_marker">Сегодня</string>
@@ -345,8 +345,8 @@
     <!-- Прогноз -->
     <string name="nw_in_6_mo">Чистый капитал через 6 мес.</string>
     <string name="nw_in_12_mo">Чистый капитал через 12 мес.</string>
-    <string name="saved_dot_pct">Сохранено · %1$s%%</string>
-    <string name="spent_dot_pct">Потрачено · %1$s%%</string>
+    <string name="saved_dot_pct">Сохранено · %1$s%</string>
+    <string name="spent_dot_pct">Потрачено · %1$s%</string>
 
     <!-- Форма цели -->
     <string name="title_label">Название</string>
@@ -487,7 +487,7 @@
     <string name="period_lifetime">За всё время</string>
 
     <!-- Метрика -->
-    <string name="pct_of_revenue">%1$s%% дохода</string>
+    <string name="pct_of_revenue">%1$s% дохода</string>
 
     <!-- Перевод -->
     <string name="transfer_from_to">%1$s → %2$s</string>

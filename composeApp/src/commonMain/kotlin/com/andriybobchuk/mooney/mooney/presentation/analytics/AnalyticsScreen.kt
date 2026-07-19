@@ -89,6 +89,7 @@ import com.andriybobchuk.mooney.mooney.domain.MonthlyMetricSnapshot
 import com.andriybobchuk.mooney.mooney.domain.TopCategorySummary
 import com.andriybobchuk.mooney.mooney.domain.formatWithCommas
 import com.andriybobchuk.mooney.mooney.domain.formatToShortString
+import com.andriybobchuk.mooney.mooney.domain.parseAmountInput
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -278,6 +279,7 @@ fun AnalyticsScreen(
                     selectedMonth = state.selectedMonth,
                     selectedPeriod = selectedTimePeriod,
                     onPeriodSelected = { selectedTimePeriod = it },
+                    onMonthTapped = viewModel::onMonthSelected,
                     modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 0.dp, bottom = 8.dp)
                 )
 
@@ -341,7 +343,9 @@ fun AnalyticsScreen(
                             onSubcategoryClick = { leafCategory ->
                                 viewModel.onLeafCategoryClicked(leafCategory)
                             },
-                            onDismiss = { viewModel.onSubcategorySheetDismissed() }
+                            onDismiss = { viewModel.onSubcategorySheetDismissed() },
+                            selectedMonth = state.selectedMonth,
+                            onMonthSelected = viewModel::onMonthSelected
                         )
                     }
                 }
@@ -360,7 +364,10 @@ fun AnalyticsScreen(
                             category = category,
                             transactions = state.transactionsForCategory,
                             exchangeRates = state.exchangeRates,
-                            onDismiss = { viewModel.onTransactionsSheetDismissed() }
+                            onDismiss = { viewModel.onTransactionsSheetDismissed() },
+                            onSetLimit = { limit ->
+                                viewModel.setCategoryMonthlyLimit(category.id, limit)
+                            }
                         )
                     }
                 }
@@ -374,7 +381,13 @@ fun AnalyticsScreen(
 @Composable
 fun CategoryItem(
     topCategorySummary: TopCategorySummary,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    /**
+     * Show the ±% MoM trend pill on the right-hand side. Off on the
+     * Expenses breakdown because the delta was noisy — one bad month
+     * of a rarely-used category rendered a scary red 500%.
+     */
+    showTrendPill: Boolean = true
 ) {
   Column(modifier = Modifier.fillMaxWidth()) {
     Row(
@@ -417,8 +430,9 @@ fun CategoryItem(
                 color = if (topCategorySummary.category.type == CategoryType.INCOME) MaterialTheme.appColors.incomeColor else MaterialTheme.appColors.expenseColor
             )
             
-            // Trend pill
-            if (topCategorySummary.trendPercentage != 0.0) {
+            // Trend pill — hidden on Expenses per user request; MoM delta is
+            // often noisy for low-volume categories.
+            if (showTrendPill && topCategorySummary.trendPercentage != 0.0) {
                 Spacer(modifier = Modifier.height(4.dp))
                 
                 val isPositive = topCategorySummary.trendPercentage > 0
@@ -675,7 +689,9 @@ fun SubcategoryBottomSheet(
     parentCategory: com.andriybobchuk.mooney.mooney.domain.Category,
     subcategories: List<TopCategorySummary>,
     onSubcategoryClick: (com.andriybobchuk.mooney.mooney.domain.Category) -> Unit = {},
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    selectedMonth: MonthKey? = null,
+    onMonthSelected: (MonthKey) -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -699,8 +715,15 @@ fun SubcategoryBottomSheet(
                 Text(
                     text = parentCategory.title,
                     style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.weight(1f)
                 )
+                if (selectedMonth != null) {
+                    com.andriybobchuk.mooney.mooney.presentation.components.MonthSelector(
+                        selectedMonth = selectedMonth,
+                        onMonthSelected = onMonthSelected
+                    )
+                }
             }
             Text(
                 text = stringResource(Res.string.subcategories_breakdown),
@@ -727,16 +750,21 @@ fun CategoryTransactionsSheet(
     category: com.andriybobchuk.mooney.mooney.domain.Category,
     transactions: List<com.andriybobchuk.mooney.mooney.domain.Transaction>,
     exchangeRates: com.andriybobchuk.mooney.mooney.domain.ExchangeRates,
-    onDismiss: () -> Unit = {}
+    onDismiss: () -> Unit = {},
+    onSetLimit: (Double?) -> Unit = {}
 ) {
+    var showLimitEditor by remember { mutableStateOf(false) }
+    var limitEntry by remember(category.id) {
+        mutableStateOf(category.monthlyLimit?.formatWithCommas() ?: "")
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 32.dp)
     ) {
-        // Header with close button — sheet covers most of the screen, so the
-        // explicit close gives users a clear way out (swipe-down isn't always
-        // discoverable, especially on iOS).
+        // Header — "Set a limit" (or the current limit) replaces the close X
+        // per user request. Sheet still dismisses on swipe / outside-tap.
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -762,12 +790,66 @@ fun CategoryTransactionsSheet(
                     )
                 }
             }
-            androidx.compose.material3.IconButton(onClick = onDismiss) {
-                androidx.compose.material3.Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Filled.Close,
-                    contentDescription = "Close",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+            // Only expense categories get a budget. Income / transfer just
+            // show the close X so we don't confuse users with irrelevant
+            // controls.
+            if (category.type == CategoryType.EXPENSE) {
+                androidx.compose.material3.TextButton(
+                    onClick = { showLimitEditor = !showLimitEditor }
+                ) {
+                    Text(
+                        text = if (category.monthlyLimit != null) {
+                            "${category.monthlyLimit.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}"
+                        } else {
+                            stringResource(Res.string.category_set_limit_button)
+                        },
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+            } else {
+                androidx.compose.material3.IconButton(onClick = onDismiss) {
+                    androidx.compose.material3.Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Filled.Close,
+                        contentDescription = "Close",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        if (showLimitEditor && category.type == CategoryType.EXPENSE) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                androidx.compose.material3.OutlinedTextField(
+                    value = limitEntry,
+                    onValueChange = { limitEntry = it },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions.Default.copy(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                    ),
+                    placeholder = { Text(stringResource(Res.string.category_budget_placeholder)) }
                 )
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        onSetLimit(limitEntry.parseAmountInput())
+                        showLimitEditor = false
+                    }
+                ) { Text(stringResource(Res.string.save)) }
+                if (category.monthlyLimit != null) {
+                    androidx.compose.material3.TextButton(
+                        onClick = {
+                            onSetLimit(null)
+                            limitEntry = ""
+                            showLimitEditor = false
+                        }
+                    ) { Text(stringResource(Res.string.clear)) }
+                }
             }
         }
 
@@ -968,6 +1050,8 @@ fun CategoryBreakdownSheet(
     sheetType: CategorySheetType,
     categories: List<TopCategorySummary>,
     historicalData: List<MonthlyMetricSnapshot> = emptyList(),
+    selectedMonth: MonthKey? = null,
+    onMonthSelected: (MonthKey) -> Unit = {},
     onCategoryClick: (com.andriybobchuk.mooney.mooney.domain.Category) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
@@ -1008,17 +1092,27 @@ fun CategoryBreakdownSheet(
                     chartData.forEachIndexed { index, snapshot ->
                         val value = values[index]
                         val barHeight = ((value / maxVal) * 80).dp.coerceAtLeast(4.dp)
-
+                        val isSelected = selectedMonth == snapshot.month
+                        // Bars are tappable — a tap on Sep's bar sets the
+                        // month to Sep so the categories below refilter to
+                        // that month's spending. Selected month reads with
+                        // full-strength primary + a small accent underline
+                        // so the current filter is visible at a glance.
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.weight(1f).padding(horizontal = 2.dp)
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 2.dp)
+                                .clickable { onMonthSelected(snapshot.month) }
                         ) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(barHeight)
                                     .background(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                                        MaterialTheme.colorScheme.primary.copy(
+                                            alpha = if (isSelected) 1f else 0.6f
+                                        ),
                                         RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
                                     )
                             )
@@ -1026,8 +1120,10 @@ fun CategoryBreakdownSheet(
                             Text(
                                 text = snapshot.month.toShortDisplayString(),
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 9.sp
+                                color = if (isSelected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 9.sp,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                             )
                             Text(
                                 text = when (sheetType) {
@@ -1045,12 +1141,14 @@ fun CategoryBreakdownSheet(
             }
         }
 
-        // Categories list
+        // Categories list — trend pills are hidden on Expenses breakdown.
+        val showTrend = sheetType != CategorySheetType.OPERATING_COSTS
         LazyColumn {
             items(categories) { category ->
                 CategoryItem(
                     topCategorySummary = category,
-                    onClick = { onCategoryClick(category.category) }
+                    onClick = { onCategoryClick(category.category) },
+                    showTrendPill = showTrend
                 )
             }
         }

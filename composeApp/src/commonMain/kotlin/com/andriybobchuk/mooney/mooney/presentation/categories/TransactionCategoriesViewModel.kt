@@ -26,6 +26,12 @@ import kotlinx.coroutines.launch
 
 data class TransactionCategoriesState(
     val allCategories: List<Category> = emptyList(),
+    /**
+     * User-picked top-level category order, mirrored from the same
+     * DataStore key the Transaction picker reads. Empty when the user
+     * hasn't reordered yet — screen falls back to natural cache order.
+     */
+    val categoryOrder: List<String> = emptyList(),
     val showPaywall: Boolean = false,
     val isPurchasing: Boolean = false,
     val purchaseError: String? = null,
@@ -47,6 +53,7 @@ sealed interface TransactionCategoriesAction {
     data object RestorePurchases : TransactionCategoriesAction
 }
 
+@Suppress("LongParameterList")
 class TransactionCategoriesViewModel(
     private val categoryDao: CategoryDao,
     private val repository: CoreRepository,
@@ -58,7 +65,10 @@ class TransactionCategoriesViewModel(
     private val categoryUsageDao: com.andriybobchuk.mooney.core.data.database.CategoryUsageDao,
     private val recurringTransactionDao: com.andriybobchuk.mooney.core.data.database.RecurringTransactionDao,
     private val pendingTransactionDao: com.andriybobchuk.mooney.core.data.database.PendingTransactionDao,
-    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
+    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache,
+    // Shared with the Transaction picker so a reorder on either surface is
+    // reflected on the other.
+    private val manageOrderUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.ManageTransactionCategoryOrderUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -68,6 +78,33 @@ class TransactionCategoriesViewModel(
 
     init {
         observeCategoriesFromCache()
+        observeCategoryOrder()
+    }
+
+    private fun observeCategoryOrder() {
+        viewModelScope.launch {
+            try {
+                manageOrderUseCase.getCategoryOrder().collect { order ->
+                    _state.update { it.copy(categoryOrder = order) }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                /* keep last */
+            }
+        }
+    }
+
+    fun updateCategoryOrder(orderedIds: List<String>) {
+        viewModelScope.launch {
+            try {
+                manageOrderUseCase.saveCategoryOrder(orderedIds)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                /* best-effort */
+            }
+        }
     }
 
     private fun observeCategoriesFromCache() {

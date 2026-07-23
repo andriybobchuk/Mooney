@@ -12,9 +12,9 @@ appId: com.andriybobchuk.mooney
 - assertVisible:
     text: "Transactions"
 - tapOn:
-    text: "Assets"
+    text: "Balance"
 - assertVisible:
-    text: "Assets"
+    text: "Balance"
 - tapOn:
     text: "Analytics"
 - assertVisible:
@@ -28,7 +28,7 @@ appId: com.andriybobchuk.mooney
 # appear because the cache holds the data and the VMs are scoped to the
 # parent nav graph. If any of these flashes, the cache-first pattern broke.
 - tapOn:
-    text: "Assets"
+    text: "Balance"
 - assertNotVisible:
     text: "No assets yet"
 - assertNotVisible:

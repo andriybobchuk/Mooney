@@ -38,7 +38,7 @@ appId: com.andriybobchuk.mooney
 - assertNotVisible:
     text: "No analytics yet"
 - tapOn:
-    text: "Assets"
+    text: "Balance"
 - assertNotVisible:
     text: "Add your first account"
 - tapOn:

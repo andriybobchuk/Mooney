@@ -3,8 +3,8 @@
 # Cycles through every tab in the bottom nav under the mid_size_user
 # fixture. Each tab must:
 #   - Render at least one non-crashing frame.
-#   - Show its canonical label text (Transactions, Assets, Analytics,
-#     Settings).
+#   - Show its canonical label text (Transactions, Balance, Analytics,
+#     Settings). "Balance" was renamed from "Assets" in f469586.
 #
 # What we protect: a Compose regression on any single screen that
 # throws during composition would crash the whole app; this catches
@@ -25,7 +25,7 @@ tags:
 
 - tapOn:
     id: "nav_accounts"
-- assertVisible: "Assets"
+- assertVisible: "Balance"
 
 - tapOn:
     id: "nav_analytics"

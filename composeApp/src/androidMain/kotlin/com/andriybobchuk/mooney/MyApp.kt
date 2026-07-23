@@ -26,7 +26,13 @@ class MyApp: Application() {
         // — the common expect-fun takes no parameters so the SDK context has
         // to be stashed up-front. Mirrors the iOS bridge wiring.
         Ads.setApplication(applicationContext)
-        Ads.initialize()
+        // Only start the Google Mobile Ads SDK when ads are actually enabled.
+        // Skipping `MobileAds.initialize()` prevents the ads library from
+        // capturing the advertising ID, which keeps the Play Data Safety
+        // declaration clean while ads are hard-coded off for this release.
+        if (com.andriybobchuk.mooney.mooney.domain.FeatureFlags.adsEnabled) {
+            Ads.initialize()
+        }
         // Notification channels must exist on Android O+ before the first
         // notify() call. Creating it here means WorkManager's worker doesn't
         // need to gamble on whether the channel was registered yet on cold

@@ -156,9 +156,13 @@ fun NavigationHost() {
     LaunchedEffect(currentBackStackEntry) {
         val route = currentBackStackEntry?.destination?.route ?: return@LaunchedEffect
         val screenName = route.substringAfterLast(".")
-        analyticsTracker.trackScreenView(screenName)
+        // Explicit screen_view calls dropped — Firebase's auto-tracking
+        // covers session + retention, and per-screen counts weren't driving
+        // any product decisions. We keep the local `navTapCount` for the
+        // interstitial eligibility gate below (that's not analytics).
         navTapCount += 1
         if (
+            FeatureFlags.adsEnabled &&
             FeatureFlags.interstitialOnAnalyticsEnabled &&
             screenName == "Analytics"
         ) {
@@ -188,11 +192,26 @@ fun NavigationHost() {
     val getGoalsUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.GetGoalsUseCase = koinInject()
     val premiumManagerProps: com.andriybobchuk.mooney.core.premium.PremiumManager = koinInject()
     val recurringTransactionDao: com.andriybobchuk.mooney.core.data.database.RecurringTransactionDao = koinInject()
+    // DataStore hoisted here so the install_version write inside the
+    // telemetry LaunchedEffect can reach it. Same instance as `dataStore`
+    // below (Koin singleton) — declared here to sidestep the "referenced
+    // before declaration" compile error.
+    val telemetryDataStore: androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences> = koinInject()
     LaunchedEffect(Unit) {
         // Best-effort telemetry — deliberately delayed so it doesn't compete
         // with the first interactive frame. 1.5s is comfortably after any
         // realistic cold-start.
         kotlinx.coroutines.delay(SECONDARY_WORK_DELAY_MS)
+        // Kick off a Remote Config fetch too so paywall/ads/goals/limits
+        // reflect the console values on the next session. First run of the
+        // app has to fall back to compiled defaults (or last-cached values).
+        try {
+            com.andriybobchuk.mooney.core.data.category.RemoteConfig.fetchAndActivate()
+        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            /* best-effort */
+        }
         try {
             val accounts = getAccountsUseCase().first()
             val transactions = getTransactionsUseCase().first()
@@ -229,6 +248,40 @@ fun NavigationHost() {
             analyticsTracker.setUserProperty("is_pro", isPro.toString())
             analyticsTracker.setUserProperty("has_recurring", (recurringCount > 0).toString())
             analyticsTracker.setUserProperty("has_goals", goals.isNotEmpty().toString())
+
+            // install_version — captured on first launch, mirrored to a
+            // Firebase user property so Remote Config console can target
+            // config values to install cohorts. Never overwritten after the
+            // first write; this is the "which schema does this user get"
+            // dimension referenced in RemoteConfigKeys docs.
+            val installVersion = telemetryDataStore.data.first()[
+                com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.INSTALL_VERSION
+            ] ?: run {
+                val v = com.andriybobchuk.mooney.APP_VERSION
+                telemetryDataStore.edit { it[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.INSTALL_VERSION] = v }
+                v
+            }
+            analyticsTracker.setUserProperty("install_version", installVersion)
+            analyticsTracker.setUserProperty("app_version", com.andriybobchuk.mooney.APP_VERSION)
+
+            // Install cohort month — derived from install_version (CalVer
+            // "YY.MM.PATCH"). Firebase console groups users by this so we can
+            // filter "users who installed in July 2026" without needing the
+            // patch. Empty string when parsing fails; console filters skip it.
+            val cohortMonth = installVersion.substringBefore('.', "")
+                .let { yy -> if (yy.isNotEmpty()) "20$yy-${installVersion.split('.').getOrNull(1) ?: ""}" else "" }
+            if (cohortMonth.isNotEmpty()) {
+                analyticsTracker.setUserProperty("install_cohort_month", cohortMonth)
+            }
+
+            // Activation state — mirrored user property so every event can be
+            // segmented "activated vs. not-yet-activated" without joining
+            // against the `activated` event log. Only set to true once the
+            // Activation event has fired (see TransactionViewModel).
+            val isActivated = telemetryDataStore.data.first()[
+                com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.ANALYTICS_ACTIVATED_FIRED
+            ] ?: false
+            analyticsTracker.setUserProperty("is_activated", isActivated.toString())
         } catch (e: kotlin.coroutines.cancellation.CancellationException) {
             throw e
         } catch (_: Exception) {
@@ -288,8 +341,12 @@ fun NavigationHost() {
                 com.andriybobchuk.mooney.core.notifications.ReminderMode.WEEKLY ->
                     reminderScheduler.scheduleWeekly(weekday, hour, minute)
                 com.andriybobchuk.mooney.core.notifications.ReminderMode.OFF -> {
-                    // No-op — explicit cancel would clobber a schedule the
-                    // user just set this session and DataStore hasn't flushed.
+                    // Explicit cancel — needed for upgraded users who had a
+                    // legacy 19:30 daily alarm scheduled by pre-v26.07 code.
+                    // The cancel() also clears the current WorkManager job
+                    // and the legacy AlarmManager PendingIntent, so users
+                    // who genuinely opted out stop getting notifications.
+                    reminderScheduler.cancel()
                 }
             }
         } catch (e: kotlin.coroutines.cancellation.CancellationException) {
@@ -330,12 +387,16 @@ fun NavigationHost() {
             // doesn't have to wait on the network. Both are cheap no-ops
             // when the bridge isn't wired (Android, or pre-SDK iOS builds).
             kotlinx.coroutines.delay(SECONDARY_WORK_DELAY_MS)
-            com.andriybobchuk.mooney.core.ads.Ads.preloadInterstitial(
-                com.andriybobchuk.mooney.core.ads.AdUnitIds.interstitial
-            )
-            com.andriybobchuk.mooney.core.ads.Ads.preloadRewarded(
-                com.andriybobchuk.mooney.core.ads.AdUnitIds.rewarded
-            )
+            // Master kill switch — skip preload entirely when the app-level
+            // ads flag is off. Keeps the SDK cold and the network idle.
+            if (FeatureFlags.adsEnabled) {
+                com.andriybobchuk.mooney.core.ads.Ads.preloadInterstitial(
+                    com.andriybobchuk.mooney.core.ads.AdUnitIds.interstitial
+                )
+                com.andriybobchuk.mooney.core.ads.Ads.preloadRewarded(
+                    com.andriybobchuk.mooney.core.ads.AdUnitIds.rewarded
+                )
+            }
         } catch (e: kotlin.coroutines.cancellation.CancellationException) {
             throw e
         } catch (_: Exception) {

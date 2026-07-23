@@ -8,6 +8,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -61,6 +63,7 @@ fun TrendChart(
     modifier: Modifier = Modifier,
     selectedPeriod: TimePeriod = TimePeriod.SIX_MONTHS,
     onPeriodSelected: (TimePeriod) -> Unit = {},
+    onMonthTapped: (MonthKey) -> Unit = {},
     lifetimeData: List<MonthlyMetricSnapshot> = emptyList(),
     isLifetimeLoading: Boolean = false
 ) {
@@ -174,12 +177,33 @@ fun TrendChart(
                 alpha = if (isDark) 0.75f else 0.55f
             )
             val markerColor = MaterialTheme.colorScheme.primary
+            // Tap-anywhere-in-the-chart month picker. Maps the tap X to the
+            // nearest snapshot in `filteredData` and fires `onMonthTapped`.
+            // Same padding math as the draw path so the accent line lines up
+            // with the tap zone.
+            val tapPadding = 40f
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp)
                     .align(Alignment.TopCenter)
                     .padding(top = 32.dp)
+                    .pointerInput(filteredData) {
+                        if (filteredData.size >= 2) {
+                            detectTapGestures(
+                                onTap = { pos: androidx.compose.ui.geometry.Offset ->
+                                    val chartW = size.width - tapPadding * 2
+                                    if (chartW > 0f) {
+                                        val rel = ((pos.x - tapPadding) / chartW).coerceIn(0f, 1f)
+                                        val idx = (rel * (filteredData.size - 1))
+                                            .toInt()
+                                            .coerceIn(0, filteredData.size - 1)
+                                        onMonthTapped(filteredData[idx].month)
+                                    }
+                                }
+                            )
+                        }
+                    }
             ) {
                 drawTrendChart(
                     data = filteredData,

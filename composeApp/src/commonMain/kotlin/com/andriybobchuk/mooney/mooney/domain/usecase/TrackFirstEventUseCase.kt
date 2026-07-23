@@ -30,6 +30,32 @@ class TrackFirstEventUseCase(
         markOnce(PreferencesKeys.ANALYTICS_FIRST_TRANSACTION_FIRED, AnalyticsEvent.FirstTransactionCreated)
     }
 
+    /** Fires `activated` if not previously fired. */
+    suspend fun activatedOnce() {
+        markOnce(PreferencesKeys.ANALYTICS_ACTIVATED_FIRED, AnalyticsEvent.Activated)
+    }
+
+    /**
+     * Fires `feature_adopted(feature)` once per install per feature. Safe to
+     * call every time the user does the thing — subsequent calls no-op.
+     * See [AnalyticsEvent.FeatureAdopted] for accepted `feature` values.
+     */
+    suspend fun featureAdopted(feature: String) {
+        try {
+            val current = dataStore.data.first()[PreferencesKeys.ANALYTICS_ADOPTED_FEATURES] ?: emptySet()
+            if (feature !in current) {
+                analyticsTracker.trackEvent(AnalyticsEvent.FeatureAdopted(feature))
+                dataStore.edit {
+                    it[PreferencesKeys.ANALYTICS_ADOPTED_FEATURES] = current + feature
+                }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Throwable) {
+            // never break the calling action
+        }
+    }
+
     private suspend fun markOnce(
         key: androidx.datastore.preferences.core.Preferences.Key<Boolean>,
         event: AnalyticsEvent

@@ -56,11 +56,8 @@ class RecurringTransactionsViewModel(
     private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
 ) : ViewModel() {
 
-    // Seed initial state from the cache; subsequent updates flow through
-    // observeFromCache().
-    private val _uiState = MutableStateFlow(
-        RecurringTransactionsState(isInitialLoading = !appDataCache.snapshot.value.isReady)
-    )
+    // Always start with isInitialLoading=true — see TransactionViewModel.
+    private val _uiState = MutableStateFlow(RecurringTransactionsState(isInitialLoading = true))
     val state = _uiState
         .onStart { observeFromCache() }
         .stateIn(

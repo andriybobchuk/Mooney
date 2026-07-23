@@ -106,12 +106,14 @@ fun App() {
                         .fillMaxSize()
                 ) {
                     val appLockManager: com.andriybobchuk.mooney.core.security.AppLockManager = koinInject()
-                    var locked by remember { mutableStateOf<Boolean?>(null) }
-                    LaunchedEffect(Unit) {
-                        locked = appLockManager.isLockEnabledNow()
-                    }
+                    // Synchronous mirror read on frame 1 kills the blank-box
+                    // stall we used to have while the DataStore suspend read
+                    // was in flight. If no mirror value exists yet (first
+                    // launch pre-migration), we optimistically show
+                    // NavigationHost — the lock only exists once the user
+                    // has explicitly set a PIN.
+                    var locked by remember { mutableStateOf(appLockManager.isLockEnabledFast()) }
                     when (locked) {
-                        null -> Unit // brief gate while we check the prefs
                         true -> com.andriybobchuk.mooney.core.security.AppLockUnlockScreen(
                             manager = appLockManager,
                             onUnlocked = { locked = false }

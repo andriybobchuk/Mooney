@@ -14,10 +14,11 @@ class DefaultAnalyticsTracker : AnalyticsTracker {
     }
 
     override fun trackScreenView(screenName: String) {
-        runSafely {
-            Analytics.logEvent("screen_view", mapOf("screen_name" to screenName))
-            Analytics.setCustomKey("last_screen", screenName)
-        }
+        // Firebase auto-collects screen_view; explicit calls were adding
+        // noise to the funnel dashboards. We keep this method for the
+        // interface contract + write a Crashlytics breadcrumb because
+        // knowing the last screen when a crash lands is worth the write.
+        runSafely { Analytics.setCustomKey("last_screen", screenName) }
     }
 
     override fun setUserProperty(name: String, value: String) {

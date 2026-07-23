@@ -38,8 +38,15 @@ fun AnalyticsBreakdownScreen(
 
     val title = when (sheetType) {
         CategorySheetType.REVENUE -> stringResource(Res.string.revenue_breakdown)
-        CategorySheetType.OPERATING_COSTS -> stringResource(Res.string.operating_costs_breakdown)
+        // "Expenses" — dropped the "/ Budget" suffix per user; still shows
+        // budget progress on the individual category rows below.
+        CategorySheetType.OPERATING_COSTS -> stringResource(Res.string.operating_costs)
         CategorySheetType.TAXES -> stringResource(Res.string.tax_breakdown)
+    }
+    // Reuse the same MonthSelector as the main Analytics screen so the two
+    // surfaces share vocabulary and users don't have to relearn the pattern.
+    LaunchedEffect(state.selectedMonth, sheetType) {
+        viewModel.loadCategoriesForSheetType(sheetType)
     }
 
     Scaffold(
@@ -50,7 +57,13 @@ fun AnalyticsBreakdownScreen(
                 title = title,
                 showBackButton = true,
                 onBackClick = onBackClick,
-                scrollBehavior = scrollBehavior
+                scrollBehavior = scrollBehavior,
+                customContent = {
+                    com.andriybobchuk.mooney.mooney.presentation.components.MonthSelector(
+                        selectedMonth = state.selectedMonth,
+                        onMonthSelected = viewModel::onMonthSelected
+                    )
+                }
             )
         },
         bottomBar = {
@@ -63,6 +76,8 @@ fun AnalyticsBreakdownScreen(
             sheetType = sheetType,
             categories = state.sheetCategories,
             historicalData = state.historicalMetrics,
+            selectedMonth = state.selectedMonth,
+            onMonthSelected = viewModel::onMonthSelected,
             onCategoryClick = { category -> viewModel.onCategoryClicked(category) },
             onDismiss = onBackClick,
             modifier = Modifier
@@ -81,7 +96,9 @@ fun AnalyticsBreakdownScreen(
                         parentCategory = category,
                         subcategories = state.subcategories,
                         onSubcategoryClick = { viewModel.onLeafCategoryClicked(it) },
-                        onDismiss = { viewModel.onSubcategorySheetDismissed() }
+                        onDismiss = { viewModel.onSubcategorySheetDismissed() },
+                        selectedMonth = state.selectedMonth,
+                        onMonthSelected = viewModel::onMonthSelected
                     )
                 }
             }
@@ -97,7 +114,10 @@ fun AnalyticsBreakdownScreen(
                         category = category,
                         transactions = state.transactionsForCategory,
                         exchangeRates = state.exchangeRates,
-                        onDismiss = { viewModel.onTransactionsSheetDismissed() }
+                        onDismiss = { viewModel.onTransactionsSheetDismissed() },
+                        onSetLimit = { limit ->
+                            viewModel.setCategoryMonthlyLimit(category.id, limit)
+                        }
                     )
                 }
             }

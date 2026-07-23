@@ -257,13 +257,16 @@ class AssetsViewModel(
             baseCurrency = GlobalConfig.baseCurrency
         )
 
-        // Compute totals per type for percentage bars
+        // Compute totals per type for percentage bars. Opted-out accounts
+        // ("Include in total net worth" toggle) drop out of these totals so
+        // the summary at the top of the Balance screen honors the flag.
         val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
         val base = GlobalConfig.baseCurrency
-        val assetsBase = allAccounts.filter { !it.isLiability }.sumOf { a ->
+        val countedAccounts = allAccounts.filter { it.includeInNetWorth }
+        val assetsBase = countedAccounts.filter { !it.isLiability }.sumOf { a ->
             if (a.currency != base) exchangeRates.convert(a.amount, a.currency, base) else a.amount
         }
-        val liabilitiesBase = allAccounts.filter { it.isLiability }.sumOf { a ->
+        val liabilitiesBase = countedAccounts.filter { it.isLiability }.sumOf { a ->
             if (a.currency != base) exchangeRates.convert(a.amount, a.currency, base) else a.amount
         }
 
@@ -369,7 +372,11 @@ class AssetsViewModel(
         amount: Double,
         currency: Currency,
         assetCategoryId: String,
-        isLiability: Boolean = false
+        isLiability: Boolean = false,
+        currentMarketValue: Double? = null,
+        includeInNetWorth: Boolean = true,
+        isPrimaryForExpenses: Boolean = false,
+        isPrimaryForIncome: Boolean = false
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             // Gate: check account limit for new accounts (id == 0 means new)
@@ -406,8 +413,33 @@ class AssetsViewModel(
                 assetCategory = AssetCategory.fromString(assetCategoryId),
                 assetCategoryId = assetCategoryId,
                 isPrimary = existingIsPrimary,
-                isLiability = existingIsLiability
+                isLiability = existingIsLiability,
+                currentMarketValue = currentMarketValue,
+                includeInNetWorth = includeInNetWorth,
+                isPrimaryForExpenses = isPrimaryForExpenses,
+                isPrimaryForIncome = isPrimaryForIncome
             )
+
+            // Single-primary-per-role invariant. If this account is being
+            // promoted to primary-for-expenses or primary-for-income, clear
+            // the same flag on every other account first — otherwise the UI
+            // would show two "primary" badges for the same role.
+            if (isPrimaryForExpenses || isPrimaryForIncome) {
+                val allAccounts = getAccountsUseCase().first().filterNotNull()
+                allAccounts.forEach { other ->
+                    if (other.id == id) return@forEach
+                    val newE = if (isPrimaryForExpenses) false else other.isPrimaryForExpenses
+                    val newI = if (isPrimaryForIncome) false else other.isPrimaryForIncome
+                    if (newE != other.isPrimaryForExpenses || newI != other.isPrimaryForIncome) {
+                        addAccountUseCase(
+                            other.copy(
+                                isPrimaryForExpenses = newE,
+                                isPrimaryForIncome = newI
+                            )
+                        )
+                    }
+                }
+            }
 
             try {
                 addAccountUseCase(account)
@@ -420,6 +452,7 @@ class AssetsViewModel(
                     )
                     trackFirstEventUseCase.firstAccount()
                 }
+                trackPrimaryAccountRole(isPrimaryForExpenses, isPrimaryForIncome)
                 // Force immediate recalculation
                 val accounts = getAccountsUseCase().first()
                 withContext(Dispatchers.Main) {
@@ -432,6 +465,19 @@ class AssetsViewModel(
                 analyticsTracker.recordException(e, "Assets")
             }
         }
+    }
+
+    /** Emit the `primary_account_set` event with a bucketed role. Extracted
+     *  from `upsertAsset` to keep that method under the detekt cyclomatic
+     *  threshold. */
+    private fun trackPrimaryAccountRole(forExpenses: Boolean, forIncome: Boolean) {
+        if (!forExpenses && !forIncome) return
+        val role = when {
+            forExpenses && forIncome -> "both"
+            forExpenses -> "expense"
+            else -> "income"
+        }
+        analyticsTracker.trackEvent(AnalyticsEvent.PrimaryAccountSet(role))
     }
 
     fun deleteAsset(id: Int) {

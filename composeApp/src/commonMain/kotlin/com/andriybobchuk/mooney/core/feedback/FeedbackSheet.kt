@@ -65,7 +65,7 @@ fun FeedbackSheet(
             ) {
                 Image(
                     painter = painterResource(Res.drawable.andrii_mooney),
-                    contentDescription = "Andrii",
+                    contentDescription = "Andrii", // allow-hardcoded (avatar alt)
                     modifier = Modifier
                         .size(140.dp)
                         .clip(CircleShape),
@@ -91,15 +91,15 @@ fun FeedbackSheet(
 
                 ContactRow(
                     icon = painterResource(Res.drawable.ic_instagram),
-                    label = "Instagram",
+                    label = "Instagram", // allow-hardcoded (brand name)
                     value = "@andriybobchuk.bro",
                     onClick = { uriHandler.openUri("https://instagram.com/andriybobchuk.bro") }
                 )
                 ContactRow(
                     icon = painterResource(Res.drawable.ic_tiktok),
-                    label = "TikTok",
-                    value = "@mooney1138",
-                    onClick = { uriHandler.openUri("https://www.tiktok.com/@mooney1138") }
+                    label = "TikTok", // allow-hardcoded (brand name)
+                    value = "@mooney_pro",
+                    onClick = { uriHandler.openUri("https://www.tiktok.com/@mooney_pro") }
                 )
                 ContactRow(
                     icon = painterResource(Res.drawable.ic_email),
@@ -120,12 +120,16 @@ private fun ContactRow(
     value: String,
     onClick: () -> Unit
 ) {
+    // Row background matches the app-wide `background` role instead of the
+    // mid-tone `surfaceVariant` grey we used before — so cards read as white
+    // in light mode and near-black in dark mode, consistent with the other
+    // sheet surfaces.
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .clickable { onClick() }
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

@@ -30,9 +30,8 @@ class AssetCategoriesViewModel(
     private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(
-        AssetCategoriesState(isInitialLoading = !appDataCache.snapshot.value.isReady)
-    )
+    // Always start with isInitialLoading=true — see TransactionViewModel.
+    private val _state = MutableStateFlow(AssetCategoriesState(isInitialLoading = true))
     val state: StateFlow<AssetCategoriesState> = _state
 
     init {

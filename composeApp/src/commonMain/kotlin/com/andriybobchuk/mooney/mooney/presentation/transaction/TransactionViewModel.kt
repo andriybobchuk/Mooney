@@ -95,16 +95,12 @@ class TransactionViewModel(
     private var excludeTaxes: Boolean = true
     private var allPendingTransactions: List<PendingTransactionEntity> = emptyList()
 
-    // Seed initial state from the app cache so we never start with empty
-    // transactions/accounts on a screen revisit. If the cache hasn't warmed
-    // yet (true cold start), [TransactionState.isInitialLoading] stays true
-    // and the shimmer takes over until the first cache emission lands.
-    private val _uiState = MutableStateFlow(seedFromCache())
-
-    private fun seedFromCache(): TransactionState {
-        val cached = appDataCache.snapshot.value
-        return TransactionState(isInitialLoading = !cached.isReady)
-    }
+    // Always start with isInitialLoading=true (same pattern as Assets and
+    // Analytics). Seeding from cache.isReady was letting the "empty state"
+    // paint the CTA directly when the cache had raced to Ready in the same
+    // frame the VM was constructed — user saw the empty CTA flash BEFORE
+    // any shimmer. Shimmer → data (or empty) is the required order.
+    private val _uiState = MutableStateFlow(TransactionState())
 
     val state = _uiState
         .onStart {
@@ -308,9 +304,11 @@ class TransactionViewModel(
             addTransactionUseCase(transaction)
             observeTransactions(_uiState.value.selectedMonth)
             loadTotal()
-            // Only on creates, never on edits — editing is a maintenance act,
-            // not a positive moment.
-            if (!wasEdit) {
+            if (wasEdit) {
+                analyticsTracker.trackEvent(
+                    AnalyticsEvent.TransactionEdited(transaction.subcategory.type.name)
+                )
+            } else {
                 analyticsTracker.trackEvent(
                     AnalyticsEvent.TransactionAdded(
                         type = transaction.subcategory.type.name,
@@ -318,8 +316,29 @@ class TransactionViewModel(
                     )
                 )
                 trackFirstEventUseCase.firstTransaction()
+                maybeCheckActivation()
                 maybeRequestReviewAfterMilestone()
             }
+        }
+    }
+
+    /**
+     * Activation criterion: ≥3 transactions across ≥2 distinct dates. Fired
+     * at most once ever via the DataStore gate in TrackFirstEventUseCase.
+     * Computed off the current filtered-for-month list plus the whole
+     * cache — cheap enough to run on every add.
+     */
+    private suspend fun maybeCheckActivation() {
+        try {
+            val all = appDataCache.snapshot.value.transactions
+            if (all.size < ACTIVATION_MIN_TX) return
+            val distinctDays = all.map { it.date }.distinct().size
+            if (distinctDays < ACTIVATION_MIN_DAYS) return
+            trackFirstEventUseCase.activatedOnce()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            /* best-effort */
         }
     }
 
@@ -355,13 +374,18 @@ class TransactionViewModel(
 
     private companion object {
         val MILESTONES = setOf(10, 25, 50, 100)
+        const val ACTIVATION_MIN_TX = 3
+        const val ACTIVATION_MIN_DAYS = 2
     }
 
     fun deleteTransaction(id: Int) {
         viewModelScope.launch {
+            val type = _uiState.value.transactions.filterNotNull()
+                .firstOrNull { it.id == id }?.subcategory?.type?.name ?: "UNKNOWN"
             deleteTransactionUseCase(id)
             observeTransactions(_uiState.value.selectedMonth)
             loadTotal()
+            analyticsTracker.trackEvent(AnalyticsEvent.TransactionDeleted(type))
         }
     }
 
@@ -425,6 +449,7 @@ class TransactionViewModel(
             analyticsTracker.trackEvent(
                 AnalyticsEvent.RecurringAdded(schedule.frequency.name)
             )
+            trackFirstEventUseCase.featureAdopted("recurring")
         }
     }
 }

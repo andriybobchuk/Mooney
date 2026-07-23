@@ -1,10 +1,14 @@
 package com.andriybobchuk.mooney.core.premium
 
+import com.andriybobchuk.mooney.core.data.category.RemoteConfigKeys
+
 /**
- * Configurable limits for free tier. Values can be overridden by remote config in the future.
+ * Free-tier caps. Values are pulled through Remote Config so we can adjust
+ * them post-release without cutting a build. The var overrides remain for
+ * dev tools that override at runtime; the RC accessors are the primary
+ * read path for gates like AccountAdd and Category limits.
  */
 object PremiumConfig {
-    // Free tier limits — also used by Apple Review to test the paywall flow.
-    var maxFreeAccounts: Int = 5
-    var maxFreeCustomCategories: Int = 5
+    val maxFreeAccounts: Int get() = RemoteConfigKeys.freeAccounts()
+    val maxFreeCustomCategories: Int get() = RemoteConfigKeys.freeCategories()
 }

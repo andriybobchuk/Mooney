@@ -21,7 +21,11 @@ fun AccountEntity.toDomain(): Account = Account(
     assetCategory = AssetCategory.fromString(assetCategory),
     assetCategoryId = assetCategory,
     isPrimary = isPrimary,
-    isLiability = isLiability
+    isLiability = isLiability,
+    currentMarketValue = currentMarketValue,
+    includeInNetWorth = includeInNetWorth,
+    isPrimaryForExpenses = isPrimaryForExpenses,
+    isPrimaryForIncome = isPrimaryForIncome
 )
 
 fun CategoryEntity.toDomain(parent: Category? = null): Category = Category(
@@ -29,7 +33,8 @@ fun CategoryEntity.toDomain(parent: Category? = null): Category = Category(
     title = title,
     type = CategoryType.valueOf(type),
     emoji = emoji,
-    parent = parent
+    parent = parent,
+    monthlyLimit = monthlyLimit
 )
 
 fun UserCurrencyEntity.toDomain(): UserCurrency = UserCurrency(

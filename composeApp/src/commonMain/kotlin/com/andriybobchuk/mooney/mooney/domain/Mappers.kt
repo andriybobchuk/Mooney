@@ -12,7 +12,11 @@ fun Account.toEntity(): AccountEntity = AccountEntity(
     emoji = emoji,
     assetCategory = assetCategoryId,
     isPrimary = isPrimary,
-    isLiability = isLiability
+    isLiability = isLiability,
+    currentMarketValue = currentMarketValue,
+    includeInNetWorth = includeInNetWorth,
+    isPrimaryForExpenses = isPrimaryForExpenses,
+    isPrimaryForIncome = isPrimaryForIncome
 )
 
 fun Transaction.toEntity(): TransactionEntity = TransactionEntity(

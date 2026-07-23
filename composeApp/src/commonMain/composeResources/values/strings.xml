@@ -4,7 +4,7 @@
 
     <!-- Navigation -->
     <string name="nav_transactions">Transactions</string>
-    <string name="nav_assets">Assets</string>
+    <string name="nav_assets">Balance</string>
     <string name="nav_exchange">Exchange</string>
     <string name="nav_analytics">Analytics</string>
     <string name="nav_goals">Goals</string>
@@ -79,10 +79,10 @@
     <string name="go_to_transactions">Go to Transactions</string>
     <string name="revenue">Revenue</string>
     <string name="taxes">Taxes</string>
-    <string name="operating_costs">Operating Costs</string>
+    <string name="operating_costs">Expenses</string>
     <string name="net_income">Net Income</string>
     <string name="revenue_breakdown">Revenue Breakdown</string>
-    <string name="operating_costs_breakdown">Operating Costs Breakdown</string>
+    <string name="operating_costs_breakdown">Expenses Breakdown</string>
     <string name="tax_breakdown">Tax Breakdown</string>
     <string name="partial_month_note">Showing partial data — month is still in progress</string>
     <string name="profit_over_6_months">Profit over 6 months</string>
@@ -114,8 +114,8 @@
     <string name="system">System</string>
     <string name="select_up_to_categories">Select up to %1$d categories</string>
 
-    <!-- Reminders -->
-    <string name="reminder_settings_title">Reminders</string>
+    <!-- Notifications -->
+    <string name="reminder_settings_title">Notifications</string>
     <string name="reminder_body">Tap to log what you spent today.</string>
     <string name="reminder_mode_off">Off</string>
     <string name="reminder_mode_daily">Daily</string>
@@ -174,7 +174,7 @@
     <string name="last_12_months">Last 12 months</string>
     <string name="last_6_months_label">Last 6 months</string>
     <string name="saved_last_n_months">SAVED · LAST %1$d MONTHS</string>
-    <string name="of_gross_income">%1$s%% of gross income</string>
+    <string name="of_gross_income">%1$s% of gross income</string>
     <string name="per_month_avg">≈ %1$s/mo</string>
     <string name="net_worth_trajectory">Net worth trajectory</string>
     <string name="today_marker">Today</string>
@@ -383,8 +383,8 @@
     <!-- Net income forecast -->
     <string name="nw_in_6_mo">Net worth in 6 mo</string>
     <string name="nw_in_12_mo">Net worth in 12 mo</string>
-    <string name="saved_dot_pct">Saved · %1$s%%</string>
-    <string name="spent_dot_pct">Spent · %1$s%%</string>
+    <string name="saved_dot_pct">Saved · %1$s%</string>
+    <string name="spent_dot_pct">Spent · %1$s%</string>
 
     <!-- Goals form -->
     <string name="title_label">Title</string>
@@ -432,15 +432,15 @@
 
     <!-- Paywall benefits -->
     <string name="paywall_benefit_accounts_title">Unlimited accounts</string>
-    <string name="paywall_benefit_accounts_sub">Beyond the 5-account free tier</string>
+    <string name="paywall_benefit_accounts_sub">Beyond the %1$d-account free tier</string>
     <string name="paywall_benefit_categories_title">Unlimited custom categories</string>
-    <string name="paywall_benefit_categories_sub">Beyond the 5-category free tier</string>
+    <string name="paywall_benefit_categories_sub">Beyond the %1$d-category free tier</string>
     <string name="paywall_benefit_noads_title">No ads, ever</string>
     <string name="paywall_benefit_noads_sub">Banner and interstitial ads stay off</string>
     <string name="paywall_benefit_lock_title">Lock screen</string>
     <string name="paywall_benefit_lock_sub">PIN + biometric for ultimate security</string>
     <string name="paywall_title_no_limits">Mooney. Without limits.</string>
-    <string name="paywall_subtitle_more_power">More power. Zero ads.</string>
+    <string name="paywall_subtitle_more_power">Unlock all features</string>
     <string name="premium_banner_subtitle_no_ads">Unlimited accounts, categories, no ads</string>
     <string name="contact_intro">I&apos;m actively building Mooney and would love to hear from you. Reach out through any channel below.</string>
     <string name="app_lock_title">App Lock</string>
@@ -455,10 +455,6 @@
     <string name="app_lock_unlock_to_continue">Unlock to continue</string>
     <string name="security_section">Security</string>
     <string name="sponsored_label">Sponsored</string>
-
-    <!-- Paywall price line -->
-    <string name="paywall_price_with">Mooney Pro · Monthly · %1$s / month</string>
-    <string name="paywall_price_without">Mooney Pro · Monthly subscription</string>
 
     <!-- Transaction screen extras -->
     <string name="custom_rate">Custom rate</string>
@@ -553,7 +549,7 @@
     <string name="period_lifetime">Lifetime</string>
 
     <!-- Metric subtitle -->
-    <string name="pct_of_revenue">%1$s%% of revenue</string>
+    <string name="pct_of_revenue">%1$s% of revenue</string>
 
     <!-- Transfer list display -->
     <string name="transfer_from_to">%1$s → %2$s</string>
@@ -818,8 +814,33 @@
     <string name="category_asset_crypto">Cryptocurrency</string>
     <string name="category_asset_precious_metals">Precious Metals</string>
     <string name="category_asset_retirement">Retirement Fund</string>
-    <string name="category_asset_business">Business Assets</string>
-    <string name="category_asset_collectibles">Collectibles</string>
+    <string name="category_asset_vehicle">Vehicle</string>
+    <string name="category_asset_receivables">Receivables</string>
+    <string name="asset_purchase_price">Purchase price</string>
+    <string name="asset_current_market_value">Current market value</string>
+    <string name="asset_unrealized_gain">Gain %1$s</string>
+    <string name="asset_unrealized_loss">Loss %1$s</string>
+    <string name="asset_include_in_net_worth">Include in total net worth</string>
+    <string name="asset_include_in_net_worth_hint">Turn off to keep this account visible but out of the summary.</string>
+    <string name="asset_detail_purchase_price">Purchase price</string>
+    <string name="asset_detail_market_value">Current market value</string>
+    <string name="asset_detail_unrealized">Unrealized %1$s</string>
+    <string name="asset_detail_pct_of_networth">%1$s% of net worth</string>
+    <string name="asset_detail_excluded_from_networth">Excluded from total net worth</string>
+    <string name="asset_not_counted_badge">Not counted</string>
+    <string name="category_budget_section">MONTHLY BUDGET</string>
+    <string name="category_budget_toggle">Set a monthly budget</string>
+    <string name="category_budget_placeholder">Amount per month</string>
+    <string name="asset_primary_expense_toggle">Primary account for expenses</string>
+    <string name="asset_primary_income_toggle">Primary account for income</string>
+    <string name="primary_expense">Primary expense</string>
+    <string name="primary_income">Primary income</string>
+    <string name="transaction_budget_over">You've already spent %1$s of your %2$s %3$s budget this month.</string>
+    <string name="analytics_expenses_budget">Expenses / Budget</string>
+    <string name="category_set_limit_button">Set a limit</string>
+    <string name="clear">Clear</string>
+    <string name="asset_detail_primary_note">Primary account · used for defaults</string>
+    <string name="asset_detail_liability_note">Reduces your net worth by this amount</string>
     <string name="category_asset_other">Other Assets</string>
     <string name="category_asset_mortgage">Mortgage</string>
     <string name="category_asset_loan">Loan</string>

@@ -4,7 +4,7 @@
 
     <!-- Navegación -->
     <string name="nav_transactions">Transacciones</string>
-    <string name="nav_assets">Activos</string>
+    <string name="nav_assets">Balance</string>
     <string name="nav_exchange">Cambio</string>
     <string name="nav_analytics">Analítica</string>
     <string name="nav_goals">Metas</string>
@@ -154,7 +154,7 @@
     <string name="last_12_months">Últimos 12 meses</string>
     <string name="last_6_months_label">Últimos 6 meses</string>
     <string name="saved_last_n_months">AHORRADO · ÚLTIMOS %1$d MESES</string>
-    <string name="of_gross_income">%1$s%% de ingresos brutos</string>
+    <string name="of_gross_income">%1$s% de ingresos brutos</string>
     <string name="per_month_avg">≈ %1$s/mes</string>
     <string name="net_worth_trajectory">Trayectoria del patrimonio</string>
     <string name="today_marker">Hoy</string>
@@ -345,8 +345,8 @@
     <!-- Pronóstico -->
     <string name="nw_in_6_mo">Patrimonio en 6 meses</string>
     <string name="nw_in_12_mo">Patrimonio en 12 meses</string>
-    <string name="saved_dot_pct">Ahorrado · %1$s%%</string>
-    <string name="spent_dot_pct">Gastado · %1$s%%</string>
+    <string name="saved_dot_pct">Ahorrado · %1$s%</string>
+    <string name="spent_dot_pct">Gastado · %1$s%</string>
 
     <!-- Formulario de meta -->
     <string name="title_label">Título</string>
@@ -391,18 +391,16 @@
     <string name="paywall_settings_sub">Desbloquea todo lo que Mooney puede hacer.</string>
     <string name="paywall_generic_headline">Desbloquea Mooney Pro</string>
     <string name="paywall_generic_sub">Disfruta de la experiencia completa.</string>
+    <string name="paywall_title_no_limits">Mooney. Sin límites.</string>
+    <string name="paywall_subtitle_more_power">Desbloquea todas las funciones</string>
 
     <!-- Beneficios Pro -->
     <string name="paywall_benefit_accounts_title">Cuentas ilimitadas</string>
-    <string name="paywall_benefit_accounts_sub">Más allá del límite gratuito de 20 cuentas</string>
+    <string name="paywall_benefit_accounts_sub">Más allá del límite gratuito de %1$d cuentas</string>
     <string name="paywall_benefit_categories_title">Categorías personalizadas ilimitadas</string>
-    <string name="paywall_benefit_categories_sub">Más allá del límite gratuito de 50 categorías</string>
+    <string name="paywall_benefit_categories_sub">Más allá del límite gratuito de %1$d categorías</string>
     <string name="paywall_benefit_noads_title">Sin anuncios, nunca</string>
     <string name="paywall_benefit_noads_sub">Los banners e intersticiales permanecen desactivados</string>
-
-    <!-- Precio -->
-    <string name="paywall_price_with">Mooney Pro · Mensual · %1$s / mes</string>
-    <string name="paywall_price_without">Mooney Pro · Suscripción mensual</string>
 
     <!-- Extras de transacciones -->
     <string name="custom_rate">Tipo personalizado</string>
@@ -487,7 +485,7 @@
     <string name="period_lifetime">Total</string>
 
     <!-- Métrica -->
-    <string name="pct_of_revenue">%1$s%% de ingresos</string>
+    <string name="pct_of_revenue">%1$s% de ingresos</string>
 
     <!-- Transferencia -->
     <string name="transfer_from_to">%1$s → %2$s</string>
@@ -575,7 +573,7 @@
     <string name="cd_scroll_to_top">Ir arriba</string>
 
     <!-- Reminders -->
-    <string name="reminder_settings_title">Recordatorios</string>
+    <string name="reminder_settings_title">Notificaciones</string>
     <string name="reminder_body">Toca para registrar lo que gastaste hoy.</string>
     <string name="reminder_mode_off">Desactivado</string>
     <string name="reminder_mode_daily">Diario</string>
@@ -778,8 +776,8 @@
     <string name="category_asset_crypto">Criptomoneda</string>
     <string name="category_asset_precious_metals">Metales preciosos</string>
     <string name="category_asset_retirement">Fondo de jubilación</string>
-    <string name="category_asset_business">Activos empresariales</string>
-    <string name="category_asset_collectibles">Coleccionables</string>
+    <string name="category_asset_vehicle">Vehículo</string>
+    <string name="category_asset_receivables">Cuentas por cobrar</string>
     <string name="category_asset_other">Otros activos</string>
     <string name="category_asset_mortgage">Hipoteca</string>
     <string name="category_asset_loan">Préstamo</string>

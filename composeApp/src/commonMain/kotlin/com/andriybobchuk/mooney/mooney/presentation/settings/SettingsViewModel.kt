@@ -196,16 +196,23 @@ class SettingsViewModel(
         }
     }
 
-    /**
-     * Dev-only: throw an unchecked exception so we can verify Crashlytics is
-     * actually receiving and symbolicating crashes end-to-end. The throw
-     * happens off the main thread so iOS doesn't get stuck on the launch
-     * screen if Crashlytics finishes uploading during the crash.
-     */
-    @Suppress("TooGenericExceptionThrown")
-    fun forceTestCrash() {
+    /** Fire the one-time app_lock adoption event. Called from Settings after
+     *  the PIN is successfully persisted so we count "PIN set" not "PIN screen
+     *  opened". */
+    fun onAppLockPinConfigured() {
         viewModelScope.launch {
-            throw RuntimeException("Mooney dev test crash — Crashlytics wiring check")
+            markFeatureAdoptedOnce("app_lock")
+        }
+    }
+
+    /** Escape hatch back to the "real user" experience. Section disappears
+     *  from Settings; the passcode-gated version-tap unlock still re-enables
+     *  it if you need dev tools again. */
+    fun disableDeveloperOptions() {
+        viewModelScope.launch {
+            dataStore.edit { prefs ->
+                prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.DEVELOPER_OPTIONS_ENABLED] = false
+            }
         }
     }
 
@@ -313,7 +320,8 @@ class SettingsViewModel(
                     prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.REMINDER_MINUTE] = minute
                     prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.REMINDER_WEEKDAY] = weekday
                 }
-                when (com.andriybobchuk.mooney.core.notifications.ReminderMode.fromStorage(mode)) {
+                val parsed = com.andriybobchuk.mooney.core.notifications.ReminderMode.fromStorage(mode)
+                when (parsed) {
                     com.andriybobchuk.mooney.core.notifications.ReminderMode.DAILY ->
                         reminderScheduler.scheduleDaily(hour, minute)
                     com.andriybobchuk.mooney.core.notifications.ReminderMode.WEEKLY ->
@@ -321,11 +329,47 @@ class SettingsViewModel(
                     com.andriybobchuk.mooney.core.notifications.ReminderMode.OFF ->
                         reminderScheduler.cancel()
                 }
+                analyticsTracker.setUserProperty("notifications_mode", mode.lowercase())
+                analyticsTracker.trackEvent(
+                    AnalyticsEvent.NotificationConfigured(
+                        mode = mode.lowercase(),
+                        timeBucket = timeBucket(hour)
+                    )
+                )
+                if (parsed != com.andriybobchuk.mooney.core.notifications.ReminderMode.OFF) {
+                    markFeatureAdoptedOnce("notifications")
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 _state.update { it.copy(error = e.message) }
             }
+        }
+    }
+
+    private fun timeBucket(hour: Int): String = when (hour) {
+        in 5..11 -> "morning"
+        in 12..16 -> "midday"
+        in 17..21 -> "evening"
+        else -> "night"
+    }
+
+    private suspend fun markFeatureAdoptedOnce(feature: String) {
+        try {
+            val current = dataStore.data.first()[
+                com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.ANALYTICS_ADOPTED_FEATURES
+            ] ?: emptySet()
+            if (feature !in current) {
+                analyticsTracker.trackEvent(AnalyticsEvent.FeatureAdopted(feature))
+                dataStore.edit {
+                    it[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.ANALYTICS_ADOPTED_FEATURES] =
+                        current + feature
+                }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            /* best-effort */
         }
     }
 
@@ -381,6 +425,12 @@ class SettingsViewModel(
                             if (summary.accountCreated) " into a new 'Imported' account" else "" +
                                 if (summary.firstFailureMessage != null) " · ${summary.firstFailureMessage}" else ""
                     )
+                }
+                if (summary.transactionsImported > 0) {
+                    analyticsTracker.trackEvent(
+                        AnalyticsEvent.CsvImported(success = true, transactionCount = summary.transactionsImported)
+                    )
+                    markFeatureAdoptedOnce("csv_import")
                 }
             } catch (e: kotlin.coroutines.cancellation.CancellationException) {
                 throw e

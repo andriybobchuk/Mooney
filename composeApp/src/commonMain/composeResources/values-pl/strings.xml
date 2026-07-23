@@ -4,7 +4,7 @@
 
     <!-- Nawigacja -->
     <string name="nav_transactions">Transakcje</string>
-    <string name="nav_assets">Aktywa</string>
+    <string name="nav_assets">Saldo</string>
     <string name="nav_exchange">Wymiana</string>
     <string name="nav_analytics">Analityka</string>
     <string name="nav_goals">Cele</string>
@@ -79,7 +79,7 @@
     <string name="go_to_transactions">Przejdź do transakcji</string>
     <string name="revenue">Przychód</string>
     <string name="taxes">Podatki</string>
-    <string name="operating_costs">Koszty operacyjne</string>
+    <string name="operating_costs">Wydatki</string>
     <string name="net_income">Dochód netto</string>
     <string name="revenue_breakdown">Podział przychodów</string>
     <string name="operating_costs_breakdown">Podział kosztów</string>
@@ -154,7 +154,7 @@
     <string name="last_12_months">Ostatnie 12 miesięcy</string>
     <string name="last_6_months_label">Ostatnie 6 miesięcy</string>
     <string name="saved_last_n_months">ZAOSZCZĘDZONO · OSTATNIE %1$d MIES.</string>
-    <string name="of_gross_income">%1$s%% przychodu brutto</string>
+    <string name="of_gross_income">%1$s% przychodu brutto</string>
     <string name="per_month_avg">≈ %1$s/mies.</string>
     <string name="net_worth_trajectory">Trajektoria wartości netto</string>
     <string name="today_marker">Dziś</string>
@@ -345,8 +345,8 @@
     <!-- Prognoza -->
     <string name="nw_in_6_mo">Wartość netto za 6 mies.</string>
     <string name="nw_in_12_mo">Wartość netto za 12 mies.</string>
-    <string name="saved_dot_pct">Zaoszczędzone · %1$s%%</string>
-    <string name="spent_dot_pct">Wydane · %1$s%%</string>
+    <string name="saved_dot_pct">Zaoszczędzone · %1$s%</string>
+    <string name="spent_dot_pct">Wydane · %1$s%</string>
 
     <!-- Formularz celu -->
     <string name="title_label">Tytuł</string>
@@ -391,18 +391,16 @@
     <string name="paywall_settings_sub">Odblokuj wszystko, co Mooney potrafi.</string>
     <string name="paywall_generic_headline">Odblokuj Mooney Pro</string>
     <string name="paywall_generic_sub">Korzystaj z pełnych możliwości.</string>
+    <string name="paywall_title_no_limits">Mooney. Bez limitów.</string>
+    <string name="paywall_subtitle_more_power">Odblokuj wszystkie funkcje</string>
 
     <!-- Korzyści Pro -->
     <string name="paywall_benefit_accounts_title">Nielimitowane konta</string>
-    <string name="paywall_benefit_accounts_sub">Ponad bezpłatny limit 20 kont</string>
+    <string name="paywall_benefit_accounts_sub">Ponad bezpłatny limit %1$d kont</string>
     <string name="paywall_benefit_categories_title">Nielimitowane własne kategorie</string>
-    <string name="paywall_benefit_categories_sub">Ponad bezpłatny limit 50 kategorii</string>
+    <string name="paywall_benefit_categories_sub">Ponad bezpłatny limit %1$d kategorii</string>
     <string name="paywall_benefit_noads_title">Bez reklam, na zawsze</string>
     <string name="paywall_benefit_noads_sub">Banery i reklamy pełnoekranowe pozostają wyłączone</string>
-
-    <!-- Cena -->
-    <string name="paywall_price_with">Mooney Pro · Miesięcznie · %1$s / miesiąc</string>
-    <string name="paywall_price_without">Mooney Pro · Subskrypcja miesięczna</string>
 
     <!-- Dodatki ekranu transakcji -->
     <string name="custom_rate">Własny kurs</string>
@@ -487,7 +485,7 @@
     <string name="period_lifetime">Cały czas</string>
 
     <!-- Wskaźnik -->
-    <string name="pct_of_revenue">%1$s%% przychodu</string>
+    <string name="pct_of_revenue">%1$s% przychodu</string>
 
     <!-- Transfer -->
     <string name="transfer_from_to">%1$s → %2$s</string>
@@ -575,7 +573,7 @@
     <string name="cd_scroll_to_top">Przewiń na górę</string>
 
     <!-- Reminders -->
-    <string name="reminder_settings_title">Przypomnienia</string>
+    <string name="reminder_settings_title">Powiadomienia</string>
     <string name="reminder_body">Stuknij, aby zapisać dzisiejsze wydatki.</string>
     <string name="reminder_mode_off">Wyłączone</string>
     <string name="reminder_mode_daily">Codziennie</string>
@@ -778,8 +776,8 @@
     <string name="category_asset_crypto">Kryptowaluty</string>
     <string name="category_asset_precious_metals">Metale szlachetne</string>
     <string name="category_asset_retirement">Emerytura</string>
-    <string name="category_asset_business">Aktywa firmy</string>
-    <string name="category_asset_collectibles">Kolekcje</string>
+    <string name="category_asset_vehicle">Pojazd</string>
+    <string name="category_asset_receivables">Należności</string>
     <string name="category_asset_other">Inne aktywa</string>
     <string name="category_asset_mortgage">Kredyt hipoteczny</string>
     <string name="category_asset_loan">Pożyczka</string>

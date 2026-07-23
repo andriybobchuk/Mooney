@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,6 +41,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Settings
@@ -1216,6 +1218,8 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
  */
 @Composable
 fun NativeTransactionAdRow() {
+    // Master kill switch. Same idea as AdBannerSlot — bail before touching Koin.
+    if (!com.andriybobchuk.mooney.mooney.domain.FeatureFlags.adsEnabled) return
     val eligibility: com.andriybobchuk.mooney.core.ads.AdEligibilityUseCase = org.koin.compose.koinInject()
     val session = com.andriybobchuk.mooney.core.ads.LocalAdSession.current
     var eligible by remember { mutableStateOf(false) }
@@ -1270,6 +1274,7 @@ fun TransactionBottomSheet(
     validateUseCase: ValidateTransactionUseCase = koinInject(),
     preferencesRepository: com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository = koinInject(),
     currencyManagerUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase = koinInject(),
+    getTransactionsUseCase: GetTransactionsUseCase = koinInject(),
 ) {
     val isEditMode = transactionToEdit != null
 
@@ -1279,10 +1284,19 @@ fun TransactionBottomSheet(
 
     // Default account picker priority:
     //   1. Edit mode — existing transaction's account
-    //   2. User's primary account if marked
-    //   3. The only account they have — saves a tap for single-account users
+    //   2. Role-specific primary (Expense → isPrimaryForExpenses, etc.)
+    //   3. Legacy general `isPrimary` for pre-v20 users
+    //   4. The only account they have — saves a tap for single-account users
     val realAccounts = accounts.filterNotNull().toAccounts()
-    val defaultAccount = realAccounts.find { it.isPrimary }
+    val initialType = transactionToEdit?.subcategory?.type
+        ?: preselectedCategory?.type
+        ?: CategoryType.EXPENSE
+    val defaultAccount = when (initialType) {
+        CategoryType.EXPENSE -> realAccounts.find { it.isPrimaryForExpenses }
+        CategoryType.INCOME -> realAccounts.find { it.isPrimaryForIncome }
+        CategoryType.TRANSFER -> null
+    }
+        ?: realAccounts.find { it.isPrimary }
         ?: realAccounts.singleOrNull()
     var selectedAccount by remember { mutableStateOf(transactionToEdit?.account ?: defaultAccount) }
     
@@ -1449,6 +1463,25 @@ fun TransactionBottomSheet(
                     // Auto-select appropriate category when type changes
                     currentSelectedCategory = getDefaultCategoryForType(type)
                     currentSelectedSubCategory = getDefaultSubCategoryForType(type)
+                    // Also swap in the role-specific primary account so the
+                    // user's picked default for the new type takes effect
+                    // without them having to open the picker.
+                    val previousPrimary = realAccounts.find {
+                        (type == CategoryType.INCOME && it.isPrimaryForExpenses) ||
+                            (type == CategoryType.EXPENSE && it.isPrimaryForIncome)
+                    }
+                    val roleDefault = when (type) {
+                        CategoryType.EXPENSE -> realAccounts.find { it.isPrimaryForExpenses }
+                        CategoryType.INCOME -> realAccounts.find { it.isPrimaryForIncome }
+                        CategoryType.TRANSFER -> null
+                    }
+                    // Only overwrite if the current pick is still the old
+                    // role's default — respect any explicit user selection.
+                    if (roleDefault != null &&
+                        (selectedAccount == null || selectedAccount == previousPrimary)
+                    ) {
+                        selectedAccount = roleDefault
+                    }
                 },
                 modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
             )
@@ -1520,7 +1553,54 @@ fun TransactionBottomSheet(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
-                AccountField(selectedAccount, accounts.filterNotNull(), assetCategories, categoryOrder, expandedCategories, onToggleAccountCategory, { selectedAccount = it })
+                // From row + inline swap button. The swap sits inside a
+                // square-with-rounded-corner that matches the AccountField
+                // chrome (same surfaceVariant background, 12dp radius) so
+                // both feel like one control cluster.
+                // `IntrinsicSize.Min` measures the Row against the shortest
+                // child that has an intrinsic height (here: the AccountField),
+                // and `fillMaxHeight()` on the swap Box then stretches to that
+                // height. Result: swap button always visually matches the
+                // adjacent field regardless of platform metrics.
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Min),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        AccountField(
+                            selectedAccount,
+                            accounts.filterNotNull(),
+                            assetCategories,
+                            categoryOrder,
+                            expandedCategories,
+                            onToggleAccountCategory,
+                            { selectedAccount = it }
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .clickable {
+                                val tmp = selectedAccount
+                                selectedAccount = destinationAccount
+                                destinationAccount = tmp
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.SwapVert,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
 
                 Spacer(Modifier.height(12.dp))
 
@@ -1570,13 +1650,16 @@ fun TransactionBottomSheet(
 
             // Optional description — placed right after Category so a quick
             // note ("Costco run") sits next to what it tags. Single line.
+            // Placeholder (not label) so the outline height matches the
+            // sibling fields; the floating-label variant added a chunky
+            // top padding that broke the vertical rhythm of the sheet.
             MooneyTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = stringResource(Res.string.tx_description_label),
+                placeholder = stringResource(Res.string.tx_description_label),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                textStyle = MaterialTheme.typography.bodySmall
+                textStyle = MaterialTheme.typography.bodyMedium
             )
 
             Spacer(Modifier.height(12.dp))
@@ -1659,6 +1742,54 @@ fun TransactionBottomSheet(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                 )
+            }
+
+            // Budget alert — surface a yellow warning when the running month
+            // total (converted to base currency) already exceeds the selected
+            // category's monthlyLimit. Purely informational; the CTA stays
+            // enabled so users can override consciously.
+            val rootCategoryForBudget: Category? = when {
+                currentSelectedCategory == null -> null
+                currentSelectedCategory?.type != CategoryType.EXPENSE -> null
+                currentSelectedCategory?.monthlyLimit != null -> currentSelectedCategory
+                // Sub-category doesn't carry a limit; fall back to the parent
+                // (the "root" expense category, e.g. Food) which does.
+                currentSelectedSubCategory?.parent?.monthlyLimit != null ->
+                    currentSelectedSubCategory?.parent
+                else -> null
+            }
+            val budgetLimit = rootCategoryForBudget?.monthlyLimit
+            if (budgetLimit != null) {
+                val txForBudget by remember { getTransactionsUseCase() }
+                    .collectAsStateWithLifecycle(initialValue = emptyList())
+                val baseCurrency = com.andriybobchuk.mooney.mooney.data.GlobalConfig.baseCurrency
+                val rates = currencyManagerUseCase.getCurrentExchangeRates()
+                val nowMonth = MonthKey.current()
+                val spentBase = remember(txForBudget, rootCategoryForBudget, nowMonth) {
+                    txForBudget.filterNotNull().filter { tx ->
+                        val monthKey = MonthKey(tx.date.year, tx.date.monthNumber)
+                        val cat = tx.subcategory
+                        val touchesRoot = cat == rootCategoryForBudget ||
+                            cat.parent == rootCategoryForBudget
+                        monthKey == nowMonth && touchesRoot
+                    }.sumOf {
+                        rates.convert(it.amount, it.account.currency, baseCurrency)
+                    }
+                }
+                if (spentBase >= budgetLimit) {
+                    Text(
+                        text = stringResource(
+                            Res.string.transaction_budget_over,
+                            "${spentBase.formatWithCommas()} ${baseCurrency.symbol}",
+                            "${budgetLimit.formatWithCommas()} ${baseCurrency.symbol}",
+                            localizedCategoryTitle(rootCategoryForBudget)
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFD4A017),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                    )
+                }
             }
             // Error: red text centered above disabled CTA (only for business rule errors, not missing selections)
             if (validation is TransactionValidation.Error && !validation.message.startsWith("Select") && !validation.message.startsWith("Enter")) {
@@ -3792,12 +3923,17 @@ private fun QuickActionChipsRow(
                 onClick = onRecurringClick
             )
         }
-        item {
-            QuickActionChip(
-                label = stringResource(Res.string.goals_chip),
-                icon = com.andriybobchuk.mooney.core.presentation.Icons.GoalsIcon(),
-                onClick = onGoalsClick
-            )
+        // Goals chip only appears when the feature is enabled (compile-time
+        // base × Remote Config toggle). Same gate the Assets goals entry
+        // point uses — so a killed goals flag hides every entry point.
+        if (com.andriybobchuk.mooney.mooney.domain.FeatureFlags.goalsEnabled) {
+            item {
+                QuickActionChip(
+                    label = stringResource(Res.string.goals_chip),
+                    icon = com.andriybobchuk.mooney.core.presentation.Icons.GoalsIcon(),
+                    onClick = onGoalsClick
+                )
+            }
         }
         item {
             QuickActionChip(

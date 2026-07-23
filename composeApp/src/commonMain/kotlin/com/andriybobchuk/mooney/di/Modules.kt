@@ -239,7 +239,7 @@ val sharedModule = module {
     single { PremiumManager(get(), get(), get()) }
 
     // App Lock — PIN-gated entry. Premium-only at the entry point.
-    single { com.andriybobchuk.mooney.core.security.AppLockManager(get()) }
+    single { com.andriybobchuk.mooney.core.security.AppLockManager(get(), get()) }
 
     // Ads — eligibility/frequency capping. The SDK itself is invoked via
     // `Ads.kt` (expect/actual; iOS bridges to Swift, Android no-op until we

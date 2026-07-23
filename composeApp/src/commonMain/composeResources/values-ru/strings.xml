@@ -4,7 +4,7 @@
 
     <!-- Навигация -->
     <string name="nav_transactions">Транзакции</string>
-    <string name="nav_assets">Активы</string>
+    <string name="nav_assets">Баланс</string>
     <string name="nav_exchange">Обмен</string>
     <string name="nav_analytics">Аналитика</string>
     <string name="nav_goals">Цели</string>
@@ -154,7 +154,7 @@
     <string name="last_12_months">Последние 12 месяцев</string>
     <string name="last_6_months_label">Последние 6 месяцев</string>
     <string name="saved_last_n_months">СБЕРЕЖЕНО · ПОСЛЕДНИЕ %1$d МЕС.</string>
-    <string name="of_gross_income">%1$s%% от валового дохода</string>
+    <string name="of_gross_income">%1$s% от валового дохода</string>
     <string name="per_month_avg">≈ %1$s/мес.</string>
     <string name="net_worth_trajectory">Траектория чистой стоимости</string>
     <string name="today_marker">Сегодня</string>
@@ -345,8 +345,8 @@
     <!-- Прогноз -->
     <string name="nw_in_6_mo">Чистый капитал через 6 мес.</string>
     <string name="nw_in_12_mo">Чистый капитал через 12 мес.</string>
-    <string name="saved_dot_pct">Сохранено · %1$s%%</string>
-    <string name="spent_dot_pct">Потрачено · %1$s%%</string>
+    <string name="saved_dot_pct">Сохранено · %1$s%</string>
+    <string name="spent_dot_pct">Потрачено · %1$s%</string>
 
     <!-- Форма цели -->
     <string name="title_label">Название</string>
@@ -391,18 +391,16 @@
     <string name="paywall_settings_sub">Откройте всё, что умеет Mooney.</string>
     <string name="paywall_generic_headline">Откройте Mooney Pro</string>
     <string name="paywall_generic_sub">Получите весь функционал.</string>
+    <string name="paywall_title_no_limits">Mooney. Без ограничений.</string>
+    <string name="paywall_subtitle_more_power">Разблокируйте все функции</string>
 
     <!-- Преимущества Pro -->
     <string name="paywall_benefit_accounts_title">Безлимитные счета</string>
-    <string name="paywall_benefit_accounts_sub">Сверх бесплатного лимита в 20 счетов</string>
+    <string name="paywall_benefit_accounts_sub">Сверх бесплатного лимита в %1$d счетов</string>
     <string name="paywall_benefit_categories_title">Безлимитные свои категории</string>
-    <string name="paywall_benefit_categories_sub">Сверх бесплатного лимита в 50 категорий</string>
+    <string name="paywall_benefit_categories_sub">Сверх бесплатного лимита в %1$d категорий</string>
     <string name="paywall_benefit_noads_title">Никакой рекламы</string>
     <string name="paywall_benefit_noads_sub">Баннеры и межстраничные объявления отключены навсегда</string>
-
-    <!-- Цена -->
-    <string name="paywall_price_with">Mooney Pro · Ежемесячно · %1$s / мес.</string>
-    <string name="paywall_price_without">Mooney Pro · Ежемесячная подписка</string>
 
     <!-- Дополнения экрана транзакций -->
     <string name="custom_rate">Свой курс</string>
@@ -487,7 +485,7 @@
     <string name="period_lifetime">За всё время</string>
 
     <!-- Метрика -->
-    <string name="pct_of_revenue">%1$s%% дохода</string>
+    <string name="pct_of_revenue">%1$s% дохода</string>
 
     <!-- Перевод -->
     <string name="transfer_from_to">%1$s → %2$s</string>
@@ -575,7 +573,7 @@
     <string name="cd_scroll_to_top">К началу</string>
 
     <!-- Reminders -->
-    <string name="reminder_settings_title">Напоминания</string>
+    <string name="reminder_settings_title">Уведомления</string>
     <string name="reminder_body">Нажмите, чтобы записать сегодняшние траты.</string>
     <string name="reminder_mode_off">Выкл.</string>
     <string name="reminder_mode_daily">Ежедневно</string>
@@ -778,8 +776,8 @@
     <string name="category_asset_crypto">Криптовалюта</string>
     <string name="category_asset_precious_metals">Драгметаллы</string>
     <string name="category_asset_retirement">Пенсионный фонд</string>
-    <string name="category_asset_business">Бизнес-активы</string>
-    <string name="category_asset_collectibles">Коллекционное</string>
+    <string name="category_asset_vehicle">Транспорт</string>
+    <string name="category_asset_receivables">Дебиторская задолженность</string>
     <string name="category_asset_other">Прочие активы</string>
     <string name="category_asset_mortgage">Ипотека</string>
     <string name="category_asset_loan">Кредит</string>

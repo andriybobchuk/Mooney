@@ -56,23 +56,27 @@ class CalculateGoalProgressUseCase(
                 } else 0.0
             }
             GoalTrackingType.NET_WORTH -> {
-                accounts.sumOf { account ->
-                    val amountInBase = if (account.currency != baseCurrency) {
-                        exchangeRates.convert(account.amount, account.currency, baseCurrency)
-                    } else {
-                        account.amount
+                accounts
+                    .filter { it.includeInNetWorth }
+                    .sumOf { account ->
+                        val amountInBase = if (account.currency != baseCurrency) {
+                            exchangeRates.convert(account.amount, account.currency, baseCurrency)
+                        } else {
+                            account.amount
+                        }
+                        if (account.isLiability) -amountInBase else amountInBase
                     }
-                    if (account.isLiability) -amountInBase else amountInBase
-                }
             }
             GoalTrackingType.TOTAL_ASSETS -> {
-                accounts.filter { !it.isLiability }.sumOf { account ->
-                    if (account.currency != baseCurrency) {
-                        exchangeRates.convert(account.amount, account.currency, baseCurrency)
-                    } else {
-                        account.amount
+                accounts
+                    .filter { it.includeInNetWorth && !it.isLiability }
+                    .sumOf { account ->
+                        if (account.currency != baseCurrency) {
+                            exchangeRates.convert(account.amount, account.currency, baseCurrency)
+                        } else {
+                            account.amount
+                        }
                     }
-                }
             }
         }
 

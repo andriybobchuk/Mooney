@@ -4,7 +4,7 @@
 
     <!-- التنقل -->
     <string name="nav_transactions">المعاملات</string>
-    <string name="nav_assets">الأصول</string>
+    <string name="nav_assets">الرصيد</string>
     <string name="nav_exchange">صرف العملات</string>
     <string name="nav_analytics">التحليلات</string>
     <string name="nav_goals">الأهداف</string>
@@ -79,7 +79,7 @@
     <string name="go_to_transactions">انتقل إلى المعاملات</string>
     <string name="revenue">الإيرادات</string>
     <string name="taxes">الضرائب</string>
-    <string name="operating_costs">المصروفات التشغيلية</string>
+    <string name="operating_costs">المصروفات</string>
     <string name="net_income">صافي الدخل</string>
     <string name="revenue_breakdown">تفصيل الإيرادات</string>
     <string name="operating_costs_breakdown">تفصيل المصروفات</string>
@@ -154,7 +154,7 @@
     <string name="last_12_months">آخر 12 شهراً</string>
     <string name="last_6_months_label">آخر 6 أشهر</string>
     <string name="saved_last_n_months">مدّخر · آخر %1$d شهر</string>
-    <string name="of_gross_income">%1$s%% من الدخل الإجمالي</string>
+    <string name="of_gross_income">%1$s% من الدخل الإجمالي</string>
     <string name="per_month_avg">≈ %1$s/شهرياً</string>
     <string name="net_worth_trajectory">مسار صافي الثروة</string>
     <string name="today_marker">اليوم</string>
@@ -345,8 +345,8 @@
     <!-- التوقع -->
     <string name="nw_in_6_mo">صافي الثروة خلال 6 أشهر</string>
     <string name="nw_in_12_mo">صافي الثروة خلال 12 شهرًا</string>
-    <string name="saved_dot_pct">المحفوظ · %1$s%%</string>
-    <string name="spent_dot_pct">المنفق · %1$s%%</string>
+    <string name="saved_dot_pct">المحفوظ · %1$s%</string>
+    <string name="spent_dot_pct">المنفق · %1$s%</string>
 
     <!-- نموذج الهدف -->
     <string name="title_label">العنوان</string>
@@ -391,18 +391,16 @@
     <string name="paywall_settings_sub">افتح كل ما يستطيع Mooney فعله.</string>
     <string name="paywall_generic_headline">افتح Mooney Pro</string>
     <string name="paywall_generic_sub">احصل على التجربة الكاملة.</string>
+    <string name="paywall_title_no_limits">Mooney. بلا حدود.</string>
+    <string name="paywall_subtitle_more_power">افتح كل الميزات</string>
 
     <!-- مزايا Pro -->
     <string name="paywall_benefit_accounts_title">حسابات بلا حدود</string>
-    <string name="paywall_benefit_accounts_sub">بما يتجاوز حد 20 حسابًا المجاني</string>
+    <string name="paywall_benefit_accounts_sub">بما يتجاوز حد %1$d حسابًا المجاني</string>
     <string name="paywall_benefit_categories_title">فئات مخصصة بلا حدود</string>
-    <string name="paywall_benefit_categories_sub">بما يتجاوز حد 50 فئة المجاني</string>
+    <string name="paywall_benefit_categories_sub">بما يتجاوز حد %1$d فئة المجاني</string>
     <string name="paywall_benefit_noads_title">بدون إعلانات نهائيًا</string>
     <string name="paywall_benefit_noads_sub">تبقى إعلانات البانر والإعلانات البينية معطّلة</string>
-
-    <!-- السعر -->
-    <string name="paywall_price_with">Mooney Pro · شهريًا · %1$s / شهر</string>
-    <string name="paywall_price_without">Mooney Pro · اشتراك شهري</string>
 
     <!-- إضافات شاشة المعاملات -->
     <string name="custom_rate">سعر مخصص</string>
@@ -487,7 +485,7 @@
     <string name="period_lifetime">منذ البداية</string>
 
     <!-- مؤشر -->
-    <string name="pct_of_revenue">%1$s%% من الإيرادات</string>
+    <string name="pct_of_revenue">%1$s% من الإيرادات</string>
 
     <!-- التحويل -->
     <string name="transfer_from_to">%1$s → %2$s</string>
@@ -575,7 +573,7 @@
     <string name="cd_scroll_to_top">الانتقال إلى الأعلى</string>
 
     <!-- Reminders -->
-    <string name="reminder_settings_title">التذكيرات</string>
+    <string name="reminder_settings_title">الإشعارات</string>
     <string name="reminder_body">اضغط لتسجيل ما أنفقته اليوم.</string>
     <string name="reminder_mode_off">إيقاف</string>
     <string name="reminder_mode_daily">يوميًا</string>
@@ -778,8 +776,8 @@
     <string name="category_asset_crypto">عملة رقمية</string>
     <string name="category_asset_precious_metals">معادن نفيسة</string>
     <string name="category_asset_retirement">صندوق تقاعد</string>
-    <string name="category_asset_business">أصول تجارية</string>
-    <string name="category_asset_collectibles">مقتنيات</string>
+    <string name="category_asset_vehicle">مركبة</string>
+    <string name="category_asset_receivables">مستحقات</string>
     <string name="category_asset_other">أصول أخرى</string>
     <string name="category_asset_mortgage">قرض عقاري</string>
     <string name="category_asset_loan">قرض</string>

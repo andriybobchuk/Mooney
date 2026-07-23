@@ -26,6 +26,18 @@ import kotlinx.coroutines.launch
 
 data class TransactionCategoriesState(
     val allCategories: List<Category> = emptyList(),
+    /**
+     * User-picked top-level category order, mirrored from the same
+     * DataStore key the Transaction picker reads. Empty when the user
+     * hasn't reordered yet — screen falls back to natural cache order.
+     */
+    val categoryOrder: List<String> = emptyList(),
+    /**
+     * Flips to true after the first DataStore emission. The screen holds
+     * the list off until then so users don't see a brief render-in-cache-
+     * order → jump-to-saved-order flash.
+     */
+    val isOrderLoaded: Boolean = false,
     val showPaywall: Boolean = false,
     val isPurchasing: Boolean = false,
     val purchaseError: String? = null,
@@ -38,11 +50,16 @@ data class TransactionCategoriesState(
 sealed interface TransactionCategoriesAction {
     data class AddCategory(val title: String, val type: String, val emoji: String?, val parentId: String?) : TransactionCategoriesAction
     data class DeleteCategory(val categoryId: String) : TransactionCategoriesAction
+    /** Rename an existing category (seed or custom). Emoji/parent/type stay put. */
+    data class RenameCategory(val categoryId: String, val newTitle: String) : TransactionCategoriesAction
+    /** Set (or clear with null) the monthly budget on a category. */
+    data class SetMonthlyLimit(val categoryId: String, val limit: Double?) : TransactionCategoriesAction
     data object DismissPaywall : TransactionCategoriesAction
     data object Subscribe : TransactionCategoriesAction
     data object RestorePurchases : TransactionCategoriesAction
 }
 
+@Suppress("LongParameterList")
 class TransactionCategoriesViewModel(
     private val categoryDao: CategoryDao,
     private val repository: CoreRepository,
@@ -54,16 +71,49 @@ class TransactionCategoriesViewModel(
     private val categoryUsageDao: com.andriybobchuk.mooney.core.data.database.CategoryUsageDao,
     private val recurringTransactionDao: com.andriybobchuk.mooney.core.data.database.RecurringTransactionDao,
     private val pendingTransactionDao: com.andriybobchuk.mooney.core.data.database.PendingTransactionDao,
-    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
+    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache,
+    // Shared with the Transaction picker so a reorder on either surface is
+    // reflected on the other.
+    private val manageOrderUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.ManageTransactionCategoryOrderUseCase
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(
-        TransactionCategoriesState(isInitialLoading = !appDataCache.snapshot.value.isReady)
-    )
+    // Always start with isInitialLoading=true so the first frame never
+    // skips the shimmer just because the cache happened to warm up before
+    // the VM was constructed. See TransactionViewModel for the full note.
+    private val _state = MutableStateFlow(TransactionCategoriesState(isInitialLoading = true))
     val state: StateFlow<TransactionCategoriesState> = _state
 
     init {
         observeCategoriesFromCache()
+        observeCategoryOrder()
+    }
+
+    private fun observeCategoryOrder() {
+        viewModelScope.launch {
+            try {
+                manageOrderUseCase.getCategoryOrder().collect { order ->
+                    _state.update { it.copy(categoryOrder = order, isOrderLoaded = true) }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Even if reading pref fails, unblock the UI so users can
+                // interact — worst case they see cache-natural order.
+                _state.update { it.copy(isOrderLoaded = true) }
+            }
+        }
+    }
+
+    fun updateCategoryOrder(orderedIds: List<String>) {
+        viewModelScope.launch {
+            try {
+                manageOrderUseCase.saveCategoryOrder(orderedIds)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                /* best-effort */
+            }
+        }
     }
 
     private fun observeCategoriesFromCache() {
@@ -94,10 +144,75 @@ class TransactionCategoriesViewModel(
         when (action) {
             is TransactionCategoriesAction.AddCategory -> addCategory(action.title, action.type, action.emoji, action.parentId)
             is TransactionCategoriesAction.DeleteCategory -> deleteCategory(action.categoryId)
+            is TransactionCategoriesAction.RenameCategory -> renameCategory(action.categoryId, action.newTitle)
+            is TransactionCategoriesAction.SetMonthlyLimit -> setMonthlyLimit(action.categoryId, action.limit)
             is TransactionCategoriesAction.DismissPaywall -> _state.update { it.copy(showPaywall = false, purchaseError = null) }
             is TransactionCategoriesAction.Subscribe -> onSubscribe()
             is TransactionCategoriesAction.RestorePurchases -> onRestorePurchases()
         }
+    }
+
+    private fun renameCategory(categoryId: String, newTitle: String) {
+        val trimmed = newTitle.trim()
+        if (trimmed.isEmpty()) return
+        viewModelScope.launch {
+            val existing = categoryDao.getById(categoryId) ?: return@launch
+            if (existing.title == trimmed) return@launch
+            categoryDao.upsert(existing.copy(title = trimmed))
+            repository.reloadCategories()
+            _state.update { it.copy(allCategories = getCategoriesUseCase()) }
+        }
+    }
+
+    private fun setMonthlyLimit(categoryId: String, limit: Double?) {
+        viewModelScope.launch {
+            val existing = categoryDao.getById(categoryId) ?: return@launch
+            if (existing.monthlyLimit == limit) return@launch
+            categoryDao.upsert(existing.copy(monthlyLimit = limit))
+            repository.reloadCategories()
+            _state.update { it.copy(allCategories = getCategoriesUseCase()) }
+            if (limit == null) {
+                analyticsTracker.trackEvent(AnalyticsEvent.BudgetRemoved(existing.id))
+            } else {
+                analyticsTracker.trackEvent(
+                    AnalyticsEvent.BudgetSet(
+                        categoryType = existing.id,
+                        amountBucket = bucketAmount(limit)
+                    )
+                )
+                markFeatureAdopted("budget")
+            }
+        }
+    }
+
+    /** Fires `feature_adopted(feature)` at most once per install. Inline
+     *  version — avoids adding TrackFirstEventUseCase to an already long
+     *  constructor list. */
+    private suspend fun markFeatureAdopted(feature: String) {
+        try {
+            val current = dataStore.data.first()[
+                com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.ANALYTICS_ADOPTED_FEATURES
+            ] ?: emptySet()
+            if (feature !in current) {
+                analyticsTracker.trackEvent(AnalyticsEvent.FeatureAdopted(feature))
+                dataStore.edit {
+                    it[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.ANALYTICS_ADOPTED_FEATURES] =
+                        current + feature
+                }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            /* best-effort */
+        }
+    }
+
+    private fun bucketAmount(amount: Double): String = when {
+        amount < 100 -> "0-100"
+        amount < 500 -> "100-500"
+        amount < 2000 -> "500-2000"
+        amount < 10000 -> "2000-10000"
+        else -> "10000+"
     }
 
     private fun addCategory(title: String, type: String, emoji: String?, parentId: String?) {

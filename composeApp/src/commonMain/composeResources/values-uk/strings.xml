@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Mooney</string>
     <string name="nav_transactions">Транзакції</string>
-    <string name="nav_assets">Активи</string>
+    <string name="nav_assets">Баланс</string>
     <string name="nav_exchange">Обмін</string>
     <string name="nav_analytics">Аналітика</string>
     <string name="nav_goals">Цілі</string>
@@ -66,7 +66,7 @@
     <string name="go_to_transactions">Перейти до транзакцій</string>
     <string name="revenue">Дохід</string>
     <string name="taxes">Податки</string>
-    <string name="operating_costs">Операційні витрати</string>
+    <string name="operating_costs">Витрати</string>
     <string name="net_income">Чистий прибуток</string>
     <string name="revenue_breakdown">Розподіл доходу</string>
     <string name="operating_costs_breakdown">Розподіл витрат</string>
@@ -129,7 +129,7 @@
     <string name="last_12_months">Останні 12 місяців</string>
     <string name="last_6_months_label">Останні 6 місяців</string>
     <string name="saved_last_n_months">ЗАОЩАДЖЕНО · ОСТАННІ %1$d МІС.</string>
-    <string name="of_gross_income">%1$s%% валового доходу</string>
+    <string name="of_gross_income">%1$s% валового доходу</string>
     <string name="per_month_avg">≈ %1$s/міс.</string>
     <string name="net_worth_trajectory">Траєкторія чистого капіталу</string>
     <string name="today_marker">Сьогодні</string>
@@ -320,8 +320,8 @@
     <!-- Прогноз -->
     <string name="nw_in_6_mo">Чистий капітал через 6 міс.</string>
     <string name="nw_in_12_mo">Чистий капітал через 12 міс.</string>
-    <string name="saved_dot_pct">Збережено · %1$s%%</string>
-    <string name="spent_dot_pct">Витрачено · %1$s%%</string>
+    <string name="saved_dot_pct">Збережено · %1$s%</string>
+    <string name="spent_dot_pct">Витрачено · %1$s%</string>
 
     <!-- Форма цілі -->
     <string name="title_label">Назва</string>
@@ -366,18 +366,16 @@
     <string name="paywall_settings_sub">Відкрийте все, що вміє Mooney.</string>
     <string name="paywall_generic_headline">Відкрийте Mooney Pro</string>
     <string name="paywall_generic_sub">Отримайте весь функціонал.</string>
+    <string name="paywall_title_no_limits">Mooney. Без обмежень.</string>
+    <string name="paywall_subtitle_more_power">Розблокуй усі функції</string>
 
     <!-- Переваги Pro -->
     <string name="paywall_benefit_accounts_title">Безлімітні рахунки</string>
-    <string name="paywall_benefit_accounts_sub">Понад безкоштовний ліміт у 20 рахунків</string>
+    <string name="paywall_benefit_accounts_sub">Понад безкоштовний ліміт у %1$d рахунків</string>
     <string name="paywall_benefit_categories_title">Безлімітні свої категорії</string>
-    <string name="paywall_benefit_categories_sub">Понад безкоштовний ліміт у 50 категорій</string>
+    <string name="paywall_benefit_categories_sub">Понад безкоштовний ліміт у %1$d категорій</string>
     <string name="paywall_benefit_noads_title">Жодної реклами</string>
     <string name="paywall_benefit_noads_sub">Банери та повноекранна реклама залишаються вимкненими</string>
-
-    <!-- Ціна -->
-    <string name="paywall_price_with">Mooney Pro · Щомісяця · %1$s / міс.</string>
-    <string name="paywall_price_without">Mooney Pro · Щомісячна підписка</string>
 
     <!-- Додатки екрана транзакцій -->
     <string name="custom_rate">Свій курс</string>
@@ -462,7 +460,7 @@
     <string name="period_lifetime">За весь час</string>
 
     <!-- Метрика -->
-    <string name="pct_of_revenue">%1$s%% доходу</string>
+    <string name="pct_of_revenue">%1$s% доходу</string>
 
     <!-- Переказ -->
     <string name="transfer_from_to">%1$s → %2$s</string>
@@ -550,7 +548,7 @@
     <string name="cd_scroll_to_top">До початку</string>
 
     <!-- Reminders -->
-    <string name="reminder_settings_title">Нагадування</string>
+    <string name="reminder_settings_title">Сповіщення</string>
     <string name="reminder_body">Натисніть, щоб записати сьогоднішні витрати.</string>
     <string name="reminder_mode_off">Вимкнено</string>
     <string name="reminder_mode_daily">Щоденно</string>
@@ -753,8 +751,8 @@
     <string name="category_asset_crypto">Криптовалюта</string>
     <string name="category_asset_precious_metals">Дорогоцінні метали</string>
     <string name="category_asset_retirement">Пенсійний фонд</string>
-    <string name="category_asset_business">Активи бізнесу</string>
-    <string name="category_asset_collectibles">Колекціонування</string>
+    <string name="category_asset_vehicle">Транспорт</string>
+    <string name="category_asset_receivables">Дебіторська заборгованість</string>
     <string name="category_asset_other">Інші активи</string>
     <string name="category_asset_mortgage">Іпотека</string>
     <string name="category_asset_loan">Позика</string>

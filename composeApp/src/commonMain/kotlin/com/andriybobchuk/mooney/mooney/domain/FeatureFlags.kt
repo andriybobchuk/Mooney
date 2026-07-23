@@ -8,7 +8,12 @@ object FeatureFlags {
      */
     const val isDebug = false
 
-    const val goalsEnabled = true
+    /** Base compile-time toggle. Wrapped in [goalsEnabled] with a Remote
+     *  Config override so we can turn Goals off in the field. */
+    private const val GOALS_ENABLED_BASE = true
+    val goalsEnabled: Boolean
+        get() = GOALS_ENABLED_BASE &&
+            com.andriybobchuk.mooney.core.data.category.RemoteConfigKeys.goalsEnabled()
     const val exchangeEnabled = false
     const val analyticsEnabled = true
     const val exportImportEnabled = true
@@ -27,6 +32,23 @@ object FeatureFlags {
      * IDs violates AdMob ToS and gets Apple rejections.
      */
     const val adsAlwaysShow = false
+
+    /**
+     * Compile-time master kill switch. Combined with the per-platform
+     * Remote Config toggle in [adsEnabled] — both must be true for any ad
+     * placement to activate. Flipping this to false forces the entire ad
+     * pipeline off regardless of what RC says (useful for review builds).
+     */
+    private const val ADS_ENABLED_BASE = true
+
+    /**
+     * Runtime "should any ad render right now" gate. False = every ad
+     * surface bails out, AdMob preload is skipped, and no unit ID lookup
+     * happens. Consumers should read this rather than the base constant.
+     */
+    val adsEnabled: Boolean
+        get() = ADS_ENABLED_BASE &&
+            com.andriybobchuk.mooney.core.data.category.RemoteConfigKeys.adsEnabled()
 
     /**
      * Hides the in-feed native-ad row on the Transactions list. Default off

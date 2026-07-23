@@ -33,10 +33,20 @@ actual class StartupPrefs(context: Context) {
         prefs.edit().putString(KEY_THEME_MODE, value).apply()
     }
 
+    actual fun getAppLockEnabled(): Boolean? =
+        if (prefs.contains(KEY_APP_LOCK_ENABLED)) {
+            prefs.getBoolean(KEY_APP_LOCK_ENABLED, false)
+        } else null
+
+    actual fun setAppLockEnabled(value: Boolean) {
+        prefs.edit().putBoolean(KEY_APP_LOCK_ENABLED, value).apply()
+    }
+
     private companion object {
         const val NAME = "mooney_startup"
         const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
         const val KEY_DEFAULT_CURRENCY = "default_currency"
         const val KEY_THEME_MODE = "theme_mode"
+        const val KEY_APP_LOCK_ENABLED = "app_lock_enabled"
     }
 }

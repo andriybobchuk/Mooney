@@ -391,18 +391,16 @@
     <string name="paywall_settings_sub">Schalten Sie alles frei, was Mooney kann.</string>
     <string name="paywall_generic_headline">Mooney Pro freischalten</string>
     <string name="paywall_generic_sub">Erleben Sie die volle Funktionalität.</string>
+    <string name="paywall_title_no_limits">Mooney. Ohne Grenzen.</string>
+    <string name="paywall_subtitle_more_power">Alle Funktionen freischalten</string>
 
     <!-- Pro-Vorteile -->
     <string name="paywall_benefit_accounts_title">Unbegrenzte Konten</string>
-    <string name="paywall_benefit_accounts_sub">Über das kostenlose Limit von 20 Konten hinaus</string>
+    <string name="paywall_benefit_accounts_sub">Über das kostenlose Limit von %1$d Konten hinaus</string>
     <string name="paywall_benefit_categories_title">Unbegrenzte eigene Kategorien</string>
-    <string name="paywall_benefit_categories_sub">Über das kostenlose Limit von 50 Kategorien hinaus</string>
+    <string name="paywall_benefit_categories_sub">Über das kostenlose Limit von %1$d Kategorien hinaus</string>
     <string name="paywall_benefit_noads_title">Keine Werbung mehr</string>
     <string name="paywall_benefit_noads_sub">Banner und ganzseitige Anzeigen bleiben aus</string>
-
-    <!-- Preis -->
-    <string name="paywall_price_with">Mooney Pro · Monatlich · %1$s / Monat</string>
-    <string name="paywall_price_without">Mooney Pro · Monatliches Abo</string>
 
     <!-- Transaktions-Bildschirm Extras -->
     <string name="custom_rate">Eigener Kurs</string>

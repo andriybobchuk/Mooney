@@ -48,6 +48,18 @@ object PreferencesKeys {
     // from ongoing engagement in Firebase funnels.
     val ANALYTICS_FIRST_ACCOUNT_FIRED = booleanPreferencesKey("analytics_first_account_fired")
     val ANALYTICS_FIRST_TRANSACTION_FIRED = booleanPreferencesKey("analytics_first_transaction_fired")
+    /**
+     * One-time gate for the "activated" event (≥3 transactions across ≥2
+     * distinct days). Once fired, never again — see TrackFirstEventUseCase.
+     */
+    val ANALYTICS_ACTIVATED_FIRED = booleanPreferencesKey("analytics_activated_fired")
+    /**
+     * Set of feature names the user has adopted for the first time. Used by
+     * `TrackFirstEventUseCase.featureAdopted` to fire the `feature_adopted`
+     * event exactly once per feature per install. Values are lowercase
+     * snake_case tags like "budget", "goal", "recurring".
+     */
+    val ANALYTICS_ADOPTED_FEATURES = stringSetPreferencesKey("analytics_adopted_features")
     // Ads — frequency-capping counters used by AdEligibilityUseCase. All are
     // best-effort; if a write loses a race, worst case we show one extra ad
     // (capped at the next check anyway). See core/ads/Ads.kt.

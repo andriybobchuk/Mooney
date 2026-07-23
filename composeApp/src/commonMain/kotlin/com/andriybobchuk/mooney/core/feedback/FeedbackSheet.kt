@@ -120,12 +120,16 @@ private fun ContactRow(
     value: String,
     onClick: () -> Unit
 ) {
+    // Row background matches the app-wide `background` role instead of the
+    // mid-tone `surfaceVariant` grey we used before — so cards read as white
+    // in light mode and near-black in dark mode, consistent with the other
+    // sheet surfaces.
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .clickable { onClick() }
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

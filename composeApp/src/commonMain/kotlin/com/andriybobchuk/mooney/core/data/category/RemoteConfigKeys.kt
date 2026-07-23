@@ -20,17 +20,16 @@ object RemoteConfigKeys {
 
     // ---- keys ----
 
-    // Per-platform paywall. `false` = fully free tier, no limits, no premium
-    // UI. `true` = paywall shown, limits enforced. Kept separate so we can
-    // roll out iOS-first (as we do today) without changing Android UX.
-    private const val PAYWALL_ENABLED_ANDROID = "paywall_enabled_android"
+    // Per-platform paywall. Android is hard-coded off in `paywallEnabled()`
+    // for this release, so the Android key is intentionally absent from the
+    // client side. The iOS key remains RC-driven.
     private const val PAYWALL_ENABLED_IOS = "paywall_enabled_ios"
 
-    // Per-platform ads. Master kill switch complements FeatureFlags.adsEnabled
-    // — either being false suppresses every ad placement. The RC key lets us
-    // enable ads for one platform at a time once AdMob approvals land.
-    private const val ADS_ENABLED_ANDROID = "ads_enabled_android"
-    private const val ADS_ENABLED_IOS = "ads_enabled_ios"
+    // Per-platform ads keys are RC-registered but the client always
+    // short-circuits to `false` for this release — iOS has no ad bridge
+    // yet and the Android SDK is wired against test unit IDs. Both keys
+    // are intentionally absent client-side. Restore the RC read for both
+    // platforms once the real unit IDs land.
 
     // Goals feature — full section on/off. If off, the entry point on Assets
     // stops showing and the deeplink returns null.
@@ -44,13 +43,25 @@ object RemoteConfigKeys {
     // ---- accessors ----
 
     fun paywallEnabled(): Boolean {
-        val key = if (isIosPlatform) PAYWALL_ENABLED_IOS else PAYWALL_ENABLED_ANDROID
-        return RemoteConfig.getString(key).toBooleanStrictOrNull() ?: DEFAULT_PAYWALL_ENABLED
+        // First-release hard override — the Android paywall / billing wiring
+        // isn't verified for this build, so we lock it OFF at the source and
+        // ignore whatever the console eventually publishes. Once the Android
+        // billing flow is validated, delete this early-return and let the
+        // key drive it.
+        if (!isIosPlatform) return false
+        return RemoteConfig.getString(PAYWALL_ENABLED_IOS).toBooleanStrictOrNull()
+            ?: DEFAULT_PAYWALL_ENABLED_IOS
     }
 
+    @Suppress("FunctionOnlyReturningConstant")
     fun adsEnabled(): Boolean {
-        val key = if (isIosPlatform) ADS_ENABLED_IOS else ADS_ENABLED_ANDROID
-        return RemoteConfig.getString(key).toBooleanStrictOrNull() ?: DEFAULT_ADS_ENABLED
+        // First-release hard override on BOTH platforms — the Android
+        // `AdUnitIds` still reference Google test unit IDs (see
+        // AdUnitIds.android.kt TODO) and we don't want iOS ads either
+        // until real inventory is verified. Restore the platform-branched
+        // `RemoteConfig.getString(...)` read once the real ad wiring lands
+        // on both platforms.
+        return false
     }
 
     fun goalsEnabled(): Boolean =
@@ -63,13 +74,13 @@ object RemoteConfigKeys {
         RemoteConfig.getString(FREE_CATEGORIES).toIntOrNull() ?: DEFAULT_FREE_CATEGORIES
 
     // ---- defaults ----
-    // These match the current shipping values so a total RC failure keeps
-    // the app behaving exactly as today's build.
-    private const val DEFAULT_PAYWALL_ENABLED = true
-    private const val DEFAULT_ADS_ENABLED = false
+    // Mirror the Firebase Remote Config console "Default value" column so a
+    // total RC failure produces the same behavior as the initial console
+    // rollout. Update both places in lockstep whenever the console changes.
+    private const val DEFAULT_PAYWALL_ENABLED_IOS = true
     private const val DEFAULT_GOALS_ENABLED = true
-    private const val DEFAULT_FREE_ACCOUNTS = 5
-    private const val DEFAULT_FREE_CATEGORIES = 5
+    private const val DEFAULT_FREE_ACCOUNTS = 20
+    private const val DEFAULT_FREE_CATEGORIES = 15
 }
 
 /** True on iOS builds, false on Android. Used to pick per-platform RC keys. */

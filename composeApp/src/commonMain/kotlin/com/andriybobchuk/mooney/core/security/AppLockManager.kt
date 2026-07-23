@@ -20,7 +20,8 @@ import kotlinx.coroutines.flow.map
  * across a stolen DataStore snapshot non-trivial.
  */
 class AppLockManager(
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
+    private val startupPrefs: com.andriybobchuk.mooney.core.data.preferences.StartupPrefs
 ) {
     val isLockEnabled: Flow<Boolean> = dataStore.data.map { prefs ->
         !prefs[PreferencesKeys.APP_LOCK_PIN_HASH].isNullOrBlank()
@@ -31,12 +32,19 @@ class AppLockManager(
         return !stored.isNullOrBlank()
     }
 
+    /** Synchronous read from the SharedPreferences/NSUserDefaults mirror. Used
+     *  by `App()` on frame 1 to decide whether to render the lock screen
+     *  without the blank-box stall that a DataStore suspend read caused. */
+    fun isLockEnabledFast(): Boolean = startupPrefs.getAppLockEnabled() ?: false
+
     suspend fun setPin(pin: String) {
         dataStore.edit { it[PreferencesKeys.APP_LOCK_PIN_HASH] = hashPin(pin) }
+        startupPrefs.setAppLockEnabled(true)
     }
 
     suspend fun disable() {
         dataStore.edit { it.remove(PreferencesKeys.APP_LOCK_PIN_HASH) }
+        startupPrefs.setAppLockEnabled(false)
     }
 
     suspend fun verify(pin: String): Boolean {

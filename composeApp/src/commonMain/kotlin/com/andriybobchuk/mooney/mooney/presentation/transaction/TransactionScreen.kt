@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,6 +41,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Settings
@@ -1555,8 +1557,15 @@ fun TransactionBottomSheet(
                 // square-with-rounded-corner that matches the AccountField
                 // chrome (same surfaceVariant background, 12dp radius) so
                 // both feel like one control cluster.
+                // `IntrinsicSize.Min` measures the Row against the shortest
+                // child that has an intrinsic height (here: the AccountField),
+                // and `fillMaxHeight()` on the swap Box then stretches to that
+                // height. Result: swap button always visually matches the
+                // adjacent field regardless of platform metrics.
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Min),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -1573,7 +1582,8 @@ fun TransactionBottomSheet(
                     }
                     Box(
                         modifier = Modifier
-                            .size(52.dp)
+                            .fillMaxHeight()
+                            .aspectRatio(1f)
                             .clip(RoundedCornerShape(12.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant)
                             .clickable {
@@ -1583,10 +1593,11 @@ fun TransactionBottomSheet(
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "⇅",
-                            fontSize = 20.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        Icon(
+                            imageVector = Icons.Filled.SwapVert,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(22.dp)
                         )
                     }
                 }
@@ -1639,12 +1650,13 @@ fun TransactionBottomSheet(
 
             // Optional description — placed right after Category so a quick
             // note ("Costco run") sits next to what it tags. Single line.
-            // Body medium (was bodySmall) — the smaller size read as an
-            // afterthought and users kept missing the field.
+            // Placeholder (not label) so the outline height matches the
+            // sibling fields; the floating-label variant added a chunky
+            // top padding that broke the vertical rhythm of the sheet.
             MooneyTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = stringResource(Res.string.tx_description_label),
+                placeholder = stringResource(Res.string.tx_description_label),
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodyMedium
@@ -3911,12 +3923,17 @@ private fun QuickActionChipsRow(
                 onClick = onRecurringClick
             )
         }
-        item {
-            QuickActionChip(
-                label = stringResource(Res.string.goals_chip),
-                icon = com.andriybobchuk.mooney.core.presentation.Icons.GoalsIcon(),
-                onClick = onGoalsClick
-            )
+        // Goals chip only appears when the feature is enabled (compile-time
+        // base × Remote Config toggle). Same gate the Assets goals entry
+        // point uses — so a killed goals flag hides every entry point.
+        if (com.andriybobchuk.mooney.mooney.domain.FeatureFlags.goalsEnabled) {
+            item {
+                QuickActionChip(
+                    label = stringResource(Res.string.goals_chip),
+                    icon = com.andriybobchuk.mooney.core.presentation.Icons.GoalsIcon(),
+                    onClick = onGoalsClick
+                )
+            }
         }
         item {
             QuickActionChip(

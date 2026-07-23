@@ -46,6 +46,16 @@ sealed interface AnalyticsEvent {
         override val name = "first_transaction_created"
     }
 
+    /**
+     * The north star. Fires once ever when the user hits our activation
+     * definition: ≥3 transactions across ≥2 distinct days. This is the
+     * boundary between "installed" and "actually using the app" — every
+     * retention / monetization number segments off it.
+     */
+    data object Activated : AnalyticsEvent {
+        override val name = "activated"
+    }
+
     // ───────────────────────── Engagement ─────────────────────────
 
     /** Every transaction add (not just the first). Type lets us see expense/income/transfer mix. */
@@ -92,6 +102,90 @@ sealed interface AnalyticsEvent {
             n <= 12 -> "4-12"
             else -> "13+"
         }
+    }
+
+    /** Existing transaction was edited — measures friction / correction rate. */
+    data class TransactionEdited(val type: String) : AnalyticsEvent {
+        override val name = "transaction_edited"
+        override val params = mapOf("type" to type)
+    }
+
+    /** Existing transaction was deleted. Together with `edited` = "oops rate". */
+    data class TransactionDeleted(val type: String) : AnalyticsEvent {
+        override val name = "transaction_deleted"
+        override val params = mapOf("type" to type)
+    }
+
+    /**
+     * One-time per feature per install. Fires the first time the user does
+     * a meaningful thing with a feature (adds a goal, sets a budget,
+     * enables notifications, imports CSV, etc.). Lets us build an
+     * "adoption %" chart per feature without noisy repeated events.
+     *
+     * `feature` values: "goal", "recurring", "budget", "csv_import",
+     * "notifications", "app_lock", "asset_market_value".
+     */
+    data class FeatureAdopted(val feature: String) : AnalyticsEvent {
+        override val name = "feature_adopted"
+        override val params = mapOf("feature" to feature)
+    }
+
+    /**
+     * Budget was set on a category. Amount is bucketed in base currency;
+     * we never log raw amounts as event params. `category_type` is the
+     * root category id so we can see whether users budget food, subs, etc.
+     */
+    data class BudgetSet(val categoryType: String, val amountBucket: String) : AnalyticsEvent {
+        override val name = "budget_set"
+        override val params = mapOf(
+            "category_type" to categoryType,
+            "amount_bucket" to amountBucket
+        )
+    }
+
+    /** Budget removed / cleared. */
+    data class BudgetRemoved(val categoryType: String) : AnalyticsEvent {
+        override val name = "budget_removed"
+        override val params = mapOf("category_type" to categoryType)
+    }
+
+    /**
+     * Yellow "you've already spent X of your Y budget" warning appeared in
+     * the Add Transaction sheet. Fires once per sheet-open. Measures how
+     * often the budget signal is actually seen.
+     */
+    data class BudgetLimitExceededSeen(val categoryType: String) : AnalyticsEvent {
+        override val name = "budget_limit_exceeded_seen"
+        override val params = mapOf("category_type" to categoryType)
+    }
+
+    /**
+     * User picked which account is primary for expenses / income. Measures
+     * split-primary UX adoption. `role` is "expense", "income", or "both".
+     */
+    data class PrimaryAccountSet(val role: String) : AnalyticsEvent {
+        override val name = "primary_account_set"
+        override val params = mapOf("role" to role)
+    }
+
+    /**
+     * User configured notifications. `mode` = "off" / "daily" / "weekly",
+     * `time_bucket` = "morning" / "midday" / "evening" / "night". Bucketed
+     * time reduces cardinality for the console dashboards.
+     */
+    data class NotificationConfigured(val mode: String, val timeBucket: String) : AnalyticsEvent {
+        override val name = "notification_configured"
+        override val params = mapOf("mode" to mode, "time_bucket" to timeBucket)
+    }
+
+    /** App was opened by tapping the reminder notification (attribution). */
+    data object NotificationOpened : AnalyticsEvent {
+        override val name = "notification_opened"
+    }
+
+    /** User tapped the swap-accounts button on a Transfer. Measures new UI adoption. */
+    data object TransferSwapUsed : AnalyticsEvent {
+        override val name = "transfer_swap_used"
     }
 
     data object CsvExported : AnalyticsEvent {

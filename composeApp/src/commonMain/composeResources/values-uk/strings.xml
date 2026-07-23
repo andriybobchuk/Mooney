@@ -366,18 +366,16 @@
     <string name="paywall_settings_sub">Відкрийте все, що вміє Mooney.</string>
     <string name="paywall_generic_headline">Відкрийте Mooney Pro</string>
     <string name="paywall_generic_sub">Отримайте весь функціонал.</string>
+    <string name="paywall_title_no_limits">Mooney. Без обмежень.</string>
+    <string name="paywall_subtitle_more_power">Розблокуй усі функції</string>
 
     <!-- Переваги Pro -->
     <string name="paywall_benefit_accounts_title">Безлімітні рахунки</string>
-    <string name="paywall_benefit_accounts_sub">Понад безкоштовний ліміт у 20 рахунків</string>
+    <string name="paywall_benefit_accounts_sub">Понад безкоштовний ліміт у %1$d рахунків</string>
     <string name="paywall_benefit_categories_title">Безлімітні свої категорії</string>
-    <string name="paywall_benefit_categories_sub">Понад безкоштовний ліміт у 50 категорій</string>
+    <string name="paywall_benefit_categories_sub">Понад безкоштовний ліміт у %1$d категорій</string>
     <string name="paywall_benefit_noads_title">Жодної реклами</string>
     <string name="paywall_benefit_noads_sub">Банери та повноекранна реклама залишаються вимкненими</string>
-
-    <!-- Ціна -->
-    <string name="paywall_price_with">Mooney Pro · Щомісяця · %1$s / міс.</string>
-    <string name="paywall_price_without">Mooney Pro · Щомісячна підписка</string>
 
     <!-- Додатки екрана транзакцій -->
     <string name="custom_rate">Свій курс</string>

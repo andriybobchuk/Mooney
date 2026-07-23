@@ -452,6 +452,7 @@ class AssetsViewModel(
                     )
                     trackFirstEventUseCase.firstAccount()
                 }
+                trackPrimaryAccountRole(isPrimaryForExpenses, isPrimaryForIncome)
                 // Force immediate recalculation
                 val accounts = getAccountsUseCase().first()
                 withContext(Dispatchers.Main) {
@@ -464,6 +465,19 @@ class AssetsViewModel(
                 analyticsTracker.recordException(e, "Assets")
             }
         }
+    }
+
+    /** Emit the `primary_account_set` event with a bucketed role. Extracted
+     *  from `upsertAsset` to keep that method under the detekt cyclomatic
+     *  threshold. */
+    private fun trackPrimaryAccountRole(forExpenses: Boolean, forIncome: Boolean) {
+        if (!forExpenses && !forIncome) return
+        val role = when {
+            forExpenses && forIncome -> "both"
+            forExpenses -> "expense"
+            else -> "income"
+        }
+        analyticsTracker.trackEvent(AnalyticsEvent.PrimaryAccountSet(role))
     }
 
     fun deleteAsset(id: Int) {

@@ -171,7 +171,48 @@ class TransactionCategoriesViewModel(
             categoryDao.upsert(existing.copy(monthlyLimit = limit))
             repository.reloadCategories()
             _state.update { it.copy(allCategories = getCategoriesUseCase()) }
+            if (limit == null) {
+                analyticsTracker.trackEvent(AnalyticsEvent.BudgetRemoved(existing.id))
+            } else {
+                analyticsTracker.trackEvent(
+                    AnalyticsEvent.BudgetSet(
+                        categoryType = existing.id,
+                        amountBucket = bucketAmount(limit)
+                    )
+                )
+                markFeatureAdopted("budget")
+            }
         }
+    }
+
+    /** Fires `feature_adopted(feature)` at most once per install. Inline
+     *  version — avoids adding TrackFirstEventUseCase to an already long
+     *  constructor list. */
+    private suspend fun markFeatureAdopted(feature: String) {
+        try {
+            val current = dataStore.data.first()[
+                com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.ANALYTICS_ADOPTED_FEATURES
+            ] ?: emptySet()
+            if (feature !in current) {
+                analyticsTracker.trackEvent(AnalyticsEvent.FeatureAdopted(feature))
+                dataStore.edit {
+                    it[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.ANALYTICS_ADOPTED_FEATURES] =
+                        current + feature
+                }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            /* best-effort */
+        }
+    }
+
+    private fun bucketAmount(amount: Double): String = when {
+        amount < 100 -> "0-100"
+        amount < 500 -> "100-500"
+        amount < 2000 -> "500-2000"
+        amount < 10000 -> "2000-10000"
+        else -> "10000+"
     }
 
     private fun addCategory(title: String, type: String, emoji: String?, parentId: String?) {

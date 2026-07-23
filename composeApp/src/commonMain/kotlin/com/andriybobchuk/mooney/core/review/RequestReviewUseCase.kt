@@ -39,13 +39,15 @@ class RequestReviewUseCase(
             val now = Clock.System.now().toEpochMilliseconds()
             val prefs = dataStore.data.first()
 
-            // 1. Cool-down — never ask more than once every 90 days. Apple's
-            //    own cap is ~3/year, and we want headroom to ask again later
-            //    if the user has another high-satisfaction moment.
+            // 1. Once per install — the moment we've shown the pre-prompt on
+            //    any positive moment, we're done. Auto-prompting a second
+            //    time (even months later) reads as pestering; the manual
+            //    "Rate Mooney" row in Settings still bypasses this gate.
             val lastPrompt = prefs[PreferencesKeys.LAST_REVIEW_PROMPT_TIMESTAMP] ?: 0L
-            if (lastPrompt != 0L && (now - lastPrompt) < COOLDOWN_MS) return false
+            if (lastPrompt != 0L) return false
 
-            // 2. Installed at least N days ago — filters out impulsive churners.
+            // 2. Installed at least a week ago — filters out impulsive
+            //    churners and gives the user real time to form an opinion.
             val installTs = prefs[PreferencesKeys.INSTALL_TIMESTAMP] ?: now
             if ((now - installTs) < MIN_INSTALL_AGE_MS) return false
 
@@ -116,8 +118,7 @@ class RequestReviewUseCase(
     }
 
     private companion object {
-        const val COOLDOWN_MS = 90L * 24 * 60 * 60 * 1000   // 90 days
-        const val MIN_INSTALL_AGE_MS = 3L * 24 * 60 * 60 * 1000  // 3 days
+        const val MIN_INSTALL_AGE_MS = 7L * 24 * 60 * 60 * 1000  // 7 days
         const val MIN_OPEN_COUNT = 3
         const val MIN_TRANSACTION_COUNT = 5
     }

@@ -18,6 +18,11 @@ actual object Ads {
     }
 
     actual fun initialize() {
+        // Match the Android early-return: if ads are hard-coded off for
+        // this release we never call `MobileAds.shared.start(...)` on the
+        // Swift bridge, so no AdMob SDK bootstrap runs and the advertising
+        // identifier stays untouched. Restore SDK start once ads flip on.
+        if (!com.andriybobchuk.mooney.mooney.domain.FeatureFlags.adsEnabled) return
         println("[Ads] initialize: bridge=${bridge}")
         bridge?.initialize()
     }

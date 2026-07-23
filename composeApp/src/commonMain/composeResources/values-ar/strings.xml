@@ -391,18 +391,16 @@
     <string name="paywall_settings_sub">افتح كل ما يستطيع Mooney فعله.</string>
     <string name="paywall_generic_headline">افتح Mooney Pro</string>
     <string name="paywall_generic_sub">احصل على التجربة الكاملة.</string>
+    <string name="paywall_title_no_limits">Mooney. بلا حدود.</string>
+    <string name="paywall_subtitle_more_power">افتح كل الميزات</string>
 
     <!-- مزايا Pro -->
     <string name="paywall_benefit_accounts_title">حسابات بلا حدود</string>
-    <string name="paywall_benefit_accounts_sub">بما يتجاوز حد 20 حسابًا المجاني</string>
+    <string name="paywall_benefit_accounts_sub">بما يتجاوز حد %1$d حسابًا المجاني</string>
     <string name="paywall_benefit_categories_title">فئات مخصصة بلا حدود</string>
-    <string name="paywall_benefit_categories_sub">بما يتجاوز حد 50 فئة المجاني</string>
+    <string name="paywall_benefit_categories_sub">بما يتجاوز حد %1$d فئة المجاني</string>
     <string name="paywall_benefit_noads_title">بدون إعلانات نهائيًا</string>
     <string name="paywall_benefit_noads_sub">تبقى إعلانات البانر والإعلانات البينية معطّلة</string>
-
-    <!-- السعر -->
-    <string name="paywall_price_with">Mooney Pro · شهريًا · %1$s / شهر</string>
-    <string name="paywall_price_without">Mooney Pro · اشتراك شهري</string>
 
     <!-- إضافات شاشة المعاملات -->
     <string name="custom_rate">سعر مخصص</string>

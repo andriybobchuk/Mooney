@@ -156,7 +156,10 @@ fun NavigationHost() {
     LaunchedEffect(currentBackStackEntry) {
         val route = currentBackStackEntry?.destination?.route ?: return@LaunchedEffect
         val screenName = route.substringAfterLast(".")
-        analyticsTracker.trackScreenView(screenName)
+        // Explicit screen_view calls dropped — Firebase's auto-tracking
+        // covers session + retention, and per-screen counts weren't driving
+        // any product decisions. We keep the local `navTapCount` for the
+        // interstitial eligibility gate below (that's not analytics).
         navTapCount += 1
         if (
             FeatureFlags.adsEnabled &&
@@ -260,6 +263,25 @@ fun NavigationHost() {
             }
             analyticsTracker.setUserProperty("install_version", installVersion)
             analyticsTracker.setUserProperty("app_version", com.andriybobchuk.mooney.APP_VERSION)
+
+            // Install cohort month — derived from install_version (CalVer
+            // "YY.MM.PATCH"). Firebase console groups users by this so we can
+            // filter "users who installed in July 2026" without needing the
+            // patch. Empty string when parsing fails; console filters skip it.
+            val cohortMonth = installVersion.substringBefore('.', "")
+                .let { yy -> if (yy.isNotEmpty()) "20$yy-${installVersion.split('.').getOrNull(1) ?: ""}" else "" }
+            if (cohortMonth.isNotEmpty()) {
+                analyticsTracker.setUserProperty("install_cohort_month", cohortMonth)
+            }
+
+            // Activation state — mirrored user property so every event can be
+            // segmented "activated vs. not-yet-activated" without joining
+            // against the `activated` event log. Only set to true once the
+            // Activation event has fired (see TransactionViewModel).
+            val isActivated = telemetryDataStore.data.first()[
+                com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.ANALYTICS_ACTIVATED_FIRED
+            ] ?: false
+            analyticsTracker.setUserProperty("is_activated", isActivated.toString())
         } catch (e: kotlin.coroutines.cancellation.CancellationException) {
             throw e
         } catch (_: Exception) {

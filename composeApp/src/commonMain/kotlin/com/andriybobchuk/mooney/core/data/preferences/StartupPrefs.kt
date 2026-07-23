@@ -28,4 +28,10 @@ expect class StartupPrefs {
 
     fun getThemeMode(): String?
     fun setThemeMode(value: String)
+
+    /** Synchronous mirror of whether App Lock is armed. Prevents the blank-box
+     *  boot stall while DataStore's async read is in flight. `null` = never
+     *  written (fall back to the DataStore async check). */
+    fun getAppLockEnabled(): Boolean?
+    fun setAppLockEnabled(value: Boolean)
 }

@@ -304,9 +304,11 @@ class TransactionViewModel(
             addTransactionUseCase(transaction)
             observeTransactions(_uiState.value.selectedMonth)
             loadTotal()
-            // Only on creates, never on edits — editing is a maintenance act,
-            // not a positive moment.
-            if (!wasEdit) {
+            if (wasEdit) {
+                analyticsTracker.trackEvent(
+                    AnalyticsEvent.TransactionEdited(transaction.subcategory.type.name)
+                )
+            } else {
                 analyticsTracker.trackEvent(
                     AnalyticsEvent.TransactionAdded(
                         type = transaction.subcategory.type.name,
@@ -314,8 +316,29 @@ class TransactionViewModel(
                     )
                 )
                 trackFirstEventUseCase.firstTransaction()
+                maybeCheckActivation()
                 maybeRequestReviewAfterMilestone()
             }
+        }
+    }
+
+    /**
+     * Activation criterion: ≥3 transactions across ≥2 distinct dates. Fired
+     * at most once ever via the DataStore gate in TrackFirstEventUseCase.
+     * Computed off the current filtered-for-month list plus the whole
+     * cache — cheap enough to run on every add.
+     */
+    private suspend fun maybeCheckActivation() {
+        try {
+            val all = appDataCache.snapshot.value.transactions
+            if (all.size < ACTIVATION_MIN_TX) return
+            val distinctDays = all.map { it.date }.distinct().size
+            if (distinctDays < ACTIVATION_MIN_DAYS) return
+            trackFirstEventUseCase.activatedOnce()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            /* best-effort */
         }
     }
 
@@ -351,13 +374,18 @@ class TransactionViewModel(
 
     private companion object {
         val MILESTONES = setOf(10, 25, 50, 100)
+        const val ACTIVATION_MIN_TX = 3
+        const val ACTIVATION_MIN_DAYS = 2
     }
 
     fun deleteTransaction(id: Int) {
         viewModelScope.launch {
+            val type = _uiState.value.transactions.filterNotNull()
+                .firstOrNull { it.id == id }?.subcategory?.type?.name ?: "UNKNOWN"
             deleteTransactionUseCase(id)
             observeTransactions(_uiState.value.selectedMonth)
             loadTotal()
+            analyticsTracker.trackEvent(AnalyticsEvent.TransactionDeleted(type))
         }
     }
 
@@ -421,6 +449,7 @@ class TransactionViewModel(
             analyticsTracker.trackEvent(
                 AnalyticsEvent.RecurringAdded(schedule.frequency.name)
             )
+            trackFirstEventUseCase.featureAdopted("recurring")
         }
     }
 }

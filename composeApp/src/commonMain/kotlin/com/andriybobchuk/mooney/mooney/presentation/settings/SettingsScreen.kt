@@ -905,14 +905,18 @@ fun SettingsScreen(
                     var showEnabledSheet by remember { mutableStateOf(false) }
                     val scope = rememberCoroutineScope()
 
+                    // When the paywall is disabled (Remote Config), the app is
+                    // fully free: hide the PRO badge and skip the App Lock
+                    // paywall gate so setup/edit is reachable directly.
+                    val paywallActive = isBillingEnabled
                     SettingsGroup {
                         AppLockSettingsRow(
                             title = stringResource(Res.string.app_lock_title),
                             description = stringResource(Res.string.app_lock_summary),
                             isEnabled = isLockEnabled,
-                            showProBadge = !isPremium,
+                            showProBadge = paywallActive && !isPremium,
                             onClick = {
-                                if (!isPremium) {
+                                if (paywallActive && !isPremium) {
                                     showAppLockPaywall = true
                                 } else if (isLockEnabled) {
                                     showEnabledSheet = true
@@ -943,6 +947,7 @@ fun SettingsScreen(
                                 onSetupComplete = { newPin ->
                                     scope.launch {
                                         appLockManager.setPin(newPin)
+                                        viewModel.onAppLockPinConfigured()
                                         showSetupSheet = false
                                     }
                                 },
@@ -1087,6 +1092,16 @@ fun SettingsScreen(
                                 title = stringResource(Res.string.plan_label),
                                 value = if (state.devForcePremium) stringResource(Res.string.pro_label) else stringResource(Res.string.free_label),
                                 onClick = { viewModel.setDevPlanPro(!state.devForcePremium) }
+                            )
+                            SettingsDivider()
+                            // Escape hatch — flip DEVELOPER_OPTIONS_ENABLED
+                            // back off so the section disappears and the app
+                            // reads like a real user's install. Re-enable via
+                            // the 5-tap-on-version code (534551) at any time.
+                            SettingsRow(
+                                title = "Hide developer options", // allow-hardcoded (dev option)
+                                value = "Back to normal", // allow-hardcoded (dev option)
+                                onClick = { viewModel.disableDeveloperOptions() }
                             )
                         }
                     }

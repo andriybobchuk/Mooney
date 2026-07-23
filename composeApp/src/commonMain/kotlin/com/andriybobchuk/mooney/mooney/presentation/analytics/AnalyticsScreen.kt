@@ -310,13 +310,14 @@ fun AnalyticsScreen(
                     //     currency = GlobalConfig.baseCurrency,
                     //     onClick = onNavigateToNetWorth
                     // )
+
+                    // Same column so the request card lines up flush with the
+                    // metric cards above — was outside the column with its own
+                    // 16dp horizontal padding, which made it look tacked-on.
+                    AnalyticsRequestCard(
+                        onClick = { showAnalyticsRequestSheet = true }
+                    )
                 }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                AnalyticsRequestCard(
-                    onClick = { showAnalyticsRequestSheet = true }
-                )
 
                 Spacer(modifier = Modifier.height(32.dp))
             }
@@ -1059,9 +1060,9 @@ fun CategoryBreakdownSheet(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(bottom = 32.dp)
+            .padding(bottom = 8.dp)
     ) {
-        
+
         // 6-month trend mini chart
         if (historicalData.isNotEmpty()) {
             val chartData = historicalData.takeLast(6)
@@ -1643,7 +1644,6 @@ private fun AnalyticsRequestCard(onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(

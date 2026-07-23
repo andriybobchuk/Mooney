@@ -1,5 +1,6 @@
 package com.andriybobchuk.mooney.core.premium
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,11 +14,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -45,8 +50,6 @@ import mooney.composeapp.generated.resources.paywall_benefit_lock_sub
 import mooney.composeapp.generated.resources.paywall_benefit_lock_title
 import mooney.composeapp.generated.resources.paywall_benefit_noads_sub
 import mooney.composeapp.generated.resources.paywall_benefit_noads_title
-import mooney.composeapp.generated.resources.paywall_price_with
-import mooney.composeapp.generated.resources.paywall_price_without
 import mooney.composeapp.generated.resources.paywall_subtitle_more_power
 import mooney.composeapp.generated.resources.paywall_title_no_limits
 import mooney.composeapp.generated.resources.privacy_policy
@@ -68,19 +71,32 @@ enum class PaywallTrigger {
     GENERIC
 }
 
-private data class BenefitItem(val emoji: String, val title: String, val subtitle: String)
+private data class BenefitItem(val title: String, val subtitle: String)
 
 // Honest list — every benefit ships in the app today. The "no ads" item
 // only shows up when ads are actually enabled for this platform; promising
 // "no ads" to a user who never sees ads anyway is a false claim.
 @Composable
 private fun rememberBenefits(): List<BenefitItem> = buildList {
-    add(BenefitItem("👛", stringResource(Res.string.paywall_benefit_accounts_title), stringResource(Res.string.paywall_benefit_accounts_sub)))
-    add(BenefitItem("🏷️", stringResource(Res.string.paywall_benefit_categories_title), stringResource(Res.string.paywall_benefit_categories_sub)))
+    // Free-tier caps come from Remote Config so the numbers we advertise here
+    // stay in lockstep with what the app actually enforces. See
+    // PremiumConfig / RemoteConfigKeys.
+    add(
+        BenefitItem(
+            stringResource(Res.string.paywall_benefit_accounts_title),
+            stringResource(Res.string.paywall_benefit_accounts_sub, PremiumConfig.maxFreeAccounts)
+        )
+    )
+    add(
+        BenefitItem(
+            stringResource(Res.string.paywall_benefit_categories_title),
+            stringResource(Res.string.paywall_benefit_categories_sub, PremiumConfig.maxFreeCustomCategories)
+        )
+    )
     if (com.andriybobchuk.mooney.mooney.domain.FeatureFlags.adsEnabled) {
-        add(BenefitItem("🚫", stringResource(Res.string.paywall_benefit_noads_title), stringResource(Res.string.paywall_benefit_noads_sub)))
+        add(BenefitItem(stringResource(Res.string.paywall_benefit_noads_title), stringResource(Res.string.paywall_benefit_noads_sub)))
     }
-    add(BenefitItem("🔒", stringResource(Res.string.paywall_benefit_lock_title), stringResource(Res.string.paywall_benefit_lock_sub)))
+    add(BenefitItem(stringResource(Res.string.paywall_benefit_lock_title), stringResource(Res.string.paywall_benefit_lock_sub)))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -188,13 +204,23 @@ fun PaywallSheet(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Price — single line, no anchor copy.
-                Text(
-                    text = if (price != null) "$price / month" else "—",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                // Price — StoreKit/Play fetches take a beat on cold start;
+                // show a small spinner instead of a placeholder dash so it
+                // reads as "loading" rather than "unavailable".
+                if (price != null) {
+                    Text(
+                        text = "$price / month",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                } else {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(28.dp),
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                        strokeWidth = 2.dp
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(20.dp))
 
@@ -241,7 +267,6 @@ fun PaywallSheet(
                 // footer so it stops competing with the primary CTA.
                 Spacer(modifier = Modifier.height(16.dp))
                 SubscriptionLegalFooter(
-                    price = price,
                     onRestore = onRestore,
                     enabled = !isLoading
                 )
@@ -253,10 +278,22 @@ fun PaywallSheet(
 @Composable
 private fun BenefitRow(benefit: BenefitItem) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text = benefit.emoji,
-            fontSize = 22.sp
-        )
+        // Accent-filled circle with a white checkmark — replaces the emoji
+        // per-item. Uses `primary` so the row reads as "unlocked" in both
+        // light and dark schemes.
+        Box(
+            modifier = Modifier
+                .size(20.dp)
+                .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(12.dp)
+            )
+        }
         Spacer(modifier = Modifier.width(12.dp))
         Column {
             Text(
@@ -276,15 +313,20 @@ private fun BenefitRow(benefit: BenefitItem) {
 
 @Composable
 private fun SubscriptionLegalFooter(
-    price: String?,
     onRestore: () -> Unit,
     enabled: Boolean
 ) {
     val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     val mutedColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.45f)
     val linkColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-    val priceLine = if (price != null) stringResource(Res.string.paywall_price_with, price) else stringResource(Res.string.paywall_price_without)
 
+    // Minimum legally required footer for a subscription IAP:
+    //   1. Restore purchases (Apple 3.1.1)
+    //   2. Auto-renewal disclosure (Apple 3.1.2)
+    //   3. Terms of Use / EULA (Apple 3.1.2)
+    //   4. Privacy Policy (Apple 5.1.1 / Play Data Safety)
+    // The redundant "Mooney Pro · Monthly · $X" restatement was dropped —
+    // price/duration are already shown large above the CTA.
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -300,13 +342,6 @@ private fun SubscriptionLegalFooter(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(
-            text = priceLine,
-            style = MaterialTheme.typography.labelSmall,
-            color = mutedColor,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = stringResource(Res.string.auto_renews_monthly),
             style = MaterialTheme.typography.labelSmall,

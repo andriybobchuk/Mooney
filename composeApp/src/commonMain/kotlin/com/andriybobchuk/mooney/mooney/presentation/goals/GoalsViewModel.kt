@@ -148,6 +148,15 @@ class GoalsViewModel(
                     analyticsTracker.trackEvent(
                         com.andriybobchuk.mooney.core.analytics.AnalyticsEvent.GoalAdded(trackingType.name)
                     )
+                    // First-ever goal → one-time adoption signal. `goals.isEmpty()`
+                    // reflects state _before_ this add (cache hasn't refreshed
+                    // yet), so this is a reliable one-shot without needing a
+                    // DataStore flag.
+                    if (_uiState.value.goals.isEmpty()) {
+                        analyticsTracker.trackEvent(
+                            com.andriybobchuk.mooney.core.analytics.AnalyticsEvent.FeatureAdopted("goal")
+                        )
+                    }
                 }
                 _uiState.update { it.copy(showAddGoalSheet = false, editingGoal = null) }
             } catch (e: CancellationException) {

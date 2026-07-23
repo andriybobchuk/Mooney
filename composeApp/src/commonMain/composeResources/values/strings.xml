@@ -432,15 +432,15 @@
 
     <!-- Paywall benefits -->
     <string name="paywall_benefit_accounts_title">Unlimited accounts</string>
-    <string name="paywall_benefit_accounts_sub">Beyond the 5-account free tier</string>
+    <string name="paywall_benefit_accounts_sub">Beyond the %1$d-account free tier</string>
     <string name="paywall_benefit_categories_title">Unlimited custom categories</string>
-    <string name="paywall_benefit_categories_sub">Beyond the 5-category free tier</string>
+    <string name="paywall_benefit_categories_sub">Beyond the %1$d-category free tier</string>
     <string name="paywall_benefit_noads_title">No ads, ever</string>
     <string name="paywall_benefit_noads_sub">Banner and interstitial ads stay off</string>
     <string name="paywall_benefit_lock_title">Lock screen</string>
     <string name="paywall_benefit_lock_sub">PIN + biometric for ultimate security</string>
     <string name="paywall_title_no_limits">Mooney. Without limits.</string>
-    <string name="paywall_subtitle_more_power">More power. Zero ads.</string>
+    <string name="paywall_subtitle_more_power">Unlock all features</string>
     <string name="premium_banner_subtitle_no_ads">Unlimited accounts, categories, no ads</string>
     <string name="contact_intro">I&apos;m actively building Mooney and would love to hear from you. Reach out through any channel below.</string>
     <string name="app_lock_title">App Lock</string>
@@ -455,10 +455,6 @@
     <string name="app_lock_unlock_to_continue">Unlock to continue</string>
     <string name="security_section">Security</string>
     <string name="sponsored_label">Sponsored</string>
-
-    <!-- Paywall price line -->
-    <string name="paywall_price_with">Mooney Pro · Monthly · %1$s / month</string>
-    <string name="paywall_price_without">Mooney Pro · Monthly subscription</string>
 
     <!-- Transaction screen extras -->
     <string name="custom_rate">Custom rate</string>

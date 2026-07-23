@@ -55,4 +55,4 @@ tags:
 
 # Post-condition: we're inside the main graph (bottom nav visible).
 - assertVisible: "Transactions"
-- assertVisible: "Assets"
+- assertVisible: "Balance"

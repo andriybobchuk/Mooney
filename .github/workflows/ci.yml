@@ -123,7 +123,11 @@ jobs:
     runs-on: macos-26
     needs: check
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-    timeout-minutes: 30
+    # 45 min — the 26.07.02 release hit the 30-min cap during Kotlin/Native
+    # framework compile (~27 min alone), leaving no time for xcodebuild +
+    # upload. Bumped so the Firebase-pods + KMP framework combo has room to
+    # breathe on a cold cache.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 

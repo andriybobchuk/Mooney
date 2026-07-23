@@ -21,10 +21,11 @@ tags:
       FIXTURE: "single_account_usd"
       WIPE_DB: "true"
 
-# The Assets tab shows the seeded "Checking" account. If either of these
-# assertions fires, either the DB wasn't seeded (bootstrap issue) or the
-# UI isn't reading the DAO (Koin wiring / AppDataCache issue).
-- assertVisible: "Assets"
-- tapOn: "Assets"
+# The Balance tab (renamed from Assets in f469586) shows the seeded
+# "Checking" account. If either of these assertions fires, either the DB
+# wasn't seeded (bootstrap issue) or the UI isn't reading the DAO (Koin
+# wiring / AppDataCache issue).
+- assertVisible: "Balance"
+- tapOn: "Balance"
 
 - assertVisible: "Checking"

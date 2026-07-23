@@ -245,7 +245,14 @@ class AssetsViewModel(
     }
 
     private fun updateTotalNetWorth() {
-        val allAccounts = state.value.assets.map { it.toAccount() }
+        // Read from `_uiState` (initialized on line 76) rather than `state`
+        // (initialized further down). The `init { observeBaseCurrencyChanges() }`
+        // block above can trigger this method via a coroutine before the
+        // `state` property line has run, at which point reading `state.value`
+        // NPEs on the still-null JVM field. Crashlytics caught this on
+        // Android in the first prod release. `_uiState.value` holds the
+        // exact same snapshot with no race.
+        val allAccounts = _uiState.value.assets.map { it.toAccount() }
         val result = calculateNetWorthUseCase(
             accounts = allAccounts,
             selectedCurrency = currencyManagerUseCase.getCurrentCurrency(),

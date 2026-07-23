@@ -70,14 +70,18 @@ enum class PaywallTrigger {
 
 private data class BenefitItem(val emoji: String, val title: String, val subtitle: String)
 
-// Honest list — every benefit ships in the app today.
+// Honest list — every benefit ships in the app today. The "no ads" item
+// only shows up when ads are actually enabled for this platform; promising
+// "no ads" to a user who never sees ads anyway is a false claim.
 @Composable
-private fun rememberBenefits(): List<BenefitItem> = listOf(
-    BenefitItem("👛", stringResource(Res.string.paywall_benefit_accounts_title), stringResource(Res.string.paywall_benefit_accounts_sub)),
-    BenefitItem("🏷️", stringResource(Res.string.paywall_benefit_categories_title), stringResource(Res.string.paywall_benefit_categories_sub)),
-    BenefitItem("🚫", stringResource(Res.string.paywall_benefit_noads_title), stringResource(Res.string.paywall_benefit_noads_sub)),
-    BenefitItem("🔒", stringResource(Res.string.paywall_benefit_lock_title), stringResource(Res.string.paywall_benefit_lock_sub))
-)
+private fun rememberBenefits(): List<BenefitItem> = buildList {
+    add(BenefitItem("👛", stringResource(Res.string.paywall_benefit_accounts_title), stringResource(Res.string.paywall_benefit_accounts_sub)))
+    add(BenefitItem("🏷️", stringResource(Res.string.paywall_benefit_categories_title), stringResource(Res.string.paywall_benefit_categories_sub)))
+    if (com.andriybobchuk.mooney.mooney.domain.FeatureFlags.adsEnabled) {
+        add(BenefitItem("🚫", stringResource(Res.string.paywall_benefit_noads_title), stringResource(Res.string.paywall_benefit_noads_sub)))
+    }
+    add(BenefitItem("🔒", stringResource(Res.string.paywall_benefit_lock_title), stringResource(Res.string.paywall_benefit_lock_sub)))
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

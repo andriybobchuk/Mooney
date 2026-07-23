@@ -26,6 +26,13 @@ object PreferencesKeys {
     val DEVELOPER_OPTIONS_ENABLED = booleanPreferencesKey("developer_options_enabled")
     // Review prompt gating
     val INSTALL_TIMESTAMP = androidx.datastore.preferences.core.longPreferencesKey("install_timestamp")
+    /**
+     * The `app.version` string captured on first launch after install. Never
+     * updates. Mirrored to a Firebase user property so Remote Config console
+     * can pin config schemas to install cohorts ("everyone who installed on
+     * or before 26.07.02 gets X, later installs get Y").
+     */
+    val INSTALL_VERSION = stringPreferencesKey("install_version")
     val APP_OPEN_COUNT = intPreferencesKey("app_open_count")
     val LAST_REVIEW_PROMPT_TIMESTAMP = androidx.datastore.preferences.core.longPreferencesKey("last_review_prompt_timestamp")
     val LAST_WIDGET_PAGE = intPreferencesKey("last_widget_page")

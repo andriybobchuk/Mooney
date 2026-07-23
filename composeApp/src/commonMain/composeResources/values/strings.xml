@@ -114,8 +114,8 @@
     <string name="system">System</string>
     <string name="select_up_to_categories">Select up to %1$d categories</string>
 
-    <!-- Reminders -->
-    <string name="reminder_settings_title">Reminders</string>
+    <!-- Notifications -->
+    <string name="reminder_settings_title">Notifications</string>
     <string name="reminder_body">Tap to log what you spent today.</string>
     <string name="reminder_mode_off">Off</string>
     <string name="reminder_mode_daily">Daily</string>
@@ -837,6 +837,8 @@
     <string name="category_budget_placeholder">Amount per month</string>
     <string name="asset_primary_expense_toggle">Primary account for expenses</string>
     <string name="asset_primary_income_toggle">Primary account for income</string>
+    <string name="primary_expense">Primary expense</string>
+    <string name="primary_income">Primary income</string>
     <string name="transaction_budget_over">You've already spent %1$s of your %2$s %3$s budget this month.</string>
     <string name="analytics_expenses_budget">Expenses / Budget</string>
     <string name="category_set_limit_button">Set a limit</string>

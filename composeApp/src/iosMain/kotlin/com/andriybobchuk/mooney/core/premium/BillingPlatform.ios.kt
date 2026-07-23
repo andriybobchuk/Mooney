@@ -1,3 +1,4 @@
 package com.andriybobchuk.mooney.core.premium
 
-actual val isBillingEnabled: Boolean = true
+// iOS has the StoreKit bridge wired end-to-end.
+actual val isBillingSupported: Boolean = true

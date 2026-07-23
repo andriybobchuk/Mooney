@@ -575,7 +575,7 @@
     <string name="cd_scroll_to_top">К началу</string>
 
     <!-- Reminders -->
-    <string name="reminder_settings_title">Напоминания</string>
+    <string name="reminder_settings_title">Уведомления</string>
     <string name="reminder_body">Нажмите, чтобы записать сегодняшние траты.</string>
     <string name="reminder_mode_off">Выкл.</string>
     <string name="reminder_mode_daily">Ежедневно</string>

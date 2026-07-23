@@ -942,11 +942,24 @@ private fun AssetCard(
                             }
                         }
 
-                        // Primary badge on its own line
-                        if (asset.isPrimary) {
+                        // Primary badge on its own line. The label now
+                        // reflects which role(s) this account is primary for
+                        // (Expense-only, Income-only, or both = "Primary
+                        // account"). Legacy `isPrimary` still counts as
+                        // primary-for-both so pre-v20 users don't lose the
+                        // badge on their previously-marked account.
+                        val primaryLabel = when {
+                            (asset.isPrimaryForExpenses && asset.isPrimaryForIncome) ||
+                                (asset.isPrimary && !asset.isPrimaryForExpenses && !asset.isPrimaryForIncome) ->
+                                stringResource(Res.string.primary_account)
+                            asset.isPrimaryForExpenses -> stringResource(Res.string.primary_expense)
+                            asset.isPrimaryForIncome -> stringResource(Res.string.primary_income)
+                            else -> null
+                        }
+                        if (primaryLabel != null) {
                             Spacer(Modifier.height(3.dp))
                             Box(modifier = Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) {
-                                Text(stringResource(Res.string.primary_account).uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontSize = 9.sp, letterSpacing = 0.5.sp)
+                                Text(primaryLabel.uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontSize = 9.sp, letterSpacing = 0.5.sp)
                             }
                         }
 

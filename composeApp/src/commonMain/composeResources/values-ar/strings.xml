@@ -575,7 +575,7 @@
     <string name="cd_scroll_to_top">الانتقال إلى الأعلى</string>
 
     <!-- Reminders -->
-    <string name="reminder_settings_title">التذكيرات</string>
+    <string name="reminder_settings_title">الإشعارات</string>
     <string name="reminder_body">اضغط لتسجيل ما أنفقته اليوم.</string>
     <string name="reminder_mode_off">إيقاف</string>
     <string name="reminder_mode_daily">يوميًا</string>

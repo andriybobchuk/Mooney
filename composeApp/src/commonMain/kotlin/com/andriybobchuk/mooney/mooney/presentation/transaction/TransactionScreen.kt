@@ -1461,6 +1461,25 @@ fun TransactionBottomSheet(
                     // Auto-select appropriate category when type changes
                     currentSelectedCategory = getDefaultCategoryForType(type)
                     currentSelectedSubCategory = getDefaultSubCategoryForType(type)
+                    // Also swap in the role-specific primary account so the
+                    // user's picked default for the new type takes effect
+                    // without them having to open the picker.
+                    val previousPrimary = realAccounts.find {
+                        (type == CategoryType.INCOME && it.isPrimaryForExpenses) ||
+                            (type == CategoryType.EXPENSE && it.isPrimaryForIncome)
+                    }
+                    val roleDefault = when (type) {
+                        CategoryType.EXPENSE -> realAccounts.find { it.isPrimaryForExpenses }
+                        CategoryType.INCOME -> realAccounts.find { it.isPrimaryForIncome }
+                        CategoryType.TRANSFER -> null
+                    }
+                    // Only overwrite if the current pick is still the old
+                    // role's default — respect any explicit user selection.
+                    if (roleDefault != null &&
+                        (selectedAccount == null || selectedAccount == previousPrimary)
+                    ) {
+                        selectedAccount = roleDefault
+                    }
                 },
                 modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
             )

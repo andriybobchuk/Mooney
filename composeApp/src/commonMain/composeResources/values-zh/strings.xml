@@ -575,7 +575,7 @@
     <string name="cd_scroll_to_top">回到顶部</string>
 
     <!-- Reminders -->
-    <string name="reminder_settings_title">提醒</string>
+    <string name="reminder_settings_title">通知</string>
     <string name="reminder_body">点按记录今天的支出。</string>
     <string name="reminder_mode_off">关闭</string>
     <string name="reminder_mode_daily">每天</string>

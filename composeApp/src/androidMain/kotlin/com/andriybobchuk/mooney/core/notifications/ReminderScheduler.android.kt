@@ -1,8 +1,11 @@
 package com.andriybobchuk.mooney.core.notifications
 
+import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
@@ -15,12 +18,21 @@ import java.util.concurrent.TimeUnit
 internal const val REMINDER_CHANNEL_ID = "mooney_reminders"
 internal const val REMINDER_WORK_NAME = "mooney_reminder"
 
+// Legacy IDs used by the 26.06.x release train. Users who upgraded from
+// those builds have a lingering AlarmManager PendingIntent (pre-WorkManager
+// migration) that still fires every day at 19:30 — that's the "second"
+// notification some users see. We cancel it explicitly whenever the current
+// scheduler runs so it's cleaned up on next open regardless of settings.
+private const val LEGACY_REMINDER_ACTION = "com.andriybobchuk.mooney.DAILY_REMINDER"
+private const val LEGACY_REMINDER_REQUEST_CODE = 4242
+
 actual class ReminderScheduler : KoinComponent {
 
     private val context: Context by inject()
 
     actual fun scheduleDaily(hour: Int, minute: Int) {
         ensureChannel(context)
+        cancelLegacyAlarm()
         val initialDelayMs = millisUntilNextDailyOccurrence(hour, minute)
         val request = PeriodicWorkRequestBuilder<ReminderWorker>(
             repeatInterval = 1,
@@ -37,6 +49,7 @@ actual class ReminderScheduler : KoinComponent {
 
     actual fun scheduleWeekly(weekday: Int, hour: Int, minute: Int) {
         ensureChannel(context)
+        cancelLegacyAlarm()
         val initialDelayMs = millisUntilNextWeeklyOccurrence(weekday, hour, minute)
         val request = PeriodicWorkRequestBuilder<ReminderWorker>(
             repeatInterval = 7,
@@ -53,6 +66,27 @@ actual class ReminderScheduler : KoinComponent {
 
     actual fun cancel() {
         WorkManager.getInstance(context).cancelUniqueWork(REMINDER_WORK_NAME)
+        cancelLegacyAlarm()
+    }
+
+    /**
+     * Cancels the legacy 19:30 daily alarm scheduled by pre-v26.07 builds.
+     * The receiver class no longer exists in the manifest, but the OS may
+     * still hold the PendingIntent; matching by action + request-code is
+     * enough for AlarmManager.cancel() to purge it.
+     */
+    private fun cancelLegacyAlarm() {
+        val alarm = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+        val intent = Intent(LEGACY_REMINDER_ACTION).apply {
+            setPackage(context.packageName)
+        }
+        val pi = PendingIntent.getBroadcast(
+            context,
+            LEGACY_REMINDER_REQUEST_CODE,
+            intent,
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+        )
+        if (pi != null) alarm.cancel(pi)
     }
 
     private fun millisUntilNextDailyOccurrence(hour: Int, minute: Int): Long {

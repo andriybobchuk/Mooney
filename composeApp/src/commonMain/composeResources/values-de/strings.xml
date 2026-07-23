@@ -575,7 +575,7 @@
     <string name="cd_scroll_to_top">Nach oben</string>
 
     <!-- Reminders -->
-    <string name="reminder_settings_title">Erinnerungen</string>
+    <string name="reminder_settings_title">Benachrichtigungen</string>
     <string name="reminder_body">Tippe, um deine heutigen Ausgaben einzutragen.</string>
     <string name="reminder_mode_off">Aus</string>
     <string name="reminder_mode_daily">Täglich</string>

@@ -550,7 +550,7 @@
     <string name="cd_scroll_to_top">До початку</string>
 
     <!-- Reminders -->
-    <string name="reminder_settings_title">Нагадування</string>
+    <string name="reminder_settings_title">Сповіщення</string>
     <string name="reminder_body">Натисніть, щоб записати сьогоднішні витрати.</string>
     <string name="reminder_mode_off">Вимкнено</string>
     <string name="reminder_mode_daily">Щоденно</string>

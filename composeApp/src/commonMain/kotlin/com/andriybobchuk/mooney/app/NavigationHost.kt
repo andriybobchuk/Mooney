@@ -189,11 +189,26 @@ fun NavigationHost() {
     val getGoalsUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.GetGoalsUseCase = koinInject()
     val premiumManagerProps: com.andriybobchuk.mooney.core.premium.PremiumManager = koinInject()
     val recurringTransactionDao: com.andriybobchuk.mooney.core.data.database.RecurringTransactionDao = koinInject()
+    // DataStore hoisted here so the install_version write inside the
+    // telemetry LaunchedEffect can reach it. Same instance as `dataStore`
+    // below (Koin singleton) — declared here to sidestep the "referenced
+    // before declaration" compile error.
+    val telemetryDataStore: androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences> = koinInject()
     LaunchedEffect(Unit) {
         // Best-effort telemetry — deliberately delayed so it doesn't compete
         // with the first interactive frame. 1.5s is comfortably after any
         // realistic cold-start.
         kotlinx.coroutines.delay(SECONDARY_WORK_DELAY_MS)
+        // Kick off a Remote Config fetch too so paywall/ads/goals/limits
+        // reflect the console values on the next session. First run of the
+        // app has to fall back to compiled defaults (or last-cached values).
+        try {
+            com.andriybobchuk.mooney.core.data.category.RemoteConfig.fetchAndActivate()
+        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            /* best-effort */
+        }
         try {
             val accounts = getAccountsUseCase().first()
             val transactions = getTransactionsUseCase().first()
@@ -230,6 +245,21 @@ fun NavigationHost() {
             analyticsTracker.setUserProperty("is_pro", isPro.toString())
             analyticsTracker.setUserProperty("has_recurring", (recurringCount > 0).toString())
             analyticsTracker.setUserProperty("has_goals", goals.isNotEmpty().toString())
+
+            // install_version — captured on first launch, mirrored to a
+            // Firebase user property so Remote Config console can target
+            // config values to install cohorts. Never overwritten after the
+            // first write; this is the "which schema does this user get"
+            // dimension referenced in RemoteConfigKeys docs.
+            val installVersion = telemetryDataStore.data.first()[
+                com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.INSTALL_VERSION
+            ] ?: run {
+                val v = com.andriybobchuk.mooney.APP_VERSION
+                telemetryDataStore.edit { it[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.INSTALL_VERSION] = v }
+                v
+            }
+            analyticsTracker.setUserProperty("install_version", installVersion)
+            analyticsTracker.setUserProperty("app_version", com.andriybobchuk.mooney.APP_VERSION)
         } catch (e: kotlin.coroutines.cancellation.CancellationException) {
             throw e
         } catch (_: Exception) {
@@ -289,8 +319,12 @@ fun NavigationHost() {
                 com.andriybobchuk.mooney.core.notifications.ReminderMode.WEEKLY ->
                     reminderScheduler.scheduleWeekly(weekday, hour, minute)
                 com.andriybobchuk.mooney.core.notifications.ReminderMode.OFF -> {
-                    // No-op — explicit cancel would clobber a schedule the
-                    // user just set this session and DataStore hasn't flushed.
+                    // Explicit cancel — needed for upgraded users who had a
+                    // legacy 19:30 daily alarm scheduled by pre-v26.07 code.
+                    // The cancel() also clears the current WorkManager job
+                    // and the legacy AlarmManager PendingIntent, so users
+                    // who genuinely opted out stop getting notifications.
+                    reminderScheduler.cancel()
                 }
             }
         } catch (e: kotlin.coroutines.cancellation.CancellationException) {

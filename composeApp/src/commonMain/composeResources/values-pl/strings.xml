@@ -575,7 +575,7 @@
     <string name="cd_scroll_to_top">Przewiń na górę</string>
 
     <!-- Reminders -->
-    <string name="reminder_settings_title">Przypomnienia</string>
+    <string name="reminder_settings_title">Powiadomienia</string>
     <string name="reminder_body">Stuknij, aby zapisać dzisiejsze wydatki.</string>
     <string name="reminder_mode_off">Wyłączone</string>
     <string name="reminder_mode_daily">Codziennie</string>

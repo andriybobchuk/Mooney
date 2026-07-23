@@ -10,11 +10,17 @@ import platform.UserNotifications.UNNotificationRequest
 import platform.UserNotifications.UNUserNotificationCenter
 
 private const val REMINDER_REQUEST_ID = "mooney_reminder"
+// One-off cleanup list: identifiers used by earlier releases. Users who
+// upgraded from an older build still have those requests pending in
+// UNUserNotificationCenter, which is why they were seeing two notifications
+// per day — the current one plus the legacy 19:30 fixed-time one.
+private val LEGACY_REMINDER_IDS = listOf("mooney_daily_reminder")
 
 actual class ReminderScheduler {
 
     actual fun scheduleDaily(hour: Int, minute: Int) {
         requestAuthorizationLazily()
+        clearLegacyReminders()
         val components = NSDateComponents().apply {
             this.hour = hour.toLong()
             this.minute = minute.toLong()
@@ -24,6 +30,7 @@ actual class ReminderScheduler {
 
     actual fun scheduleWeekly(weekday: Int, hour: Int, minute: Int) {
         requestAuthorizationLazily()
+        clearLegacyReminders()
         // iOS NSDateComponents weekday: 1 = Sunday … 7 = Saturday.
         // We accept ISO 1 = Mon … 7 = Sun, so convert.
         val iosWeekday = isoToIosWeekday(weekday)
@@ -37,7 +44,18 @@ actual class ReminderScheduler {
 
     actual fun cancel() {
         UNUserNotificationCenter.currentNotificationCenter()
-            .removePendingNotificationRequestsWithIdentifiers(listOf(REMINDER_REQUEST_ID))
+            .removePendingNotificationRequestsWithIdentifiers(
+                listOf(REMINDER_REQUEST_ID) + LEGACY_REMINDER_IDS
+            )
+    }
+
+    /**
+     * Wipes any notification requests scheduled by earlier builds. Safe to
+     * call repeatedly — the UN API no-ops when an id isn't pending.
+     */
+    private fun clearLegacyReminders() {
+        UNUserNotificationCenter.currentNotificationCenter()
+            .removePendingNotificationRequestsWithIdentifiers(LEGACY_REMINDER_IDS)
     }
 
     private fun requestAuthorizationLazily() {

@@ -6,6 +6,19 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+    <!-- Strip the AdMob SDK's auto-merged AD_ID permission. Ads are hard-coded
+         off for this release (see FeatureFlags.adsEnabled + RemoteConfigKeys)
+         and `MobileAds.initialize()` is gated so the SDK never starts. Keeping
+         AD_ID in the merged manifest would force a "Yes, my app collects
+         Advertising ID" answer on Play Console's Advertising ID declaration
+         and drag advertising-data collection into our Data Safety form — for
+         a build that shows zero ads. Remove this `tools:node="remove"` line
+         when the ad rendering wiring is verified and we actually want the
+         capability back in a future release. -->
+    <uses-permission
+        android:name="com.google.android.gms.permission.AD_ID"
+        tools:node="remove" />
+
     <application
         android:name=".MyApp"
         android:allowBackup="true"

@@ -122,7 +122,11 @@ jobs:
     name: Deploy to TestFlight
     runs-on: macos-26
     needs: check
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    # Skip iOS when the merge/head commit is tagged `[android-only]` — used
+    # for hotfixes that only touch Android (e.g. AndroidManifest tweaks).
+    # The marker lives in the merge-commit message that /ship writes when
+    # merging dev → master, so it's visible on `github.event.head_commit`.
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push' && !contains(github.event.head_commit.message, '[android-only]')
     # 45 min — the 26.07.02 release hit the 30-min cap during Kotlin/Native
     # framework compile (~27 min alone), leaving no time for xcodebuild +
     # upload. Bumped so the Firebase-pods + KMP framework combo has room to
@@ -171,8 +175,9 @@ jobs:
     needs: check
     # Only run on master pushes. Also requires the MOONEY_KEYSTORE_BASE64 secret
     # to be set — until first manual upload to Play Console is done, leave the
-    # secret unset and this job will skip cleanly.
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push' && vars.PLAY_DEPLOY_ENABLED == 'true'
+    # secret unset and this job will skip cleanly. Skip Android when the
+    # merge/head commit is tagged `[ios-only]` — symmetric to the iOS skip.
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push' && vars.PLAY_DEPLOY_ENABLED == 'true' && !contains(github.event.head_commit.message, '[ios-only]')
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4

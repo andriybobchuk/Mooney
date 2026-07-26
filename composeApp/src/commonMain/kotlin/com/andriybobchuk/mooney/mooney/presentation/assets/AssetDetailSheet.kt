@@ -32,8 +32,6 @@ import mooney.composeapp.generated.resources.asset_detail_purchase_price
 import mooney.composeapp.generated.resources.asset_detail_unrealized
 import mooney.composeapp.generated.resources.delete
 import mooney.composeapp.generated.resources.edit
-import mooney.composeapp.generated.resources.primary_account
-import mooney.composeapp.generated.resources.set_as_primary
 import androidx.compose.foundation.clickable
 import kotlin.math.abs
 import org.jetbrains.compose.resources.stringResource
@@ -48,7 +46,6 @@ fun AssetDetailSheet(
     /** Total net worth in base currency. Drives the "% of net worth" line. */
     baseNetWorth: Double,
     onEdit: () -> Unit,
-    onSetPrimary: () -> Unit = {},
     onDelete: () -> Unit = {}
 ) {
     val isForeign = asset.originalCurrency != baseCurrency
@@ -172,36 +169,9 @@ fun AssetDetailSheet(
 
         Spacer(Modifier.height(8.dp))
 
-        // Set as primary row — disabled when already primary, still shown
-        // (with a filled tint) so users see the current role at a glance.
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(
-                    if (asset.isPrimary) MaterialTheme.colorScheme.primaryContainer
-                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                )
-                .clickable(enabled = !asset.isPrimary, onClick = onSetPrimary)
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = if (asset.isPrimary) {
-                    "✓ " + stringResource(Res.string.primary_account)
-                } else {
-                    stringResource(Res.string.set_as_primary)
-                },
-                style = MaterialTheme.typography.bodyLarge,
-                color = if (asset.isPrimary) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                }
-            )
-        }
-
-        Spacer(Modifier.height(8.dp))
+        // "Set as primary" row was removed — a single "primary" flag reads
+        // ambiguously now that we split roles into isPrimaryForExpenses and
+        // isPrimaryForIncome. Set those explicitly by editing the account.
 
         Row(
             modifier = Modifier

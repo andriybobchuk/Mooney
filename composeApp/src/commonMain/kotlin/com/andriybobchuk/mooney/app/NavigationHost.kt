@@ -56,6 +56,7 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 private const val SECONDARY_WORK_DELAY_MS = 1500L
+private const val MS_PER_DAY = 86_400_000L
 
 @Suppress("ThrowsCount")
 @Composable
@@ -282,6 +283,42 @@ fun NavigationHost() {
                 com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.ANALYTICS_ACTIVATED_FIRED
             ] ?: false
             analyticsTracker.setUserProperty("is_activated", isActivated.toString())
+
+            // `session_number` — bucketed count of cold-starts. The exact
+            // count would blow up cardinality, but "1, 2-3, 4-10, 11-30, 31+"
+            // is plenty to separate first-touch users from daily returners
+            // on any downstream funnel.
+            val opens = telemetryDataStore.data.first()[
+                com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.APP_OPEN_COUNT
+            ] ?: 0
+            val sessionBucket = when {
+                opens <= 1 -> "1"
+                opens <= 3 -> "2-3"
+                opens <= 10 -> "4-10"
+                opens <= 30 -> "11-30"
+                else -> "31+"
+            }
+            analyticsTracker.setUserProperty("session_number_bucket", sessionBucket)
+
+            // `days_since_install_bucket` — cohort staleness signal. Lets us
+            // ask "did this feature launch move the needle for week-1 users
+            // vs long-tenured users?" without shipping the raw days count.
+            val installTs = telemetryDataStore.data.first()[
+                com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.INSTALL_TIMESTAMP
+            ] ?: 0L
+            if (installTs > 0L) {
+                val nowMs = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
+                val daysSince = ((nowMs - installTs) / MS_PER_DAY).toInt().coerceAtLeast(0)
+                val daysBucket = when {
+                    daysSince == 0 -> "0"
+                    daysSince <= 1 -> "1"
+                    daysSince <= 7 -> "2-7"
+                    daysSince <= 30 -> "8-30"
+                    daysSince <= 90 -> "31-90"
+                    else -> "90+"
+                }
+                analyticsTracker.setUserProperty("days_since_install_bucket", daysBucket)
+            }
         } catch (e: kotlin.coroutines.cancellation.CancellationException) {
             throw e
         } catch (_: Exception) {

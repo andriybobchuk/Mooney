@@ -1,10 +1,12 @@
 package com.andriybobchuk.mooney
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.andriybobchuk.mooney.app.App
+import com.andriybobchuk.mooney.core.notifications.NotificationTelemetry
 import com.andriybobchuk.mooney.core.premium.ActivityProvider
 import com.andriybobchuk.mooney.e2e.E2eBootstrap
 import com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
@@ -28,6 +30,7 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         activityProvider.setActivity(this)
+        maybeFireNotificationOpened(intent)
 
         // Keep the system splash visible until the AppDataCache has emitted
         // at least once. By that point Room is open, the dep graph is fully
@@ -40,6 +43,27 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             App()
+        }
+    }
+
+    // When SINGLE_TOP + CLEAR_TOP relaunches the existing activity from a
+    // notification tap, onCreate does NOT re-run — the new intent arrives
+    // through onNewIntent. Fire the analytics event from both paths so we
+    // capture both cold-start and warm-return attribution.
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        maybeFireNotificationOpened(intent)
+    }
+
+    private fun maybeFireNotificationOpened(intent: Intent?) {
+        val fromNotification = intent
+            ?.getBooleanExtra(NotificationTelemetry.EXTRA_FROM_NOTIFICATION, false) == true
+        if (fromNotification) {
+            NotificationTelemetry().markOpened()
+            // Clear the extra so a subsequent config change (rotation,
+            // process-death restore) doesn't refire the event on the same
+            // intent instance.
+            intent?.removeExtra(NotificationTelemetry.EXTRA_FROM_NOTIFICATION)
         }
     }
 }

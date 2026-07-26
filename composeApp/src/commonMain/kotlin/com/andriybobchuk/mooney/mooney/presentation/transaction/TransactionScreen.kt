@@ -1275,6 +1275,7 @@ fun TransactionBottomSheet(
     preferencesRepository: com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository = koinInject(),
     currencyManagerUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase = koinInject(),
     getTransactionsUseCase: GetTransactionsUseCase = koinInject(),
+    analyticsTracker: com.andriybobchuk.mooney.core.analytics.AnalyticsTracker = koinInject(),
 ) {
     val isEditMode = transactionToEdit != null
 
@@ -1590,6 +1591,9 @@ fun TransactionBottomSheet(
                                 val tmp = selectedAccount
                                 selectedAccount = destinationAccount
                                 destinationAccount = tmp
+                                analyticsTracker.trackEvent(
+                                    com.andriybobchuk.mooney.core.analytics.AnalyticsEvent.TransferSwapUsed
+                                )
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -1777,6 +1781,17 @@ fun TransactionBottomSheet(
                     }
                 }
                 if (spentBase >= budgetLimit) {
+                    // One event per (category × over-budget-state) — the
+                    // LaunchedEffect key covers both dimensions so switching
+                    // categories re-fires when a new one is over, but a
+                    // recomposition on the same category doesn't spam.
+                    LaunchedEffect(rootCategoryForBudget.id) {
+                        analyticsTracker.trackEvent(
+                            com.andriybobchuk.mooney.core.analytics.AnalyticsEvent.BudgetLimitExceededSeen(
+                                rootCategoryForBudget.id
+                            )
+                        )
+                    }
                     Text(
                         text = stringResource(
                             Res.string.transaction_budget_over,

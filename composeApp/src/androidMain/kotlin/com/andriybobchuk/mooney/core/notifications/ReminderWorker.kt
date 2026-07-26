@@ -34,6 +34,11 @@ class ReminderWorker(
 
         val openAppIntent = Intent(applicationContext, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            // Attribution flag — MainActivity checks this in onCreate /
+            // onNewIntent to fire `notification_opened`. Kept as an extra
+            // (not action) so future non-reminder notifications can reuse
+            // the same launch shape without collision.
+            putExtra(NotificationTelemetry.EXTRA_FROM_NOTIFICATION, true)
         }
         val contentIntent = PendingIntent.getActivity(
             applicationContext,

@@ -37,6 +37,16 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <!-- Disable Firebase Analytics' automatic screen_view auto-collection.
+             We fire our own domain events (transaction_added, paywall_viewed,
+             etc.) so the auto-screen_view stream is pure noise in the Firebase
+             event log — dashboards get cleaner without it, and we lose nothing
+             because Analytics' cohort/retention charts key off `session_start`,
+             not screen views. -->
+        <meta-data
+            android:name="google_analytics_automatic_screen_reporting_enabled"
+            android:value="false" />
+
         <!-- TODO(production-ad-id): replace this Google test AdMob App ID with the real
              ca-app-pub-7021633711522076~<android-app-id> from the AdMob console before release. -->
         <meta-data

@@ -19,7 +19,6 @@ import com.andriybobchuk.mooney.core.premium.PremiumManager
 import com.andriybobchuk.mooney.core.premium.PurchaseResult
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetUserCurrenciesUseCase
-import com.andriybobchuk.mooney.mooney.domain.usecase.SetPrimaryAccountUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageAssetCategoryOrderUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.assets.ManageCategoryExpansionUseCase
 import com.andriybobchuk.mooney.core.domain.Result
@@ -51,7 +50,6 @@ class AssetsViewModel(
     private val manageAssetCategoryOrderUseCase: ManageAssetCategoryOrderUseCase,
     private val manageCategoryExpansionUseCase: ManageCategoryExpansionUseCase,
     private val shouldRefreshExchangeRatesUseCase: ShouldRefreshExchangeRatesUseCase,
-    private val setPrimaryAccountUseCase: SetPrimaryAccountUseCase,
     private val getUserCurrenciesUseCase: GetUserCurrenciesUseCase,
     private val assetCategoryDao: AssetCategoryDao,
     private val analyticsTracker: AnalyticsTracker,
@@ -523,11 +521,6 @@ class AssetsViewModel(
         }
     }
 
-    fun setPrimaryAccount(accountId: Int) {
-        viewModelScope.launch(Dispatchers.IO) {
-            setPrimaryAccountUseCase(accountId)
-        }
-    }
 }
 
 typealias UiAsset = AccountWithConversion

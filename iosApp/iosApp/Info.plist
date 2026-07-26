@@ -30,6 +30,12 @@
 	     resizable windows; UIRequiresFullScreen=true blocks that. -->
 	<key>UIRequiresFullScreen</key>
 	<true/>
+	<!-- Disable Firebase Analytics' automatic screen_view auto-collection.
+	     We fire our own domain events; the auto stream is noise for our
+	     dashboards. Session/retention charts key off session_start, not
+	     screen_view, so nothing meaningful is lost. -->
+	<key>FirebaseAutomaticScreenReportingEnabled</key>
+	<false/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

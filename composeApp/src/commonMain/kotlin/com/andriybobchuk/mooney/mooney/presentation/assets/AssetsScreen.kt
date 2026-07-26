@@ -306,12 +306,6 @@ fun AssetsScreen(
                 currentRates = state.currentRates,
                 onAssetClick = { detailAsset = it },
                 currencyInsightsEnabled = state.currencyInsightsEnabled,
-                onEdit = {
-                    editingAsset = it
-                    showSheet = true
-                },
-                onDelete = { viewModel.deleteAsset(it.id) },
-                onSetPrimary = { viewModel.setPrimaryAccount(it.id) },
                 onToggleCategory = { viewModel.toggleCategoryExpansion(it) },
                 onUpdateCategoryOrder = { viewModel.updateCategoryOrder(it) },
                 onAddAsset = { showSheet = true }
@@ -377,10 +371,6 @@ fun AssetsScreen(
                     detailAsset = null
                     editingAsset = asset
                     showSheet = true
-                },
-                onSetPrimary = {
-                    viewModel.setPrimaryAccount(asset.id)
-                    detailAsset = null
                 },
                 onDelete = {
                     viewModel.deleteAsset(asset.id)
@@ -549,9 +539,6 @@ private fun AssetsScreenContent(
     baseCurrency: Currency,
     totalNetWorth: Double = 0.0,
     baseNetWorth: Double = 0.0,
-    onEdit: (UiAsset) -> Unit,
-    onDelete: (UiAsset) -> Unit,
-    onSetPrimary: (UiAsset) -> Unit,
     historicalRates: Map<Currency, List<com.andriybobchuk.mooney.mooney.domain.HistoricalRate>> = emptyMap(),
     percentiles: Map<Currency, Int> = emptyMap(),
     currentRates: Map<Currency, Double> = emptyMap(),
@@ -751,10 +738,11 @@ private fun AssetsScreenContent(
                                         historicalRates = if (currencyInsightsEnabled) historicalRates[asset.originalCurrency] else null,
                                         percentile = if (currencyInsightsEnabled) percentiles[asset.originalCurrency] else null,
                                         currentRate = if (currencyInsightsEnabled) currentRates[asset.originalCurrency] else null,
-                                        onClick = { if (currencyInsightsEnabled) onAssetClick(asset) else onEdit(asset) },
-                                        onEdit = onEdit,
-                                        onDelete = onDelete,
-                                        onSetPrimary = onSetPrimary
+                                        // Single tap ALWAYS opens the detail sheet — that's the
+                                        // surface where Edit / Delete / etc. live. Previously we
+                                        // short-circuited to onEdit when currency insights were
+                                        // off, which killed the only path to delete an account.
+                                        onClick = { onAssetClick(asset) }
                                     )
                                 }
                                 Spacer(Modifier.height(8.dp))
@@ -876,10 +864,7 @@ private fun AssetCard(
     historicalRates: List<com.andriybobchuk.mooney.mooney.domain.HistoricalRate>? = null,
     percentile: Int? = null,
     currentRate: Double? = null,
-    onClick: () -> Unit = {},
-    onEdit: (UiAsset) -> Unit,
-    onDelete: (UiAsset) -> Unit,
-    onSetPrimary: (UiAsset) -> Unit
+    onClick: () -> Unit = {}
 ) {
     val isForeign = asset.originalCurrency != baseCurrency
 

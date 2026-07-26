@@ -220,10 +220,21 @@ sealed interface AnalyticsEvent {
         override val params = mapOf("trigger" to trigger)
     }
 
-    /** User tapped the Subscribe button (intent — not yet a purchase). */
-    data class SubscribeTap(val productId: String, val trigger: String) : AnalyticsEvent {
+    /** User tapped the Subscribe button (intent — not yet a purchase).
+     *  `time_since_view_bucket` groups the decision speed (how long the
+     *  sheet was open before the tap) so we can separate impulse buyers
+     *  from deliberators when reading the funnel. */
+    data class SubscribeTap(
+        val productId: String,
+        val trigger: String,
+        val timeSinceViewBucket: String
+    ) : AnalyticsEvent {
         override val name = "subscribe_tap"
-        override val params = mapOf("product_id" to productId, "trigger" to trigger)
+        override val params = mapOf(
+            "product_id" to productId,
+            "trigger" to trigger,
+            "time_since_view_bucket" to timeSinceViewBucket
+        )
     }
 
     /** Outcome of the StoreKit/Play Billing call. */

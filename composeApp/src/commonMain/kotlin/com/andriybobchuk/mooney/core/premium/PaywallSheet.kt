@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -114,6 +115,10 @@ fun PaywallSheet(
     val premiumManager = koinInject<PremiumManager>()
     val analyticsTracker = koinInject<com.andriybobchuk.mooney.core.analytics.AnalyticsTracker>()
     val price by premiumManager.monthlyPriceFlow.collectAsState()
+    // Timestamp captured at first composition so we can bucket the time
+    // between paywall view and subscribe tap (or dismiss). Uses a plain
+    // remember so it survives recompositions but resets on remount.
+    val paywallShownAtMs = remember { kotlinx.datetime.Clock.System.now().toEpochMilliseconds() }
     LaunchedEffect(Unit) {
         premiumManager.refreshMonthlyPrice()
         // Fires once per paywall mount — trigger label feeds the funnel chart
@@ -130,10 +135,13 @@ fun PaywallSheet(
         onDismiss()
     }
     val wrappedOnSubscribe: () -> Unit = {
+        val elapsedSeconds = ((kotlinx.datetime.Clock.System.now()
+            .toEpochMilliseconds() - paywallShownAtMs) / 1000L).toInt()
         analyticsTracker.trackEvent(
             com.andriybobchuk.mooney.core.analytics.AnalyticsEvent.SubscribeTap(
                 productId = PRODUCT_ID_MONTHLY,
-                trigger = trigger.name
+                trigger = trigger.name,
+                timeSinceViewBucket = bucketDecisionSeconds(elapsedSeconds)
             )
         )
         onSubscribe()
@@ -378,4 +386,17 @@ private fun PaywallMeshBackground() {
     com.andriybobchuk.mooney.core.presentation.designsystem.components.EnhancedMeshBackground(
         modifier = Modifier.fillMaxSize()
     )
+}
+
+/**
+ * Buckets the seconds between paywall-shown and subscribe-tap. Small enough
+ * ranges to distinguish impulse vs deliberation; wide enough that we don't
+ * blow up event-property cardinality in Firebase.
+ */
+private fun bucketDecisionSeconds(seconds: Int): String = when {
+    seconds < 5 -> "0-5"
+    seconds < 15 -> "5-15"
+    seconds < 60 -> "15-60"
+    seconds < 300 -> "60-300"
+    else -> "300+"
 }

@@ -73,6 +73,77 @@
             android:name="android.adservices.AD_SERVICES_CONFIG"
             android:resource="@xml/gma_ad_services_config"
             tools:replace="android:resource" />
+
+        <!-- ────────────────── Widgets ──────────────────
+             Each Glance widget needs its own AppWidgetProvider receiver.
+             onEnabled fires the widget_added analytics event, onDisabled
+             fires widget_removed. Composition + data reads happen inside
+             the corresponding GlanceAppWidget class (see widgets/*.kt).
+
+             `android:updatePeriodMillis` in the XML enforces a minimum
+             30-minute cadence; the app can push more frequent updates via
+             GlanceAppWidget.updateAll (called from WidgetSnapshotWriter
+             on every tx change).
+        -->
+        <receiver
+            android:name=".widgets.BalanceWidgetReceiver"
+            android:exported="false"
+            android:label="Mooney · Balance">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_balance" />
+        </receiver>
+
+        <receiver
+            android:name=".widgets.TodaySpendingWidgetReceiver"
+            android:exported="false"
+            android:label="Mooney · Today">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_today" />
+        </receiver>
+
+        <receiver
+            android:name=".widgets.BudgetProgressWidgetReceiver"
+            android:exported="false"
+            android:label="Mooney · Budgets">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_budget" />
+        </receiver>
+
+        <receiver
+            android:name=".widgets.StreakWidgetReceiver"
+            android:exported="false"
+            android:label="Mooney · Streak (Mooley)">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_streak" />
+        </receiver>
+
+        <receiver
+            android:name=".widgets.QuickAddWidgetReceiver"
+            android:exported="false"
+            android:label="Mooney · Quick Add">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info_quickadd" />
+        </receiver>
     </application>
 
 </manifest>

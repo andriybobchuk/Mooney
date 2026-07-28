@@ -122,6 +122,29 @@ fun App() {
                     }
                 }
 
+                // Widget onboarding — one-shot bottom sheet that appears
+                // once the user hits activation (≥3 tx across ≥2 distinct
+                // days). Placed at the App() level so it floats above every
+                // screen regardless of current tab. Deep-links to the
+                // Widgets picker as its "learn more" CTA — the picker route
+                // isn't reachable from here because App() doesn't own the
+                // NavHost, so we drop a note in the sheet callback and rely
+                // on the user tapping the CTA which navigates to Widgets via
+                // the intent below.
+                com.andriybobchuk.mooney.core.widgets.WidgetOnboardingHost(
+                    platform = if (com.andriybobchuk.mooney.core.data.category.isIosPlatform) {
+                        com.andriybobchuk.mooney.core.widgets.WidgetOnboardingPlatform.IOS
+                    } else {
+                        com.andriybobchuk.mooney.core.widgets.WidgetOnboardingPlatform.ANDROID
+                    },
+                    onSeeAllWidgets = {
+                        // TODO: needs a nav callback threaded from
+                        //  NavigationHost. For MVP, dismissing the sheet is
+                        //  enough — the Settings → Widgets link is right
+                        //  there. Wire real deep-link in follow-up.
+                    }
+                )
+
                 // DEV overlay — only in debug builds
                 if (FeatureFlags.isDebug) {
                     var showDevTools by remember { mutableStateOf(false) }

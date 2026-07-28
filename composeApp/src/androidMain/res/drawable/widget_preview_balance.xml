@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple preview shown in the launcher's widget picker. Vector so it
+     scales cleanly to whatever preview size the launcher renders at.
+     The real widget composition happens at add-to-home time via Glance. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="140dp"
+    android:height="140dp"
+    android:viewportWidth="140"
+    android:viewportHeight="140">
+    <path
+        android:fillColor="#12141A"
+        android:pathData="M20,20 L120,20 A16,16 0 0 1 136,36 L136,120 A16,16 0 0 1 120,136 L20,136 A16,16 0 0 1 4,120 L4,36 A16,16 0 0 1 20,20 Z" />
+    <path
+        android:fillColor="#8A8F9F"
+        android:pathData="M20,40 L80,40 L80,50 L20,50 Z" />
+    <path
+        android:fillColor="#F2F3F7"
+        android:pathData="M20,60 L110,60 L110,90 L20,90 Z" />
+    <path
+        android:fillColor="#3562F6"
+        android:pathData="M20,100 L60,100 L60,110 L20,110 Z" />
+</vector>

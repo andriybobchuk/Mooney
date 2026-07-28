@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Widget extension entitlement. Must be added to the target's build settings
+  (Signing & Capabilities → Custom Entitlements) once the target is created.
+  Xcode auto-generates a matching file for the main iosApp target when you
+  add "App Groups" capability there; the group ID here MUST match both the
+  main app's App Group and the Kotlin `WidgetSnapshotStorage.IOS_APP_GROUP`
+  constant.
+
+  If any of the three drift, UserDefaults(suiteName:) silently returns the
+  per-process container and the widget stays stuck on the placeholder.
+-->
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.com.andriybobchuk.mooney.widgets</string>
+    </array>
+</dict>
+</plist>

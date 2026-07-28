@@ -54,6 +54,7 @@ fun SettingsScreen(
     onBackClick: () -> Unit,
     onNavigateToTransactionCategories: () -> Unit = {},
     onNavigateToAssetCategories: () -> Unit = {},
+    onNavigateToWidgets: () -> Unit = {},
     onReplayOnboarding: () -> Unit = {},
     // Settings is a top-level tab — when reached from the bottom nav, this
     // renders the persistent nav bar. Null means we're reached from a
@@ -1030,6 +1031,21 @@ fun SettingsScreen(
                             description = stringResource(Res.string.exclude_taxes_desc),
                             checked = state.excludeTaxesFromTotals,
                             onCheckedChange = { viewModel.onAction(SettingsAction.OnExcludeTaxesToggle(it)) }
+                        )
+                    }
+                }
+
+                // Widgets — dedicated section so the Home-Screen story is
+                // discoverable AFTER the post-activation onboarding sheet is
+                // dismissed. Value prop is prominent — this is one of our
+                // biggest retention levers.
+                item { SettingsSectionHeader("Home screen") } // allow-hardcoded (Widgets category)
+                item {
+                    SettingsGroup {
+                        SettingsRow(
+                            title = "Widgets", // allow-hardcoded (feature name)
+                            value = "Add Mooley → tap to explore", // allow-hardcoded (short marketing hook)
+                            onClick = onNavigateToWidgets
                         )
                     }
                 }

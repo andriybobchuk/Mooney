@@ -55,4 +55,9 @@ sealed interface Route {
     @Serializable
     data object NetWorthDetail : Route
 
+    /** Settings → Widgets picker. Shows every widget variant and the
+     *  platform-specific "how to add" instructions. */
+    @Serializable
+    data object Widgets : Route
+
 }

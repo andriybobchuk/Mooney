@@ -11,6 +11,12 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         FirebaseApp.configure()
         Analytics.shared.setBridge(bridge: FirebaseAnalyticsBridge())
         RemoteConfig.shared.setBridge(bridge: RemoteConfigBridge())
+        // Widgets — hand the WidgetKit reload closure to Kotlin so the
+        // KMP-side coordinator can ping WidgetCenter on every snapshot write.
+        // The Kotlin-registered App Group defaults are the actual data
+        // channel; this bridge only exists to nudge WidgetKit that fresh
+        // data landed.
+        WidgetKitBridgeRegistry.shared.setBridge(bridge: WidgetKitBridgeImpl())
         // Ads — currently a no-op bridge. When the Google Mobile Ads SwiftPM
         // dependency is added (see AdMobBridge.swift header), this single
         // setBridge call is all that activates the SDK from app launch.
@@ -63,6 +69,13 @@ struct iOSApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onOpenURL { url in
+                    // Widget taps arrive here (Widget's `.widgetURL(...)`
+                    // handoff). We fire the shared telemetry so both
+                    // platforms' widget_tapped events look identical in
+                    // Firebase, then let normal deep-link routing take over.
+                    WidgetTapTelemetry.shared.handleWidgetOpen(url: url.absoluteString)
+                }
         }
     }
 }

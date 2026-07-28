@@ -63,6 +63,13 @@ kotlin {
             // Reminder notifications — scheduled via WorkManager so the OS
             // hosts the periodic trigger across reboots and app upgrades.
             implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+            // Jetpack Glance — Compose-flavored AppWidgetProvider replacement.
+            // We render every home-screen widget with Glance so we can share
+            // domain models directly with the main app (rather than serializing
+            // across RemoteViews). See composeApp/src/androidMain/.../widgets/.
+            implementation("androidx.glance:glance-appwidget:1.1.1")
+            implementation("androidx.glance:glance-material3:1.1.1")
         }
         commonMain.dependencies {
             implementation(compose.runtime)

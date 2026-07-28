@@ -3,9 +3,11 @@ package com.andriybobchuk.mooney
 import android.app.Application
 import com.andriybobchuk.mooney.core.ads.Ads
 import com.andriybobchuk.mooney.core.notifications.ensureReminderNotificationChannel
+import com.andriybobchuk.mooney.core.widgets.WidgetSnapshotCoordinator
 import com.andriybobchuk.mooney.di.initKoin
 import com.andriybobchuk.mooney.di.warmStartupSingletons
 import com.andriybobchuk.mooney.e2e.E2eBootstrap
+import org.koin.android.ext.android.get
 import org.koin.android.ext.koin.androidContext
 
 class MyApp: Application() {
@@ -39,5 +41,10 @@ class MyApp: Application() {
         // start, and the channel shows up in system settings even before the
         // user enables reminders.
         ensureReminderNotificationChannel(this)
+
+        // Widget snapshot coordinator — starts observing the app data cache
+        // and writing the shared snapshot every time the DB changes. Idempotent
+        // start() means no harm if the process is rebuilt from a cached state.
+        get<WidgetSnapshotCoordinator>().start()
     }
 }

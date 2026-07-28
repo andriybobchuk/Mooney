@@ -6,9 +6,12 @@ import com.andriybobchuk.mooney.core.data.preferences.StartupPrefs
 import com.andriybobchuk.mooney.core.platform.FileHandler
 import com.andriybobchuk.mooney.core.premium.BillingManager
 import com.andriybobchuk.mooney.core.premium.IosBillingManager
+import com.andriybobchuk.mooney.core.widgets.IosWidgetSnapshotWriter
+import com.andriybobchuk.mooney.core.widgets.WidgetSnapshotWriter
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.darwin.Darwin
 import org.koin.core.module.Module
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
 actual val platformModule: Module
@@ -19,4 +22,7 @@ actual val platformModule: Module
         single { StartupPrefs() }
         single { FileHandler() }
         single<BillingManager> { IosBillingManager() }
+        // Widgets — iOS impl writes to App-Group UserDefaults + pings
+        // WidgetKit via the IosWidgetKitBridge registered from iOSApp.swift.
+        single { IosWidgetSnapshotWriter() }.bind<WidgetSnapshotWriter>()
     }

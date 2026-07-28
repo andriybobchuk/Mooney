@@ -567,6 +567,21 @@ fun NavigationHost() {
                 )
             }
 
+            // Settings → Widgets. Reachable from the Settings list and from
+            // the post-activation "Add Mooney to home screen" onboarding
+            // sheet's "See all widgets" CTA. Shows every variant + platform
+            // instructions.
+            composable<Route.Widgets> {
+                com.andriybobchuk.mooney.core.widgets.WidgetsPickerScreen(
+                    platform = if (com.andriybobchuk.mooney.core.data.category.isIosPlatform) {
+                        com.andriybobchuk.mooney.core.widgets.WidgetOnboardingPlatform.IOS
+                    } else {
+                        com.andriybobchuk.mooney.core.widgets.WidgetOnboardingPlatform.ANDROID
+                    },
+                    onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
+                )
+            }
+
             if (FeatureFlags.goalsEnabled) {
                 composable<Route.Goals> {
                     val viewModel = koinViewModel<GoalsViewModel>()
@@ -594,6 +609,7 @@ fun NavigationHost() {
                     onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() },
                     onNavigateToTransactionCategories = { navController.navigate(Route.Categories) },
                     onNavigateToAssetCategories = { navController.navigate(Route.Categories) },
+                    onNavigateToWidgets = { navController.navigate(Route.Widgets) },
                     onReplayOnboarding = {
                         // Pop everything down to the onboarding destination so
                         // finishing it lands you back on the main graph fresh.

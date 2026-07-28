@@ -275,6 +275,83 @@ sealed interface AnalyticsEvent {
         override val name = "developer_options_unlocked"
     }
 
+    // ───────────────────────── Widgets ─────────────────────────
+
+    /**
+     * Fires when a widget is placed on the home screen. `kind` identifies the
+     * widget variant ("balance"/"today"/"budget"/"streak"/"quick_add"),
+     * `size` identifies the requested area ("small"/"medium"/"large"). This
+     * lets us build "which widget is most valuable to users" charts.
+     */
+    data class WidgetAdded(val kind: String, val size: String) : AnalyticsEvent {
+        override val name = "widget_added"
+        override val params = mapOf("kind" to kind, "size" to size)
+    }
+
+    /**
+     * Fires when a widget is removed. Same params as [WidgetAdded]. Retention
+     * signal — a widget that gets added and quickly removed is worse than one
+     * that isn't added at all.
+     */
+    data class WidgetRemoved(val kind: String, val size: String) : AnalyticsEvent {
+        override val name = "widget_removed"
+        override val params = mapOf("kind" to kind, "size" to size)
+    }
+
+    /**
+     * Fires when the user taps a widget. `action` describes where the tap
+     * routed to inside the app ("open_transactions"/"open_paywall"/"add_tx"…).
+     * Cheapest possible retention proxy — every event is a home-screen tap
+     * that would otherwise have opened another app.
+     */
+    data class WidgetTapped(val kind: String, val action: String) : AnalyticsEvent {
+        override val name = "widget_tapped"
+        override val params = mapOf("kind" to kind, "action" to action)
+    }
+
+    /**
+     * Fires every time the coordinator successfully writes a fresh snapshot.
+     * `mood` is Mooley's current mood; `generation` is a monotonic counter
+     * that lets us detect gaps (missing writes) in the funnel.
+     */
+    data class WidgetDataRefreshed(
+        val generation: Long,
+        val mood: String
+    ) : AnalyticsEvent {
+        override val name = "widget_data_refreshed"
+        override val params = mapOf(
+            "generation_bucket" to bucketGeneration(generation),
+            "mood" to mood
+        )
+
+        private fun bucketGeneration(n: Long): String = when {
+            n <= 1 -> "1"
+            n <= 10 -> "2-10"
+            n <= 100 -> "11-100"
+            n <= 1000 -> "101-1000"
+            else -> "1000+"
+        }
+    }
+
+    /**
+     * Post-activation bottom sheet was shown ("Add Mooney to home screen").
+     * Fires at most once per install per platform.
+     */
+    data class WidgetOnboardingShown(val platform: String) : AnalyticsEvent {
+        override val name = "widget_onboarding_shown"
+        override val params = mapOf("platform" to platform)
+    }
+
+    /**
+     * User's response to the widget onboarding sheet. `action` is one of
+     * "add_now" (tapped the CTA), "later" (dismiss), "learn_more" (viewed
+     * the Settings → Widgets screen).
+     */
+    data class WidgetOnboardingAction(val action: String) : AnalyticsEvent {
+        override val name = "widget_onboarding_action"
+        override val params = mapOf("action" to action)
+    }
+
     // ───────────────────────── Internal / debug only ─────────────────────────
 
     /**

@@ -60,6 +60,14 @@ object PreferencesKeys {
      * snake_case tags like "budget", "goal", "recurring".
      */
     val ANALYTICS_ADOPTED_FEATURES = stringSetPreferencesKey("analytics_adopted_features")
+    /**
+     * One-shot flag — flipped `true` the first time we surface the "Add
+     * Mooney to your home screen" bottom sheet after the user has logged
+     * ≥ ACTIVATION_MIN_TX transactions across ≥ ACTIVATION_MIN_DAYS distinct
+     * days. Keeps the widget onboarding from re-appearing every launch after
+     * the user swipes it away.
+     */
+    val WIDGET_ONBOARDING_SHOWN = booleanPreferencesKey("widget_onboarding_shown")
     // Ads — frequency-capping counters used by AdEligibilityUseCase. All are
     // best-effort; if a write loses a race, worst case we show one extra ad
     // (capped at the next check anyway). See core/ads/Ads.kt.

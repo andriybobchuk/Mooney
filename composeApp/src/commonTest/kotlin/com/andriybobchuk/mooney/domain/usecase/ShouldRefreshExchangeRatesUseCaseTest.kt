@@ -25,20 +25,14 @@ class ShouldRefreshExchangeRatesUseCaseTest {
         assertTrue(result)
     }
 
-    @Test
-    fun `returns true when timestamp is exactly at the 1 hour boundary`() {
-        // Timestamp is exactly ONE_HOUR_MS ago, which means it is NOT recent (< oneHourAgo fails)
-        val exactlyOneHourAgo = Clock.System.now().toEpochMilliseconds() - ShouldRefreshExchangeRatesUseCase.ONE_HOUR_MS
-
-        val result = sut(lastUpdatedTimestamp = exactlyOneHourAgo)
-
-        // exactlyOneHourAgo < oneHourAgo is borderline — small clock jitter may tip it either way;
-        // we only assert on clearly stale and clearly fresh cases in the other tests
-        // This test documents the boundary behaviour without asserting a specific side
-        val oneHourAgo = Clock.System.now().toEpochMilliseconds() - ShouldRefreshExchangeRatesUseCase.ONE_HOUR_MS
-        val expected = exactlyOneHourAgo < oneHourAgo
-        assertTrue(result == expected || !result == !expected) // tautology — just documents the call
-    }
+    // The "exactly at the 1 hour boundary" test that lived here was removed
+    // because it hinged on strict-less-than semantics of two Clock.now()
+    // reads. On a fast machine both reads return the same value and the
+    // SUT returns false; on a slower CI runner the second read ticks forward
+    // and the SUT returns true. Either behavior is technically correct
+    // (nothing meaningful happens on a 1-µs boundary), but the test was
+    // deterministic in NEITHER direction. Clearly-stale + clearly-fresh
+    // cases below cover the actual product behavior.
 
     @Test
     fun `returns false when timestamp is recent - less than 1 hour ago`() {

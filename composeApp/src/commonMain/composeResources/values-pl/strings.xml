@@ -118,6 +118,8 @@
     <string name="get_in_touch">Skontaktuj się</string>
     <string name="feedback_description">Mooney jest aktywnie rozwijany. Znalazłeś błąd? Masz pomysł? Napisz — Twoja opinia kształtuje aplikację.</string>
     <string name="feedback_socials_title">Cześć! Jestem Andriy</string>
+    <string name="contact_intro">Aktywnie rozwijam Mooney i chętnie usłyszę Twoją opinię. Napisz do mnie na jednym z poniższych kanałów.</string>
+    <string name="contact_email_label">E-mail</string>
     <string name="feedback_socials_intro">Aktywnie rozwijam Mooney i chętnie usłyszę Twoją opinię. Znalazłeś błąd? Masz pomysł? Po prostu chcesz pogadać? Napisz na którymkolwiek z kanałów poniżej!</string>
     <string name="analytics_request_title">Potrzebujesz więcej funkcji w analityce?</string>
     <string name="analytics_request_desc">Powiedz, co byłoby przydatne — napisz na dowolnym kanale, a najlepsze pomysły wdrożę.</string>
@@ -222,6 +224,7 @@
     <string name="enjoying_mooney">Podoba Ci się Mooney?</string>
     <string name="feedback_intro">Twoja opinia pomaga rozwijać aplikację — pracuję sam, każda odpowiedź zostaje przeczytana.</string>
     <string name="not_really">Niezupełnie</string>
+    <string name="i_love_it">Uwielbiam</string>
     <string name="got_it_thanks">Rozumiem. Dziękuję.</string>
     <string name="couldnt_send">Nie udało się wysłać. Sprawdź połączenie i spróbuj ponownie.</string>
     <string name="whats_on_your_mind">Co Ci leży na sercu?</string>

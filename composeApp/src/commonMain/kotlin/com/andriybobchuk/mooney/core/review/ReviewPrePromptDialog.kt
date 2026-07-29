@@ -31,6 +31,7 @@ import com.andriybobchuk.mooney.core.presentation.designsystem.components.Enhanc
 import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.enjoying_mooney
 import mooney.composeapp.generated.resources.feedback_intro
+import mooney.composeapp.generated.resources.i_love_it
 import mooney.composeapp.generated.resources.not_really
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -117,7 +118,7 @@ fun ReviewPrePromptDialog(
                     )
                 ) {
                     Text(
-                        text = "I love it",
+                        text = stringResource(Res.string.i_love_it),
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp
                     )

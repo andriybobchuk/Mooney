@@ -43,6 +43,15 @@ class AdEligibilityUseCase(
         sessionTapCount: Int,
         sessionCount: Int
     ): Boolean {
+        // Global kill switch — same gate used by every ad-rendering call site.
+        // Without this, the "Watch ad to say thanks" row on Settings + the
+        // rewarded-only flows still show up even when ads are hard-coded off
+        // for the release (Android in 26.07.06). User-visible bug: dead row
+        // in Settings that tapping does nothing helpful.
+        if (!com.andriybobchuk.mooney.mooney.domain.FeatureFlags.adsEnabled) {
+            println("[Ads] $placement DENY: FeatureFlags.adsEnabled is false")
+            return false
+        }
         val prefsForKillSwitch = dataStore.data.first()
         if (prefsForKillSwitch[PreferencesKeys.ADS_DISABLED_DEV] == true) {
             println("[Ads] $placement DENY: ADS_DISABLED_DEV is on")

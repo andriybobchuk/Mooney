@@ -118,6 +118,8 @@
     <string name="get_in_touch">Kontakt aufnehmen</string>
     <string name="feedback_description">Mooney wird aktiv entwickelt. Bug gefunden? Idee? Schreib uns — dein Feedback prägt die App.</string>
     <string name="feedback_socials_title">Hi! Ich bin Andriy</string>
+    <string name="contact_intro">Ich arbeite aktiv an Mooney und freue mich, von dir zu hören. Schreib mir auf einem der unten stehenden Kanäle.</string>
+    <string name="contact_email_label">E-Mail</string>
     <string name="feedback_socials_intro">Ich entwickle Mooney aktiv und freue mich über deine Nachricht. Bug gefunden? Idee? Lust auf einen Plausch? Erreich mich über einen der Kanäle unten!</string>
     <string name="analytics_request_title">Brauchst du mehr Analyse-Funktionen?</string>
     <string name="analytics_request_desc">Sag mir, was nützlich wäre — schreib mir auf einem Kanal und ich baue die besten Ideen.</string>
@@ -222,6 +224,7 @@
     <string name="enjoying_mooney">Magst du Mooney?</string>
     <string name="feedback_intro">Dein Feedback hilft, die App zu verbessern — entwickelt alleine, jede Antwort wird gelesen.</string>
     <string name="not_really">Eher nicht</string>
+    <string name="i_love_it">Ich liebe es</string>
     <string name="got_it_thanks">Verstanden. Danke.</string>
     <string name="couldnt_send">Konnte nicht senden. Verbindung prüfen und erneut versuchen.</string>
     <string name="whats_on_your_mind">Was beschäftigt dich?</string>

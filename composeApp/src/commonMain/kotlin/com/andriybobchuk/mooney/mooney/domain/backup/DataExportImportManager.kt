@@ -66,7 +66,14 @@ class DataExportImportManager(
         val emoji: String,
         val assetCategory: String,
         val isPrimary: Boolean = false,
-        val isLiability: Boolean = false
+        val isLiability: Boolean = false,
+        // v4 additions — previously lost across export/import round-trips.
+        // Every field has a safe default so restoring a v1-v3 export still
+        // works (missing fields decode as their defaults).
+        val currentMarketValue: Double? = null,
+        val includeInNetWorth: Boolean = true,
+        val isPrimaryForExpenses: Boolean = false,
+        val isPrimaryForIncome: Boolean = false
     )
 
     @Serializable
@@ -79,7 +86,12 @@ class DataExportImportManager(
         val currency: String,
         val createdDate: String,
         val groupName: String,
-        val imagePath: String? = null
+        val imagePath: String? = null,
+        // v4 additions — GoalEntity tracks these to compute progress against
+        // account balance vs. net worth vs. gross assets. Missing them
+        // silently downgraded every restored goal to a NET_WORTH goal.
+        val trackingType: String = "NET_WORTH",
+        val accountId: Int? = null
     )
 
     @Serializable
@@ -104,7 +116,11 @@ class DataExportImportManager(
         val title: String,
         val type: String,
         val emoji: String? = null,
-        val parentId: String? = null
+        val parentId: String? = null,
+        // v4 addition — user-set monthly budget per category. Missing this
+        // wiped every budget on restore, which silently broke the whole
+        // Analytics → Budget-progress flow after import.
+        val monthlyLimit: Double? = null
     )
 
     @Serializable
@@ -218,6 +234,12 @@ class DataExportImportManager(
         return json.encodeToString(export)
     }
 
+    // Suppressed because the length is inherently structural — 10 sequential
+    // "insert entity type N" steps, each with explicit constructor mapping
+    // so anyone reading this can grep for a single field and confirm it
+    // survives round-trip. Extracting per-step helpers would hide exactly
+    // the trace we want to keep visible.
+    @Suppress("LongMethod")
     suspend fun importData(jsonData: String, clearExisting: Boolean = false): ImportResult {
         return try {
             val export = json.decodeFromString<CompleteDataExport>(jsonData)
@@ -229,9 +251,21 @@ class DataExportImportManager(
             // Import order matters: parents before children
             var counts = ImportCounts()
 
-            // 1. Categories first (no dependencies)
+            // 1. Categories first (no dependencies).
+            //    monthlyLimit was added in export v4 — CategoryExport defaults
+            //    it to null for older payloads so restoring a v1-v3 backup
+            //    keeps the existing behavior (no budget).
             export.categories.forEach { cat ->
-                categoryDao.upsert(CategoryEntity(cat.id, cat.title, cat.type, cat.emoji, cat.parentId))
+                categoryDao.upsert(
+                    CategoryEntity(
+                        id = cat.id,
+                        title = cat.title,
+                        type = cat.type,
+                        emoji = cat.emoji,
+                        parentId = cat.parentId,
+                        monthlyLimit = cat.monthlyLimit
+                    )
+                )
                 counts = counts.copy(categories = counts.categories + 1)
             }
 
@@ -247,10 +281,27 @@ class DataExportImportManager(
                 counts = counts.copy(goalGroups = counts.goalGroups + 1)
             }
 
-            // 4. Accounts (transactions reference them)
+            // 4. Accounts (transactions reference them).
+            //    v4 fields (currentMarketValue, includeInNetWorth,
+            //    isPrimaryForExpenses, isPrimaryForIncome) all have safe
+            //    defaults so restoring older exports still keeps everything
+            //    counted / no primary-role assignments.
             export.accounts.forEach { acc ->
                 accountDao.upsert(
-                    AccountEntity(0, acc.title, acc.amount, acc.currency, acc.emoji, acc.assetCategory, acc.isPrimary, acc.isLiability)
+                    AccountEntity(
+                        id = 0,
+                        title = acc.title,
+                        amount = acc.amount,
+                        currency = acc.currency,
+                        emoji = acc.emoji,
+                        assetCategory = acc.assetCategory,
+                        isPrimary = acc.isPrimary,
+                        isLiability = acc.isLiability,
+                        currentMarketValue = acc.currentMarketValue,
+                        includeInNetWorth = acc.includeInNetWorth,
+                        isPrimaryForExpenses = acc.isPrimaryForExpenses,
+                        isPrimaryForIncome = acc.isPrimaryForIncome
+                    )
                 )
                 counts = counts.copy(accounts = counts.accounts + 1)
             }
@@ -261,11 +312,25 @@ class DataExportImportManager(
                 counts = counts.copy(transactions = counts.transactions + 1)
             }
 
-            // 6. Goals
+            // 6. Goals — v4 restored `trackingType` + `accountId`. Missing
+            //    them silently downgraded every restored goal to NET_WORTH,
+            //    which produced wrong progress bars for ACCOUNT-tracked
+            //    goals (e.g. "save $5k in checking").
             export.goals.forEach { goal ->
                 goalDao.upsert(
-                    GoalEntity(0, goal.emoji, goal.title, goal.description, goal.targetAmount,
-                        goal.currency, goal.createdDate, goal.groupName, goal.imagePath)
+                    GoalEntity(
+                        id = 0,
+                        emoji = goal.emoji,
+                        title = goal.title,
+                        description = goal.description,
+                        targetAmount = goal.targetAmount,
+                        currency = goal.currency,
+                        createdDate = goal.createdDate,
+                        groupName = goal.groupName,
+                        imagePath = goal.imagePath,
+                        trackingType = goal.trackingType,
+                        accountId = goal.accountId
+                    )
                 )
                 counts = counts.copy(goals = counts.goals + 1)
             }
@@ -379,15 +444,48 @@ class DataExportImportManager(
 
     private fun TransactionEntity.toExport() = TransactionExport(id, subcategoryId, amount, accountId, date, destinationAmount, description)
 
-    private fun AccountEntity.toExport() = AccountExport(id, title, amount, currency, emoji, assetCategory, isPrimary, isLiability)
+    private fun AccountEntity.toExport() = AccountExport(
+        id = id,
+        title = title,
+        amount = amount,
+        currency = currency,
+        emoji = emoji,
+        assetCategory = assetCategory,
+        isPrimary = isPrimary,
+        isLiability = isLiability,
+        // v4 fields — see AccountExport docs for why each matters.
+        currentMarketValue = currentMarketValue,
+        includeInNetWorth = includeInNetWorth,
+        isPrimaryForExpenses = isPrimaryForExpenses,
+        isPrimaryForIncome = isPrimaryForIncome
+    )
 
-    private fun GoalEntity.toExport() = GoalExport(id, emoji, title, description, targetAmount, currency, createdDate, groupName, imagePath)
+    private fun GoalEntity.toExport() = GoalExport(
+        id = id,
+        emoji = emoji,
+        title = title,
+        description = description,
+        targetAmount = targetAmount,
+        currency = currency,
+        createdDate = createdDate,
+        groupName = groupName,
+        imagePath = imagePath,
+        trackingType = trackingType,
+        accountId = accountId
+    )
 
     private fun GoalGroupEntity.toExport() = GoalGroupExport(id, name, emoji, color, createdDate)
 
     private fun CategoryUsageEntity.toExport() = CategoryUsageExport(categoryId, usageCount, lastUsedDate)
 
-    private fun CategoryEntity.toExport() = CategoryExport(id, title, type, emoji, parentId)
+    private fun CategoryEntity.toExport() = CategoryExport(
+        id = id,
+        title = title,
+        type = type,
+        emoji = emoji,
+        parentId = parentId,
+        monthlyLimit = monthlyLimit
+    )
 
     private fun UserCurrencyEntity.toExport() = UserCurrencyExport(code, sortOrder)
 
@@ -450,6 +548,13 @@ class DataExportImportManager(
     }
 
     companion object {
-        const val CURRENT_EXPORT_VERSION = 3
+        // Bump when adding new fields to any *Export data class OR when
+        // changing the wire-format of an existing field. The importer +
+        // checksum switch below keep older exports readable — but a mismatch
+        // between the exporter and any consumer with a NEWER version-cap
+        // (e.g. a beta test rejects a stable-app backup) surfaces the
+        // "Unsupported export version" error to the user, which is the
+        // correct behavior.
+        const val CURRENT_EXPORT_VERSION = 4
     }
 }

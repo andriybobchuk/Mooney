@@ -33,6 +33,7 @@ import com.andriybobchuk.mooney.core.presentation.designsystem.components.Enhanc
 import com.andriybobchuk.mooney.core.presentation.designsystem.components.MooneyBottomSheet
 import mooney.composeapp.generated.resources.Res
 import mooney.composeapp.generated.resources.andrii_mooney
+import mooney.composeapp.generated.resources.contact_email_label
 import mooney.composeapp.generated.resources.contact_intro
 import mooney.composeapp.generated.resources.feedback_socials_title
 import mooney.composeapp.generated.resources.ic_email
@@ -103,7 +104,7 @@ fun FeedbackSheet(
                 )
                 ContactRow(
                     icon = painterResource(Res.drawable.ic_email),
-                    label = "Email",
+                    label = stringResource(Res.string.contact_email_label),
                     value = "andriybobchuk@gmail.com",
                     onClick = { uriHandler.openUri("mailto:andriybobchuk@gmail.com") }
                 )

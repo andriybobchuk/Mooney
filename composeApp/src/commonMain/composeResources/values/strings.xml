@@ -242,6 +242,7 @@
     <string name="enjoying_mooney">Enjoying Mooney?</string>
     <string name="feedback_intro">Your feedback helps me improve the app — built solo, every reply is read.</string>
     <string name="not_really">Not really</string>
+    <string name="i_love_it">I love it</string>
     <string name="got_it_thanks">Got it. Thank you.</string>
     <string name="couldnt_send">Couldn't send. Check your connection and try again.</string>
     <string name="whats_on_your_mind">What's on your mind?</string>
@@ -443,6 +444,7 @@
     <string name="paywall_subtitle_more_power">Unlock all features</string>
     <string name="premium_banner_subtitle_no_ads">Unlimited accounts, categories, no ads</string>
     <string name="contact_intro">I&apos;m actively building Mooney and would love to hear from you. Reach out through any channel below.</string>
+    <string name="contact_email_label">Email</string>
     <string name="app_lock_title">App Lock</string>
     <string name="app_lock_summary">Require a PIN every time the app opens.</string>
     <string name="app_lock_set_pin">Set PIN</string>

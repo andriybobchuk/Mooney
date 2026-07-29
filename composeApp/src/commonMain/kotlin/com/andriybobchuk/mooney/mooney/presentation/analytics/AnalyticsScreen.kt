@@ -167,9 +167,14 @@ fun AnalyticsScreen(
     val isEmptyState = !hasAnyData && !state.isLoading && !showShimmer
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    // Scaffold containerColor was transparent — combined with a shimmer
+    // that had no background of its own, this exposed the underlying window
+    // color on first paint. On dark theme that flashed as pure white for
+    // ~1 frame between screen entry and shimmer render. Use the theme
+    // background so the surface is always painted, even during composition.
     Scaffold(
-        containerColor = Color.Transparent,
-        modifier = Modifier.background(Color.Transparent),
+        containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.background(MaterialTheme.colorScheme.background),
         topBar = {
             Toolbars.Primary(
                 containerColor = Color.Transparent,
@@ -1535,7 +1540,12 @@ private fun AnalyticsScreenShimmer(modifier: Modifier = Modifier) {
         alpha = 0.08f * (alpha * 2f).coerceAtMost(1f)
     )
     Column(
-        modifier = modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+        modifier = modifier
+            // Always paint the theme background so we don't inherit whatever
+            // sits behind us during the first composition pass (root window
+            // color, which defaults to white before the theme is applied).
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Trend chart band placeholder.

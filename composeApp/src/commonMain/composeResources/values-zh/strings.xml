@@ -118,6 +118,8 @@
     <string name="get_in_touch">联系我</string>
     <string name="feedback_description">Mooney 正在积极开发中。发现 bug？有想法？告诉我 — 你的反馈塑造这款 App。</string>
     <string name="feedback_socials_title">嗨！我是 Andriy</string>
+    <string name="contact_intro">我正在积极开发 Mooney，非常想听听你的想法。通过下面的任何渠道联系我吧。</string>
+    <string name="contact_email_label">邮箱</string>
     <string name="feedback_socials_intro">我正在持续开发 Mooney，非常期待你的反馈。发现 bug？有想法？想聊聊？通过下面任何一个渠道找我！</string>
     <string name="analytics_request_title">需要更多分析功能？</string>
     <string name="analytics_request_desc">告诉我你想要什么 — 通过任何渠道私信我，我会做出最棒的那些想法。</string>
@@ -222,6 +224,7 @@
     <string name="enjoying_mooney">喜欢 Mooney 吗？</string>
     <string name="feedback_intro">你的反馈帮助我改进这款 App — 我独自开发，每条回复都会读。</string>
     <string name="not_really">不太喜欢</string>
+    <string name="i_love_it">超喜欢</string>
     <string name="got_it_thanks">明白了，谢谢。</string>
     <string name="couldnt_send">发送失败。请检查网络后重试。</string>
     <string name="whats_on_your_mind">你想说什么？</string>

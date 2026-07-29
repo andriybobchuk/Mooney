@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.andriybobchuk.mooney.app.App
 import com.andriybobchuk.mooney.core.notifications.NotificationTelemetry
+import com.andriybobchuk.mooney.core.platform.FilePickerLauncher
 import com.andriybobchuk.mooney.core.premium.ActivityProvider
 import com.andriybobchuk.mooney.e2e.E2eBootstrap
 import com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
@@ -15,6 +16,12 @@ import org.koin.android.ext.android.inject
 class MainActivity : ComponentActivity() {
     private val activityProvider: ActivityProvider by inject()
     private val appDataCache: AppDataCache by inject()
+    // Bridge between the ActivityResult contract (must be registered before
+    // the Activity reaches STARTED) and the suspending FileHandler API.
+    // Without calling attach() below, `pickAndReadTextFile` silently returns
+    // null → Settings → Import + Import CSV look "broken" with no error
+    // (user reported this against 26.07.06 on Android).
+    private val filePickerLauncher: FilePickerLauncher by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // E2E bootstrap: no-op on debug/release, real on the e2e variant.
@@ -30,6 +37,10 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         activityProvider.setActivity(this)
+        // MUST run before setContent / any suspend attempt to pick a file:
+        // Android's registerForActivityResult contract has to be registered
+        // before the Activity hits STARTED, else it throws IllegalStateException.
+        filePickerLauncher.attach(this)
         maybeFireNotificationOpened(intent)
 
         // Keep the system splash visible until the AppDataCache has emitted

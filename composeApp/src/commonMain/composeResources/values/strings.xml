@@ -207,6 +207,17 @@
     <string name="csv_imported_n_new_account">Imported %1$d transactions into a new 'Imported' account</string>
     <string name="csv_columns_not_recognised">Couldn't recognise date / amount columns in this CSV. Try exporting again from the source app, or rename the columns to include 'Date' and 'Amount'.</string>
     <string name="csv_import_failed">Couldn't import CSV: %1$s</string>
+    <string name="fill_demo_data">Fill app with demo data</string>
+    <string name="fill_demo_data_desc">Populate with 15 months of sample transactions, accounts and goals. Only available while the app is empty.</string>
+    <string name="switch_to_demo_db">Switch to demo DB</string>
+    <string name="switch_to_demo_db_desc">Load a separate demo database (auto-populated) without touching your real data. Requires an app restart.</string>
+    <string name="switch_to_prod_db">Switch back to your real DB</string>
+    <string name="switch_to_prod_db_desc">Return to your real ledger. Your demo DB stays saved for the next switch. Requires an app restart.</string>
+    <string name="restart_required_title">Restart required</string>
+    <string name="ok">OK</string>
+    <string name="continue_action">Continue</string>
+    <string name="switch_to_demo_db_confirm">This will switch to a separate demo database with sample data. Your real ledger stays saved and you can switch back anytime. The app will restart.</string>
+    <string name="switch_to_prod_db_confirm">Switch back to your real ledger? Your demo data stays saved for the next switch. The app will restart.</string>
 
     <!-- Settings — Support Mooney -->
     <string name="support_mooney">Support Mooney</string>
@@ -252,6 +263,11 @@
     <string name="get_mooney_pro">Get Mooney Pro</string>
     <string name="restore_purchases_link">Restore purchases</string>
     <string name="auto_renews_monthly">Auto-renews monthly. Cancel anytime in your App Store account.</string>
+    <string name="auto_renews_generic">Auto-renews at the selected interval. Cancel anytime in your App Store account.</string>
+    <string name="paywall_tier_weekly">Weekly</string>
+    <string name="paywall_tier_weekly_desc">%1$s billed every week</string>
+    <string name="paywall_tier_monthly">Monthly</string>
+    <string name="paywall_tier_monthly_desc">%1$s billed every month</string>
     <string name="terms_of_use">Terms of Use</string>
     <string name="unlimited_accounts_categories">Unlimited accounts, categories &amp; more</string>
 
@@ -411,6 +427,7 @@
     <!-- Toolbar titles -->
     <string name="goals_title">Goals</string>
     <string name="analytics_title">Analytics</string>
+    <string name="analytics_compared_to_last_month">vs. %1$s last month</string>
     <string name="net_income_title">Net Income</string>
     <string name="net_worth_title">Net Worth</string>
 

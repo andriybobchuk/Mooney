@@ -600,12 +600,34 @@ val MIGRATION_18_19 = object : Migration(18, 19) {
     }
 }
 
+/**
+ * v20 → v21. Adds `description` (nullable text) to both `recurring_transactions`
+ * and `pending_transactions`. Users expected recurring templates to carry the
+ * note they wrote in the source transaction ("Landlord — rent") into every
+ * generated instance; before v21, the note was silently dropped on save so
+ * every materialized recurring row showed up as bare "Rent" with no context.
+ */
+val MIGRATION_20_21 = object : Migration(20, 21) {
+    override fun migrate(connection: SQLiteConnection) {
+        if (!hasColumn(connection, "recurring_transactions", "description")) {
+            connection.execSQL(
+                "ALTER TABLE recurring_transactions ADD COLUMN description TEXT"
+            )
+        }
+        if (!hasColumn(connection, "pending_transactions", "description")) {
+            connection.execSQL(
+                "ALTER TABLE pending_transactions ADD COLUMN description TEXT"
+            )
+        }
+    }
+}
+
 val ALL_MIGRATIONS = listOf(
     MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
     MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9,
     MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13,
     MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17,
-    MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20,
+    MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21,
 )
 
 /**

@@ -375,6 +375,7 @@
     <!-- Tytuły pasków -->
     <string name="goals_title">Cele</string>
     <string name="analytics_title">Analizy</string>
+    <string name="analytics_compared_to_last_month">poprz. mies.: %1$s</string>
     <string name="net_income_title">Dochód netto</string>
     <string name="net_worth_title">Wartość netto</string>
 

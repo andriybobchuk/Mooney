@@ -2,11 +2,17 @@ package com.andriybobchuk.mooney.mooney.domain
 
 object FeatureFlags {
     /**
-     * Set to true for development builds.
-     * Controls: dev DB file, dev toolbar overlay, mock data tools.
-     * IMPORTANT: Must be false for release builds.
+     * True for local dev / CI debug APKs, false for signed release builds
+     * that ship to the store. Sourced from the platform build system —
+     * Android reads [android.BuildConfig.DEBUG]; iOS is hardcoded to false
+     * so App Store binaries never serve test ads. Debug testing on iOS
+     * happens via [adsAlwaysShow] instead.
+     *
+     * Consumers use this to swap prod ad unit IDs → Google's public test
+     * unit IDs, so a dev build never bills a real advertiser (and never
+     * puts our AdMob account at risk under invalid-traffic policy).
      */
-    const val isDebug = false
+    val isDebug: Boolean get() = isDebugBuild
 
     /** Base compile-time toggle. Wrapped in [goalsEnabled] with a Remote
      *  Config override so we can turn Goals off in the field. */
@@ -65,3 +71,6 @@ object FeatureFlags {
      */
     const val interstitialOnAnalyticsEnabled = false
 }
+
+/** Platform-provided debug/release discriminator — see [FeatureFlags.isDebug]. */
+expect val isDebugBuild: Boolean

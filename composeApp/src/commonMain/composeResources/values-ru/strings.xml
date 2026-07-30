@@ -375,6 +375,7 @@
     <!-- Заголовки -->
     <string name="goals_title">Цели</string>
     <string name="analytics_title">Аналитика</string>
+    <string name="analytics_compared_to_last_month">пред. месяц: %1$s</string>
     <string name="net_income_title">Чистый доход</string>
     <string name="net_worth_title">Чистый капитал</string>
 

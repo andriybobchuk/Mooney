@@ -3,6 +3,7 @@ package com.andriybobchuk.mooney.e2e.doubles
 import com.andriybobchuk.mooney.core.premium.BillingManager
 import com.andriybobchuk.mooney.core.premium.BillingProduct
 import com.andriybobchuk.mooney.core.premium.PRODUCT_ID_MONTHLY
+import com.andriybobchuk.mooney.core.premium.PRODUCT_ID_WEEKLY
 import com.andriybobchuk.mooney.core.premium.PurchaseResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +20,7 @@ class FakeBillingManager(startPremium: Boolean = false) : BillingManager {
     override val isSubscribed: Flow<Boolean> = subscribed
 
     override suspend fun fetchProducts(): List<BillingProduct> = listOf(
+        BillingProduct(id = PRODUCT_ID_WEEKLY, localizedPrice = "$1.49"),
         BillingProduct(id = PRODUCT_ID_MONTHLY, localizedPrice = "$3.99"),
     )
 

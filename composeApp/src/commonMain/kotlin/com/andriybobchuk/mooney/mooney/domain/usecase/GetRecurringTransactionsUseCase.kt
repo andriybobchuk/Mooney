@@ -35,7 +35,8 @@ class GetRecurringTransactionsUseCase(
                         weekDay = entity.weekDay,
                         monthOfYear = entity.monthOfYear
                     ),
-                    isActive = entity.isActive
+                    isActive = entity.isActive,
+                    description = entity.description
                 )
             }
         }

@@ -28,10 +28,15 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.border
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -41,8 +46,12 @@ import androidx.compose.ui.unit.sp
 import com.andriybobchuk.mooney.core.testing.TestTags
 import com.andriybobchuk.mooney.core.testing.mooneyTestTag
 import mooney.composeapp.generated.resources.Res
-import mooney.composeapp.generated.resources.auto_renews_monthly
+import mooney.composeapp.generated.resources.auto_renews_generic
 import mooney.composeapp.generated.resources.get_mooney_pro
+import mooney.composeapp.generated.resources.paywall_tier_monthly
+import mooney.composeapp.generated.resources.paywall_tier_monthly_desc
+import mooney.composeapp.generated.resources.paywall_tier_weekly
+import mooney.composeapp.generated.resources.paywall_tier_weekly_desc
 import mooney.composeapp.generated.resources.paywall_benefit_accounts_sub
 import mooney.composeapp.generated.resources.paywall_benefit_accounts_title
 import mooney.composeapp.generated.resources.paywall_benefit_categories_sub
@@ -107,20 +116,24 @@ fun PaywallSheet(
     errorMessage: String? = null,
     trigger: PaywallTrigger = PaywallTrigger.GENERIC,
     onDismiss: () -> Unit,
-    onSubscribe: () -> Unit,
+    onSubscribe: (productId: String) -> Unit,
     onRestore: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val premiumManager = koinInject<PremiumManager>()
     val analyticsTracker = koinInject<com.andriybobchuk.mooney.core.analytics.AnalyticsTracker>()
-    val price by premiumManager.monthlyPriceFlow.collectAsState()
+    val prices by premiumManager.pricesFlow.collectAsState()
+    // Default to monthly — historically the higher-LTV choice, and the user's
+    // last-selected tier lasts only within this sheet mount (rememberSaveable
+    // is per-instance, not persisted across app launches).
+    var selectedProductId by rememberSaveable { mutableStateOf(PRODUCT_ID_MONTHLY) }
     // Timestamp captured at first composition so we can bucket the time
     // between paywall view and subscribe tap (or dismiss). Uses a plain
     // remember so it survives recompositions but resets on remount.
     val paywallShownAtMs = remember { kotlinx.datetime.Clock.System.now().toEpochMilliseconds() }
     LaunchedEffect(Unit) {
-        premiumManager.refreshMonthlyPrice()
+        premiumManager.refreshPrices()
         // Fires once per paywall mount — trigger label feeds the funnel chart
         // so we know which entry path actually converts.
         analyticsTracker.trackEvent(
@@ -139,12 +152,12 @@ fun PaywallSheet(
             .toEpochMilliseconds() - paywallShownAtMs) / 1000L).toInt()
         analyticsTracker.trackEvent(
             com.andriybobchuk.mooney.core.analytics.AnalyticsEvent.SubscribeTap(
-                productId = PRODUCT_ID_MONTHLY,
+                productId = selectedProductId,
                 trigger = trigger.name,
                 timeSinceViewBucket = bucketDecisionSeconds(elapsedSeconds)
             )
         )
-        onSubscribe()
+        onSubscribe(selectedProductId)
     }
 
     ModalBottomSheet(
@@ -210,23 +223,27 @@ fun PaywallSheet(
                     rememberBenefits().forEach { benefit -> BenefitRow(benefit) }
                 }
 
+                // Minimum 28dp of air between the last benefit and the first
+                // tier card even on short devices where the weighted spacer
+                // collapses to zero. The remaining weight pushes the cards
+                // toward the bottom when there IS spare room.
+                Spacer(modifier = Modifier.height(28.dp))
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Price — StoreKit/Play fetches take a beat on cold start;
-                // show a small spinner instead of a placeholder dash so it
-                // reads as "loading" rather than "unavailable".
-                if (price != null) {
-                    Text(
-                        text = "$price / month",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                } else {
+                // Tier selector — StoreKit/Play fetches take a beat on cold
+                // start; show a small spinner in that window instead of two
+                // blank cards, so users read "loading" not "unavailable".
+                if (prices.isEmpty()) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(28.dp),
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                         strokeWidth = 2.dp
+                    )
+                } else {
+                    TierSelector(
+                        prices = prices,
+                        selectedProductId = selectedProductId,
+                        onSelect = { selectedProductId = it }
                     )
                 }
 
@@ -351,7 +368,7 @@ private fun SubscriptionLegalFooter(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = stringResource(Res.string.auto_renews_monthly),
+            text = stringResource(Res.string.auto_renews_generic),
             style = MaterialTheme.typography.labelSmall,
             color = mutedColor,
             textAlign = TextAlign.Center,
@@ -386,6 +403,87 @@ private fun PaywallMeshBackground() {
     com.andriybobchuk.mooney.core.presentation.designsystem.components.EnhancedMeshBackground(
         modifier = Modifier.fillMaxSize()
     )
+}
+
+@Composable
+private fun TierSelector(
+    prices: Map<String, String>,
+    selectedProductId: String,
+    onSelect: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        // Iterate in ALL_PRODUCT_IDS order (weekly first, monthly second) so
+        // the tier ordering is authoritative and matches what the paywall
+        // funnel analytics expect. Missing prices skip silently — if only one
+        // SKU resolves (partial fetch, product mid-review), the user still
+        // sees one usable card.
+        ALL_PRODUCT_IDS.forEach { productId ->
+            val price = prices[productId] ?: return@forEach
+            TierCard(
+                productId = productId,
+                localizedPrice = price,
+                isSelected = productId == selectedProductId,
+                onClick = { onSelect(productId) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun TierCard(
+    productId: String,
+    localizedPrice: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    // Selected card gets a heavier border + on-primary text; unselected uses
+    // a low-alpha border so both cards are legible without a "which one is
+    // active?" moment.
+    val borderColor = if (isSelected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.onBackground.copy(alpha = 0.15f)
+    }
+    val borderWidth = if (isSelected) 2.dp else 1.dp
+    val titleRes = when (productId) {
+        PRODUCT_ID_WEEKLY -> Res.string.paywall_tier_weekly
+        else -> Res.string.paywall_tier_monthly
+    }
+    val descRes = when (productId) {
+        PRODUCT_ID_WEEKLY -> Res.string.paywall_tier_weekly_desc
+        else -> Res.string.paywall_tier_monthly_desc
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(borderWidth, borderColor, RoundedCornerShape(16.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(titleRes),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                text = stringResource(descRes, localizedPrice),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.65f)
+            )
+        }
+        Text(
+            text = localizedPrice,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+    }
 }
 
 /**

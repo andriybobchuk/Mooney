@@ -3,6 +3,7 @@ package com.andriybobchuk.mooney.di
 import com.andriybobchuk.mooney.core.data.database.MooneyDatabaseFactory
 import com.andriybobchuk.mooney.core.data.preferences.PreferencesDataStoreFactory
 import com.andriybobchuk.mooney.core.data.preferences.StartupPrefs
+import com.andriybobchuk.mooney.core.platform.AppRestarter
 import com.andriybobchuk.mooney.core.platform.FileHandler
 import com.andriybobchuk.mooney.core.platform.FilePickerLauncher
 import com.andriybobchuk.mooney.core.premium.ActivityProvider
@@ -17,11 +18,14 @@ import org.koin.dsl.module
 actual val platformModule: Module
     get() = module {
         single<HttpClientEngine> { OkHttp.create() }
-        single { MooneyDatabaseFactory(androidApplication()) }
-        single { PreferencesDataStoreFactory(androidApplication()) }
+        // StartupPrefs must resolve first so the DB factory can read the
+        // demo-mode toggle synchronously at construction time.
         single { StartupPrefs(androidApplication()) }
+        single { MooneyDatabaseFactory(androidApplication(), get()) }
+        single { PreferencesDataStoreFactory(androidApplication()) }
         single { FilePickerLauncher() }
         single { FileHandler(androidApplication(), get()) }
         single { ActivityProvider() }
         single<BillingManager> { AndroidBillingManager(androidApplication(), get()) }
+        single { AppRestarter() }
     }

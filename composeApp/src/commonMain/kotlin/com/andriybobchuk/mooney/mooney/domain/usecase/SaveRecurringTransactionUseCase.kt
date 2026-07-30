@@ -44,7 +44,8 @@ class SaveRecurringTransactionUseCase(
                 monthOfYear = recurring.schedule.monthOfYear,
                 isActive = recurring.isActive,
                 createdDate = existing?.createdDate ?: today.toString(),
-                lastProcessedDate = if (scheduleChanged) null else existing?.lastProcessedDate
+                lastProcessedDate = if (scheduleChanged) null else existing?.lastProcessedDate,
+                description = recurring.description
             )
         )
     }

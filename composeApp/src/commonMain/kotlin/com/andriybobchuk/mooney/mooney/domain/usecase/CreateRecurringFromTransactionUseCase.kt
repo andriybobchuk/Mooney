@@ -18,7 +18,10 @@ class CreateRecurringFromTransactionUseCase(
                 amount = transaction.amount,
                 account = transaction.account,
                 schedule = schedule,
-                isActive = true
+                isActive = true,
+                // Propagate the note the user typed on the source transaction
+                // so every future generated instance shows the same context.
+                description = transaction.description
             )
         )
     }

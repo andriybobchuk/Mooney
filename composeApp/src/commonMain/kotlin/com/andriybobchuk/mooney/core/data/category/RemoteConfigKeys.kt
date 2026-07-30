@@ -20,16 +20,20 @@ object RemoteConfigKeys {
 
     // ---- keys ----
 
-    // Per-platform paywall. Android is hard-coded off in `paywallEnabled()`
-    // for this release, so the Android key is intentionally absent from the
-    // client side. The iOS key remains RC-driven.
+    // Per-platform paywall. Both platforms have their own key so we can kill
+    // one without touching the other — Play Store review and App Review land
+    // on independent timelines and the paywall status is what most often
+    // triggers a rejection.
     private const val PAYWALL_ENABLED_IOS = "paywall_enabled_ios"
+    private const val PAYWALL_ENABLED_ANDROID = "paywall_enabled_android"
 
-    // Per-platform ads keys are RC-registered but the client always
-    // short-circuits to `false` for this release — iOS has no ad bridge
-    // yet and the Android SDK is wired against test unit IDs. Both keys
-    // are intentionally absent client-side. Restore the RC read for both
-    // platforms once the real unit IDs land.
+    // Per-platform ads kill switch. Independent iOS/Android keys so we can
+    // roll out ads on one store while the other's review is still pending
+    // (Apple and Google approve on independent timelines). Both default OFF
+    // — flip in Firebase Remote Config when the ad units are validated in
+    // the field.
+    private const val ADS_ENABLED_IOS = "ads_enabled_ios"
+    private const val ADS_ENABLED_ANDROID = "ads_enabled_android"
 
     // Goals feature — full section on/off. If off, the entry point on Assets
     // stops showing and the deeplink returns null.
@@ -43,24 +47,23 @@ object RemoteConfigKeys {
     // ---- accessors ----
 
     fun paywallEnabled(): Boolean {
-        // First-release hard override — the Android paywall / billing wiring
-        // isn't verified for this build, so we lock it OFF at the source and
-        // ignore whatever the console eventually publishes. Once the Android
-        // billing flow is validated, delete this early-return and let the
-        // key drive it.
+        // Android is hard-locked off — no Google Payments merchant account
+        // exists yet, so there's nothing StoreKit-equivalent can transact
+        // against. To lift: create the merchant account + subscriptions in
+        // Play Console, then delete this early-return.
         if (!isIosPlatform) return false
+        // iOS reads the live RC key — the iOS paywall / monthly subscription
+        // is shipping in production today.
         return RemoteConfig.getString(PAYWALL_ENABLED_IOS).toBooleanStrictOrNull()
             ?: DEFAULT_PAYWALL_ENABLED_IOS
     }
 
     @Suppress("FunctionOnlyReturningConstant")
     fun adsEnabled(): Boolean {
-        // First-release hard override on BOTH platforms — the Android
-        // `AdUnitIds` still reference Google test unit IDs (see
-        // AdUnitIds.android.kt TODO) and we don't want iOS ads either
-        // until real inventory is verified. Restore the platform-branched
-        // `RemoteConfig.getString(...)` read once the real ad wiring lands
-        // on both platforms.
+        // HARD OVERRIDE — locked off on both platforms until we're ready to
+        // start serving real ads. Same lift procedure as [paywallEnabled]:
+        // delete the early-return and let [ADS_ENABLED_IOS] / [ADS_ENABLED_ANDROID]
+        // + their defaults drive it.
         return false
     }
 
@@ -78,6 +81,15 @@ object RemoteConfigKeys {
     // total RC failure produces the same behavior as the initial console
     // rollout. Update both places in lockstep whenever the console changes.
     private const val DEFAULT_PAYWALL_ENABLED_IOS = true
+    // Default OFF for Android — safer to require an explicit console flip
+    // once real-money billing has been validated on-device, rather than
+    // rolling out to all Android users the moment this ships.
+    private const val DEFAULT_PAYWALL_ENABLED_ANDROID = false
+    // Both ad defaults are OFF so a total RC failure doesn't accidentally
+    // start serving ads to the field. Enabling ads requires an explicit
+    // console flip, per platform.
+    private const val DEFAULT_ADS_ENABLED_IOS = false
+    private const val DEFAULT_ADS_ENABLED_ANDROID = false
     private const val DEFAULT_GOALS_ENABLED = true
     private const val DEFAULT_FREE_ACCOUNTS = 20
     private const val DEFAULT_FREE_CATEGORIES = 15

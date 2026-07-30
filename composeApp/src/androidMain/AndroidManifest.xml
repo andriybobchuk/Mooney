@@ -60,11 +60,15 @@
             android:name="google_analytics_automatic_screen_reporting_enabled"
             android:value="false" />
 
-        <!-- TODO(production-ad-id): replace this Google test AdMob App ID with the real
-             ca-app-pub-7021633711522076~<android-app-id> from the AdMob console before release. -->
+        <!-- Real Mooney Android App ID from AdMob console. AdMob SDK reads this
+             at init and it must match the app registered in the console;
+             mismatched IDs cause a hard crash at startup on Android. Debug
+             builds still show test ads because the per-unit IDs (banner /
+             interstitial / rewarded) are swapped to Google's test IDs via
+             FeatureFlags.isDebug — the App ID stays real regardless. -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="ca-app-pub-7021633711522076~6854132621" />
 
         <!-- Google Mobile Ads and Firebase Analytics both ship an AD_SERVICES_CONFIG
              property pointing at different XML files. AdMob's gma_ad_services_config

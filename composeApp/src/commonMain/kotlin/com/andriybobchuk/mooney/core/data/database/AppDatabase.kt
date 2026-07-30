@@ -19,7 +19,7 @@ import androidx.room.RoomDatabase
         HistoricalRateEntity::class,
         RateWatchAlertEntity::class
     ],
-    version = 20,
+    version = 21,
     exportSchema = true
 )
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -41,5 +41,9 @@ abstract class AppDatabase : RoomDatabase() {
         const val DB_NAME = "mooney.db"
         const val DB_NAME_DEV = "mooney_dev.db"
         const val DB_NAME_E2E = "mooney_e2e.db"
+        // Physically separate demo file so switching to demo mode can never
+        // touch the real user's ledger. Populated on first switch by
+        // SeedDemoDataUseCase and reused across relaunches.
+        const val DB_NAME_DEMO = "mooney_demo.db"
     }
 }

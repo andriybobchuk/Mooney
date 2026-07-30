@@ -34,4 +34,10 @@ expect class StartupPrefs {
      *  written (fall back to the DataStore async check). */
     fun getAppLockEnabled(): Boolean?
     fun setAppLockEnabled(value: Boolean)
+
+    /** True while the app is running against the demo DB (mooney_demo.db).
+     *  Read synchronously at DatabaseFactory construction so the routing
+     *  decision happens before Room opens the file. Defaults to false. */
+    fun getDemoDbMode(): Boolean
+    fun setDemoDbMode(value: Boolean)
 }

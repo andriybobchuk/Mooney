@@ -22,3 +22,11 @@ interface BillingManager {
 }
 
 const val PRODUCT_ID_MONTHLY = "mooney_pro_monthly"
+const val PRODUCT_ID_WEEKLY = "mooney_pro_weekly"
+
+/**
+ * Canonical order for paywall tier lists — weekly first (impulse buy) then
+ * monthly (default). Both platforms and every UI surface iterate this same
+ * list so the tier ordering never drifts out of sync between iOS and Android.
+ */
+val ALL_PRODUCT_IDS: List<String> = listOf(PRODUCT_ID_WEEKLY, PRODUCT_ID_MONTHLY)

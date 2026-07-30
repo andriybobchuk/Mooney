@@ -209,6 +209,10 @@ val sharedModule = module {
     singleOf(::DeleteRecurringTransactionUseCase)
     singleOf(::CreateRecurringFromTransactionUseCase)
 
+    // Demo data seeder — for marketing / screen recording. Only usable when
+    // the app is empty; will be removed before the real 1.0 release.
+    singleOf(::SeedDemoDataUseCase)
+
     // Onboarding
     singleOf(::CompleteOnboardingUseCase)
 
@@ -281,7 +285,36 @@ val sharedModule = module {
     viewModelOf(::AnalyticsViewModel)
     viewModelOf(::ExchangeViewModel)
     viewModelOf(::GoalsViewModel)
-    viewModelOf(::SettingsViewModel)
+    // Explicit viewModel { } — SettingsViewModel outgrew Koin's viewModelOf
+    // reflective builder (capped around 22 constructor params). Order must
+    // match the primary constructor exactly.
+    viewModel {
+        SettingsViewModel(
+            getUserPreferencesUseCase = get(),
+            updatePinnedCategoriesUseCase = get(),
+            getCategoriesUseCase = get(),
+            getPinnedCategoriesUseCase = get(),
+            preferencesRepository = get(),
+            dataExportImportManager = get(),
+            getUserCurrenciesUseCase = get(),
+            updateUserCurrenciesUseCase = get(),
+            assetCategoryDao = get(),
+            analyticsTracker = get(),
+            premiumManager = get(),
+            getAccountsUseCase = get(),
+            setPrimaryAccountUseCase = get(),
+            updateTransactionCategoriesUseCase = get(),
+            currencyManagerUseCase = get(),
+            dataStore = get(),
+            appDataCache = get(),
+            universalCsvImporter = get(),
+            importCsvUseCase = get(),
+            reminderScheduler = get(),
+            seedDemoDataUseCase = get(),
+            startupPrefs = get(),
+            appRestarter = get()
+        )
+    }
     viewModelOf(::OnboardingViewModel)
     viewModelOf(::RecurringTransactionsViewModel)
     viewModelOf(::TransactionCategoriesViewModel)

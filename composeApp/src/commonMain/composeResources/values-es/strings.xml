@@ -375,6 +375,7 @@
     <!-- Títulos -->
     <string name="goals_title">Metas</string>
     <string name="analytics_title">Análisis</string>
+    <string name="analytics_compared_to_last_month">mes ant.: %1$s</string>
     <string name="net_income_title">Ingreso neto</string>
     <string name="net_worth_title">Patrimonio neto</string>
 

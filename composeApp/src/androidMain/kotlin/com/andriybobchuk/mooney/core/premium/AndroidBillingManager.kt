@@ -5,7 +5,7 @@ import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
 import com.android.billingclient.api.BillingResult
-import com.android.billingclient.api.ProductDetailsResult
+import com.android.billingclient.api.PendingPurchasesParams
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
@@ -56,7 +56,14 @@ class AndroidBillingManager(
 
     private val billingClient = BillingClient.newBuilder(context)
         .setListener(purchasesUpdatedListener)
-        .enablePendingPurchases()
+        // Billing 8: enablePendingPurchases requires PendingPurchasesParams.
+        // We only sell subscriptions, but enableOneTimeProducts() is still
+        // required per the API contract (SUBS support is implicit).
+        .enablePendingPurchases(
+            PendingPurchasesParams.newBuilder()
+                .enableOneTimeProducts()
+                .build()
+        )
         .build()
 
     init {
@@ -93,17 +100,22 @@ class AndroidBillingManager(
     override suspend fun fetchProducts(): List<BillingProduct>? {
         if (!ensureConnected()) return null
 
-        val productList = listOf(
+        // Query every SKU we ship in a single round-trip. Play Billing lets us
+        // batch these; splitting into two calls would double the cold-start
+        // latency of the paywall for no gain.
+        val productList = ALL_PRODUCT_IDS.map { id ->
             QueryProductDetailsParams.Product.newBuilder()
-                .setProductId(PRODUCT_ID_MONTHLY)
+                .setProductId(id)
                 .setProductType(BillingClient.ProductType.SUBS)
                 .build()
-        )
+        }
         val params = QueryProductDetailsParams.newBuilder()
             .setProductList(productList)
             .build()
 
-        val result: ProductDetailsResult = billingClient.queryProductDetails(params)
+        // Billing 8 renamed ProductDetailsResult → QueryProductDetailsResult.
+        // Let the compiler infer so we survive future minor bumps.
+        val result = billingClient.queryProductDetails(params)
         if (result.billingResult.responseCode != BillingClient.BillingResponseCode.OK) return null
 
         return result.productDetailsList?.map { details ->

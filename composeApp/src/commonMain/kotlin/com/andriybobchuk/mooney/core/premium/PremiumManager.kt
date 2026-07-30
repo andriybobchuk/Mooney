@@ -30,9 +30,10 @@ class PremiumManager(
         billingManager.isSubscribed
     ) { cached, live -> cached || live }
 
-    private val _monthlyPriceFlow = MutableStateFlow<String?>(null)
-    /** Localized monthly subscription price (e.g. "$2.99"). Null until fetched. */
-    val monthlyPriceFlow: StateFlow<String?> = _monthlyPriceFlow.asStateFlow()
+    private val _pricesFlow = MutableStateFlow<Map<String, String>>(emptyMap())
+    /** Localized prices keyed by product ID (e.g. `mooney_pro_monthly` → "$2.99").
+     *  Empty until [refreshPrices] runs; UI shows a spinner in that state. */
+    val pricesFlow: StateFlow<Map<String, String>> = _pricesFlow.asStateFlow()
 
     suspend fun getIsPremium(): Boolean {
         if (!isBillingEnabled) return true
@@ -75,20 +76,20 @@ class PremiumManager(
     }
 
     /**
-     * Pull the monthly-subscription localized price into [monthlyPriceFlow].
-     * Safe to call repeatedly — re-fetches each time. Best-effort: errors and
-     * empty results leave the flow null, which the UI handles gracefully.
+     * Pull every SKU's localized price into [pricesFlow]. Safe to call
+     * repeatedly — re-fetches each time. Best-effort: errors and empty
+     * results leave the previously-cached prices in place, which the UI
+     * handles gracefully.
      */
-    suspend fun refreshMonthlyPrice() {
+    suspend fun refreshPrices() {
         if (!isBillingEnabled) return
         try {
-            val products = billingManager.fetchProducts()
-            val monthly = products?.firstOrNull { it.id == PRODUCT_ID_MONTHLY }
-            _monthlyPriceFlow.value = monthly?.localizedPrice
+            val products = billingManager.fetchProducts() ?: return
+            _pricesFlow.value = products.associate { it.id to it.localizedPrice }
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
-            // Leave the price as whatever it was; UI shows "—" as fallback.
+            // Leave prices as whatever they were; UI shows a spinner if empty.
         }
     }
 

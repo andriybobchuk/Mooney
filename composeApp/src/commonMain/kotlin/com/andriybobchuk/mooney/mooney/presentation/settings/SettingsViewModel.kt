@@ -8,7 +8,6 @@ import com.andriybobchuk.mooney.mooney.domain.Currency
 import com.andriybobchuk.mooney.mooney.domain.UserCurrency
 import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
 import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
-import com.andriybobchuk.mooney.core.premium.PRODUCT_ID_MONTHLY
 import com.andriybobchuk.mooney.core.premium.PremiumConfig
 import com.andriybobchuk.mooney.core.premium.PremiumManager
 import com.andriybobchuk.mooney.core.premium.PurchaseResult
@@ -64,14 +63,24 @@ class SettingsViewModel(
     // accounts/categories per-call.
     private val universalCsvImporter: com.andriybobchuk.mooney.mooney.domain.backup.UniversalCsvImporter,
     private val importCsvUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.ImportCsvUseCase,
-    private val reminderScheduler: com.andriybobchuk.mooney.core.notifications.ReminderScheduler
+    private val reminderScheduler: com.andriybobchuk.mooney.core.notifications.ReminderScheduler,
+    // Marketing / demo seeder — safe to wire in unconditionally because the
+    // use case gates itself on [SeedDemoDataUseCase.isEmpty].
+    private val seedDemoDataUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.SeedDemoDataUseCase,
+    // Demo-DB toggle needs sync pref + process restart. See AppRestarter for
+    // the iOS-can't-programmatically-quit caveat.
+    private val startupPrefs: com.andriybobchuk.mooney.core.data.preferences.StartupPrefs,
+    private val appRestarter: com.andriybobchuk.mooney.core.platform.AppRestarter
 ) : ViewModel() {
 
     // Seed `isLoading` from the app cache so opening Settings while the cache
     // is warm (the usual case — you reach Settings from a tab, the tabs have
     // already warmed the cache) skips the cold-start spinner entirely.
     private val _state = MutableStateFlow(
-        SettingsState(isLoading = !appDataCache.snapshot.value.isReady)
+        SettingsState(
+            isLoading = !appDataCache.snapshot.value.isReady,
+            isDemoDbMode = startupPrefs.getDemoDbMode()
+        )
     )
     val state: StateFlow<SettingsState> = _state.asStateFlow()
 
@@ -89,6 +98,17 @@ class SettingsViewModel(
         observeAdsDisabled()
         observeDevPremiumFlag()
         observeReminderConfig()
+        observeSeederAvailability()
+    }
+
+    private fun observeSeederAvailability() {
+        // The seeder row hides itself the moment the user has anything
+        // (accounts OR transactions) — this is how we guarantee it can never
+        // clobber a real ledger even if wired in the shipping build.
+        appDataCache.snapshot.map { it.isReady && it.accounts.isEmpty() && it.transactions.isEmpty() }
+            .onEach { empty ->
+                _state.update { it.copy(canSeedDemoData = empty) }
+            }.launchIn(viewModelScope)
     }
 
     private fun observeReminderConfig() {
@@ -308,6 +328,66 @@ class SettingsViewModel(
                 weekday = action.weekday
             )
             is SettingsAction.OnBackClick -> {}
+            is SettingsAction.OnFillDemoData -> handleFillDemoData()
+            is SettingsAction.OnToggleDemoDbMode -> handleToggleDemoDbMode()
+        }
+    }
+
+    private fun handleToggleDemoDbMode() {
+        val newValue = !startupPrefs.getDemoDbMode()
+        // Persist synchronously (commit(), not apply()) so the pref survives
+        // the imminent process kill on Android — otherwise the write can be
+        // lost and the app re-opens in the wrong mode.
+        startupPrefs.setDemoDbMode(newValue)
+        _state.update { it.copy(isDemoDbMode = newValue) }
+        if (appRestarter.canRestart) {
+            appRestarter.restart()
+        } else {
+            // iOS: the user has to force-quit manually. Ask via the state
+            // field so Settings can render the copy in the correct locale.
+            _state.update {
+                it.copy(
+                    pendingRestartMessage = if (newValue) {
+                        "Please force-quit and reopen Mooney to load the demo data."
+                    } else {
+                        "Please force-quit and reopen Mooney to load your real data."
+                    }
+                )
+            }
+        }
+    }
+
+    fun clearPendingRestartMessage() {
+        _state.update { it.copy(pendingRestartMessage = null) }
+    }
+
+    private fun handleFillDemoData() {
+        viewModelScope.launch {
+            if (!seedDemoDataUseCase.isEmpty()) {
+                _state.update {
+                    it.copy(restoreMessage = "Demo data can only be added to an empty app")
+                }
+                return@launch
+            }
+            _state.update { it.copy(isSeedingDemoData = true) }
+            try {
+                seedDemoDataUseCase()
+                _state.update {
+                    it.copy(
+                        isSeedingDemoData = false,
+                        restoreMessage = "Demo data added — enjoy!"
+                    )
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isSeedingDemoData = false,
+                        restoreMessage = "Couldn't seed demo data: ${e.message ?: "unknown error"}"
+                    )
+                }
+            }
         }
     }
 
@@ -379,8 +459,12 @@ class SettingsViewModel(
                 _state.update { it.copy(isExporting = true, error = null) }
                 val exportData = dataExportImportManager.exportAllData()
                 analyticsTracker.trackEvent(AnalyticsEvent.CsvExported)
+                // Leave isExporting=true — the UI's file-save picker is still
+                // pending. The Screen calls [clearExporting] once the OS
+                // picker returns (either the user picked a destination or
+                // dismissed it). Flipping the flag off here caused the
+                // spinner to vanish before the picker appeared.
                 _events.emit(SettingsEvent.ExportReady(exportData))
-                _state.update { it.copy(isExporting = false) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -388,6 +472,11 @@ class SettingsViewModel(
                 _state.update { it.copy(isExporting = false, error = "Export failed: ${e.message}") }
             }
         }
+    }
+
+    /** Called by the UI after the OS file-save picker resolves. */
+    fun clearExporting() {
+        _state.update { it.copy(isExporting = false) }
     }
 
     private fun handleImportCsv(csvContent: String) {
@@ -698,7 +787,7 @@ class SettingsViewModel(
         _state.update { it.copy(showPaywall = false, purchaseError = null) }
     }
 
-    fun onSubscribe() {
+    fun onSubscribe(productId: String) {
         viewModelScope.launch {
             _state.update { it.copy(isPurchasing = true, purchaseError = null) }
             try {
@@ -706,7 +795,7 @@ class SettingsViewModel(
                 // even if every downstream layer's timeout fails. 25s is just
                 // longer than the billing manager's internal 20s timeout.
                 val result = kotlinx.coroutines.withTimeoutOrNull(25_000L) {
-                    premiumManager.purchase(PRODUCT_ID_MONTHLY)
+                    premiumManager.purchase(productId)
                 }
                 when (result) {
                     is PurchaseResult.Success -> _state.update { it.copy(showPaywall = false, isPurchasing = false) }

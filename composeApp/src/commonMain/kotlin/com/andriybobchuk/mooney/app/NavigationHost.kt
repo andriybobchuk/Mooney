@@ -490,7 +490,10 @@ fun NavigationHost() {
                     onNavigateToAssets = { navController.navigate(Route.Accounts) { popUpTo(Route.MooneyGraph) } },
                     onNavigateToRecurring = { navController.navigate(Route.RecurringTransactions) },
                     onNavigateToTransactionCategories = { navController.navigate(Route.Categories) },
-                    onNavigateToGoals = { navController.navigate(Route.Goals) }
+                    onNavigateToGoals = { navController.navigate(Route.Goals) },
+                    onNavigateToExpensesBreakdown = {
+                        navController.navigate(Route.AnalyticsCosts)
+                    }
                 )
             }
             composable<Route.Accounts> { entry ->

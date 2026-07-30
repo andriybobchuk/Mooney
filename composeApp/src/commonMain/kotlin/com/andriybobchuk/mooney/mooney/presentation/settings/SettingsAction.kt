@@ -50,4 +50,10 @@ sealed interface SettingsAction {
         val minute: Int,
         val weekday: Int
     ) : SettingsAction
+
+    /** Fill an empty app with demo data for marketing / screen recording. */
+    data object OnFillDemoData : SettingsAction
+
+    /** Flip between the real ledger and the demo DB — requires an app restart. */
+    data object OnToggleDemoDbMode : SettingsAction
 }

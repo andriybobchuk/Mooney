@@ -42,11 +42,20 @@ actual class StartupPrefs(context: Context) {
         prefs.edit().putBoolean(KEY_APP_LOCK_ENABLED, value).apply()
     }
 
+    // Demo DB toggle. commit() (not apply()) because we call this immediately
+    // before killing the process — apply() is async and could lose the write.
+    actual fun getDemoDbMode(): Boolean = prefs.getBoolean(KEY_DEMO_DB_MODE, false)
+
+    actual fun setDemoDbMode(value: Boolean) {
+        prefs.edit().putBoolean(KEY_DEMO_DB_MODE, value).commit()
+    }
+
     private companion object {
         const val NAME = "mooney_startup"
         const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
         const val KEY_DEFAULT_CURRENCY = "default_currency"
         const val KEY_THEME_MODE = "theme_mode"
         const val KEY_APP_LOCK_ENABLED = "app_lock_enabled"
+        const val KEY_DEMO_DB_MODE = "demo_db_mode"
     }
 }

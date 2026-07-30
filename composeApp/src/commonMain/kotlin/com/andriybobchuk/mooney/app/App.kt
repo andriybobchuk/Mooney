@@ -52,11 +52,20 @@ fun App() {
     val syncDefaults: SyncDefaultCategoriesUseCase = koinInject()
     val reportUsage: ReportCategoryUsageUseCase = koinInject()
     val requestReview: com.andriybobchuk.mooney.core.review.RequestReviewUseCase = koinInject()
+    val seedDemoData: com.andriybobchuk.mooney.mooney.domain.usecase.SeedDemoDataUseCase = koinInject()
+    val startupPrefsForSeed: StartupPrefs = koinInject()
     LaunchedEffect(Unit) {
         syncDefaults()
         reportUsage()
         // Tracks install date + open count — gates the review prompt later on.
         requestReview.recordAppOpen()
+        // Demo-DB boot path: user flipped the toggle in Settings + restarted;
+        // this launch runs against mooney_demo.db which is empty on first
+        // switch. Auto-populate so the marketing team never has to tap the
+        // separate "Fill with demo data" row after the switch.
+        if (startupPrefsForSeed.getDemoDbMode() && seedDemoData.isEmpty()) {
+            seedDemoData()
+        }
     }
 
     val themeManager: ThemeManager = koinInject()

@@ -80,19 +80,18 @@ class IosBillingManager : BillingManager {
         // Prefer the Swift StoreKit 2 bridge when available — single async
         // call, no delegate/observer plumbing.
         bridge?.let { bridge ->
-            NSLog("[Billing] fetchProducts via StoreKit 2 bridge")
-            return suspendCancellableCoroutine { cont ->
-                bridge.fetchPrice(PRODUCT_ID_MONTHLY) { price ->
-                    NSLog("[Billing] fetchProducts bridge result price=$price")
-                    if (price == null) {
-                        cont.resume(null) {}
-                    } else {
-                        cont.resume(
-                            listOf(BillingProduct(id = PRODUCT_ID_MONTHLY, localizedPrice = price))
-                        ) {}
-                    }
+            NSLog("[Billing] fetchProducts via StoreKit 2 bridge for ${ALL_PRODUCT_IDS.size} products")
+            // Fetch each SKU's price in parallel through the bridge. The
+            // Swift Product.products(for:) API takes a Set and returns all in
+            // one round-trip; the bridge exposes a per-ID call so we sequence
+            // here — cost is negligible (StoreKit caches server-side).
+            val results = ALL_PRODUCT_IDS.mapNotNull { productId ->
+                val price = suspendCancellableCoroutine<String?> { cont ->
+                    bridge.fetchPrice(productId) { p -> cont.resume(p) {} }
                 }
+                price?.let { BillingProduct(id = productId, localizedPrice = it) }
             }
+            return results.ifEmpty { null }
         }
 
         val deferred = CompletableDeferred<List<SKProduct>?>()
@@ -108,7 +107,7 @@ class IosBillingManager : BillingManager {
             }
         )
 
-        val request = SKProductsRequest(productIdentifiers = setOf(PRODUCT_ID_MONTHLY))
+        val request = SKProductsRequest(productIdentifiers = ALL_PRODUCT_IDS.toSet())
         request.delegate = currentProductsDelegate
         request.start()
 
@@ -224,16 +223,19 @@ class IosBillingManager : BillingManager {
     override suspend fun restorePurchases(): Boolean {
         // StoreKit 2 bridge: query current entitlements directly. No "Sign in to
         // Apple ID" prompt because Transaction.currentEntitlements reads what
-        // the user has, server-side.
+        // the user has, server-side. Check every SKU we sell — the user might
+        // hold a weekly or monthly entitlement; either grants Pro.
         bridge?.let { bridge ->
-            NSLog("[Billing] restorePurchases via StoreKit 2 bridge")
-            return suspendCancellableCoroutine { cont ->
-                bridge.checkEntitlement(PRODUCT_ID_MONTHLY) { entitled ->
-                    NSLog("[Billing] restorePurchases bridge result entitled=$entitled")
-                    if (entitled) _isSubscribed.value = true
-                    cont.resume(entitled) {}
+            NSLog("[Billing] restorePurchases via StoreKit 2 bridge across ${ALL_PRODUCT_IDS.size} SKUs")
+            val anyEntitled = ALL_PRODUCT_IDS.any { productId ->
+                suspendCancellableCoroutine<Boolean> { cont ->
+                    bridge.checkEntitlement(productId) { entitled ->
+                        cont.resume(entitled) {}
+                    }
                 }
             }
+            if (anyEntitled) _isSubscribed.value = true
+            return anyEntitled
         }
 
         val deferred = CompletableDeferred<Boolean>()

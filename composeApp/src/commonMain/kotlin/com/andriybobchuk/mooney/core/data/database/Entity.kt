@@ -108,7 +108,12 @@ data class RecurringTransactionEntity(
     val monthOfYear: Int? = null, // 1-12 for yearly, null otherwise
     val isActive: Boolean = true,
     val createdDate: String, // ISO date string
-    val lastProcessedDate: String? = null // Track last time it was processed
+    val lastProcessedDate: String? = null, // Track last time it was processed
+    // Free-text note the user attached to the source transaction. Persisted
+    // on the recurring template so every pending / materialized instance
+    // inherits it — otherwise the user would have to re-type "Landlord —
+    // June rent" on every generated tx. Nullable for pre-v21 rows.
+    val description: String? = null
 )
 
 @Entity(tableName = "pending_transactions")
@@ -120,7 +125,11 @@ data class PendingTransactionEntity(
     val accountId: Int,
     val scheduledDate: String, // ISO date string - when it should be added
     val status: String = "PENDING", // "PENDING", "ACCEPTED", "REJECTED", "SKIPPED"
-    val createdDate: String // ISO date string - when the pending entry was created
+    val createdDate: String, // ISO date string - when the pending entry was created
+    // Copied from the parent RecurringTransactionEntity at generation time,
+    // then propagated to the real TransactionEntity when the user accepts
+    // the pending row. Nullable for pre-v21 rows.
+    val description: String? = null
 )
 
 @Entity(tableName = "historical_rates", primaryKeys = ["fromCurrency", "toCurrency", "date"])

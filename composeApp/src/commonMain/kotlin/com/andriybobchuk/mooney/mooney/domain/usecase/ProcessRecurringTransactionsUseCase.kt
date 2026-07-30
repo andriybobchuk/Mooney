@@ -45,7 +45,12 @@ class ProcessRecurringTransactionsUseCase(
                             accountId = recurring.accountId,
                             scheduledDate = dueDate.toString(),
                             status = "PENDING",
-                            createdDate = today.toString()
+                            createdDate = today.toString(),
+                            // Carry the note from the recurring template so the
+                            // pending row (and any transaction the user accepts
+                            // from it) surfaces the same context users typed
+                            // when the recurring was created.
+                            description = recurring.description
                         )
                     )
                     recurringTransactionDao.updateLastProcessedDate(recurring.id, dueDate.toString())

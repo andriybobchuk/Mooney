@@ -60,7 +60,14 @@ fun MooneyTextField(
     onTrailingIconClick: (() -> Unit)? = null,
     showClearButton: Boolean = false,
     variant: TextFieldVariant = TextFieldVariant.OUTLINED,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    // Default to sentence-case: every user-facing text input should suggest
+    // capitalizing the first letter of each sentence, matching platform
+    // conventions (Notes, Reminders, WhatsApp — all sentence-case by default).
+    // Overrides at the call site can still choose Words / Characters / None
+    // for cases like currency codes or email fields (rare in this app).
+    keyboardOptions: KeyboardOptions = KeyboardOptions(
+        capitalization = KeyboardCapitalization.Sentences
+    ),
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     textStyle: androidx.compose.ui.text.TextStyle? = null

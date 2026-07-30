@@ -27,7 +27,7 @@ class CalculateAnalyticsMetricsUseCase(
 
         return listOf(
             buildMetric(
-                title = "Revenue",
+                title = "Revenue", // allow-hardcoded (internal key, UI maps to Res.string.revenue_title)
                 current = currentRevenue,
                 previous = previousRevenue,
                 baseCurrency = baseCurrency,
@@ -43,7 +43,7 @@ class CalculateAnalyticsMetricsUseCase(
                 revenueForSubtitle = currentRevenue
             ),
             buildMetric(
-                title = "Expenses",
+                title = "Expenses", // allow-hardcoded (internal key)
                 current = currentExpenses,
                 previous = previousExpenses,
                 baseCurrency = baseCurrency,
@@ -51,7 +51,7 @@ class CalculateAnalyticsMetricsUseCase(
                 revenueForSubtitle = currentRevenue
             ),
             buildMetric(
-                title = "Net Income",
+                title = "Net Income", // allow-hardcoded (internal key)
                 current = currentNetIncome,
                 previous = previousNetIncome,
                 baseCurrency = baseCurrency,
@@ -78,13 +78,22 @@ class CalculateAnalyticsMetricsUseCase(
             null
         }
 
+        // Pre-format the last-month value so the composable renders a plain
+        // string. We only surface it when there was actually SOMETHING last
+        // month — a "Compared to $0" line reads as a bug even when the delta
+        // is meaningfully +∞ (fresh user's very first month).
+        val previousValueFormatted = if (previous != 0.0) {
+            "${previous.formatWithCommas()} ${baseCurrency.symbol}"
+        } else null
+
         return AnalyticsMetric(
             title = title,
             value = "${current.formatWithCommas()} ${baseCurrency.symbol}",
             subtitle = subtitle,
             color = color,
             trendPercentage = trendPercentage,
-            isClickable = true
+            isClickable = true,
+            previousValueFormatted = previousValueFormatted
         )
     }
 

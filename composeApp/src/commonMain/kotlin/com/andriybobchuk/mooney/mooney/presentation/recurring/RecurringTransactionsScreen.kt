@@ -445,18 +445,37 @@ private fun RecurringTransactionItem(
         Spacer(Modifier.width(10.dp))
 
         Column(modifier = Modifier.weight(1f)) {
+            // Mirror the Transactions screen row treatment: if the user
+            // typed a description, promote it to the primary text and demote
+            // the category title to the secondary row. Ellipsize both so a
+            // long note doesn't push the price off-screen.
+            val note = recurring.description?.trim().orEmpty()
+            val hasNote = note.isNotEmpty()
+            val categoryTitle = recurring.subcategory
+                ?.let { com.andriybobchuk.mooney.mooney.data.localizedCategoryTitle(it) }
+                ?: recurring.title
+            val primary = if (hasNote) note else categoryTitle
+            val secondary = if (hasNote) {
+                "${categoryTitle} · ${recurring.schedule.toDisplayString()}"
+            } else {
+                recurring.schedule.toDisplayString()
+            }
             Text(
-                recurring.subcategory?.let { com.andriybobchuk.mooney.mooney.data.localizedCategoryTitle(it) } ?: recurring.title,
+                text = primary,
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.Normal,
                     fontSize = 15.sp
                 ),
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
             Text(
-                recurring.schedule.toDisplayString(),
+                text = secondary,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
         }
 
@@ -492,14 +511,18 @@ private fun RecurringTransactionAddSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    // Convert editing recurring to a Transaction for the bottom sheet
+    // Convert editing recurring to a Transaction for the bottom sheet.
+    // description must flow through here or the sheet's Description field
+    // renders blank when reopened — the user then re-types the note, saves,
+    // and it looks like the save silently dropped it (bug #2 from the batch).
     val transactionToEdit = editingRecurring?.let { rec ->
         if (rec.account != null && rec.subcategory != null) {
             com.andriybobchuk.mooney.mooney.domain.Transaction(
                 id = 0,
                 subcategory = rec.subcategory,
                 amount = rec.amount,
-                account = rec.account
+                account = rec.account,
+                description = rec.description
             )
         } else null
     }
@@ -528,7 +551,8 @@ private fun RecurringTransactionAddSheet(
                             subcategory = transaction.subcategory,
                             amount = transaction.amount,
                             account = transaction.account,
-                            schedule = schedule
+                            schedule = schedule,
+                            description = transaction.description
                         )
                     )
                 } else {
@@ -544,7 +568,8 @@ private fun RecurringTransactionAddSheet(
                         subcategory = transaction.subcategory,
                         amount = transaction.amount,
                         account = transaction.account,
-                        schedule = schedule
+                        schedule = schedule,
+                        description = transaction.description
                     )
                 )
             }

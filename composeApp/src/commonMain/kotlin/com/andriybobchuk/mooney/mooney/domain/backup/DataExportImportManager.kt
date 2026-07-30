@@ -142,7 +142,10 @@ class DataExportImportManager(
         val monthOfYear: Int? = null,
         val isActive: Boolean = true,
         val createdDate: String,
-        val lastProcessedDate: String? = null
+        val lastProcessedDate: String? = null,
+        // v5 addition — carry the note attached to the recurring template
+        // so restore preserves user context ("Landlord — May rent").
+        val description: String? = null
     )
 
     @Serializable
@@ -154,7 +157,9 @@ class DataExportImportManager(
         val accountId: Int,
         val scheduledDate: String,
         val status: String = "PENDING",
-        val createdDate: String
+        val createdDate: String,
+        // v5 addition — same reason as RecurringTransactionExport.
+        val description: String? = null
     )
 
     @Serializable
@@ -185,7 +190,11 @@ class DataExportImportManager(
 
     // endregion
 
-    suspend fun exportAllData(): String {
+    // Dispatchers.Default so the 10 DAO reads + JSON encoding never touch
+    // Main — on iPhones with hundreds of transactions the serialization step
+    // alone was jank-freezing the button for 500-1500ms. Room's own reads
+    // already dispatch internally, but json.encodeToString does not.
+    suspend fun exportAllData(): String = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
         val transactions = transactionDao.getAll().first().map { it.toExport() }
         val accounts = accountDao.getAll().first().map { it.toExport() }
         val goals = goalDao.getAll().first().map { it.toExport() }
@@ -231,7 +240,7 @@ class DataExportImportManager(
             metadata = metadata
         )
 
-        return json.encodeToString(export)
+        json.encodeToString(export)
     }
 
     // Suppressed because the length is inherently structural — 10 sequential
@@ -341,21 +350,43 @@ class DataExportImportManager(
                 counts = counts.copy(categoryUsages = counts.categoryUsages + 1)
             }
 
-            // 8. Recurring transactions
+            // 8. Recurring transactions — v5 restored `description` so the
+            //    note user typed at recurring-creation time survives export.
             export.recurringTransactions.forEach { rt ->
                 recurringTransactionDao.upsert(
-                    RecurringTransactionEntity(0, rt.title, rt.subcategoryId, rt.amount, rt.accountId,
-                        rt.dayOfMonth, rt.frequency, rt.weekDay, rt.monthOfYear, rt.isActive,
-                        rt.createdDate, rt.lastProcessedDate)
+                    RecurringTransactionEntity(
+                        id = 0,
+                        title = rt.title,
+                        subcategoryId = rt.subcategoryId,
+                        amount = rt.amount,
+                        accountId = rt.accountId,
+                        dayOfMonth = rt.dayOfMonth,
+                        frequency = rt.frequency,
+                        weekDay = rt.weekDay,
+                        monthOfYear = rt.monthOfYear,
+                        isActive = rt.isActive,
+                        createdDate = rt.createdDate,
+                        lastProcessedDate = rt.lastProcessedDate,
+                        description = rt.description
+                    )
                 )
                 counts = counts.copy(recurringTransactions = counts.recurringTransactions + 1)
             }
 
-            // 9. Pending transactions
+            // 9. Pending transactions — same v5 rationale as recurring.
             export.pendingTransactions.forEach { pt ->
                 pendingTransactionDao.upsert(
-                    PendingTransactionEntity(0, pt.recurringTransactionId, pt.subcategoryId,
-                        pt.amount, pt.accountId, pt.scheduledDate, pt.status, pt.createdDate)
+                    PendingTransactionEntity(
+                        id = 0,
+                        recurringTransactionId = pt.recurringTransactionId,
+                        subcategoryId = pt.subcategoryId,
+                        amount = pt.amount,
+                        accountId = pt.accountId,
+                        scheduledDate = pt.scheduledDate,
+                        status = pt.status,
+                        createdDate = pt.createdDate,
+                        description = pt.description
+                    )
                 )
                 counts = counts.copy(pendingTransactions = counts.pendingTransactions + 1)
             }
@@ -490,12 +521,31 @@ class DataExportImportManager(
     private fun UserCurrencyEntity.toExport() = UserCurrencyExport(code, sortOrder)
 
     private fun RecurringTransactionEntity.toExport() = RecurringTransactionExport(
-        id, title, subcategoryId, amount, accountId, dayOfMonth, frequency,
-        weekDay, monthOfYear, isActive, createdDate, lastProcessedDate
+        id = id,
+        title = title,
+        subcategoryId = subcategoryId,
+        amount = amount,
+        accountId = accountId,
+        dayOfMonth = dayOfMonth,
+        frequency = frequency,
+        weekDay = weekDay,
+        monthOfYear = monthOfYear,
+        isActive = isActive,
+        createdDate = createdDate,
+        lastProcessedDate = lastProcessedDate,
+        description = description
     )
 
     private fun PendingTransactionEntity.toExport() = PendingTransactionExport(
-        id, recurringTransactionId, subcategoryId, amount, accountId, scheduledDate, status, createdDate
+        id = id,
+        recurringTransactionId = recurringTransactionId,
+        subcategoryId = subcategoryId,
+        amount = amount,
+        accountId = accountId,
+        scheduledDate = scheduledDate,
+        status = status,
+        createdDate = createdDate,
+        description = description
     )
 
     private fun AssetCategoryEntity.toExport() = AssetCategoryExport(
@@ -555,6 +605,6 @@ class DataExportImportManager(
         // (e.g. a beta test rejects a stable-app backup) surfaces the
         // "Unsupported export version" error to the user, which is the
         // correct behavior.
-        const val CURRENT_EXPORT_VERSION = 4
+        const val CURRENT_EXPORT_VERSION = 5
     }
 }

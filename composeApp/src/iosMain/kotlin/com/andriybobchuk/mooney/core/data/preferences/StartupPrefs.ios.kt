@@ -38,10 +38,19 @@ actual class StartupPrefs {
         defaults.setBool(value, KEY_APP_LOCK_ENABLED)
     }
 
+    actual fun getDemoDbMode(): Boolean = defaults.boolForKey(KEY_DEMO_DB_MODE)
+
+    actual fun setDemoDbMode(value: Boolean) {
+        defaults.setBool(value, KEY_DEMO_DB_MODE)
+        // Force disk flush before the user quits the app manually.
+        defaults.synchronize()
+    }
+
     private companion object {
         const val KEY_ONBOARDING_COMPLETED = "mooney_onboarding_completed"
         const val KEY_DEFAULT_CURRENCY = "mooney_default_currency"
         const val KEY_THEME_MODE = "mooney_theme_mode"
         const val KEY_APP_LOCK_ENABLED = "mooney_app_lock_enabled"
+        const val KEY_DEMO_DB_MODE = "mooney_demo_db_mode"
     }
 }

@@ -665,24 +665,42 @@ fun EnhancedMetricCard(
                 }
             }
 
-            // Trend pill
-            if (metric.trendPercentage != 0.0) {
-                val isPositive = metric.trendPercentage > 0
-                val trendColor = if (isPositive) Color(0xFF16A34A) else Color(0xFFDC2626)
-                val pillBg = if (isPositive) Color(0xFF16A34A).copy(alpha = 0.10f) else Color(0xFFDC2626).copy(alpha = 0.10f)
-                val sign = if (isPositive) "+" else ""
-                val value = kotlin.math.round(metric.trendPercentage * 10) / 10
+            // Trend pill + "vs. last month" absolute value.
+            //
+            // We show the pill on line 1 and the last-month absolute below.
+            // The absolute matters a lot to users: a +40% pill on a
+            // "Compared to 12.574 zł" month tells a very different story
+            // than +40% on "Compared to 43 zł". Kept small + muted so the
+            // primary card value stays visually dominant.
+            if (metric.trendPercentage != 0.0 || metric.previousValueFormatted != null) {
+                Column(horizontalAlignment = Alignment.End) {
+                    if (metric.trendPercentage != 0.0) {
+                        val isPositive = metric.trendPercentage > 0
+                        val trendColor = if (isPositive) Color(0xFF16A34A) else Color(0xFFDC2626)
+                        val pillBg = if (isPositive) Color(0xFF16A34A).copy(alpha = 0.10f) else Color(0xFFDC2626).copy(alpha = 0.10f)
+                        val sign = if (isPositive) "+" else ""
+                        val value = kotlin.math.round(metric.trendPercentage * 10) / 10
 
-                Box(
-                    modifier = Modifier
-                        .background(pillBg, RoundedCornerShape(50))
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
-                ) {
-                    Text(
-                        text = "$sign$value%",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = trendColor
-                    )
+                        Box(
+                            modifier = Modifier
+                                .background(pillBg, RoundedCornerShape(50))
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        ) {
+                            Text(
+                                text = "$sign$value%",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = trendColor
+                            )
+                        }
+                    }
+                    metric.previousValueFormatted?.let { prev ->
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = stringResource(Res.string.analytics_compared_to_last_month, prev),
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                    }
                 }
             }
         }

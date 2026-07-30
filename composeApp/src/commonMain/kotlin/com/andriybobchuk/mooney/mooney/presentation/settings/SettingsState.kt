@@ -59,7 +59,22 @@ data class SettingsState(
     /** Local-time minute for the reminder (0–59). */
     val reminderMinute: Int = 0,
     /** ISO weekday for WEEKLY reminders: 1 = Mon … 7 = Sun. */
-    val reminderWeekday: Int = 7
+    val reminderWeekday: Int = 7,
+    /**
+     * Marketing / demo seeder: `true` while the app has zero transactions and
+     * zero accounts. Gates the "Fill app with demo data" row so the seeder
+     * can never overwrite a real user's ledger.
+     */
+    val canSeedDemoData: Boolean = false,
+    /** True while [SeedDemoDataUseCase] is running so the row shows a spinner. */
+    val isSeedingDemoData: Boolean = false,
+    /** True while the app is running against mooney_demo.db (marketing mode). */
+    val isDemoDbMode: Boolean = false,
+    /**
+     * When set, Settings shows a modal telling the user the demo-mode switch
+     * requires them to force-quit the app (iOS only — Android auto-restarts).
+     */
+    val pendingRestartMessage: String? = null
 ) {
     val maxPinnedCategories: Int = 5
     val canAddMorePinned: Boolean = pinnedCategoryIds.size < maxPinnedCategories

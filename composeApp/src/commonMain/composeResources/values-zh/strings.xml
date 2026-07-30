@@ -375,6 +375,7 @@
     <!-- 标题 -->
     <string name="goals_title">目标</string>
     <string name="analytics_title">分析</string>
+    <string name="analytics_compared_to_last_month">上月：%1$s</string>
     <string name="net_income_title">净收入</string>
     <string name="net_worth_title">净资产</string>
 

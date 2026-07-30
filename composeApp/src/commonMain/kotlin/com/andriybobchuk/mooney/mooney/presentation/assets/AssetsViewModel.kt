@@ -13,7 +13,6 @@ import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
 import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.core.data.database.AssetCategoryDao
 import com.andriybobchuk.mooney.core.data.database.AssetCategoryEntity
-import com.andriybobchuk.mooney.core.premium.PRODUCT_ID_MONTHLY
 import com.andriybobchuk.mooney.core.premium.PremiumConfig
 import com.andriybobchuk.mooney.core.premium.PremiumManager
 import com.andriybobchuk.mooney.core.premium.PurchaseResult
@@ -326,12 +325,12 @@ class AssetsViewModel(
         _uiState.update { it.copy(showPaywall = false, purchaseError = null) }
     }
 
-    fun onSubscribe() {
+    fun onSubscribe(productId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isPurchasing = true, purchaseError = null) }
             try {
                 val result = kotlinx.coroutines.withTimeoutOrNull(25_000L) {
-                    premiumManager.purchase(PRODUCT_ID_MONTHLY)
+                    premiumManager.purchase(productId)
                 }
                 when (result) {
                     is PurchaseResult.Success -> _uiState.update { it.copy(showPaywall = false, isPurchasing = false) }

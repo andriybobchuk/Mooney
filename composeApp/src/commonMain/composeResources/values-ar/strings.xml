@@ -375,6 +375,7 @@
     <!-- العناوين -->
     <string name="goals_title">الأهداف</string>
     <string name="analytics_title">التحليلات</string>
+    <string name="analytics_compared_to_last_month">الشهر الماضي: %1$s</string>
     <string name="net_income_title">صافي الدخل</string>
     <string name="net_worth_title">صافي الثروة</string>
 

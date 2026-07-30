@@ -386,7 +386,7 @@ fun AssetsScreen(
             errorMessage = state.purchaseError,
             trigger = com.andriybobchuk.mooney.core.premium.PaywallTrigger.ACCOUNT_LIMIT,
             onDismiss = { viewModel.dismissPaywall() },
-            onSubscribe = { viewModel.onSubscribe() },
+            onSubscribe = { productId -> viewModel.onSubscribe(productId) },
             onRestore = { viewModel.onRestorePurchases() }
         )
     }

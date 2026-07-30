@@ -187,7 +187,14 @@ data class RecurringTransaction(
     val amount: Double,
     val account: Account?,
     val schedule: RecurringSchedule,
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
+    /**
+     * Free-text note inherited from the source transaction. Carried on the
+     * template so every materialized instance (Pending → real Transaction)
+     * shows the same context — e.g. "Landlord — May rent" rendered on
+     * every monthly regeneration instead of a bare "Rent" row.
+     */
+    val description: String? = null
 )
 
 private fun ordinal(day: Int): String {

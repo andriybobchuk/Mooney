@@ -15,6 +15,7 @@ import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.coroutines.cancellation.CancellationException
@@ -31,6 +32,15 @@ data class AnalyticsState(
     val isSubcategorySheetOpen: Boolean = false,
     val isCategorySheetOpen: Boolean = false,
     val categorySheetType: CategorySheetType? = null,
+    /**
+     * Sticky record of the last [CategorySheetType] loaded into [sheetCategories]
+     * — set by both the inline sheet path AND the full-screen [AnalyticsBreakdownScreen]
+     * route. Unlike [categorySheetType], this outlives sheet dismissal so
+     * [setCategoryMonthlyLimit] knows which breakdown to re-fetch after a budget
+     * change even when the inline sheet was never open (e.g. user is on the
+     * Expenses full screen).
+     */
+    val lastLoadedSheetType: CategorySheetType? = null,
     val isNetIncomeSheetOpen: Boolean = false,
     val isLoading: Boolean = false,
     /**
@@ -94,6 +104,30 @@ class AnalyticsViewModel(
         loadHistoricalData()
         observeBaseCurrency()
         observeNetWorth()
+        observeCategoryChanges()
+    }
+
+    /**
+     * Watch every categories DB write and auto-refresh the currently-displayed
+     * breakdown. This is what actually guarantees the budget bar appears on
+     * the Expenses row the moment the user hits Save — regardless of which
+     * entry path they used (inline sheet on the tab, full-screen breakdown
+     * from a card tap, or a future new surface).
+     *
+     * Skips the very first emission — that's the initial snapshot, and
+     * running loadCategoriesForSheetType before [lastLoadedSheetType] is set
+     * would be a wasted call.
+     */
+    private fun observeCategoryChanges() {
+        viewModelScope.launch {
+            categoryDao.getAll()
+                .drop(1)
+                .collect {
+                    val sheetType = _state.value.lastLoadedSheetType ?: return@collect
+                    loadCategoriesForSheetType(sheetType)
+                    loadMetricsForMonth(_state.value.selectedMonth)
+                }
+        }
     }
 
     private fun observeNetWorth() {
@@ -271,10 +305,24 @@ class AnalyticsViewModel(
                 if (existing.monthlyLimit == limit) return@launch
                 categoryDao.upsert(existing.copy(monthlyLimit = limit))
                 coreRepository.reloadCategories()
-                // Refresh the currently-open breakdown so the row shows the
-                // new budget bar immediately.
-                _state.value.categorySheetType?.let { sheetType ->
-                    loadCategoriesForSheetType(sheetType)
+                // Refresh everything that renders Category refs so the limit
+                // bar / budget label update immediately. Three surfaces read
+                // categories: the main tab (topCategories), the breakdown
+                // screen (sheetCategories), and the transactions sheet's
+                // "Set a limit" button (transactionsSheetCategory). The
+                // budget change is a rare user action, so re-running the
+                // whole monthly analytics pass here is fine cost-wise.
+                loadMetricsForMonth(_state.value.selectedMonth)
+                // Refresh whichever breakdown the user was on. Prefer the
+                // inline sheet's active type (categorySheetType) but fall
+                // back to the last-loaded type — that's what covers the
+                // full-screen AnalyticsBreakdownScreen path where the inline
+                // sheet was never opened.
+                val sheetTypeToReload = _state.value.categorySheetType ?: _state.value.lastLoadedSheetType
+                sheetTypeToReload?.let { loadCategoriesForSheetType(it) }
+                val fresh = coreRepository.getCategoryById(categoryId)
+                if (fresh != null && _state.value.transactionsSheetCategory?.id == categoryId) {
+                    _state.update { it.copy(transactionsSheetCategory = fresh) }
                 }
             } catch (e: kotlin.coroutines.cancellation.CancellationException) {
                 throw e
@@ -373,7 +421,7 @@ class AnalyticsViewModel(
                 exchangeRates = exchangeRates
             )
 
-            _state.update { it.copy(sheetCategories = categories) }
+            _state.update { it.copy(sheetCategories = categories, lastLoadedSheetType = sheetType) }
         }
     }
 }

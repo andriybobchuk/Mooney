@@ -163,7 +163,7 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun TransactionsScreen(
     viewModel: TransactionViewModel = koinViewModel(),
@@ -173,6 +173,11 @@ fun TransactionsScreen(
     onNavigateToRecurring: () -> Unit = {},
     onNavigateToTransactionCategories: () -> Unit = {},
     onNavigateToGoals: () -> Unit = {},
+    // Tap on the "spent this month" total now navigates to the Analytics
+    // → Expenses breakdown (a much more useful destination than cycling
+    // through display currencies — that behavior is preserved as a long
+    // press). Injected here so we don't need to know the NavController.
+    onNavigateToExpensesBreakdown: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val transactions = state.transactions
@@ -247,10 +252,18 @@ fun TransactionsScreen(
                     // Amount + "Spent in <Month>" subtitle. Date stepper sits
                     // in the actions slot to the right of the title — Settings
                     // moved out of the toolbar entirely (now a bottom-nav tab).
+                    //
+                    // Tap now deep-links to the Analytics → Expenses breakdown
+                    // (the most useful "why did I spend that much?" surface).
+                    // Long-press preserves the previous behavior of cycling
+                    // through display currencies for users who liked that.
                     Column(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .clickable { viewModel.onTotalCurrencyClick() }
+                            .combinedClickable(
+                                onClick = { onNavigateToExpensesBreakdown() },
+                                onLongClick = { viewModel.onTotalCurrencyClick() }
+                            )
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
                         Text(
@@ -398,10 +411,21 @@ fun TransactionsScreen(
                             viewModel.upsertTransaction(transaction)
                         }
                     },
-                    onUpdate = { transaction, _ ->
+                    onUpdate = { transaction, schedule ->
                         isBottomSheetOpen = false
                         transactionToEdit = null
+                        // Previously the schedule was silently discarded here
+                        // (arg was `_`), so users editing an existing tx and
+                        // enabling Repeat saw no recurring entry appear. Now
+                        // we always upsert the tx, and — if a schedule got
+                        // attached in the sheet — create a paired recurring
+                        // template from it. The paired recurring uses a
+                        // fresh row (id=0) since a Transaction has no
+                        // parent-recurring pointer to update.
                         viewModel.upsertTransaction(transaction)
+                        if (schedule != null) {
+                            viewModel.createRecurringFromTransaction(transaction, schedule)
+                        }
                     },
                     onEditCategories = onNavigateToTransactionCategories
                 )
@@ -1157,16 +1181,40 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
                     style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                 )
             } else {
-                // For regular transactions: show category title
+                // Row headline: prefer the user's own note ("Costco run",
+                // "Landlord — May rent") because that's the answer to
+                // "what was this transaction?" — the subcategory is
+                // redundant when the user already told us. Fall back to
+                // the localized category title when no note exists.
+                //
+                // The subcategory then moves to the secondary line so the
+                // information is still available without cluttering the
+                // primary read.
+                val noteText = transaction.description?.trim().orEmpty()
+                val hasNote = noteText.isNotEmpty()
+                val primary = if (hasNote) noteText else localizedCategoryTitle(transaction.subcategory)
                 Text(
-                    localizedCategoryTitle(transaction.subcategory),
+                    text = primary,
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, fontSize = 15.sp),
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
-                if (transaction.subcategory.isSubCategory()) {
+                // Secondary line — subcategory (with parent context) when
+                // the note took over the primary line; otherwise the
+                // legacy parent line for sub-categories.
+                val secondary = when {
+                    hasNote -> localizedCategoryTitle(transaction.subcategory)
+                    transaction.subcategory.isSubCategory() ->
+                        transaction.subcategory.parent?.let { localizedCategoryTitle(it) }
+                    else -> null
+                }
+                if (secondary != null) {
                     Text(
-                        transaction.subcategory.parent?.let { localizedCategoryTitle(it) } ?: "???",
-                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        text = secondary,
+                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
             }
@@ -1903,7 +1951,14 @@ fun TransactionBottomSheet(
                             },
                             date = selectedDate,
                             destinationAmount = computedDestinationAmount,
-                            description = description.trim().takeIf { it.isNotEmpty() }
+                            // Capitalize the first char on save so
+                            // list rows always look tidy — belt-and-braces
+                            // with the sentence-capitalization keyboard hint
+                            // on the input field itself (some keyboards
+                            // ignore that hint after autocorrect).
+                            description = description.trim()
+                                .takeIf { it.isNotEmpty() }
+                                ?.replaceFirstChar { it.uppercase() }
                         )
                         
                         val schedule = if (isRecurringEnabled) recurringSchedule else null

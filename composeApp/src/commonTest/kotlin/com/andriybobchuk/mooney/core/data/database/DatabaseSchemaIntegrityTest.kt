@@ -32,11 +32,11 @@ class DatabaseSchemaIntegrityTest {
      * the guard is the two numbers drifting apart.
      */
     @Test
-    fun `AppDatabase version is 20`() {
-        // Sourced from AppDatabase's `@Database(version = 20)` annotation
+    fun `AppDatabase version is 21`() {
+        // Sourced from AppDatabase's `@Database(version = 21)` annotation
         // by way of a static const — if the annotation is bumped, this
         // test file is where the test author lands to update the check.
-        assertEquals(20, EXPECTED_VERSION)
+        assertEquals(21, EXPECTED_VERSION)
     }
 
     /**
@@ -54,16 +54,18 @@ class DatabaseSchemaIntegrityTest {
     }
 
     @Test
-    fun `three DB names are distinct so variants can never collide`() {
+    fun `four DB names are distinct so variants can never collide`() {
         val names = setOf(
             AppDatabase.DB_NAME,
             AppDatabase.DB_NAME_DEV,
             AppDatabase.DB_NAME_E2E,
+            AppDatabase.DB_NAME_DEMO,
         )
-        assertEquals(3, names.size, "prod / dev / e2e DB names must be distinct")
+        assertEquals(4, names.size, "prod / dev / e2e / demo DB names must be distinct")
         assertTrue(AppDatabase.DB_NAME.isNotBlank())
         assertTrue(AppDatabase.DB_NAME_DEV.isNotBlank())
         assertTrue(AppDatabase.DB_NAME_E2E.isNotBlank())
+        assertTrue(AppDatabase.DB_NAME_DEMO.isNotBlank())
     }
 
     /**
@@ -108,7 +110,7 @@ class DatabaseSchemaIntegrityTest {
 
     companion object {
         /** Must be bumped in lockstep with `@Database(version = ?)` on [AppDatabase]. */
-        private const val EXPECTED_VERSION = 20
+        private const val EXPECTED_VERSION = 21
 
         /** Must be bumped in lockstep with `@Database(entities = […])` on [AppDatabase]. */
         private const val EXPECTED_ENTITY_COUNT = 12

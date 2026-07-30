@@ -9,7 +9,6 @@ import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
 import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.core.data.database.CategoryDao
 import com.andriybobchuk.mooney.core.data.database.CategoryEntity
-import com.andriybobchuk.mooney.core.premium.PRODUCT_ID_MONTHLY
 import com.andriybobchuk.mooney.core.premium.PremiumConfig
 import com.andriybobchuk.mooney.core.premium.PremiumManager
 import com.andriybobchuk.mooney.core.premium.PurchaseResult
@@ -55,7 +54,8 @@ sealed interface TransactionCategoriesAction {
     /** Set (or clear with null) the monthly budget on a category. */
     data class SetMonthlyLimit(val categoryId: String, val limit: Double?) : TransactionCategoriesAction
     data object DismissPaywall : TransactionCategoriesAction
-    data object Subscribe : TransactionCategoriesAction
+    /** Subscribe to a specific tier — productId flows from the paywall's tier selector. */
+    data class Subscribe(val productId: String) : TransactionCategoriesAction
     data object RestorePurchases : TransactionCategoriesAction
 }
 
@@ -147,7 +147,7 @@ class TransactionCategoriesViewModel(
             is TransactionCategoriesAction.RenameCategory -> renameCategory(action.categoryId, action.newTitle)
             is TransactionCategoriesAction.SetMonthlyLimit -> setMonthlyLimit(action.categoryId, action.limit)
             is TransactionCategoriesAction.DismissPaywall -> _state.update { it.copy(showPaywall = false, purchaseError = null) }
-            is TransactionCategoriesAction.Subscribe -> onSubscribe()
+            is TransactionCategoriesAction.Subscribe -> onSubscribe(action.productId)
             is TransactionCategoriesAction.RestorePurchases -> onRestorePurchases()
         }
     }
@@ -293,12 +293,12 @@ class TransactionCategoriesViewModel(
         }
     }
 
-    private fun onSubscribe() {
+    private fun onSubscribe(productId: String) {
         viewModelScope.launch {
             _state.update { it.copy(isPurchasing = true, purchaseError = null) }
             try {
                 val result = kotlinx.coroutines.withTimeoutOrNull(25_000L) {
-                    premiumManager.purchase(PRODUCT_ID_MONTHLY)
+                    premiumManager.purchase(productId)
                 }
                 when (result) {
                     is PurchaseResult.Success -> _state.update { it.copy(showPaywall = false, isPurchasing = false) }

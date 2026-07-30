@@ -21,7 +21,11 @@ class AcceptPendingTransactionUseCase(
             subcategory = subcategory,
             amount = pending.amount,
             account = account,
-            date = LocalDate.parse(pending.scheduledDate)
+            date = LocalDate.parse(pending.scheduledDate),
+            // Carry the note from the pending row (which itself came from
+            // the recurring template) so the user sees the same context on
+            // the materialized transaction.
+            description = pending.description
         )
         addTransactionUseCase(transaction)
         pendingTransactionDao.updateStatus(pending.id, "ACCEPTED")

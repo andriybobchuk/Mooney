@@ -68,6 +68,7 @@ fun SettingsScreen(
 
     var showImportConfirmDialog by remember { mutableStateOf(false) }
     var showUpdateCategoriesConfirm by remember { mutableStateOf(false) }
+    var showDemoDbSwitchConfirm by remember { mutableStateOf(false) }
     var importJsonData by remember { mutableStateOf<String?>(null) }
     var importPreview by remember { mutableStateOf<Triple<Int, Int, Int>?>(null) }
 
@@ -124,13 +125,22 @@ fun SettingsScreen(
             when (event) {
                 is SettingsEvent.ExportReady -> {
                     coroutineScope.launch {
-                        fileHandler.saveTextFile(event.jsonData, "mooney_backup.json")
-                            .onSuccess {
-                                // Could show success toast
-                            }
-                            .onFailure { error ->
-                                // Could show error
-                            }
+                        try {
+                            fileHandler.saveTextFile(event.jsonData, "mooney_backup.json")
+                                .onSuccess {
+                                    // Could show success toast
+                                }
+                                .onFailure { error ->
+                                    // Could show error
+                                }
+                        } finally {
+                            // Guarantees the spinner clears even if the OS
+                            // picker throws — leaving isExporting stuck at
+                            // true would make Export un-tappable for the
+                            // rest of the session (row uses .clickable(
+                            // enabled = !showLoading)).
+                            viewModel.clearExporting()
+                        }
                     }
                 }
                 is SettingsEvent.ShowImportConfirmation -> {
@@ -199,6 +209,57 @@ fun SettingsScreen(
                     }
                 ) {
                     Text(stringResource(Res.string.cancel))
+                }
+            }
+        )
+    }
+
+    // Demo-DB switch confirmation. Reassures the user their real data is
+    // safe before we blow away the process — accidental taps here are the
+    // scariest thing on the Settings surface.
+    if (showDemoDbSwitchConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDemoDbSwitchConfirm = false },
+            title = {
+                Text(
+                    if (state.isDemoDbMode) stringResource(Res.string.switch_to_prod_db)
+                    else stringResource(Res.string.switch_to_demo_db)
+                )
+            },
+            text = {
+                Text(
+                    if (state.isDemoDbMode) stringResource(Res.string.switch_to_prod_db_confirm)
+                    else stringResource(Res.string.switch_to_demo_db_confirm)
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDemoDbSwitchConfirm = false
+                    viewModel.onAction(SettingsAction.OnToggleDemoDbMode)
+                }) {
+                    Text(stringResource(Res.string.continue_action))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDemoDbSwitchConfirm = false }) {
+                    Text(stringResource(Res.string.cancel))
+                }
+            }
+        )
+    }
+
+    // iOS-only prompt after flipping the demo-DB toggle. Apple doesn't allow
+    // programmatic app quit, so we lean on the user to force-quit. Android
+    // never reaches this branch because AppRestarter.canRestart is true and
+    // the process is killed synchronously.
+    state.pendingRestartMessage?.let { message ->
+        AlertDialog(
+            onDismissRequest = { viewModel.clearPendingRestartMessage() },
+            title = { Text(stringResource(Res.string.restart_required_title)) },
+            text = { Text(message) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.clearPendingRestartMessage() }) {
+                    Text(stringResource(Res.string.ok))
                 }
             }
         )
@@ -768,7 +829,7 @@ fun SettingsScreen(
             errorMessage = state.purchaseError,
             trigger = com.andriybobchuk.mooney.core.premium.PaywallTrigger.SETTINGS_BANNER,
             onDismiss = { viewModel.dismissPaywall() },
-            onSubscribe = { viewModel.onSubscribe() },
+            onSubscribe = { productId -> viewModel.onSubscribe(productId) },
             onRestore = { viewModel.onRestorePurchases() }
         )
     }
@@ -839,7 +900,7 @@ fun SettingsScreen(
                                 errorMessage = state.purchaseError,
                                 trigger = com.andriybobchuk.mooney.core.premium.PaywallTrigger.SETTINGS_BANNER,
                                 onDismiss = { showPaywallFromBanner = false },
-                                onSubscribe = { viewModel.onSubscribe() },
+                                onSubscribe = { productId -> viewModel.onSubscribe(productId) },
                                 onRestore = { viewModel.onRestorePurchases() }
                             )
                         }
@@ -933,7 +994,7 @@ fun SettingsScreen(
                             errorMessage = state.purchaseError,
                             trigger = com.andriybobchuk.mooney.core.premium.PaywallTrigger.APP_LOCK,
                             onDismiss = { showAppLockPaywall = false },
-                            onSubscribe = { viewModel.onSubscribe() },
+                            onSubscribe = { productId -> viewModel.onSubscribe(productId) },
                             onRestore = { viewModel.onRestorePurchases() }
                         )
                     }
@@ -1050,8 +1111,8 @@ fun SettingsScreen(
                             SettingsDivider()
                             SettingsRow(
                                 title = "Update Categories", // allow-hardcoded (dev option)
-                                value = if (state.isUpdatingCategories) "Updating…" else "",
-                                onClick = { if (!state.isUpdatingCategories) showUpdateCategoriesConfirm = true }
+                                onClick = { showUpdateCategoriesConfirm = true },
+                                showLoading = state.isUpdatingCategories
                             )
                             SettingsDivider()
                             SettingsToggleRow(
@@ -1164,6 +1225,37 @@ fun SettingsScreen(
                             },
                             showLoading = state.isImporting
                         )
+                        // Marketing / screen-recording helper: fills the app
+                        // with 15 months of realistic demo data. Only visible
+                        // while the app is empty so it can never overwrite a
+                        // real user's ledger. Will be removed before 1.0.
+                        if (state.canSeedDemoData || state.isSeedingDemoData) {
+                            SettingsDivider()
+                            SettingsRow(
+                                title = stringResource(Res.string.fill_demo_data),
+                                description = stringResource(Res.string.fill_demo_data_desc),
+                                onClick = { viewModel.onAction(SettingsAction.OnFillDemoData) },
+                                showLoading = state.isSeedingDemoData
+                            )
+                        }
+                        // Demo-DB toggle: swaps Room between the real ledger
+                        // and mooney_demo.db, then restarts the process so
+                        // Room reopens against the new file. iOS shows a
+                        // manual quit-and-reopen dialog instead.
+                        SettingsDivider()
+                        SettingsRow(
+                            title = if (state.isDemoDbMode) {
+                                stringResource(Res.string.switch_to_prod_db)
+                            } else {
+                                stringResource(Res.string.switch_to_demo_db)
+                            },
+                            description = if (state.isDemoDbMode) {
+                                stringResource(Res.string.switch_to_prod_db_desc)
+                            } else {
+                                stringResource(Res.string.switch_to_demo_db_desc)
+                            },
+                            onClick = { showDemoDbSwitchConfirm = true }
+                        )
                     }
                 }
 
@@ -1216,7 +1308,8 @@ fun SettingsScreen(
                         SettingsDivider()
                         SettingsRow(
                             title = stringResource(Res.string.restore_purchases),
-                            onClick = { viewModel.onRestorePurchases() }
+                            onClick = { viewModel.onRestorePurchases() },
+                            showLoading = state.isPurchasing
                         )
                     }
                 }

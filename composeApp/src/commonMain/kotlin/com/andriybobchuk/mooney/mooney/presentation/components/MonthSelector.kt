@@ -51,12 +51,20 @@ import org.jetbrains.compose.resources.stringResource
  * cell shows a count under the label (transaction count for that month).
  *
  * Used by both the Transactions and Analytics screens so the affordance is
- * identical wherever the user changes month. Forward stepping past the current
- * month is disabled (Mooney has no meaningful future-month data).
+ * identical wherever the user changes month.
  *
- * @param monthlyCounts optional per-month value rendered as a small caption
- *   under each month cell (typically the transaction count for that month).
- *   Missing or zero values render no caption.
+ * ## Future-month gating
+ *
+ * The selector normally caps at the current month, but any FUTURE month that
+ * has at least one transaction (i.e. `monthlyCounts[m] > 0` for `m > now`) is
+ * also reachable — this lets users plan forward by dating a transaction in a
+ * future month and then reviewing it there. Cells for future months with zero
+ * transactions stay disabled so the grid doesn't invite empty navigation.
+ *
+ * @param monthlyCounts per-month transaction count. Used BOTH to render the
+ *   small caption under each month cell AND to compute which future months
+ *   are selectable. Past-month counts are cosmetic; future-month counts are
+ *   load-bearing.
  */
 @Composable
 fun MonthSelector(
@@ -66,9 +74,22 @@ fun MonthSelector(
     monthlyCounts: Map<MonthKey, Int> = emptyMap()
 ) {
     val currentMonth = remember { MonthKey.current() }
-    val canGoForward = remember(selectedMonth, currentMonth) {
-        selectedMonth.year < currentMonth.year ||
-            (selectedMonth.year == currentMonth.year && selectedMonth.month < currentMonth.month)
+    // The effective upper bound: today OR the furthest future month with data
+    // (whichever is greater). This is what canGoForward + the picker's year
+    // chevron key off of.
+    val upperBound = remember(currentMonth, monthlyCounts) {
+        monthlyCounts
+            .filter { (m, count) ->
+                count > 0 && (m.year > currentMonth.year ||
+                    (m.year == currentMonth.year && m.month > currentMonth.month))
+            }
+            .keys
+            .maxByOrNull { it.year * 12 + it.month }
+            ?: currentMonth
+    }
+    val canGoForward = remember(selectedMonth, upperBound) {
+        selectedMonth.year < upperBound.year ||
+            (selectedMonth.year == upperBound.year && selectedMonth.month < upperBound.month)
     }
     var showSheet by remember { mutableStateOf(false) }
     // Build the chip label from localized month name + year so it follows
@@ -124,6 +145,7 @@ fun MonthSelector(
         YearMonthPickerSheet(
             initialMonth = selectedMonth,
             currentMonth = currentMonth,
+            upperBound = upperBound,
             monthlyCounts = monthlyCounts,
             onPick = { picked ->
                 onMonthSelected(picked)
@@ -163,6 +185,7 @@ private fun MonthStepperButton(
 private fun YearMonthPickerSheet(
     initialMonth: MonthKey,
     currentMonth: MonthKey,
+    upperBound: MonthKey,
     monthlyCounts: Map<MonthKey, Int>,
     onPick: (MonthKey) -> Unit,
     onDismiss: () -> Unit
@@ -206,7 +229,11 @@ private fun YearMonthPickerSheet(
                         onClick = { year++ },
                         painter = MooneyIcons.ChevronRightIcon(),
                         contentDescription = stringResource(Res.string.cd_next_year),
-                        enabled = year < currentMonth.year
+                        // Allow the year chevron all the way to the year of
+                        // the furthest future-with-data month — otherwise a
+                        // user with, say, a Jan-2027 planned tx couldn't
+                        // navigate off 2026 to reach it.
+                        enabled = year < upperBound.year
                     )
                 }
 
@@ -230,14 +257,19 @@ private fun YearMonthPickerSheet(
                             val isFuture = year > currentMonth.year ||
                                 (year == currentMonth.year && monthNumber > currentMonth.month)
                             val count = monthlyCounts[cellMonth] ?: 0
+                            // Future months are reachable only when they hold
+                            // real user data (planned txs). Empty future cells
+                            // stay disabled so the picker doesn't invite
+                            // navigation to blank state.
+                            val isDisabled = isFuture && count == 0
 
                             MonthGridCell(
                                 label = monthLabels[monthIndex],
                                 count = count.takeIf { it > 0 },
                                 isSelected = isSelected,
-                                isDisabled = isFuture,
+                                isDisabled = isDisabled,
                                 onClick = {
-                                    if (!isFuture) onPick(cellMonth)
+                                    if (!isDisabled) onPick(cellMonth)
                                 },
                                 modifier = Modifier.weight(1f)
                             )

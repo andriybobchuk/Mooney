@@ -493,7 +493,8 @@ fun NavigationHost() {
                     onNavigateToGoals = { navController.navigate(Route.Goals) },
                     onNavigateToExpensesBreakdown = {
                         navController.navigate(Route.AnalyticsCosts)
-                    }
+                    },
+                    onNavigateToAndrewEats = { navController.navigate(Route.AndrewEats) }
                 )
             }
             composable<Route.Accounts> { entry ->
@@ -604,7 +605,14 @@ fun NavigationHost() {
                             popUpTo(Route.MooneyGraph) { inclusive = true }
                         }
                     },
+                    onNavigateToShortcutsOnboarding = { navController.navigate(Route.ShortcutsOnboarding) },
                     bottomNavbar = { BottomNavigationBar(navController, 4) }
+                )
+            }
+
+            composable<Route.ShortcutsOnboarding> {
+                com.andriybobchuk.mooney.mooney.presentation.settings.ShortcutsOnboardingScreen(
+                    onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
                 )
             }
 
@@ -634,6 +642,15 @@ fun NavigationHost() {
                     transactionViewModel = txViewModel,
                     assetViewModel = assetViewModel,
                     onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
+                )
+            }
+
+            // Dev-only WebView host for the AndrewEats web app. Reached
+            // from the "Eats" pill in Transactions quick-actions, which is
+            // itself gated on the DISPLAY_EATS_ENABLED preference.
+            composable<Route.AndrewEats> {
+                com.andriybobchuk.mooney.mooney.presentation.andreweats.AndrewEatsScreen(
+                    onBackClick = { navController.navigateUp() }
                 )
             }
         }

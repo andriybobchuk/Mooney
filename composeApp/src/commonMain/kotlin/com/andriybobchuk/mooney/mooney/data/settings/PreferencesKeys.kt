@@ -24,6 +24,12 @@ object PreferencesKeys {
     val LAST_USAGE_REPORT = stringPreferencesKey("last_category_usage_report")
     val EXCHANGE_RATE_SOURCE = stringPreferencesKey("exchange_rate_source")
     val DEVELOPER_OPTIONS_ENABLED = booleanPreferencesKey("developer_options_enabled")
+    /**
+     * Developer opt-in: when true, a "Eats" pill shows up in the Transactions
+     * quick-actions row and taps into a full-screen WebView hosting the
+     * AndrewEats web app. Off by default so real users never see it.
+     */
+    val DISPLAY_EATS_ENABLED = booleanPreferencesKey("display_eats_enabled")
     // Review prompt gating
     val INSTALL_TIMESTAMP = androidx.datastore.preferences.core.longPreferencesKey("install_timestamp")
     /**

@@ -147,14 +147,11 @@ fun AnalyticsScreen(
         }
     }
 
-    // Counts per month for the picker sheet caption. Built from whichever
-    // dataset is richer — lifetime data when it's loaded covers the full
-    // history; otherwise fall back to the 6-month historical window.
-    val monthlyCounts = remember(state.historicalMetrics, state.lifetimeMetrics) {
-        val source = if (state.lifetimeMetrics.isNotEmpty()) state.lifetimeMetrics
-        else state.historicalMetrics
-        source.associate { it.month to it.transactionCount }
-    }
+    // Counts per month drive the picker's caption AND (crucially) the
+    // future-month unlock — any month with count > 0 becomes selectable. We
+    // source from the VM's live cache-backed field so newly-added future
+    // txs light up the corresponding picker cell without a restart.
+    val monthlyCounts = state.monthlyTransactionCounts
     val hasAnyData = state.transactionsForMonth.filterNotNull().isNotEmpty() ||
         state.historicalMetrics.any { it.revenue > 0 || it.taxes > 0 || it.operatingCosts > 0 || it.netIncome != 0.0 }
     // Wrapped flag ensures the shimmer is actually visible on cold start

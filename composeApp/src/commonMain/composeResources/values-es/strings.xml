@@ -468,6 +468,7 @@
     <!-- Botones de transacción -->
     <string name="confirm">Confirmar</string>
     <string name="repeat_question">¿Repetir?</string>
+    <string name="future_transaction_warning">Programado para %1$s</string>
 
     <!-- Compartir -->
     <string name="share_my_net_worth">Mi patrimonio neto:</string>

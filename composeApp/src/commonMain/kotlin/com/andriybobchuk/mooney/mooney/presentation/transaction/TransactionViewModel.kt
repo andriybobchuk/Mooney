@@ -171,6 +171,17 @@ class TransactionViewModel(
                     MonthKey(it.date.year, it.date.monthNumber)
                 }.eachCount()
                 _uiState.update { it.copy(monthlyTransactionCounts = counts) }
+                // If the user deletes the last future-month tx that made a
+                // future month reachable, snap the picker back to the current
+                // month — otherwise the chip stays stuck on a month that no
+                // longer appears in the picker grid.
+                val current = MonthKey.current()
+                val selected = _uiState.value.selectedMonth
+                val isFutureSelection = selected.year > current.year ||
+                    (selected.year == current.year && selected.month > current.month)
+                if (isFutureSelection && (counts[selected] ?: 0) == 0) {
+                    _uiState.update { it.copy(selectedMonth = current) }
+                }
             }
             .launchIn(viewModelScope)
     }

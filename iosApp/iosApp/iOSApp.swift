@@ -63,6 +63,41 @@ struct iOSApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                // Deep-link fallback for pre-iOS-16 devices AND for Shortcut
+                // authors who prefer a raw URL over the App Intent. Handles
+                // mooney://add-tx?amount=12.5&type=expense&category=coffee&...
+                // See AddMooneyTransactionIntent.swift for the parameter map.
+                .onOpenURL { url in
+                    handleMooneyURL(url)
+                }
+        }
+    }
+
+    private func handleMooneyURL(_ url: URL) {
+        guard url.scheme == "mooney",
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              components.host == "add-tx" else { return }
+
+        let items = components.queryItems ?? []
+        func value(_ key: String) -> String? {
+            items.first(where: { $0.name == key })?.value
+        }
+
+        guard let amountStr = value("amount"), let amount = Double(amountStr), amount > 0 else {
+            return
+        }
+        let typeRaw = value("type")?.uppercased() ?? "EXPENSE"
+
+        Task {
+            let handler = TransactionIntentHandlerKt.resolveTransactionIntentHandler()
+            _ = try? await handler.addTransaction(
+                amount: amount,
+                typeRaw: typeRaw,
+                categoryId: value("category"),
+                accountTitle: value("account"),
+                description: value("note"),
+                isoDate: value("date")
+            )
         }
     }
 }

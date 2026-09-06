@@ -547,6 +547,7 @@
     <!-- Transaction buttons -->
     <string name="confirm">Confirm</string>
     <string name="repeat_question">Repeat?</string>
+    <string name="future_transaction_warning">Scheduled for %1$s</string>
 
     <!-- Net worth share text -->
     <string name="share_my_net_worth">My net worth:</string>

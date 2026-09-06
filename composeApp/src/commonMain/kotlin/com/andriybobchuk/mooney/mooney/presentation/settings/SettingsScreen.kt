@@ -55,6 +55,7 @@ fun SettingsScreen(
     onNavigateToTransactionCategories: () -> Unit = {},
     onNavigateToAssetCategories: () -> Unit = {},
     onReplayOnboarding: () -> Unit = {},
+    onNavigateToShortcutsOnboarding: () -> Unit = {},
     // Settings is a top-level tab — when reached from the bottom nav, this
     // renders the persistent nav bar. Null means we're reached from a
     // detail screen (e.g. older flows) and should show a back button instead.
@@ -1143,6 +1144,13 @@ fun SettingsScreen(
                                 onCheckedChange = { viewModel.toggleAdsForceShow(it) }
                             )
                             SettingsDivider()
+                            SettingsToggleRow(
+                                title = "Display Eats", // allow-hardcoded (dev option)
+                                description = "Show the Eats pill in Transactions quick-actions — opens the AndrewEats web app in a full-screen WebView", // allow-hardcoded (dev option)
+                                checked = state.displayEatsEnabled,
+                                onCheckedChange = { viewModel.toggleDisplayEats(it) }
+                            )
+                            SettingsDivider()
                             SettingsRow(
                                 title = stringResource(Res.string.replay_onboarding),
                                 value = stringResource(Res.string.reset_view),
@@ -1256,6 +1264,25 @@ fun SettingsScreen(
                             },
                             onClick = { showDemoDbSwitchConfirm = true }
                         )
+                    }
+                }
+
+                // AUTOMATION section — iOS only. On Android the row + section
+                // header both disappear because the equivalent (Google
+                // Assistant / Tasker intents) hasn't shipped yet and the
+                // instructions would just confuse Android users.
+                if (com.andriybobchuk.mooney.core.data.category.isIosPlatform) {
+                    item {
+                        SettingsSectionHeader("Automation") // allow-hardcoded (iOS-only edu section)
+                    }
+                    item {
+                        SettingsGroup {
+                            SettingsRow(
+                                title = "Automate transactions", // allow-hardcoded (iOS-only)
+                                description = "Use Siri, Shortcuts, or auto-log from your bank's push notifications", // allow-hardcoded (iOS-only)
+                                onClick = { onNavigateToShortcutsOnboarding() }
+                            )
+                        }
                     }
                 }
 

@@ -32,6 +32,7 @@ import com.andriybobchuk.mooney.mooney.presentation.onboarding.OnboardingViewMod
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import com.andriybobchuk.mooney.core.review.RequestReviewUseCase
+import com.andriybobchuk.mooney.core.platform.TransactionIntentHandler
 import com.andriybobchuk.mooney.core.review.ReviewPromptManager
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
@@ -212,6 +213,12 @@ val sharedModule = module {
     // Demo data seeder — for marketing / screen recording. Only usable when
     // the app is empty; will be removed before the real 1.0 release.
     singleOf(::SeedDemoDataUseCase)
+
+    // Platform intent bridge — iOS App Intents / Siri Shortcuts today,
+    // Android quick-tiles later. Handler resolves loose Shortcut strings
+    // into real domain objects (Category, Account) and persists via the
+    // same use case as the in-app Add sheet.
+    singleOf(::TransactionIntentHandler)
 
     // Onboarding
     singleOf(::CompleteOnboardingUseCase)

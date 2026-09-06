@@ -468,6 +468,7 @@
     <!-- Przyciski transakcji -->
     <string name="confirm">Potwierdź</string>
     <string name="repeat_question">Powtórz?</string>
+    <string name="future_transaction_warning">Zaplanowane na %1$s</string>
 
     <!-- Udostępnij -->
     <string name="share_my_net_worth">Moja wartość netto:</string>

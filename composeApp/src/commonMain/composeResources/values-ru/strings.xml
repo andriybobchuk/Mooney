@@ -468,6 +468,7 @@
     <!-- Кнопки транзакции -->
     <string name="confirm">Подтвердить</string>
     <string name="repeat_question">Повторить?</string>
+    <string name="future_transaction_warning">Запланировано на %1$s</string>
 
     <!-- Поделиться -->
     <string name="share_my_net_worth">Мой чистый капитал:</string>

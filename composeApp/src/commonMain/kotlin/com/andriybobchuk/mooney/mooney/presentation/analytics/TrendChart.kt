@@ -70,7 +70,10 @@ fun TrendChart(
 
     // Filter data based on selected period.
     // Lifetime: use the lazily-loaded wider dataset, drop empty leading months.
-    // Otherwise: last N months from the standard window.
+    // Otherwise: last N months from the standard window. The window is
+    // ANCHORED at the furthest month with data (see AnalyticsViewModel), so
+    // when a user has planned future txs the 6mo / 1y views end there — no
+    // separate "Future" tab needed.
     val filteredData = if (selectedPeriod == TimePeriod.LIFETIME) {
         val firstNonEmpty = lifetimeData.indexOfFirst {
             it.transactionCount > 0 || it.revenue != 0.0 || it.operatingCosts != 0.0

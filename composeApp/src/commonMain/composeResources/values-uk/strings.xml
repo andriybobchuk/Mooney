@@ -443,6 +443,7 @@
     <!-- Кнопки транзакції -->
     <string name="confirm">Підтвердити</string>
     <string name="repeat_question">Повторити?</string>
+    <string name="future_transaction_warning">Заплановано на %1$s</string>
 
     <!-- Поділитися -->
     <string name="share_my_net_worth">Мій чистий капітал:</string>

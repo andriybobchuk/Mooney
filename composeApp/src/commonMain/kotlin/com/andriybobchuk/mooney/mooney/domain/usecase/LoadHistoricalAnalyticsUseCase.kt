@@ -9,8 +9,15 @@ class LoadHistoricalAnalyticsUseCase(
     private val calculateTaxesUseCase: CalculateTaxesUseCase,
     private val currencyManagerUseCase: CurrencyManagerUseCase
 ) {
+    /**
+     * @param anchorMonth the newest month in the returned window. Defaults to
+     *   today for the standard past-only views (6mo, 1y, Lifetime), but the
+     *   Future/Planning view passes the furthest month with transactions —
+     *   e.g. anchor=Oct 2026 + monthCount=6 → May-Oct 2026 (a mix of past +
+     *   future). Result is sorted oldest-first.
+     */
     suspend operator fun invoke(
-        currentMonth: MonthKey,
+        anchorMonth: MonthKey,
         monthCount: Int = 12,
         baseCurrency: Currency
     ): List<MonthlyMetricSnapshot> {
@@ -18,7 +25,7 @@ class LoadHistoricalAnalyticsUseCase(
         val historicalData = mutableListOf<MonthlyMetricSnapshot>()
 
         repeat(monthCount) { offset ->
-            val month = currentMonth.monthsAgo(offset)
+            val month = anchorMonth.monthsAgo(offset)
             val start = month.firstDay()
             val end = month.firstDayOfNextMonth()
 

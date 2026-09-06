@@ -128,5 +128,21 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
+	<!-- Custom URL scheme for the Shortcuts / AppIntent fallback path.
+	     Handled by iOSApp.body.onOpenURL — see the handleMooneyURL func
+	     in iOSApp.swift. AppIntent users don't touch this; it exists so
+	     older iOS or hand-crafted Shortcuts can trigger tx entry via a
+	     plain URL like mooney://add-tx?amount=12.5&type=expense -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.andriybobchuk.mooney.deeplink</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>mooney</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

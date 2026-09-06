@@ -16,6 +16,9 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.coroutines.cancellation.CancellationException
@@ -64,7 +67,14 @@ data class AnalyticsState(
      * Sum of all account balances (assets minus liabilities) converted to
      * base currency. Updated whenever accounts emit.
      */
-    val currentNetWorth: Double = 0.0
+    val currentNetWorth: Double = 0.0,
+    /**
+     * Per-month transaction count across the entire ledger — INCLUDING future
+     * months if the user has planned any. Drives the month-picker's caption
+     * (dots under each cell) and, load-bearing, the future-month unlock: any
+     * future month with count > 0 becomes selectable in the picker.
+     */
+    val monthlyTransactionCounts: Map<MonthKey, Int> = emptyMap()
 )
 
 @Suppress("LongParameterList")
@@ -86,7 +96,11 @@ class AnalyticsViewModel(
     // sheet can persist without a round-trip through a dedicated use case.
     // The list refresh cascades via CoreRepository.reloadCategories().
     private val categoryDao: com.andriybobchuk.mooney.core.data.database.CategoryDao,
-    private val coreRepository: com.andriybobchuk.mooney.mooney.domain.CoreRepository
+    private val coreRepository: com.andriybobchuk.mooney.mooney.domain.CoreRepository,
+    // Cache exposes the full transactions list — needed to source the
+    // month-picker's counts (including future months, so the picker can
+    // unlock them for viewing).
+    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
 ) : ViewModel() {
     private var baseCurrency: Currency = GlobalConfig.baseCurrency
 
@@ -105,6 +119,77 @@ class AnalyticsViewModel(
         observeBaseCurrency()
         observeNetWorth()
         observeCategoryChanges()
+        observeMonthlyTransactionCounts()
+    }
+
+    /**
+     * Populate [AnalyticsState.monthlyTransactionCounts] from the full ledger.
+     * Uses appDataCache so future-month transactions are captured (the historical
+     * metrics feed only covers past months). When counts change we ALSO clamp
+     * [selectedMonth] if it's beyond the latest month with data — that prevents
+     * the picker showing a selected chip for a month the user just deleted the
+     * last transaction from.
+     */
+    private fun observeMonthlyTransactionCounts() {
+        // Deliberately NO drop(1): when the AnalyticsViewModel is constructed
+        // AFTER the appDataCache is already warm (user opened another tab
+        // first, cache populated, THEN switched to Analytics), the very first
+        // emission carries the real transactions. Dropping it made planned
+        // future months invisible until the user added/deleted another tx.
+        appDataCache.snapshot
+            .map { it.transactions }
+            .onEach { transactions ->
+                val counts = transactions.groupingBy {
+                    MonthKey(it.date.year, it.date.monthNumber)
+                }.eachCount()
+                _state.update { it.copy(monthlyTransactionCounts = counts) }
+                clampSelectedMonthIfNeeded(counts)
+                // Lifetime metrics is a heavy 60-month scan cached behind
+                // lifetimeLoaded. If we don't invalidate on transaction changes
+                // the Lifetime chart stays stale until app restart. Any change
+                // to the ledger => stale => next tab open recomputes.
+                if (_state.value.lifetimeLoaded) {
+                    _state.update { it.copy(lifetimeLoaded = false) }
+                    loadLifetimeData()
+                }
+                // Same problem for the historical (6mo/1y) dataset, which
+                // powers the default chart view. Refresh it in the background.
+                loadHistoricalData()
+            }
+            .launchIn(viewModelScope)
+    }
+
+    /**
+     * The anchor month for both the historical (6mo/1y) window and Lifetime
+     * — takes the furthest month with data if it's past today, otherwise
+     * today. This is what makes a planned Sep tx pull the 6mo chart window
+     * to Apr-Sep instead of clipping to Mar-Aug.
+     */
+    private fun chartAnchorMonth(): MonthKey {
+        val current = MonthKey.current()
+        val currentOrdinal = current.year * 12 + current.month
+        val furthest = _state.value.monthlyTransactionCounts.keys
+            .maxByOrNull { it.year * 12 + it.month }
+        return if (furthest != null &&
+            (furthest.year * 12 + furthest.month) > currentOrdinal
+        ) {
+            furthest
+        } else {
+            current
+        }
+    }
+
+    private fun clampSelectedMonthIfNeeded(counts: Map<MonthKey, Int>) {
+        val current = MonthKey.current()
+        val selected = _state.value.selectedMonth
+        val isFutureSelection = selected.year > current.year ||
+            (selected.year == current.year && selected.month > current.month)
+        if (isFutureSelection && (counts[selected] ?: 0) == 0) {
+            // User deleted the last future-month tx that made this month
+            // reachable — snap back to current month.
+            _state.update { it.copy(selectedMonth = current) }
+            loadMetricsForMonth(current)
+        }
     }
 
     /**
@@ -222,18 +307,15 @@ class AnalyticsViewModel(
 
     private fun loadHistoricalData() {
         viewModelScope.launch {
-            // Anchor the trailing-month window to today, NOT the selected month —
-            // otherwise picking February would reframe the panel with February as
-            // "most recent" until the app is restarted.
+            // Anchor at [chartAnchorMonth] so a planned Sep tx (with today =
+            // Aug) shifts the 6mo/1y window to end at Sep — the whole point
+            // of the "show planned months in the graph" feature. When there's
+            // no future data, this just returns today (== old behavior).
             val historicalData = loadHistoricalAnalyticsUseCase(
-                currentMonth = MonthKey.current(),
+                anchorMonth = chartAnchorMonth(),
                 baseCurrency = baseCurrency
             )
             _state.update { it.copy(historicalMetrics = historicalData) }
-            // Don't invalidate lifetime here — refresh() is called on every
-            // resume, and a stale wipe race-condition'd with loadLifetimeData()
-            // left the chart blank after switching tabs. Currency changes do
-            // their own invalidation in observeBaseCurrency().
         }
     }
 
@@ -243,7 +325,7 @@ class AnalyticsViewModel(
             _state.update { it.copy(isLifetimeLoading = true) }
             try {
                 val data = loadHistoricalAnalyticsUseCase(
-                    currentMonth = MonthKey.current(),
+                    anchorMonth = chartAnchorMonth(),
                     monthCount = LIFETIME_MONTHS,
                     baseCurrency = baseCurrency
                 )

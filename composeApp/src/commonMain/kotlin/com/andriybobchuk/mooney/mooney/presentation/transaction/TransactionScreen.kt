@@ -178,6 +178,9 @@ fun TransactionsScreen(
     // through display currencies — that behavior is preserved as a long
     // press). Injected here so we don't need to know the NavController.
     onNavigateToExpensesBreakdown: () -> Unit = {},
+    // Hidden dev-only nav target — the "Eats" pill in the quick-actions
+    // row only fires this when `DISPLAY_EATS_ENABLED` is on.
+    onNavigateToAndrewEats: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val transactions = state.transactions
@@ -190,6 +193,12 @@ fun TransactionsScreen(
     val transactionsDataStore = org.koin.compose.koinInject<androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>>()
     val widgetPagerEnabled by transactionsDataStore.data
         .map { it[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.WIDGET_PAGER_ENABLED] ?: false }
+        .collectAsStateWithLifecycle(initialValue = false)
+
+    // Hidden dev pref — same pattern as widgetPagerEnabled. Off in prod so
+    // the "Eats" pill never leaks into a real user's quick-actions row.
+    val displayEatsEnabled by transactionsDataStore.data
+        .map { it[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.DISPLAY_EATS_ENABLED] ?: false }
         .collectAsStateWithLifecycle(initialValue = false)
 
     // Cold-start shimmer can vanish in well under a frame if the cache emits
@@ -300,9 +309,14 @@ fun TransactionsScreen(
         },
         bottomBar = { bottomNavbar() },
         floatingActionButton = {
-            val hasTransactions = transactions.filterNotNull().isNotEmpty()
             val hasAccounts = state.accounts.filterNotNull().isNotEmpty()
-            if (hasTransactions && hasAccounts) {
+            // Show the FAB whenever the empty state isn't rendering — the
+            // empty state has its own "Add transaction" CTA so two entry
+            // points on the same screen would be redundant. But when the
+            // list has only pending txs (no real txs), the empty state ISN'T
+            // shown, so the user needs the FAB to add real ones. Prior gate
+            // on `hasTransactions` missed that case.
+            if (!isEmptyState && hasAccounts) {
                 FloatingActionButton(
                     onClick = {
                         // Clear edit context — without this a stale transactionToEdit
@@ -342,7 +356,9 @@ fun TransactionsScreen(
                         QuickActionChipsRow(
                             onRecurringClick = onNavigateToRecurring,
                             onGoalsClick = onNavigateToGoals,
-                            onCategoriesClick = onNavigateToTransactionCategories
+                            onCategoriesClick = onNavigateToTransactionCategories,
+                            eatsEnabled = displayEatsEnabled,
+                            onEatsClick = onNavigateToAndrewEats,
                         )
                     }
                     if (showShimmer) {
@@ -1760,6 +1776,30 @@ fun TransactionBottomSheet(
                             modifier = Modifier.size(20.dp)
                         )
                     }
+                }
+
+                // Future-date informational note. Mirrors the budget-over
+                // warning treatment below (yellow #D4A017, centered, bodySmall)
+                // so users read the two "heads-up" hints as the same class of
+                // signal. Non-blocking — future txs are the whole point of
+                // the planning feature.
+                val todayForWarning = remember {
+                    kotlinx.datetime.Clock.System.now()
+                        .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
+                }
+                if (selectedDate > todayForWarning) {
+                    val monthLabel = com.andriybobchuk.mooney.core.presentation.i18n
+                        .localizedMonthName(selectedDate.monthNumber, short = false)
+                    Text(
+                        text = stringResource(
+                            Res.string.future_transaction_warning,
+                            "$monthLabel ${selectedDate.year}"
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFD4A017),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                    )
                 }
 
                 // Repeat/Schedule button — opens schedule sheet
@@ -3977,6 +4017,8 @@ private fun QuickActionChipsRow(
     onRecurringClick: () -> Unit,
     onGoalsClick: () -> Unit,
     onCategoriesClick: () -> Unit,
+    eatsEnabled: Boolean,
+    onEatsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     androidx.compose.foundation.lazy.LazyRow(
@@ -3986,6 +4028,19 @@ private fun QuickActionChipsRow(
         contentPadding = PaddingValues(horizontal = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        // Dev-only Eats pill leads the row so it's the first thing the user
+        // sees when the toggle is on. Gated on the "Display Eats" pref —
+        // never renders in a production install with dev options off.
+        if (eatsEnabled) {
+            item {
+                QuickActionChip(
+                    label = "Eats", // allow-hardcoded (dev-only product name)
+                    // TODO: swap for a dedicated fork/knife SVG once we add one.
+                    icon = com.andriybobchuk.mooney.core.presentation.Icons.RecurringIcon(),
+                    onClick = onEatsClick
+                )
+            }
+        }
         item {
             QuickActionChip(
                 label = stringResource(Res.string.quick_recurring),

@@ -468,6 +468,7 @@
     <!-- 交易按钮 -->
     <string name="confirm">确认</string>
     <string name="repeat_question">重复？</string>
+    <string name="future_transaction_warning">计划于 %1$s</string>
 
     <!-- 分享 -->
     <string name="share_my_net_worth">我的净资产：</string>

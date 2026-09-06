@@ -36,6 +36,8 @@ data class SettingsState(
     val isUpdatingCategories: Boolean = false,
     val exchangeRateSource: ExchangeRateSource = ExchangeRateSource.EXTENDED,
     val developerOptionsEnabled: Boolean = false,
+    /** Dev opt-in: adds an "Eats" pill to the Transactions quick-actions row. */
+    val displayEatsEnabled: Boolean = false,
     /** Local override for Pro plan — used by the Developer Plan toggle. */
     val devForcePremium: Boolean = false,
     /** Dev opt-in: when true, the Transactions screen shows the multi-widget pager again. */

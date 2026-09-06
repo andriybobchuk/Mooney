@@ -468,6 +468,7 @@
     <!-- أزرار المعاملة -->
     <string name="confirm">تأكيد</string>
     <string name="repeat_question">تكرار؟</string>
+    <string name="future_transaction_warning">مُجدولة في %1$s</string>
 
     <!-- مشاركة -->
     <string name="share_my_net_worth">صافي ثروتي:</string>

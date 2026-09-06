@@ -468,6 +468,7 @@
     <!-- Transaktions-Buttons -->
     <string name="confirm">Bestätigen</string>
     <string name="repeat_question">Wiederholen?</string>
+    <string name="future_transaction_warning">Geplant für %1$s</string>
 
     <!-- Teilen -->
     <string name="share_my_net_worth">Mein Nettovermögen:</string>

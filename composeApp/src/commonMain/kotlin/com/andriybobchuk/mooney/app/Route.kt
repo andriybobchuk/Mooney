@@ -55,4 +55,15 @@ sealed interface Route {
     @Serializable
     data object NetWorthDetail : Route
 
+    @Serializable
+    data object ShortcutsOnboarding : Route
+
+    /**
+     * Full-screen WebView hosting the AndrewEats web app. Only reachable via
+     * the "Eats" pill in Transactions quick-actions, which itself is only
+     * visible when the "Display Eats" dev toggle is on.
+     */
+    @Serializable
+    data object AndrewEats : Route
+
 }

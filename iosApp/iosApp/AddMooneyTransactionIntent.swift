@@ -48,9 +48,10 @@ enum MooneyIntentError: Swift.Error, CustomLocalizedStringResourceConvertible {
 struct AddMooneyTransactionIntent: AppIntent {
     static var title: LocalizedStringResource = "Add Transaction"
 
+    // Single-string literal (no + concatenation) so the compiler can bridge
+    // it to LocalizedStringResource. Concatenated Strings don't auto-bridge.
     static var description = IntentDescription(
-        "Log a new expense or income in Mooney without opening the app. " +
-        "Best paired with the Wallet card-payment automation trigger.",
+        "Log a new expense or income in Mooney without opening the app. Best paired with the Wallet card-payment automation trigger.",
         categoryName: "Money",
         searchKeywords: ["transaction", "expense", "income", "spending", "budget", "wallet"]
     )

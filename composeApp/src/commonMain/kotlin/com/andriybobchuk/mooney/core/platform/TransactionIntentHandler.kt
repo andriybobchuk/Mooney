@@ -211,8 +211,16 @@ class TransactionIntentHandler(
 
         return try {
             addTransactionUseCase(tx)
+            val amountFormatted = "${amount.formatWithCommas()} ${account.currency.symbol}"
+            // Label prefers the user's typed description (which for Wallet
+            // automations gets populated from the Merchant/Name magic
+            // variable). Falls back to the category title so a bare
+            // "Add expense $12" via Siri still reads meaningfully.
+            val label = tx.description?.takeIf { it.isNotBlank() } ?: category.title
             TransactionIntentResult.success(
-                "Added ${amount.formatWithCommas()} ${account.currency.symbol} — ${category.title}"
+                message = "Added $amountFormatted — ${tx.description ?: category.title}",
+                amountFormatted = amountFormatted,
+                label = label
             )
         } catch (e: CancellationException) {
             throw e
@@ -262,11 +270,25 @@ class TransactionIntentHandler(
 
 data class TransactionIntentResult(
     val isSuccess: Boolean,
-    val message: String
+    val message: String,
+    /** Formatted with currency symbol, e.g. "64.14 zł". Empty on error. */
+    val amountFormatted: String,
+    /**
+     * The user-friendly label for the transaction — description if set,
+     * else the category title. Used by iOS to compose the "Automatically
+     * added X for Y" confirmation notification.
+     */
+    val label: String
 ) {
     companion object {
-        fun success(message: String) = TransactionIntentResult(true, message)
-        fun error(message: String) = TransactionIntentResult(false, message)
+        fun success(
+            message: String,
+            amountFormatted: String,
+            label: String
+        ) = TransactionIntentResult(true, message, amountFormatted, label)
+
+        fun error(message: String) =
+            TransactionIntentResult(false, message, "", "")
     }
 }
 

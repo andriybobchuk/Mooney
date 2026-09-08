@@ -268,62 +268,43 @@ private data class OnboardingPage(
 @Composable
 private fun rememberOnboardingPages(): List<OnboardingPage> = listOf(
     OnboardingPage(
-        emoji = "⚡️",
-        title = "Add transactions without opening Mooney", // allow-hardcoded (iOS-only edu screen)
-        body = "Mooney exposes Siri Shortcuts and App Intents on iOS so you can " +
-            "log expenses, check balances, or even chain automations that fire " +
-            "when your bank app sends a notification. The next few pages walk " +
-            "you through the useful setups."
+        emoji = "💳",
+        title = "Auto-log every Apple Pay purchase", // allow-hardcoded (iOS-only edu screen)
+        body = "iOS has a built-in Wallet automation trigger that fires the " +
+            "moment you make a card payment. Point it at Mooney's Add " +
+            "Transaction action and every tap-to-pay becomes an instant, " +
+            "silent log entry — with amount and merchant filled in " +
+            "automatically. Setup takes about a minute."
     ),
     OnboardingPage(
-        emoji = "🎙️",
-        title = "Try it with Siri right now", // allow-hardcoded (iOS-only edu screen)
-        body = "Hold your side button (or say \"Hey Siri\") and try one of these " +
-            "phrases. Mooney will confirm right in the Siri overlay — no need to " +
-            "open the app.",
+        emoji = "⚙️",
+        title = "Create the automation", // allow-hardcoded (iOS-only edu screen)
+        body = "Follow these exact steps in the Shortcuts app. Once saved, " +
+            "the automation runs silently in the background — Mooney logs " +
+            "every payment and sends a confirmation notification so you " +
+            "know it worked.",
         steps = listOf(
-            "\"Add expense in Mooney\" — Siri asks for the amount, then logs it.",
-            "\"How much did I spend in Mooney this month\" — reads back the total.",
-            "\"What's my net worth in Mooney\" — reads back the current sum."
+            "Open the Shortcuts app → tap the Automation tab at the bottom.",
+            "Tap + (top right) → scroll to New Automation.",
+            "Scroll down the trigger list → tap Wallet.",
+            "Select which card(s) should trigger the automation (or leave all cards).",
+            "Optionally filter by transaction category (Groceries, Transport, etc.).",
+            "Tap Next → tap New Blank Automation.",
+            "Tap the search bar at the bottom → search Mooney → tap Add Transaction.",
+            "The Amount field auto-wires to the Wallet payment amount.",
+            "Tap Description → pick Merchant (or Name) from the magic variables.",
+            "Toggle Run Immediately ON at the top so it fires without asking."
         )
     ),
     OnboardingPage(
-        emoji = "📲",
-        title = "Auto-log from your bank's push notifications", // allow-hardcoded (iOS-only edu screen)
-        body = "The closest thing to real automation: every time your bank app " +
-            "sends a push notification about a card purchase, iOS fires an " +
-            "automation that parses the amount and logs it in Mooney. Setup takes " +
-            "~5 minutes and works with any bank whose app sends push notifs.",
-        steps = listOf(
-            "Open the Shortcuts app → Automation tab → tap +.",
-            "Pick \"Notification\" as the trigger, then select your bank's app.",
-            "Add action: \"Get Text from Input\" (the notification body).",
-            "Add action: \"Match Text\" with regex like ([0-9]+[.,][0-9]+) to pull the amount.",
-            "Add action: \"Add Transaction\" (from the Mooney app group) and map Amount → the matched value.",
-            "Turn OFF \"Ask Before Running\" so it runs silently."
-        )
-    ),
-    OnboardingPage(
-        emoji = "🏷️",
-        title = "Tap-to-log with an NFC tag", // allow-hardcoded (iOS-only edu screen)
-        body = "Stick an NFC tag on your wallet or your desk. Tap your phone to " +
-            "it and Mooney prompts for the amount, then logs the expense — " +
-            "great for cash purchases that never leave a digital trace.",
-        steps = listOf(
-            "Shortcuts → Automation → tap +.",
-            "Trigger: NFC → scan a blank tag to bind it.",
-            "Action: \"Ask for Input\" → prompt \"Amount?\".",
-            "Action: \"Add Transaction\" (Mooney) → Amount = the Provided Input.",
-            "Turn OFF \"Ask Before Running\" for a true one-tap flow."
-        )
-    ),
-    OnboardingPage(
-        emoji = "🔗",
-        title = "Power-user: URL scheme", // allow-hardcoded (iOS-only edu screen)
-        body = "For hand-crafted automations or x-callback-url chains, Mooney " +
-            "accepts a plain URL:\n\nmooney://add-tx?amount=12.5&type=expense" +
-            "&category=coffee&account=Bank&note=Latte\n\nAny of these params " +
-            "can be omitted — Mooney falls back to your default expense category " +
-            "and primary account. Type is expense/income."
+        emoji = "✅",
+        title = "Test it and you're done", // allow-hardcoded (iOS-only edu screen)
+        body = "Make any card payment via Apple Pay. Within a second or two " +
+            "you'll get a Mooney notification: \"Automatically added 12.50 zł " +
+            "for Biedronka\". Open Mooney → Transactions to confirm — the " +
+            "entry is already there under your default account and category, " +
+            "with the merchant name as the description.\n\nAny future " +
+            "categorisation tweaks (change category, edit amount) still work " +
+            "the same way as manually added transactions."
     )
 )

@@ -1,6 +1,7 @@
 import AppIntents
 import ComposeApp
 import Foundation
+import UserNotifications
 
 // MARK: - Intent parameters
 
@@ -34,24 +35,24 @@ enum MooneyIntentError: Swift.Error, CustomLocalizedStringResourceConvertible {
 
 /// AppIntent that logs a new Mooney transaction without opening the app.
 ///
-/// Users can invoke this via:
-///   * Siri: "Add expense in Mooney"
-///   * Shortcuts app: pre-built "Add Transaction" tile
-///   * Custom Shortcuts: chained after Apple Wallet notifications, NFC tag
-///     scans, focus filters, or "when I arrive at Merchant X" automations
+/// The killer use case: chain from the built-in **Wallet card payment**
+/// automation trigger. Wallet exposes the payment Amount, Merchant, and Card
+/// as magic variables — wire Amount → the intent's Amount, and Merchant →
+/// the intent's Description, and every card payment auto-logs in Mooney with
+/// a meaningful label ("Automatically added 64.14 zł for Biedronka").
 ///
-/// `openAppWhenRun = false` — the intent runs silently in the background so
-/// automation doesn't yank the user out of whatever they're doing. The result
-/// dialog shows the confirmation ("Added 12.50 zł — Coffee") right in the
-/// Shortcuts / Siri overlay.
+/// `openAppWhenRun = false` so automation doesn't yank the user out of what
+/// they're doing. After success we fire a local notification confirming the
+/// entry — otherwise silent auto-logs feel invisible.
 @available(iOS 16.0, *)
 struct AddMooneyTransactionIntent: AppIntent {
     static var title: LocalizedStringResource = "Add Transaction"
 
     static var description = IntentDescription(
-        "Log a new expense or income in Mooney without opening the app.",
+        "Log a new expense or income in Mooney without opening the app. " +
+        "Best paired with the Wallet card-payment automation trigger.",
         categoryName: "Money",
-        searchKeywords: ["transaction", "expense", "income", "spending", "budget"]
+        searchKeywords: ["transaction", "expense", "income", "spending", "budget", "wallet"]
     )
 
     static var openAppWhenRun: Bool = false
@@ -61,6 +62,12 @@ struct AddMooneyTransactionIntent: AppIntent {
 
     @Parameter(title: "Type", default: .expense)
     var type: MooneyTransactionType
+
+    @Parameter(
+        title: "Description",
+        description: "Merchant or note — wire Wallet's Merchant magic variable here for auto-labelled logs."
+    )
+    var descriptionText: String?
 
     @Parameter(
         title: "Category",
@@ -74,29 +81,23 @@ struct AddMooneyTransactionIntent: AppIntent {
     )
     var accountTitle: String?
 
-    @Parameter(title: "Note")
-    var note: String?
-
     @Parameter(title: "Date")
     var date: Date?
 
+    // Description is hoisted into the visible summary so users pairing this
+    // with Wallet automations can wire the Merchant variable without having
+    // to expand the "additional parameters" section.
     static var parameterSummary: some ParameterSummary {
-        Summary("Add \(\.$type) of \(\.$amount) to Mooney") {
+        Summary("Add \(\.$type) of \(\.$amount) for \(\.$descriptionText) to Mooney") {
             \.$categoryId
             \.$accountTitle
-            \.$note
             \.$date
         }
     }
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        // Resolve the Kotlin handler through the top-level bootstrap function.
-        // Guaranteed idempotent w.r.t. Koin — safe to call whether the app is
-        // in the foreground, background, or being launched cold by the intent.
         let handler = TransactionIntentHandlerKt.resolveTransactionIntentHandler()
 
-        // Convert the optional Swift Date to the yyyy-MM-dd string the Kotlin
-        // handler expects. Passing nil lets the handler default to today.
         let isoDate: String? = date.map { pickedDate in
             let formatter = ISO8601DateFormatter()
             formatter.formatOptions = [.withFullDate]
@@ -108,14 +109,35 @@ struct AddMooneyTransactionIntent: AppIntent {
             typeRaw: type.rawValue,
             categoryId: categoryId,
             accountTitle: accountTitle,
-            description: note,
+            description: descriptionText,
             isoDate: isoDate
         )
 
         if result.isSuccess {
+            postAutoLogNotification(amountFormatted: result.amountFormatted, label: result.label)
             return .result(dialog: IntentDialog(stringLiteral: result.message))
         } else {
             throw MooneyIntentError.failed(message: result.message)
+        }
+    }
+
+    /// Local push confirming the auto-log — critical for background-run
+    /// intents (Wallet automation) because otherwise the user has no signal
+    /// that Mooney actually recorded the payment. Silently no-ops if the
+    /// user hasn't granted notification permission; the intent still succeeds.
+    private func postAutoLogNotification(amountFormatted: String, label: String) {
+        let content = UNMutableNotificationContent()
+        content.title = "Mooney"
+        content.body = "Automatically added \(amountFormatted) for \(label)"
+        content.sound = nil // Silent — Wallet already made the "cha-ching" sound
+        let request = UNNotificationRequest(
+            identifier: "mooney.autolog.\(UUID().uuidString)",
+            content: content,
+            trigger: nil // Fire immediately
+        )
+        UNUserNotificationCenter.current().add(request) { _ in
+            // No-op — best-effort. If permission denied, notification is
+            // dropped silently and the intent still returns success.
         }
     }
 }

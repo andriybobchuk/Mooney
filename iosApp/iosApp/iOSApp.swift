@@ -59,6 +59,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 @main
 struct iOSApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @State private var showLiquidGlassPreview = false
 
     var body: some Scene {
         WindowGroup {
@@ -67,17 +68,46 @@ struct iOSApp: App {
                 // authors who prefer a raw URL over the App Intent. Handles
                 // mooney://add-tx?amount=12.5&type=expense&category=coffee&...
                 // See AddMooneyTransactionIntent.swift for the parameter map.
+                //
+                // Also handles mooney://liquid-glass-preview — presents the
+                // SwiftUI + Liquid Glass PoC as a full-screen cover. Kept
+                // behind a URL so the PoC ships zero UI in the production
+                // build path; only reachable if user (or dev) explicitly
+                // navigates to the URL (Safari, Shortcut, or Notes link).
                 .onOpenURL { url in
                     handleMooneyURL(url)
+                }
+                .fullScreenCover(isPresented: $showLiquidGlassPreview) {
+                    if #available(iOS 26.0, *) {
+                        MooneyLiquidGlassPreview()
+                    } else {
+                        FallbackUnavailableView()
+                    }
                 }
         }
     }
 
     private func handleMooneyURL(_ url: URL) {
         guard url.scheme == "mooney",
-              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              components.host == "add-tx" else { return }
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        else { return }
 
+        switch components.host {
+        case "liquid-glass-preview":
+            // Launch the SwiftUI Liquid Glass PoC. Deliberately gated behind
+            // a URL rather than a Settings row so the production Compose UI
+            // ships zero surface area for this — the PoC is opt-in only.
+            showLiquidGlassPreview = true
+
+        case "add-tx":
+            handleAddTransactionURL(components)
+
+        default:
+            break
+        }
+    }
+
+    private func handleAddTransactionURL(_ components: URLComponents) {
         let items = components.queryItems ?? []
         func value(_ key: String) -> String? {
             items.first(where: { $0.name == key })?.value
@@ -99,5 +129,31 @@ struct iOSApp: App {
                 isoDate: value("date")
             )
         }
+    }
+}
+
+/// Shown when the PoC URL is opened on a device running iOS below 26 — the
+/// Liquid Glass material and several API tokens require iOS 26. Keeps the
+/// experience honest instead of silently no-oping.
+private struct FallbackUnavailableView: View {
+    @Environment(\.dismiss) private var dismiss
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 48))
+                .foregroundStyle(.tint)
+            Text("Liquid Glass preview requires iOS 26")
+                .font(.headline)
+            Text("This device is on an older iOS. Open Mooney on an iOS 26 device to see the preview.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+            Button("Close") { dismiss() }
+                .buttonStyle(.borderedProminent)
+                .padding(.top, 12)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.regularMaterial)
     }
 }

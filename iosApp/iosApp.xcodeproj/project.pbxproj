@@ -24,6 +24,7 @@
 		A1B2C3D400000000AA000002 /* AddMooneyTransactionIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000000AA000001 /* AddMooneyTransactionIntent.swift */; };
 		A1B2C3D400000000AA000004 /* MooneyAppShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000000AA000003 /* MooneyAppShortcuts.swift */; };
 		A1B2C3D400000000AA000006 /* MooneyBalanceIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000000AA000005 /* MooneyBalanceIntents.swift */; };
+		A1B2C3D400000000AA000008 /* MooneyLiquidGlassPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000000AA000007 /* MooneyLiquidGlassPreview.swift */; };
 		52C0DE202FA0000000CCCCCC /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 52C0DE1F2FA0000000CCCCCC /* PrivacyInfo.xcprivacy */; };
 		7555FF83242A565900829871 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7555FF82242A565900829871 /* ContentView.swift */; };
 /* End PBXBuildFile section */
@@ -40,6 +41,7 @@
 		A1B2C3D400000000AA000001 /* AddMooneyTransactionIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddMooneyTransactionIntent.swift; sourceTree = "<group>"; };
 		A1B2C3D400000000AA000003 /* MooneyAppShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MooneyAppShortcuts.swift; sourceTree = "<group>"; };
 		A1B2C3D400000000AA000005 /* MooneyBalanceIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MooneyBalanceIntents.swift; sourceTree = "<group>"; };
+		A1B2C3D400000000AA000007 /* MooneyLiquidGlassPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MooneyLiquidGlassPreview.swift; sourceTree = "<group>"; };
 		52C0DE1F2FA0000000CCCCCC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		7555FF7B242A565900829871 /* Mooney.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mooney.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7555FF82242A565900829871 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -109,6 +111,7 @@
 				A1B2C3D400000000AA000001 /* AddMooneyTransactionIntent.swift */,
 				A1B2C3D400000000AA000003 /* MooneyAppShortcuts.swift */,
 				A1B2C3D400000000AA000005 /* MooneyBalanceIntents.swift */,
+				A1B2C3D400000000AA000007 /* MooneyLiquidGlassPreview.swift */,
 				52C0DE002F8597A000AAAAAA /* GoogleService-Info.plist */,
 				7555FF8C242A565B00829871 /* Info.plist */,
 				52C0DE1F2FA0000000CCCCCC /* PrivacyInfo.xcprivacy */,
@@ -242,6 +245,7 @@
 				A1B2C3D400000000AA000002 /* AddMooneyTransactionIntent.swift in Sources */,
 				A1B2C3D400000000AA000004 /* MooneyAppShortcuts.swift in Sources */,
 				A1B2C3D400000000AA000006 /* MooneyBalanceIntents.swift in Sources */,
+				A1B2C3D400000000AA000008 /* MooneyLiquidGlassPreview.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

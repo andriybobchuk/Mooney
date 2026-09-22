@@ -59,51 +59,58 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 @main
 struct iOSApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    @State private var showLiquidGlassPreview = false
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                // Deep-link fallback for pre-iOS-16 devices AND for Shortcut
-                // authors who prefer a raw URL over the App Intent. Handles
-                // mooney://add-tx?amount=12.5&type=expense&category=coffee&...
-                // See AddMooneyTransactionIntent.swift for the parameter map.
-                //
-                // Also handles mooney://liquid-glass-preview — presents the
-                // SwiftUI + Liquid Glass PoC as a full-screen cover. Kept
-                // behind a URL so the PoC ships zero UI in the production
-                // build path; only reachable if user (or dev) explicitly
-                // navigates to the URL (Safari, Shortcut, or Notes link).
-                .onOpenURL { url in
-                    handleMooneyURL(url)
-                }
-                .fullScreenCover(isPresented: $showLiquidGlassPreview) {
-                    if #available(iOS 26.0, *) {
-                        MooneyLiquidGlassPreview()
-                    } else {
-                        FallbackUnavailableView()
-                    }
-                }
+            // Wrapper owns the fullScreenCover state so URL handling and
+            // the modifier live in the same View — earlier version had the
+            // @State on the App struct and the modifier on ContentView,
+            // which didn't propagate the state flip on some iOS versions.
+            RootHostView()
         }
+    }
+}
+
+/// SwiftUI shell hosting the Compose UI. Owns state that the App can't
+/// (e.g. the Liquid Glass PoC full-screen cover) and centralizes URL scheme
+/// routing.
+private struct RootHostView: View {
+    @State private var showLiquidGlassPreview = false
+
+    var body: some View {
+        ContentView()
+            // Deep-link fallback for pre-iOS-16 devices AND for Shortcut
+            // authors who prefer a raw URL over the App Intent. Handles:
+            //   mooney://add-tx?amount=…&type=…&category=…&account=…&note=…
+            //   mooney://liquid-glass-preview
+            .onOpenURL { url in
+                handleMooneyURL(url)
+            }
+            .fullScreenCover(isPresented: $showLiquidGlassPreview) {
+                if #available(iOS 26.0, *) {
+                    MooneyLiquidGlassPreview()
+                } else {
+                    FallbackUnavailableView()
+                }
+            }
     }
 
     private func handleMooneyURL(_ url: URL) {
+        NSLog("[Mooney] onOpenURL: \(url.absoluteString)")
         guard url.scheme == "mooney",
               let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         else { return }
 
         switch components.host {
         case "liquid-glass-preview":
-            // Launch the SwiftUI Liquid Glass PoC. Deliberately gated behind
-            // a URL rather than a Settings row so the production Compose UI
-            // ships zero surface area for this — the PoC is opt-in only.
+            NSLog("[Mooney] Presenting Liquid Glass preview")
             showLiquidGlassPreview = true
 
         case "add-tx":
             handleAddTransactionURL(components)
 
         default:
-            break
+            NSLog("[Mooney] Unknown mooney:// host: \(String(describing: components.host))")
         }
     }
 

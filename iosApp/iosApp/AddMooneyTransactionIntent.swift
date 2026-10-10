@@ -97,18 +97,34 @@ struct AddMooneyTransactionIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        // Silent-skip when the Wallet trigger fires without a real payment.
-        // The "When I tap any payment card or pass" automation fires on
-        // every tap in Wallet — loyalty cards, boarding passes, declined
-        // txs, pre-auth events, even just OPENING a card to look at it.
-        // In those cases Amount = 0 and we got a scary "Amount must be
-        // greater than zero" failure notification 30-40% of the time.
+        // Zero-amount path. The iOS Wallet "card tap" trigger fires at NFC
+        // handshake time (t≈0), BEFORE the terminal has sent back the final
+        // amount. For PIN'd / network-authorized contactless txs the amount
+        // may not populate for 1-5 seconds — the trigger wins the race and
+        // Mooney gets Amount=0 for what was in fact a real purchase. That
+        // was the "30-40% intermittent failure" users were seeing.
         //
-        // Returning .result() without calling the handler = Shortcuts
-        // treats it as success → no error notification → no spam. Real
-        // payments with real amounts still flow through unchanged below.
+        // Two sub-cases, distinguished by whether Merchant was wired:
+        //   (a) Merchant present → real purchase racing settlement. Fire a
+        //       push notification "Amount needed for [Merchant]" so the user
+        //       can log it manually. ZERO data loss — the user still knows
+        //       a tx happened. Return success so Shortcuts doesn't ALSO
+        //       stack its red failure banner on top.
+        //   (b) Merchant empty → trigger fired on a non-payment event
+        //       (loyalty card tap, boarding pass, pre-auth with no merchant
+        //       context). Silent skip is correct here.
+        //
+        // Best permanent cure is on the Shortcut side: insert a "Wait 3s"
+        // action before Add Transaction. We tell users this in the
+        // Automation onboarding screen. This Mooney-side logic is the
+        // safety net for users who skip that step.
         guard amount > 0 else {
-            return .result(dialog: "No amount in this Wallet event — nothing to log.")
+            let merchantHint = descriptionText?.trimmingCharacters(in: .whitespaces) ?? ""
+            if !merchantHint.isEmpty {
+                postAmountNeededNotification(merchant: merchantHint)
+                return .result(dialog: "Payment at \(merchantHint) — Apple Wallet didn't report the amount in time. Tap the Mooney notification to add it manually.")
+            }
+            return .result(dialog: "No amount or merchant in this Wallet event — nothing to log.")
         }
 
         let handler = TransactionIntentHandlerKt.resolveTransactionIntentHandler()
@@ -134,6 +150,24 @@ struct AddMooneyTransactionIntent: AppIntent {
         } else {
             throw MooneyIntentError.failed(message: result.message)
         }
+    }
+
+    /// Local push for the race-condition case: Wallet fired the trigger
+    /// with Amount=0 but a real Merchant is present (shop payment that
+    /// settled too slow for the trigger). Non-silent sound because this
+    /// is action-required, not a passive confirmation.
+    private func postAmountNeededNotification(merchant: String) {
+        let content = UNMutableNotificationContent()
+        content.title = "Mooney — amount needed"
+        content.body = "Apple Wallet didn't send the amount for your \(merchant) payment in time. Open Mooney to add it."
+        content.sound = .default
+        content.userInfo = ["pendingMerchant": merchant]
+        let request = UNNotificationRequest(
+            identifier: "mooney.amountneeded.\(UUID().uuidString)",
+            content: content,
+            trigger: nil
+        )
+        UNUserNotificationCenter.current().add(request) { _ in }
     }
 
     /// Local push confirming the auto-log — critical for background-run

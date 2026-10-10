@@ -287,10 +287,15 @@ private fun rememberOnboardingPages(): List<OnboardingPage> = listOf(
             "Open the Shortcuts app → tap the Automation tab at the bottom.",
             "Tap + (top right) → scroll to New Automation.",
             "Scroll down the trigger list → tap Wallet.",
-            "Select which card(s) should trigger the automation (or leave all cards).",
-            "Optionally filter by transaction category (Groceries, Transport, etc.).",
+            "Select which payment card(s) should trigger the automation. " +
+                "DESELECT loyalty cards and passes — those fire with no amount.",
             "Tap Next → tap New Blank Automation.",
-            "Tap the search bar at the bottom → search Mooney → tap Add Transaction.",
+            "Tap the search bar at the bottom → search Wait → add Wait and " +
+                "set it to 3 Seconds. This step is critical — Apple Wallet " +
+                "needs ~1-5s to tell your phone the final payment amount, " +
+                "so firing Add Transaction immediately gives you a 0-amount " +
+                "race condition on ~30% of real purchases.",
+            "Tap the search bar again → search Mooney → tap Add Transaction.",
             "The Amount field auto-wires to the Wallet payment amount.",
             "Tap Description → pick Merchant (or Name) from the magic variables.",
             "Toggle Run Immediately ON at the top so it fires without asking."
@@ -299,12 +304,17 @@ private fun rememberOnboardingPages(): List<OnboardingPage> = listOf(
     OnboardingPage(
         emoji = "✅",
         title = "Test it and you're done", // allow-hardcoded (iOS-only edu screen)
-        body = "Make any card payment via Apple Pay. Within a second or two " +
+        body = "Make any card payment via Apple Pay. Within a few seconds " +
             "you'll get a Mooney notification: \"Automatically added 12.50 zł " +
-            "for Biedronka\". Open Mooney → Transactions to confirm — the " +
-            "entry is already there under your default account and category, " +
-            "with the merchant name as the description.\n\nAny future " +
-            "categorisation tweaks (change category, edit amount) still work " +
-            "the same way as manually added transactions."
+            "for Biedronka\". Open Mooney → Transactions to confirm the entry.\n\n" +
+            "A couple of caveats to set expectations:\n\n" +
+            "• ONLINE Apple Pay (Safari / in-app) doesn't trigger — Apple " +
+            "only exposes the physical NFC tap event to Shortcuts. For online " +
+            "purchases, use Siri (\"Add expense \$42 in Mooney\") or the " +
+            "Mooney widget on your Home Screen.\n\n" +
+            "• If Mooney sends \"Amount needed for [Merchant]\" instead of a " +
+            "confirmation, the Wait step wasn't long enough for that terminal " +
+            "— try bumping it to 5 seconds. The merchant payment still " +
+            "happened; the amount just didn't arrive in time."
     )
 )

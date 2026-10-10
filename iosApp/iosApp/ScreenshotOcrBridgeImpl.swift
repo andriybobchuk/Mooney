@@ -26,7 +26,7 @@ class ScreenshotOcrBridgeImpl: NSObject, ScreenshotOcrBridge {
     private static let maxImages: Int = 20
 
     func pickAndExtractText(
-        onResult: @escaping (NSArray) -> Void
+        onResult: @escaping ([ScreenshotOcrResult]) -> Void
     ) {
         // Dispatch to main because we need UIKit presentation + the Kotlin
         // callback expects to be invoked once; the Vision pass is still off
@@ -36,7 +36,7 @@ class ScreenshotOcrBridgeImpl: NSObject, ScreenshotOcrBridge {
         }
     }
 
-    private func presentPicker(onResult: @escaping (NSArray) -> Void) {
+    private func presentPicker(onResult: @escaping ([ScreenshotOcrResult]) -> Void) {
         // Default PHPickerConfiguration (no photoLibrary argument) uses the
         // out-of-process picker — zero Photo Library authorization required,
         // the user picks images via the system UI and only the chosen
@@ -58,7 +58,7 @@ class ScreenshotOcrBridgeImpl: NSObject, ScreenshotOcrBridge {
 
         guard let rootVC = Self.topViewController() else {
             NSLog("[ScreenshotOcr] No root VC to present picker — returning empty")
-            onResult(NSArray())
+            onResult([])
             return
         }
         rootVC.present(picker, animated: true)
@@ -85,13 +85,13 @@ private class PickerDelegate: NSObject, PHPickerViewControllerDelegate {
 
     static var associationKey: UInt8 = 0
 
-    private let onResult: (NSArray) -> Void
+    private let onResult: ([ScreenshotOcrResult]) -> Void
     /// Guards double-invocation — PHPicker calls back exactly once but we
     /// use the same closure path for cancellation and we don't want the
     /// Kotlin side to resume twice.
     private var hasFired: Bool = false
 
-    init(onResult: @escaping (NSArray) -> Void) {
+    init(onResult: @escaping ([ScreenshotOcrResult]) -> Void) {
         self.onResult = onResult
     }
 
@@ -163,7 +163,7 @@ private class PickerDelegate: NSObject, PHPickerViewControllerDelegate {
     private func fire(with results: [ScreenshotOcrResult]) {
         guard !hasFired else { return }
         hasFired = true
-        onResult(results as NSArray)
+        onResult(results)
     }
 
     // MARK: - Vision

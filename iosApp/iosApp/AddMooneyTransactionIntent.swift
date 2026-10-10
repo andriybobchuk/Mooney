@@ -97,6 +97,20 @@ struct AddMooneyTransactionIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
+        // Silent-skip when the Wallet trigger fires without a real payment.
+        // The "When I tap any payment card or pass" automation fires on
+        // every tap in Wallet — loyalty cards, boarding passes, declined
+        // txs, pre-auth events, even just OPENING a card to look at it.
+        // In those cases Amount = 0 and we got a scary "Amount must be
+        // greater than zero" failure notification 30-40% of the time.
+        //
+        // Returning .result() without calling the handler = Shortcuts
+        // treats it as success → no error notification → no spam. Real
+        // payments with real amounts still flow through unchanged below.
+        guard amount > 0 else {
+            return .result(dialog: "No amount in this Wallet event — nothing to log.")
+        }
+
         let handler = TransactionIntentHandlerKt.resolveTransactionIntentHandler()
 
         let isoDate: String? = date.map { pickedDate in

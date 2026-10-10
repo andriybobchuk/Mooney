@@ -181,6 +181,8 @@ fun TransactionsScreen(
     // Hidden dev-only nav target — the "Eats" pill in the quick-actions
     // row only fires this when `DISPLAY_EATS_ENABLED` is on.
     onNavigateToAndrewEats: () -> Unit = {},
+    // Tap on the "N auto-added to review" banner → opens UpkeepReviewScreen.
+    onNavigateToUpkeep: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val transactions = state.transactions
@@ -359,6 +361,16 @@ fun TransactionsScreen(
                             onCategoriesClick = onNavigateToTransactionCategories,
                             eatsEnabled = displayEatsEnabled,
                             onEatsClick = onNavigateToAndrewEats,
+                        )
+                    }
+
+                    // Upkeep banner — only when there are auto-added txs
+                    // pending review. Hides itself when count hits zero so
+                    // "clean inbox" state has zero chrome.
+                    if (!showShimmer && state.autoAddedPendingCount > 0) {
+                        UpkeepBanner(
+                            count = state.autoAddedPendingCount,
+                            onClick = onNavigateToUpkeep
                         )
                     }
                     if (showShimmer) {
@@ -1160,6 +1172,70 @@ fun TransactionsScreenContent(
 }
 
 
+/**
+ * Chip rendered on the secondary line of a transaction row when the entry
+ * was created by an iOS Shortcut / Siri / Wallet automation. Muted brand
+ * accent so it reads as informational, not alarming — users shouldn't feel
+ * their ledger is being flagged, just marked for review in the Upkeep flow.
+ * Disappears the moment the user confirms the category in Upkeep.
+ */
+@Composable
+private fun AutoTag() {
+    Text(
+        text = "AUTO", // allow-hardcoded (brand term, no translation needed)
+        style = MaterialTheme.typography.labelSmall.copy(
+            fontSize = 10.sp,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = 0.5.sp
+        ),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+        modifier = Modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+            .padding(horizontal = 6.dp, vertical = 2.dp)
+    )
+}
+
+/**
+ * Dismissible banner above the transaction list when auto-added transactions
+ * are waiting for review. Tapping opens the Upkeep card flow. Hides itself
+ * when the count drops to zero — no banner, no empty-state chrome.
+ */
+@Composable
+private fun UpkeepBanner(count: Int, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+            .clickable { onClick() }
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = "⚡", fontSize = 20.sp)
+        Spacer(modifier = Modifier.width(10.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(Res.string.upkeep_banner_title, count),
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = stringResource(Res.string.upkeep_banner_subtitle),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Icon(
+            painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(18.dp)
+        )
+    }
+}
+
 @Composable
 fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
     Row(
@@ -1225,13 +1301,23 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
                         transaction.subcategory.parent?.let { localizedCategoryTitle(it) }
                     else -> null
                 }
-                if (secondary != null) {
-                    Text(
-                        text = secondary,
-                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
-                        maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                    )
+                if (secondary != null || transaction.addedByAutomation) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        if (transaction.addedByAutomation) {
+                            AutoTag()
+                        }
+                        if (secondary != null) {
+                            Text(
+                                text = secondary,
+                                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                        }
+                    }
                 }
             }
         }

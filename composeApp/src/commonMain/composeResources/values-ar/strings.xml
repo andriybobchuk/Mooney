@@ -470,6 +470,15 @@
     <string name="repeat_question">تكرار؟</string>
     <string name="future_transaction_warning">مُجدولة في %1$s</string>
 
+    <string name="upkeep_banner_title">%1$d معاملات تلقائية بحاجة إلى مراجعة</string>
+    <string name="upkeep_banner_subtitle">أكّد أو غيّر الفئة</string>
+    <string name="upkeep_title">مراجعة</string>
+    <string name="upkeep_card_header">%1$s</string>
+    <string name="upkeep_more_categories">المزيد من الفئات…</string>
+    <string name="upkeep_all_caught_up_title">تمت المراجعة</string>
+    <string name="upkeep_all_caught_up_body">تمت مراجعة جميع المعاملات التلقائية.</string>
+    <string name="upkeep_done_button">تم</string>
+
     <!-- مشاركة -->
     <string name="share_my_net_worth">صافي ثروتي:</string>
     <string name="share_tracked_with">أتتبّع مع Mooney 💰</string>

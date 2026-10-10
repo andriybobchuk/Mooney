@@ -445,6 +445,15 @@
     <string name="repeat_question">Повторити?</string>
     <string name="future_transaction_warning">Заплановано на %1$s</string>
 
+    <string name="upkeep_banner_title">%1$d авто-транзакцій для перевірки</string>
+    <string name="upkeep_banner_subtitle">Підтвердіть або змініть категорію</string>
+    <string name="upkeep_title">Перевірка</string>
+    <string name="upkeep_card_header">%1$s</string>
+    <string name="upkeep_more_categories">Інші категорії…</string>
+    <string name="upkeep_all_caught_up_title">Усе перевірено</string>
+    <string name="upkeep_all_caught_up_body">Усі авто-транзакції оброблено.</string>
+    <string name="upkeep_done_button">Готово</string>
+
     <!-- Поділитися -->
     <string name="share_my_net_worth">Мій чистий капітал:</string>
     <string name="share_tracked_with">Відстежую в Mooney 💰</string>

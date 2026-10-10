@@ -52,7 +52,8 @@ fun TransactionEntity.toDomain(
     account = account,
     date = LocalDate.parse(date),
     destinationAmount = destinationAmount,
-    description = description
+    description = description,
+    addedByAutomation = addedByAutomation
 )
 
 fun GoalEntity.toDomain(): Goal = Goal(

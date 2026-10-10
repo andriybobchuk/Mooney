@@ -622,12 +622,42 @@ val MIGRATION_20_21 = object : Migration(20, 21) {
     }
 }
 
+/**
+ * v21 → v22: Phase 1 of the Upkeep review flow.
+ *
+ * 1. Adds `addedByAutomation` boolean to TransactionEntity. True iff the row
+ *    was created by an iOS Shortcut / App Intent; drives the AUTO chip on
+ *    the row and inclusion in the Upkeep review queue. Defaults to 0 so
+ *    every existing (manually-created) row stays untouched.
+ * 2. Creates `merchant_category_history` for the smart-category feature —
+ *    maps a normalized merchant key to the category the user last confirmed
+ *    for that merchant, so subsequent auto-adds for the same merchant are
+ *    suggested with the right category instead of the generic default.
+ */
+val MIGRATION_21_22 = object : Migration(21, 22) {
+    override fun migrate(connection: SQLiteConnection) {
+        if (!hasColumn(connection, "TransactionEntity", "addedByAutomation")) {
+            connection.execSQL(
+                "ALTER TABLE TransactionEntity ADD COLUMN addedByAutomation INTEGER NOT NULL DEFAULT 0"
+            )
+        }
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS merchant_category_history (" +
+                "merchantKey TEXT NOT NULL PRIMARY KEY, " +
+                "categoryId TEXT NOT NULL, " +
+                "updatedAt TEXT NOT NULL" +
+                ")"
+        )
+    }
+}
+
 val ALL_MIGRATIONS = listOf(
     MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
     MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9,
     MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13,
     MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17,
     MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21,
+    MIGRATION_21_22,
 )
 
 /**

@@ -34,6 +34,7 @@ import org.koin.core.module.dsl.singleOf
 import com.andriybobchuk.mooney.core.review.RequestReviewUseCase
 import com.andriybobchuk.mooney.core.platform.TransactionIntentHandler
 import com.andriybobchuk.mooney.core.review.ReviewPromptManager
+import com.andriybobchuk.mooney.mooney.presentation.upkeep.UpkeepReviewViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.module.dsl.factoryOf
@@ -110,6 +111,7 @@ val sharedModule = module {
     single { get<AppDatabase>().assetCategoryDao }
     single { get<AppDatabase>().historicalRateDao }
     single { get<AppDatabase>().rateWatchAlertDao }
+    single { get<AppDatabase>().merchantCategoryHistoryDao }
 
     // Data Export/Import Manager
     single {
@@ -220,6 +222,13 @@ val sharedModule = module {
     // same use case as the in-app Add sheet.
     singleOf(::TransactionIntentHandler)
 
+    // Upkeep review flow — auto-added tx queue + smart category learning.
+    singleOf(::GetAutoAddedPendingUseCase)
+    singleOf(::GetAutoAddedCountFlowUseCase)
+    singleOf(::ReviewAutoAddedUseCase)
+    singleOf(::GetSmartCategoryForMerchantUseCase)
+    singleOf(::GetFrequentExpenseCategoryIdsUseCase)
+
     // Onboarding
     singleOf(::CompleteOnboardingUseCase)
 
@@ -286,7 +295,8 @@ val sharedModule = module {
             manageTransactionCategoryOrderUseCase = get(),
             requestReviewUseCase = get(),
             trackFirstEventUseCase = get(),
-            appDataCache = get()
+            appDataCache = get(),
+            getAutoAddedCountFlowUseCase = get()
         )
     }
     viewModelOf(::AnalyticsViewModel)
@@ -326,4 +336,5 @@ val sharedModule = module {
     viewModelOf(::RecurringTransactionsViewModel)
     viewModelOf(::TransactionCategoriesViewModel)
     viewModelOf(::AssetCategoriesViewModel)
+    viewModelOf(::UpkeepReviewViewModel)
 }

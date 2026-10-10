@@ -470,6 +470,15 @@
     <string name="repeat_question">重复？</string>
     <string name="future_transaction_warning">计划于 %1$s</string>
 
+    <string name="upkeep_banner_title">%1$d 条自动添加待复核</string>
+    <string name="upkeep_banner_subtitle">确认或更改分类</string>
+    <string name="upkeep_title">复核</string>
+    <string name="upkeep_card_header">%1$s</string>
+    <string name="upkeep_more_categories">更多分类…</string>
+    <string name="upkeep_all_caught_up_title">全部完成</string>
+    <string name="upkeep_all_caught_up_body">所有自动添加的交易已复核。</string>
+    <string name="upkeep_done_button">完成</string>
+
     <!-- 分享 -->
     <string name="share_my_net_worth">我的净资产：</string>
     <string name="share_tracked_with">用 Mooney 跟踪 💰</string>

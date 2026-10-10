@@ -32,11 +32,11 @@ class DatabaseSchemaIntegrityTest {
      * the guard is the two numbers drifting apart.
      */
     @Test
-    fun `AppDatabase version is 21`() {
-        // Sourced from AppDatabase's `@Database(version = 21)` annotation
+    fun `AppDatabase version is 22`() {
+        // Sourced from AppDatabase's `@Database(version = 22)` annotation
         // by way of a static const — if the annotation is bumped, this
         // test file is where the test author lands to update the check.
-        assertEquals(21, EXPECTED_VERSION)
+        assertEquals(22, EXPECTED_VERSION)
     }
 
     /**
@@ -110,10 +110,10 @@ class DatabaseSchemaIntegrityTest {
 
     companion object {
         /** Must be bumped in lockstep with `@Database(version = ?)` on [AppDatabase]. */
-        private const val EXPECTED_VERSION = 21
+        private const val EXPECTED_VERSION = 22
 
         /** Must be bumped in lockstep with `@Database(entities = […])` on [AppDatabase]. */
-        private const val EXPECTED_ENTITY_COUNT = 12
+        private const val EXPECTED_ENTITY_COUNT = 13
 
         /**
          * Read-only mirror of the entity count exposed indirectly by
@@ -121,6 +121,6 @@ class DatabaseSchemaIntegrityTest {
          * constant needs to be updated too. Failing the test forces the
          * update.
          */
-        private const val EXPECTED_ENTITY_COUNT_FROM_APPDATABASE = 12
+        private const val EXPECTED_ENTITY_COUNT_FROM_APPDATABASE = 13
     }
 }

@@ -299,6 +299,41 @@ sealed interface AnalyticsEvent {
             "unused" to unusedDefaults.toString()
         )
     }
+
+    // ---- Upkeep review flow telemetry ----
+    // Three events form the funnel for auto-added transaction review:
+    //   UpkeepOpened              → user tapped the banner
+    //   UpkeepCardAction          → per-card outcome (fires once per card)
+    //   UpkeepSessionCompleted    → session ended (reachedEnd distinguishes
+    //                               "finished queue" vs "bailed early")
+    // Together they tell us engagement rate, auto-category accuracy
+    // (confirm/change ratio), and whether the flow feels pleasant.
+
+    data object UpkeepOpened : AnalyticsEvent {
+        override val name = "upkeep_opened"
+    }
+
+    data class UpkeepCardAction(
+        val action: String, // "confirm" | "change"
+        val merchantMatched: Boolean
+    ) : AnalyticsEvent {
+        override val name = "upkeep_card_action"
+        override val params = mapOf(
+            "action" to action,
+            "merchant_matched" to merchantMatched.toString()
+        )
+    }
+
+    data class UpkeepSessionCompleted(
+        val cardsReviewed: Int,
+        val reachedEnd: Boolean
+    ) : AnalyticsEvent {
+        override val name = "upkeep_session_completed"
+        override val params = mapOf(
+            "cards_reviewed_bucket" to bucketCount(cardsReviewed),
+            "reached_end" to reachedEnd.toString()
+        )
+    }
 }
 
 internal fun bucketCount(n: Int): String = when {

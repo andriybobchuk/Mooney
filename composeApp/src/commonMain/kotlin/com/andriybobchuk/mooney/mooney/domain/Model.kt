@@ -56,7 +56,15 @@ data class Transaction(
      * months later. Never displayed in the main Transactions list to keep
      * that view tight.
      */
-    val description: String? = null
+    val description: String? = null,
+    /**
+     * True iff this row was created by an iOS Shortcut / App Intent (Wallet
+     * card tap, Siri "add expense", URL scheme) rather than typed by the
+     * user. Drives the [AUTO] chip on the Transactions row and membership
+     * in the Upkeep review queue. Set back to false the moment the user
+     * reviews it (confirms current category or picks a different one).
+     */
+    val addedByAutomation: Boolean = false
 )
 
 data class Account(

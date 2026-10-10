@@ -54,7 +54,10 @@ data class TransactionState(
     // Per-month transaction counts across the entire user's history. Powers the
     // count caption under each cell in the month-picker bottom sheet. Computed
     // from the full cache, not from [transactions] (which is month-filtered).
-    val monthlyTransactionCounts: Map<MonthKey, Int> = emptyMap()
+    val monthlyTransactionCounts: Map<MonthKey, Int> = emptyMap(),
+    /** Number of txs created by automation that the user hasn't reviewed yet.
+     *  Drives the dismissible "⚡ N auto-added to review" banner. */
+    val autoAddedPendingCount: Int = 0
 )
 
 @Suppress("LongParameterList", "TooManyFunctions")
@@ -88,7 +91,9 @@ class TransactionViewModel(
     // is already populated by the time this ViewModel is constructed, so the
     // first state emission carries real data and we never flash an empty
     // shimmer between screens.
-    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
+    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache,
+    // Upkeep queue count — drives the "⚡ N auto-added to review" banner.
+    private val getAutoAddedCountFlowUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.GetAutoAddedCountFlowUseCase
 ) : ViewModel() {
 
     private var observeTransactionsJob: Job? = null
@@ -161,6 +166,17 @@ class TransactionViewModel(
         observeTaxPreference()
         observeTransactionCategoryOrder()
         observeMonthlyTransactionCounts()
+        observeAutoAddedPendingCount()
+    }
+
+    private fun observeAutoAddedPendingCount() {
+        // Count flows straight from the use case. No local caching — Room is
+        // the source of truth; the banner just mirrors it.
+        getAutoAddedCountFlowUseCase()
+            .onEach { count ->
+                _uiState.update { it.copy(autoAddedPendingCount = count) }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun observeMonthlyTransactionCounts() {

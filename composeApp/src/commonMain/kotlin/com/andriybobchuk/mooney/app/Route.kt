@@ -58,6 +58,11 @@ sealed interface Route {
     @Serializable
     data object ShortcutsOnboarding : Route
 
+    /** Full-screen Upkeep review flow — card-at-a-time category picker for
+     *  transactions auto-added by Shortcuts/Siri/Wallet. */
+    @Serializable
+    data object UpkeepReview : Route
+
     /**
      * Full-screen WebView hosting the AndrewEats web app. Only reachable via
      * the "Eats" pill in Transactions quick-actions, which itself is only

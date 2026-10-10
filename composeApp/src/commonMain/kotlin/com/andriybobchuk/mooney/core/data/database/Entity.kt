@@ -61,7 +61,13 @@ data class TransactionEntity(
     val destinationAmount: Double? = null,
     // Optional free-text note. Surfaces in the Analytics breakdown drilldown
     // so users can answer "what was this $42 grocery run again?" months later.
-    val description: String? = null
+    val description: String? = null,
+    // True iff this transaction was created by an iOS Shortcut / App Intent
+    // (Wallet card tap, Siri "add expense", URL scheme) rather than being
+    // typed by the user. Drives the [AUTO] chip on the row + membership
+    // in the Upkeep review queue. Flipped to false the moment the user
+    // reviews it (confirms current category or picks a different one).
+    val addedByAutomation: Boolean = false
 )
 
 @Entity(tableName = "category_usage")
@@ -160,4 +166,22 @@ data class AssetCategoryEntity(
     val color: Long = 0xFF3562F6,
     val sortOrder: Int = 0,
     val isLiability: Boolean = false
+)
+
+/**
+ * Learned mapping from merchant name (as it appears in Apple Wallet) to the
+ * category the user last confirmed for that merchant. Populated by the
+ * Upkeep review flow — every time the user picks a category for a tx that
+ * has a non-blank description, we upsert the pair here. Reads happen in
+ * [TransactionIntentHandler] during auto-add: if we recognize the merchant,
+ * suggest that category instead of the user's generic default.
+ *
+ * PK is the lowercased, trimmed merchant string so "Biedronka ", "biedronka",
+ * and "BIEDRONKA" all map to the same bucket.
+ */
+@Entity(tableName = "merchant_category_history")
+data class MerchantCategoryHistoryEntity(
+    @PrimaryKey val merchantKey: String,
+    val categoryId: String,
+    val updatedAt: String
 )

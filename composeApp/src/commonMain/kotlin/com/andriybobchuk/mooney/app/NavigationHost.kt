@@ -494,7 +494,8 @@ fun NavigationHost() {
                     onNavigateToExpensesBreakdown = {
                         navController.navigate(Route.AnalyticsCosts)
                     },
-                    onNavigateToAndrewEats = { navController.navigate(Route.AndrewEats) }
+                    onNavigateToAndrewEats = { navController.navigate(Route.AndrewEats) },
+                    onNavigateToUpkeep = { navController.navigate(Route.UpkeepReview) }
                 )
             }
             composable<Route.Accounts> { entry ->
@@ -612,6 +613,14 @@ fun NavigationHost() {
 
             composable<Route.ShortcutsOnboarding> {
                 com.andriybobchuk.mooney.mooney.presentation.settings.ShortcutsOnboardingScreen(
+                    onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
+                )
+            }
+
+            composable<Route.UpkeepReview> {
+                val viewModel = koinViewModel<com.andriybobchuk.mooney.mooney.presentation.upkeep.UpkeepReviewViewModel>()
+                com.andriybobchuk.mooney.mooney.presentation.upkeep.UpkeepReviewScreen(
+                    viewModel = viewModel,
                     onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
                 )
             }

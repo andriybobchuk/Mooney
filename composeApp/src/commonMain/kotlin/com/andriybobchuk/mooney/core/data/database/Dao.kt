@@ -241,3 +241,18 @@ interface AssetCategoryDao {
     @Query("SELECT COUNT(*) FROM asset_categories")
     suspend fun getCount(): Int
 }
+
+@Dao
+interface MerchantCategoryHistoryDao {
+    @Upsert
+    suspend fun upsert(entry: MerchantCategoryHistoryEntity)
+
+    @Query("SELECT * FROM merchant_category_history WHERE merchantKey = :merchantKey")
+    suspend fun getByMerchantKey(merchantKey: String): MerchantCategoryHistoryEntity?
+
+    @Query("SELECT * FROM merchant_category_history")
+    fun getAll(): Flow<List<MerchantCategoryHistoryEntity>>
+
+    @Query("DELETE FROM merchant_category_history WHERE merchantKey = :merchantKey")
+    suspend fun delete(merchantKey: String)
+}

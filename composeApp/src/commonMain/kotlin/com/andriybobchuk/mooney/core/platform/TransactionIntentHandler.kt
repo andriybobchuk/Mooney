@@ -12,6 +12,7 @@ import com.andriybobchuk.mooney.mooney.domain.usecase.AddTransactionUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.CalculateMonthlyAnalyticsUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.CalculateNetWorthUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.CurrencyManagerUseCase
+import com.andriybobchuk.mooney.mooney.domain.usecase.GetSmartCategoryForMerchantUseCase
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Clock
@@ -36,7 +37,8 @@ class TransactionIntentHandler(
     private val preferencesRepository: PreferencesRepository,
     private val calculateMonthlyAnalyticsUseCase: CalculateMonthlyAnalyticsUseCase,
     private val calculateNetWorthUseCase: CalculateNetWorthUseCase,
-    private val currencyManagerUseCase: CurrencyManagerUseCase
+    private val currencyManagerUseCase: CurrencyManagerUseCase,
+    private val getSmartCategoryForMerchantUseCase: GetSmartCategoryForMerchantUseCase
 ) {
 
     // ---- read-only balance queries (Get Balance / Get Spent This Month intents) ----
@@ -173,7 +175,7 @@ class TransactionIntentHandler(
             )
         }
 
-        val category = resolveCategory(categoryId, type)
+        val category = resolveCategory(categoryId, type, merchantHint = description)
             ?: return TransactionIntentResult.error(
                 "No matching ${type.name.lowercase()} category" +
                     (categoryId?.let { " for '$it'" } ?: "") + "."
@@ -206,7 +208,11 @@ class TransactionIntentHandler(
             date = date,
             description = description?.trim()
                 ?.takeIf { it.isNotEmpty() }
-                ?.replaceFirstChar { it.uppercase() }
+                ?.replaceFirstChar { it.uppercase() },
+            // Every tx coming through this handler is auto-added by
+            // definition (Shortcut / Siri / URL scheme). Drives the AUTO
+            // chip + inclusion in the Upkeep review queue.
+            addedByAutomation = true
         )
 
         return try {
@@ -231,16 +237,35 @@ class TransactionIntentHandler(
         }
     }
 
-    private suspend fun resolveCategory(categoryId: String?, type: CategoryType): Category? {
-        // Explicit ID wins. Otherwise fall back to the user's default for the
-        // requested transaction type, which is what the in-app Add sheet
-        // pre-selects too — Shortcut behavior matches app behavior.
+    private suspend fun resolveCategory(
+        categoryId: String?,
+        type: CategoryType,
+        merchantHint: String?
+    ): Category? {
+        // Precedence (first match wins):
+        //   1. Explicit categoryId from the Shortcut parameter
+        //   2. For EXPENSES only: smart lookup — "Biedronka" learned as
+        //      Groceries from a prior review → suggest Groceries now
+        //   3. User's default expense / income category
+        // Smart lookup is expense-only because INCOME auto-adds are
+        // vanishingly rare (Siri / Wallet triggers don't exist for
+        // deposits) and the merchant history is populated from Wallet
+        // (expense) events.
         val id = categoryId?.trim()?.takeIf { it.isNotEmpty() }
+            ?: smartSuggestionIfExpense(type, merchantHint)
             ?: preferencesRepository.getCurrentPreferences().let { prefs ->
                 if (type == CategoryType.EXPENSE) prefs.defaultExpenseCategory
                 else prefs.defaultIncomeCategory
             }
         return repository.getCategoryById(id)
+    }
+
+    private suspend fun smartSuggestionIfExpense(
+        type: CategoryType,
+        merchantHint: String?
+    ): String? {
+        if (type != CategoryType.EXPENSE) return null
+        return getSmartCategoryForMerchantUseCase(merchantHint)
     }
 
     private suspend fun resolveAccount(

@@ -549,6 +549,16 @@
     <string name="repeat_question">Repeat?</string>
     <string name="future_transaction_warning">Scheduled for %1$s</string>
 
+    <!-- Upkeep review flow — AUTO-tagged transaction categorisation UX -->
+    <string name="upkeep_banner_title">%1$d auto-added to review</string>
+    <string name="upkeep_banner_subtitle">Confirm or change their categories</string>
+    <string name="upkeep_title">Upkeep</string>
+    <string name="upkeep_card_header">%1$s</string>
+    <string name="upkeep_more_categories">More categories…</string>
+    <string name="upkeep_all_caught_up_title">All caught up</string>
+    <string name="upkeep_all_caught_up_body">Every auto-added transaction has been reviewed.</string>
+    <string name="upkeep_done_button">Done</string>
+
     <!-- Net worth share text -->
     <string name="share_my_net_worth">My net worth:</string>
     <string name="share_tracked_with">Tracked with Mooney 💰</string>

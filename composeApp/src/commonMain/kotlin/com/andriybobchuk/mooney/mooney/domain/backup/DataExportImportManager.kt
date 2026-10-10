@@ -54,7 +54,10 @@ class DataExportImportManager(
         val accountId: Int,
         val date: String,
         val destinationAmount: Double? = null,
-        val description: String? = null
+        val description: String? = null,
+        // Default false so pre-v6 export files (which lack this field)
+        // import cleanly — missing JSON key just means "manually created".
+        val addedByAutomation: Boolean = false
     )
 
     @Serializable
@@ -317,7 +320,7 @@ class DataExportImportManager(
 
             // 5. Transactions
             export.transactions.forEach { tx ->
-                transactionDao.upsert(TransactionEntity(0, tx.subcategoryId, tx.amount, tx.accountId, tx.date, tx.destinationAmount, tx.description))
+                transactionDao.upsert(TransactionEntity(0, tx.subcategoryId, tx.amount, tx.accountId, tx.date, tx.destinationAmount, tx.description, tx.addedByAutomation))
                 counts = counts.copy(transactions = counts.transactions + 1)
             }
 
@@ -473,7 +476,7 @@ class DataExportImportManager(
 
     // region Entity to Export mappers
 
-    private fun TransactionEntity.toExport() = TransactionExport(id, subcategoryId, amount, accountId, date, destinationAmount, description)
+    private fun TransactionEntity.toExport() = TransactionExport(id, subcategoryId, amount, accountId, date, destinationAmount, description, addedByAutomation)
 
     private fun AccountEntity.toExport() = AccountExport(
         id = id,
@@ -605,6 +608,8 @@ class DataExportImportManager(
         // (e.g. a beta test rejects a stable-app backup) surfaces the
         // "Unsupported export version" error to the user, which is the
         // correct behavior.
-        const val CURRENT_EXPORT_VERSION = 5
+        // Bumped to v6 for the addedByAutomation flag on TransactionExport.
+        // v5 exports import cleanly because the field has a Boolean default.
+        const val CURRENT_EXPORT_VERSION = 6
     }
 }

@@ -26,5 +26,6 @@ fun Transaction.toEntity(): TransactionEntity = TransactionEntity(
     accountId = account.id,
     date = date.toString(),
     destinationAmount = destinationAmount,
-    description = description
+    description = description,
+    addedByAutomation = addedByAutomation
 )

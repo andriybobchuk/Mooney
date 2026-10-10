@@ -470,6 +470,15 @@
     <string name="repeat_question">Powtórz?</string>
     <string name="future_transaction_warning">Zaplanowane na %1$s</string>
 
+    <string name="upkeep_banner_title">%1$d auto-transakcji do sprawdzenia</string>
+    <string name="upkeep_banner_subtitle">Potwierdź lub zmień kategorię</string>
+    <string name="upkeep_title">Sprawdzenie</string>
+    <string name="upkeep_card_header">%1$s</string>
+    <string name="upkeep_more_categories">Więcej kategorii…</string>
+    <string name="upkeep_all_caught_up_title">Wszystko sprawdzone</string>
+    <string name="upkeep_all_caught_up_body">Wszystkie auto-transakcje zostały przejrzane.</string>
+    <string name="upkeep_done_button">Gotowe</string>
+
     <!-- Udostępnij -->
     <string name="share_my_net_worth">Moja wartość netto:</string>
     <string name="share_tracked_with">Śledzone z Mooney 💰</string>

@@ -63,6 +63,12 @@ sealed interface Route {
     @Serializable
     data object UpkeepReview : Route
 
+    /** Full-screen screenshot-import preview — user picks screenshots of bank
+     *  / Apple Pay notifications, Mooney OCRs them and shows the parsed
+     *  candidates with per-row keep/drop + dedup warnings before commit. */
+    @Serializable
+    data object ScreenshotImport : Route
+
     /**
      * Full-screen WebView hosting the AndrewEats web app. Only reachable via
      * the "Eats" pill in Transactions quick-actions, which itself is only

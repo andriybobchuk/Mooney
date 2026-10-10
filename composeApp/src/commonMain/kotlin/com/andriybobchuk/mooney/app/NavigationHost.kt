@@ -495,7 +495,8 @@ fun NavigationHost() {
                         navController.navigate(Route.AnalyticsCosts)
                     },
                     onNavigateToAndrewEats = { navController.navigate(Route.AndrewEats) },
-                    onNavigateToUpkeep = { navController.navigate(Route.UpkeepReview) }
+                    onNavigateToUpkeep = { navController.navigate(Route.UpkeepReview) },
+                    onNavigateToScreenshotImport = { navController.navigate(Route.ScreenshotImport) }
                 )
             }
             composable<Route.Accounts> { entry ->
@@ -622,6 +623,23 @@ fun NavigationHost() {
                 com.andriybobchuk.mooney.mooney.presentation.upkeep.UpkeepReviewScreen(
                     viewModel = viewModel,
                     onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
+                )
+            }
+
+            composable<Route.ScreenshotImport> {
+                val viewModel = koinViewModel<com.andriybobchuk.mooney.mooney.presentation.screenshot.ScreenshotImportViewModel>()
+                com.andriybobchuk.mooney.mooney.presentation.screenshot.ScreenshotImportScreen(
+                    viewModel = viewModel,
+                    onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() },
+                    // Commit flow pops back to Transactions. The committed rows
+                    // show up there as auto-added transactions and the user can
+                    // bulk-correct categories via the existing Phase 1 Upkeep
+                    // card flow — no extra UX needed on the Transactions side.
+                    onFinished = { _ ->
+                        if (navController.previousBackStackEntry != null) {
+                            navController.navigateUp()
+                        }
+                    }
                 )
             }
 

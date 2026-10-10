@@ -35,6 +35,12 @@ import com.andriybobchuk.mooney.core.review.RequestReviewUseCase
 import com.andriybobchuk.mooney.core.platform.TransactionIntentHandler
 import com.andriybobchuk.mooney.core.review.ReviewPromptManager
 import com.andriybobchuk.mooney.mooney.presentation.upkeep.UpkeepReviewViewModel
+import com.andriybobchuk.mooney.mooney.presentation.screenshot.ScreenshotImportViewModel
+import com.andriybobchuk.mooney.core.platform.ScreenshotOcrParser
+import com.andriybobchuk.mooney.mooney.domain.usecase.screenshot.ParseScreenshotUseCase
+import com.andriybobchuk.mooney.mooney.domain.usecase.screenshot.DedupScreenshotCandidatesUseCase
+import com.andriybobchuk.mooney.mooney.domain.usecase.screenshot.RunScreenshotImportUseCase
+import com.andriybobchuk.mooney.mooney.domain.usecase.screenshot.CommitScreenshotImportUseCase
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.core.module.dsl.factoryOf
@@ -229,6 +235,16 @@ val sharedModule = module {
     singleOf(::GetSmartCategoryForMerchantUseCase)
     singleOf(::GetFrequentExpenseCategoryIdsUseCase)
 
+    // Screenshot bulk-import — Phase 3 "second line of automation".
+    // Parser is platform-actual (Swift PhotosPicker + Vision on iOS,
+    // no-op stub on Android for now); the rest is pure common Kotlin so
+    // adding ML Kit on Android later only means swapping the parser.
+    single { ScreenshotOcrParser() }
+    singleOf(::ParseScreenshotUseCase)
+    singleOf(::DedupScreenshotCandidatesUseCase)
+    singleOf(::RunScreenshotImportUseCase)
+    singleOf(::CommitScreenshotImportUseCase)
+
     // Onboarding
     singleOf(::CompleteOnboardingUseCase)
 
@@ -337,4 +353,5 @@ val sharedModule = module {
     viewModelOf(::TransactionCategoriesViewModel)
     viewModelOf(::AssetCategoriesViewModel)
     viewModelOf(::UpkeepReviewViewModel)
+    viewModelOf(::ScreenshotImportViewModel)
 }

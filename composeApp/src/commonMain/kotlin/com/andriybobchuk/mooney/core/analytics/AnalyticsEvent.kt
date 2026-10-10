@@ -334,6 +334,47 @@ sealed interface AnalyticsEvent {
             "reached_end" to reachedEnd.toString()
         )
     }
+
+    // ---- Screenshot bulk-import telemetry ----
+    // Mirrors the Upkeep funnel: Opened → Parsed → Committed, with Cancelled
+    // as the drop-off branch. Together they tell us picker→commit conversion,
+    // typical batch size, and OCR quality (parsed vs failed ratio).
+
+    data object ScreenshotImportOpened : AnalyticsEvent {
+        override val name = "screenshot_import_opened"
+    }
+
+    data class ScreenshotImportParsed(
+        val imagesPicked: Int,
+        val parsed: Int,
+        val dupsExisting: Int,
+        val dupsBatch: Int,
+        val parseFailed: Int
+    ) : AnalyticsEvent {
+        override val name = "screenshot_import_parsed"
+        override val params = mapOf(
+            "images_picked_bucket" to bucketCount(imagesPicked),
+            "parsed_bucket" to bucketCount(parsed),
+            "dups_existing_bucket" to bucketCount(dupsExisting),
+            "dups_batch_bucket" to bucketCount(dupsBatch),
+            "parse_failed_bucket" to bucketCount(parseFailed)
+        )
+    }
+
+    data class ScreenshotImportCommitted(
+        val inserted: Int,
+        val overrodeDups: Boolean
+    ) : AnalyticsEvent {
+        override val name = "screenshot_import_committed"
+        override val params = mapOf(
+            "inserted_bucket" to bucketCount(inserted),
+            "overrode_dups" to overrodeDups.toString()
+        )
+    }
+
+    data object ScreenshotImportCancelled : AnalyticsEvent {
+        override val name = "screenshot_import_cancelled"
+    }
 }
 
 internal fun bucketCount(n: Int): String = when {

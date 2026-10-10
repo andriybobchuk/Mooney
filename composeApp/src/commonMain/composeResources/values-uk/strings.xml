@@ -773,4 +773,18 @@
     <string name="category_asset_credit_card">Кредитна картка</string>
     <string name="category_asset_debt">Борг</string>
 
+    <!-- Screenshot bulk-import -->
+    <string name="screenshot_import_chip">Скан скріншотів</string>
+    <string name="screenshot_import_title">Скан скріншотів</string>
+    <string name="screenshot_import_subtitle">Перевірте розпізнане перед додаванням</string>
+    <string name="screenshot_import_commit_button">Додати транзакції</string>
+    <string name="screenshot_import_select_all">Вибрати все</string>
+    <string name="screenshot_import_select_none">Зняти</string>
+    <string name="screenshot_import_dup_existing">Вже додано</string>
+    <string name="screenshot_import_dup_batch">Повтор у цій пачці</string>
+    <string name="screenshot_import_low_confidence">Низька впевненість</string>
+    <string name="screenshot_import_parse_failed">Не вдалося прочитати скріншот</string>
+    <string name="screenshot_import_keep_anyway">Все одно додати</string>
+    <string name="screenshot_import_empty_title">Нічого імпортувати</string>
+    <string name="screenshot_import_empty_body">Виберіть скріншоти сповіщень банку чи Apple Pay, щоб додати транзакції одразу.</string>
 </resources>

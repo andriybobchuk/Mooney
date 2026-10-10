@@ -798,4 +798,18 @@
     <string name="category_asset_credit_card">信用卡</string>
     <string name="category_asset_debt">债务</string>
 
+    <!-- Screenshot bulk-import -->
+    <string name="screenshot_import_chip">扫描截图</string>
+    <string name="screenshot_import_title">扫描截图</string>
+    <string name="screenshot_import_subtitle">添加前请检查识别结果</string>
+    <string name="screenshot_import_commit_button">添加交易</string>
+    <string name="screenshot_import_select_all">全选</string>
+    <string name="screenshot_import_select_none">清除</string>
+    <string name="screenshot_import_dup_existing">已添加</string>
+    <string name="screenshot_import_dup_batch">本批次重复</string>
+    <string name="screenshot_import_low_confidence">置信度低</string>
+    <string name="screenshot_import_parse_failed">无法读取此截图</string>
+    <string name="screenshot_import_keep_anyway">仍然添加</string>
+    <string name="screenshot_import_empty_title">无内容可导入</string>
+    <string name="screenshot_import_empty_body">选择银行或 Apple Pay 通知的截图以批量添加交易。</string>
 </resources>

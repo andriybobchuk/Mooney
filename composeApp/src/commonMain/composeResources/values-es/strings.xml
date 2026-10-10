@@ -798,4 +798,18 @@
     <string name="category_asset_credit_card">Tarjeta de crédito</string>
     <string name="category_asset_debt">Deuda</string>
 
+    <!-- Screenshot bulk-import -->
+    <string name="screenshot_import_chip">Escanear capturas</string>
+    <string name="screenshot_import_title">Escanear capturas</string>
+    <string name="screenshot_import_subtitle">Revisa lo detectado antes de añadir</string>
+    <string name="screenshot_import_commit_button">Añadir transacciones</string>
+    <string name="screenshot_import_select_all">Seleccionar todo</string>
+    <string name="screenshot_import_select_none">Quitar</string>
+    <string name="screenshot_import_dup_existing">Ya añadido</string>
+    <string name="screenshot_import_dup_batch">Repetida en este lote</string>
+    <string name="screenshot_import_low_confidence">Baja confianza</string>
+    <string name="screenshot_import_parse_failed">No se pudo leer la captura</string>
+    <string name="screenshot_import_keep_anyway">Añadir igual</string>
+    <string name="screenshot_import_empty_title">Nada que importar</string>
+    <string name="screenshot_import_empty_body">Elige capturas de notificaciones de tu banco o Apple Pay para añadir transacciones en lote.</string>
 </resources>

@@ -559,6 +559,21 @@
     <string name="upkeep_all_caught_up_body">Every auto-added transaction has been reviewed.</string>
     <string name="upkeep_done_button">Done</string>
 
+    <!-- Screenshot bulk-import — Phase 3 "second line of automation" -->
+    <string name="screenshot_import_chip">Scan screenshots</string>
+    <string name="screenshot_import_title">Scan screenshots</string>
+    <string name="screenshot_import_subtitle">Review what we read before adding</string>
+    <string name="screenshot_import_commit_button">Add transactions</string>
+    <string name="screenshot_import_select_all">Select all</string>
+    <string name="screenshot_import_select_none">Clear</string>
+    <string name="screenshot_import_dup_existing">Already added</string>
+    <string name="screenshot_import_dup_batch">Repeated in this batch</string>
+    <string name="screenshot_import_low_confidence">Low confidence</string>
+    <string name="screenshot_import_parse_failed">Couldn\'t read this screenshot</string>
+    <string name="screenshot_import_keep_anyway">Keep anyway</string>
+    <string name="screenshot_import_empty_title">Nothing to import</string>
+    <string name="screenshot_import_empty_body">Pick screenshots of your bank or Apple Pay notifications to add transactions in bulk.</string>
+
     <!-- Net worth share text -->
     <string name="share_my_net_worth">My net worth:</string>
     <string name="share_tracked_with">Tracked with Mooney 💰</string>

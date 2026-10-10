@@ -181,6 +181,7 @@ fun TransactionsScreen(
     // Hidden dev-only nav target — the "Eats" pill in the quick-actions
     // row only fires this when `DISPLAY_EATS_ENABLED` is on.
     onNavigateToAndrewEats: () -> Unit = {},
+    onNavigateToScreenshotImport: () -> Unit = {},
     // Tap on the "N auto-added to review" banner → opens UpkeepReviewScreen.
     onNavigateToUpkeep: () -> Unit = {},
 ) {
@@ -361,6 +362,7 @@ fun TransactionsScreen(
                             onCategoriesClick = onNavigateToTransactionCategories,
                             eatsEnabled = displayEatsEnabled,
                             onEatsClick = onNavigateToAndrewEats,
+                            onScreenshotImportClick = onNavigateToScreenshotImport
                         )
                     }
 
@@ -4105,6 +4107,7 @@ private fun QuickActionChipsRow(
     onCategoriesClick: () -> Unit,
     eatsEnabled: Boolean,
     onEatsClick: () -> Unit,
+    onScreenshotImportClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     androidx.compose.foundation.lazy.LazyRow(
@@ -4151,6 +4154,27 @@ private fun QuickActionChipsRow(
                 label = stringResource(Res.string.quick_categories),
                 icon = com.andriybobchuk.mooney.core.presentation.Icons.CategoriesIcon(),
                 onClick = onCategoriesClick
+            )
+        }
+        // Screenshot bulk-import — Phase 3 "second line of automation".
+        // Chip uses an emoji in the label so we don't have to ship a new
+        // SVG for this one entry point; aligns with the ⚡ convention used
+        // for the Upkeep banner.
+        item {
+            androidx.compose.material3.AssistChip(
+                onClick = onScreenshotImportClick,
+                label = {
+                    Text(
+                        text = "📸  " + stringResource(Res.string.screenshot_import_chip),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
+                shape = RoundedCornerShape(50),
+                colors = androidx.compose.material3.AssistChipDefaults.assistChipColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                ),
+                border = null
             )
         }
     }

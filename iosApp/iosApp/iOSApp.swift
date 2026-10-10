@@ -23,6 +23,14 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         if #available(iOS 15.0, *) {
             IosBillingBridgeKt.setIosBillingBridge(bridge: IosBillingBridgeImpl())
         }
+        // Screenshot bulk-import (Phase 3) — bridge presents SwiftUI
+        // PhotosPicker + Apple Vision OCR; Kotlin runs the amount/merchant
+        // regex + dedup pipeline on the results. iOS 16+ required for
+        // PhotosPicker (iOS 14+ UIImagePickerController fallback not worth
+        // the complexity — our min target is already iOS 16).
+        if #available(iOS 16.0, *) {
+            ScreenshotOcrBridgeKt.setScreenshotOcrBridge(bridge: ScreenshotOcrBridgeImpl())
+        }
         // Register as UNUserNotificationCenter delegate so we can fire
         // `notification_opened` when a user taps the reminder. Without
         // setting a delegate, UN silently drops the tap callback.

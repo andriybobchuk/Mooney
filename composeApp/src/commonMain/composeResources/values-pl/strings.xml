@@ -798,4 +798,18 @@
     <string name="category_asset_credit_card">Karta kredytowa</string>
     <string name="category_asset_debt">Dług</string>
 
+    <!-- Screenshot bulk-import -->
+    <string name="screenshot_import_chip">Skanuj zrzuty</string>
+    <string name="screenshot_import_title">Skanuj zrzuty</string>
+    <string name="screenshot_import_subtitle">Sprawdź odczyt przed dodaniem</string>
+    <string name="screenshot_import_commit_button">Dodaj transakcje</string>
+    <string name="screenshot_import_select_all">Zaznacz wszystko</string>
+    <string name="screenshot_import_select_none">Wyczyść</string>
+    <string name="screenshot_import_dup_existing">Już dodane</string>
+    <string name="screenshot_import_dup_batch">Powtórka w tej partii</string>
+    <string name="screenshot_import_low_confidence">Niska pewność</string>
+    <string name="screenshot_import_parse_failed">Nie udało się odczytać zrzutu</string>
+    <string name="screenshot_import_keep_anyway">Dodaj mimo to</string>
+    <string name="screenshot_import_empty_title">Nic do zaimportowania</string>
+    <string name="screenshot_import_empty_body">Wybierz zrzuty powiadomień banku lub Apple Pay, aby dodać transakcje hurtowo.</string>
 </resources>

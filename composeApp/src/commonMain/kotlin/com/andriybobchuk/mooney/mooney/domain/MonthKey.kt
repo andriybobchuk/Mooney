@@ -10,6 +10,11 @@ data class MonthKey(val year: Int, val month: Int) {
 
     fun toShortDisplayString(): String = shortMonthName(month)
 
+    /** Full month name without the year — "September". Used in the
+     *  Expenses breakdown subtitle so the toolbar reads "September
+     *  Expenses" rather than "September 2026 Expenses". */
+    fun toMonthName(): String = monthName(month)
+
     fun firstDay(): LocalDate = LocalDate(year, month, 1)
 
     fun firstDayOfNextMonth(): LocalDate {

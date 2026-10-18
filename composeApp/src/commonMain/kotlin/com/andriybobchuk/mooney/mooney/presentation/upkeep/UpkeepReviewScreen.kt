@@ -11,13 +11,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.statusBarsPadding
+import com.andriybobchuk.mooney.core.presentation.designsystem.components.MeshGradientBackground
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,6 +36,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import com.andriybobchuk.mooney.app.appColors
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,6 +82,10 @@ fun UpkeepReviewScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
+        // Solid theme background — the mesh gradient only shows in the
+        // middle content area (see Box below). Otherwise the mesh bled into
+        // the status bar + home-indicator strip, producing a weird gradient
+        // under the chrome that didn't match either light or dark theme.
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             UpkeepTopBar(
@@ -90,7 +101,11 @@ fun UpkeepReviewScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .navigationBarsPadding()
         ) {
+            // `prominent = true` — user asked for a stronger mesh background
+            // on Review for better contrast between the card and the backdrop.
+            MeshGradientBackground(prominent = true)
             when {
                 state.isLoading -> {
                     Box(
@@ -103,30 +118,49 @@ fun UpkeepReviewScreen(
                 state.isCompleted -> {
                     AllCaughtUpContent(onDone = onBackClick)
                 }
-                state.currentCard != null -> {
-                    CardContent(
-                        transaction = state.currentCard!!,
-                        frequentCategories = state.frequentCategories,
-                        onCategoryPicked = { category ->
+                state.queue.isNotEmpty() -> {
+                    PagerContent(
+                        state = state,
+                        onPickCategory = { category ->
                             viewModel.onAction(UpkeepReviewAction.PickCategory(category))
                         },
                         onMoreClicked = {
                             viewModel.onAction(UpkeepReviewAction.OpenCategoryPicker)
+                        },
+                        onSwipedToPage = { index ->
+                            viewModel.onAction(UpkeepReviewAction.SwipedToPage(index))
+                        },
+                        onShiftDate = { deltaDays ->
+                            viewModel.onAction(UpkeepReviewAction.ShiftCurrentCardDate(deltaDays))
                         }
                     )
                 }
             }
         }
 
-        if (state.isCategoryPickerOpen) {
-            CategoryPickerSheet(
-                categories = state.allExpenseCategories,
-                currentCategoryId = state.currentCard?.subcategory?.id,
-                onPick = { category ->
-                    viewModel.onAction(UpkeepReviewAction.PickCategory(category))
-                },
+        // Reuse the SAME multilevel picker the Add Transaction sheet uses —
+        // category tab (expense/income), general-category list with drill-down
+        // into subcategories, inline "add category", etc. We get all of that
+        // + the proven design/UX in exchange for a few lines of adapter code.
+        val card = state.currentCard
+        if (state.isCategoryPickerOpen && card != null) {
+            val currentGeneral = card.subcategory.parent?.getRoot() ?: card.subcategory
+            com.andriybobchuk.mooney.mooney.presentation.transaction.CategorySelectionBottomSheet(
                 onDismiss = {
                     viewModel.onAction(UpkeepReviewAction.DismissCategoryPicker)
+                },
+                sheetState = androidx.compose.material3.rememberModalBottomSheetState(
+                    skipPartiallyExpanded = true,
+                    confirmValueChange = { true }
+                ),
+                categories = state.allCategories,
+                initialSelectedCategory = currentGeneral,
+                initialSelectedSubCategory = card.subcategory.takeIf { it.isSubCategory() },
+                onCategorySelected = { general, sub ->
+                    // Prefer the drilled-down subcategory. If the user picked a
+                    // top-level general with no children, use that id instead.
+                    val chosen = sub ?: general
+                    viewModel.onAction(UpkeepReviewAction.PickCategory(chosen))
                 }
             )
         }
@@ -141,12 +175,32 @@ private fun UpkeepTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            // Scaffold with a custom topBar doesn't auto-apply status bar
+            // insets — do it explicitly so the Close button and progress
+            // text clear the Dynamic Island / notch.
+            .statusBarsPadding()
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onClose) {
-            Icon(Icons.Default.Close, contentDescription = "Close")
+        // Matches the Mooney 44dp round nav button used on every other top
+        // bar (see Toolbars.kt back-button pattern) so the chrome feels
+        // consistent instead of a plain Material IconButton.
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                .clickable(onClick = onClose),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Default.Close,
+                contentDescription = "Close",
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(22.dp)
+            )
         }
+        Spacer(modifier = Modifier.width(8.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stringResource(Res.string.upkeep_title),
@@ -163,47 +217,96 @@ private fun UpkeepTopBar(
     }
 }
 
+/**
+ * Pager-wrapped card content. User can swipe freely between pending auto-
+ * added transactions; tapping a chip commits the current page's card AND
+ * advances to the next page. The swipe-driven animation gives a strong
+ * "this is a different transaction" cue the previous single-card flow
+ * lacked.
+ */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-private fun CardContent(
-    transaction: Transaction,
-    frequentCategories: List<Category>,
-    onCategoryPicked: (Category) -> Unit,
-    onMoreClicked: () -> Unit
+private fun PagerContent(
+    state: UpkeepReviewState,
+    onPickCategory: (Category) -> Unit,
+    onMoreClicked: () -> Unit,
+    onSwipedToPage: (Int) -> Unit,
+    onShiftDate: (Int) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        TransactionCard(transaction = transaction)
-        Spacer(modifier = Modifier.height(28.dp))
-        CategoryChipGrid(
-            categories = frequentCategories,
-            currentCategoryId = transaction.subcategory.id,
-            onPick = onCategoryPicked
+    val pagerState = androidx.compose.foundation.pager.rememberPagerState(
+        initialPage = state.currentIndex.coerceAtMost((state.queue.size - 1).coerceAtLeast(0))
+    ) { state.queue.size }
+
+    // Keep VM in sync with the pager — fires once per settled page.
+    androidx.compose.runtime.LaunchedEffect(pagerState) {
+        androidx.compose.runtime.snapshotFlow { pagerState.settledPage }.collect { page ->
+            onSwipedToPage(page)
+        }
+    }
+    // Keep the pager in sync with VM-driven index changes (chip tap advances).
+    androidx.compose.runtime.LaunchedEffect(state.currentIndex) {
+        if (state.currentIndex < state.queue.size &&
+            pagerState.currentPage != state.currentIndex) {
+            pagerState.animateScrollToPage(state.currentIndex)
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        com.andriybobchuk.mooney.core.presentation.designsystem.components.SegmentedPagerIndicator(
+            currentStep = pagerState.currentPage,
+            totalSteps = state.queue.size,
+            pagerOffset = pagerState.currentPageOffsetFraction,
+            modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
         )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = stringResource(Res.string.upkeep_more_categories),
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .clickable { onMoreClicked() }
-                .padding(horizontal = 12.dp, vertical = 10.dp)
-        )
+        androidx.compose.foundation.pager.HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            val transaction = state.queue.getOrNull(page) ?: return@HorizontalPager
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                TransactionCard(
+                    transaction = transaction,
+                    onShiftDate = onShiftDate
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                CategoryChipGrid(
+                    categories = state.frequentCategories,
+                    currentCategoryId = transaction.subcategory.id,
+                    onPick = onPickCategory
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                androidx.compose.material3.TextButton(
+                    onClick = onMoreClicked
+                ) {
+                    Text(
+                        text = stringResource(Res.string.upkeep_more_categories),
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun TransactionCard(transaction: Transaction) {
+private fun TransactionCard(
+    transaction: Transaction,
+    onShiftDate: (Int) -> Unit
+) {
     val isExpense = transaction.subcategory.type ==
         com.andriybobchuk.mooney.mooney.domain.CategoryType.EXPENSE
+    // Theme-aware red/green from the shared tokens — same ones the main
+    // transactions list uses, so colors stay consistent across the app
+    // and respect dark/light mode.
     val amountColor = if (isExpense) {
-        Color(0xFFDC2626) // red for expenses
+        MaterialTheme.appColors.expenseColor
     } else {
-        Color(0xFF16A34A) // green for income
+        MaterialTheme.appColors.incomeColor
     }
     val sign = if (isExpense) "-" else "+"
 
@@ -211,7 +314,10 @@ private fun TransactionCard(transaction: Transaction) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+            // Opaque surface sits on top of the Mesh background so the card
+            // reads as a distinct container. `surface` (not surfaceVariant)
+            // gives higher contrast against the mesh.
+            .background(MaterialTheme.colorScheme.surface)
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -219,7 +325,7 @@ private fun TransactionCard(transaction: Transaction) {
             modifier = Modifier
                 .size(72.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
             Text(transaction.subcategory.resolveEmoji(), fontSize = 36.sp)
@@ -236,25 +342,85 @@ private fun TransactionCard(transaction: Transaction) {
                 ?: localizedCategoryTitle(transaction.subcategory),
             style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center,
-            maxLines = 2
+            maxLines = 2,
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = formatCardSubtitle(transaction),
+            text = "· ${transaction.account.title}",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
+        Spacer(modifier = Modifier.height(10.dp))
+        DateStepperRow(
+            date = transaction.date,
+            onShiftDate = onShiftDate
+        )
     }
 }
 
-private fun formatCardSubtitle(tx: Transaction): String {
-    val datePart = tx.date.monthShortLabel() + " " + tx.date.dayOfMonth
-    return "$datePart · ${tx.account.title}"
+/**
+ * Prev / next day arrow buttons flanking the current card's date. Same
+ * 36dp round-button visual language as [MonthStepperButton] in the top-
+ * bar MonthSelector so the user recognises the control. Tapping either
+ * arrow fires [ShiftCurrentCardDate]; the VM persists + the queue updates
+ * in place so the card re-renders with the new date.
+ */
+@Composable
+private fun DateStepperRow(
+    date: LocalDate,
+    onShiftDate: (Int) -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        DateStepperButton(
+            onClick = { onShiftDate(-1) },
+            icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft
+        )
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(50))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = date.toString(),
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+        DateStepperButton(
+            onClick = { onShiftDate(1) },
+            icon = Icons.AutoMirrored.Filled.KeyboardArrowRight
+        )
+    }
 }
 
-private fun LocalDate.monthShortLabel(): String =
-    this.month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
+@Composable
+private fun DateStepperButton(
+    onClick: () -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+            tint = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
 
 @Composable
 private fun CategoryChipGrid(
@@ -263,10 +429,13 @@ private fun CategoryChipGrid(
     onPick: (Category) -> Unit
 ) {
     // 2-column grid rendered as a Column of Rows — no need to pull in
-    // LazyVerticalGrid for 6 items that always fit above the fold.
+    // LazyVerticalGrid for 8 items that always fit above the fold. Chip
+    // count bumped from 6 to 8 (4 rows) so a wider spread of recent
+    // categories is one tap away before the user has to drill into
+    // "More categories…".
     val rows = categories.chunked(2)
     Column(
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         rows.forEach { row ->
@@ -299,15 +468,18 @@ private fun CategoryChip(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    // Opaque surface so chips read cleanly against the mesh background.
+    // Selected chip filled with primaryContainer; its on-color is theme-
+    // tuned for both light and dark modes.
     val bgColor = if (isSelected) {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+        MaterialTheme.colorScheme.primaryContainer
     } else {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        MaterialTheme.colorScheme.surface
     }
-    val borderColor = if (isSelected) {
-        MaterialTheme.colorScheme.primary
+    val textColor = if (isSelected) {
+        MaterialTheme.colorScheme.onPrimaryContainer
     } else {
-        Color.Transparent
+        MaterialTheme.colorScheme.onSurface
     }
     Row(
         modifier = modifier
@@ -323,62 +495,9 @@ private fun CategoryChip(
         Text(
             text = localizedCategoryTitle(category),
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-            color = MaterialTheme.colorScheme.onSurface,
+            color = textColor,
             maxLines = 2
         )
-        if (isSelected) {
-            Spacer(modifier = Modifier.weight(1f))
-            Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(16.dp)
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CategoryPickerSheet(
-    categories: List<Category>,
-    currentCategoryId: String?,
-    onPick: (Category) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState
-    ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            items(categories, key = { it.id }) { cat ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onPick(cat) }
-                        .padding(horizontal = 20.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    Text(cat.resolveEmoji(), fontSize = 20.sp)
-                    Text(
-                        text = localizedCategoryTitle(cat),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f)
-                    )
-                    if (cat.id == currentCategoryId) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            }
-        }
     }
 }
 

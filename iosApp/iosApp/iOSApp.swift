@@ -4,10 +4,34 @@ import UserNotifications
 import ComposeApp
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+
+    // Per-screen orientation lock. The default is .portrait so every
+    // existing screen behaves exactly as before. The AnalyticsTimeline
+    // screen temporarily flips this to .landscape via a Kotlin→Swift
+    // NSNotification (name = "MooneyLockOrientation"), then restores
+    // it to .portrait when the user leaves the screen.
+    static var orientationLock: UIInterfaceOrientationMask = .portrait
+
+    func application(
+        _ application: UIApplication,
+        supportedInterfaceOrientationsFor window: UIWindow?
+    ) -> UIInterfaceOrientationMask {
+        return AppDelegate.orientationLock
+    }
+
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        // Kotlin side posts "MooneyLockOrientation" with an NSNumber bool
+        // whenever LockLandscape(enabled=…) enters / leaves composition.
+        // Driven by [AnalyticsTimelineScreen]; see LockOrientation.ios.kt.
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(onLockOrientation(_:)),
+            name: Notification.Name("MooneyLockOrientation"),
+            object: nil
+        )
         FirebaseApp.configure()
         Analytics.shared.setBridge(bridge: FirebaseAnalyticsBridge())
         RemoteConfig.shared.setBridge(bridge: RemoteConfigBridge())
@@ -30,6 +54,12 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // the complexity — our min target is already iOS 16).
         if #available(iOS 16.0, *) {
             ScreenshotOcrBridgeKt.setScreenshotOcrBridge(bridge: ScreenshotOcrBridgeImpl())
+        }
+        // Account photo hero (Vehicle / Real Estate) — uses the same
+        // SwiftUI PhotosPicker as the OCR bridge but with
+        // selectionLimit=1 and persists a single JPEG to Documents.
+        if #available(iOS 16.0, *) {
+            AccountImagePickerKt.setAccountImagePickerBridge(bridge: AccountImagePickerBridgeImpl())
         }
         // Register as UNUserNotificationCenter delegate so we can fire
         // `notification_opened` when a user taps the reminder. Without
@@ -61,6 +91,26 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     ) {
         NotificationTelemetry().markOpened()
         completionHandler()
+    }
+
+    @objc func onLockOrientation(_ notification: Notification) {
+        let landscape = (notification.object as? NSNumber)?.boolValue ?? false
+        AppDelegate.orientationLock = landscape ? .landscape : .portrait
+        DispatchQueue.main.async {
+            if #available(iOS 16.0, *) {
+                // iOS 16+ API: ask the window scene to update its
+                // geometry to match the newly-permitted orientations.
+                let scenes = UIApplication.shared.connectedScenes
+                guard let windowScene = scenes
+                    .compactMap({ $0 as? UIWindowScene })
+                    .first else { return }
+                let orientations: UIInterfaceOrientationMask = landscape ? .landscape : .portrait
+                windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: orientations))
+                windowScene.keyWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+            } else {
+                UIViewController.attemptRotationToDeviceOrientation()
+            }
+        }
     }
 }
 

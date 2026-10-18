@@ -812,4 +812,24 @@
     <string name="screenshot_import_keep_anyway">Trotzdem hinzufügen</string>
     <string name="screenshot_import_empty_title">Nichts zu importieren</string>
     <string name="screenshot_import_empty_body">Wähle Screenshots von Bank- oder Apple Pay-Benachrichtigungen, um Transaktionen in großen Mengen hinzuzufügen.</string>
+
+    <!-- Reconcile -->
+    <string name="reconcile_button">Abgleichen</string>
+    <string name="reconcile_title">%1$s abgleichen</string>
+    <string name="reconcile_body">Welcher Kontostand steht gerade in deiner Bank?</string>
+    <string name="reconcile_input_label">Aktueller Kontostand (%1$s)</string>
+    <string name="reconcile_mooney_shows">Mooney zeigt</string>
+    <string name="reconcile_delta_label">Differenz</string>
+    <string name="reconcile_cta">Abgleichen</string>
+    <string name="breakdown_long_press_hint">Kategorie lange drücken, um sie aus den Summen auszuschließen.</string>
+    <string name="category_excluded_tag">AUSGESCHLOSSEN</string>
+    <string name="open_timeline">Vollständige Zeitachse öffnen</string>
+    <string name="spending_goal_label">Ziel</string>
+    <string name="spending_goal_empty">Noch kein Ausgabenziel</string>
+    <string name="spending_goal_set">Ziel festlegen</string>
+    <string name="spending_goal_edit">Ausgabenziel bearbeiten</string>
+    <string name="spending_goal_title">Monatliches Ausgabenziel</string>
+    <string name="spending_goal_hint">Wir zeichnen eine horizontale Linie, damit du siehst, ob deine Ausgaben unter dem Ziel bleiben.</string>
+    <string name="flex_monthly_history">Monatsverlauf</string>
+    <string name="flex_history_empty">Dein Nettovermögen zum Monatsende erscheint hier, sobald ein Monat endet.</string>
 </resources>

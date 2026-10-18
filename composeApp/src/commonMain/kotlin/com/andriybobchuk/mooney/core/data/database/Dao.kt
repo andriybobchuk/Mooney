@@ -256,3 +256,25 @@ interface MerchantCategoryHistoryDao {
     @Query("DELETE FROM merchant_category_history WHERE merchantKey = :merchantKey")
     suspend fun delete(merchantKey: String)
 }
+
+@Dao
+interface NetWorthSnapshotDao {
+    /** Upsert — unique (accountId, date) index guarantees idempotency.
+     *  If the catch-up job runs twice for the same month, the second pass
+     *  just rewrites the row with the latest numbers instead of
+     *  duplicating. */
+    @Upsert
+    suspend fun upsertAll(snapshots: List<NetWorthSnapshotEntity>)
+
+    @Query("SELECT * FROM net_worth_snapshots ORDER BY date ASC")
+    fun observeAll(): Flow<List<NetWorthSnapshotEntity>>
+
+    @Query("SELECT * FROM net_worth_snapshots WHERE date = :date")
+    suspend fun getByDate(date: String): List<NetWorthSnapshotEntity>
+
+    @Query("SELECT MAX(date) FROM net_worth_snapshots")
+    suspend fun getLatestSnapshotDate(): String?
+
+    @Query("DELETE FROM net_worth_snapshots WHERE accountId = :accountId")
+    suspend fun deleteByAccount(accountId: Int)
+}

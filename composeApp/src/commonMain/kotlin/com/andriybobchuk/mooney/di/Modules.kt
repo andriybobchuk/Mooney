@@ -14,6 +14,10 @@ import com.andriybobchuk.mooney.mooney.domain.CoreRepository
 
 import com.andriybobchuk.mooney.mooney.domain.devtools.DevToolsManager
 import com.andriybobchuk.mooney.mooney.domain.usecase.*
+import com.andriybobchuk.mooney.mooney.domain.usecase.networth.CatchUpNetWorthSnapshotsUseCase
+import com.andriybobchuk.mooney.mooney.domain.usecase.networth.GetNetWorthHistoryUseCase
+import com.andriybobchuk.mooney.mooney.domain.usecase.networth.SetManualNetWorthUseCase
+import com.andriybobchuk.mooney.mooney.domain.usecase.networth.WriteNetWorthSnapshotUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.settings.*
 import com.andriybobchuk.mooney.mooney.domain.usecase.assets.*
 import com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository
@@ -118,6 +122,7 @@ val sharedModule = module {
     single { get<AppDatabase>().historicalRateDao }
     single { get<AppDatabase>().rateWatchAlertDao }
     single { get<AppDatabase>().merchantCategoryHistoryDao }
+    single { get<AppDatabase>().netWorthSnapshotDao }
 
     // Data Export/Import Manager
     single {
@@ -181,6 +186,16 @@ val sharedModule = module {
     singleOf(::LoadCategoriesForSheetTypeUseCase)
     singleOf(::GetPreviousMonthTransactionsUseCase)
     singleOf(::ReconcileAccountUseCase)
+    singleOf(::ReconcileAccountFromBalanceUseCase)
+
+    // Net-worth snapshots — one row per account per month-end.
+    // CatchUp fires on app visit to Balance and backfills missing months
+    // (reconstructed from current balance + reversed deltas); subsequent
+    // months get captured naturally when the user opens the app.
+    singleOf(::WriteNetWorthSnapshotUseCase)
+    singleOf(::CatchUpNetWorthSnapshotsUseCase)
+    singleOf(::GetNetWorthHistoryUseCase)
+    singleOf(::SetManualNetWorthUseCase)
     singleOf(::ShouldRefreshExchangeRatesUseCase)
     singleOf(::FilterTransactionsByMonthUseCase)
     singleOf(::CalculateDailyTotalsMapUseCase)
@@ -240,9 +255,19 @@ val sharedModule = module {
     // no-op stub on Android for now); the rest is pure common Kotlin so
     // adding ML Kit on Android later only means swapping the parser.
     single { ScreenshotOcrParser() }
+
+    // Account photo-hero picker. iOS binds a real PhotosPicker + JPEG-to-
+    // Documents writer via the Swift bridge; Android stub returns null.
+    // Shared facade is constructor-less so it lives in common. The real
+    // ImageStorage is platform-registered (Android needs Context) in
+    // platformModule.
+    single { com.andriybobchuk.mooney.core.platform.AccountImagePickerFacade() }
     singleOf(::ParseScreenshotUseCase)
     singleOf(::DedupScreenshotCandidatesUseCase)
     singleOf(::RunScreenshotImportUseCase)
+    // Screenshot commit intentionally does NOT depend on smart learning —
+    // see CommitScreenshotImportUseCase doc for the reasoning (noisy OCR
+    // merchant names would pollute the learning dict).
     singleOf(::CommitScreenshotImportUseCase)
 
     // Onboarding
@@ -282,7 +307,37 @@ val sharedModule = module {
     // wire play-services-ads). See core/ads/Ads.kt.
     singleOf(::AdEligibilityUseCase)
 
-    viewModelOf(::AssetsViewModel)
+    // Explicit viewModel { } — AssetsViewModel outgrew Koin's viewModelOf
+    // reflective builder (capped at 22 constructor params) once we added the
+    // net-worth-snapshot use cases. Order must match the primary constructor.
+    viewModel {
+        AssetsViewModel(
+            getAccountsUseCase = get(),
+            addAccountUseCase = get(),
+            deleteAccountUseCase = get(),
+            calculateNetWorthUseCase = get(),
+            convertAccountsToUiUseCase = get(),
+            currencyManagerUseCase = get(),
+            manageAssetCategoryOrderUseCase = get(),
+            manageCategoryExpansionUseCase = get(),
+            shouldRefreshExchangeRatesUseCase = get(),
+            getUserCurrenciesUseCase = get(),
+            assetCategoryDao = get(),
+            analyticsTracker = get(),
+            premiumManager = get(),
+            loadHistoricalRatesUseCase = get(),
+            calculateRatePercentileUseCase = get(),
+            dataStore = get(),
+            trackFirstEventUseCase = get(),
+            appDataCache = get(),
+            reconcileAccountFromBalanceUseCase = get(),
+            accountImagePickerFacade = get(),
+            imageStorage = get(),
+            catchUpNetWorthSnapshotsUseCase = get(),
+            getNetWorthHistoryUseCase = get(),
+            setManualNetWorthUseCase = get()
+        )
+    }
     // Manual registration — TransactionViewModel has too many params for `viewModelOf`.
     viewModel {
         TransactionViewModel(

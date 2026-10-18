@@ -812,4 +812,24 @@
     <string name="screenshot_import_keep_anyway">إضافة على أي حال</string>
     <string name="screenshot_import_empty_title">لا شيء للاستيراد</string>
     <string name="screenshot_import_empty_body">اختر لقطات شاشة لإشعارات بنكك أو Apple Pay لإضافة المعاملات دفعةً واحدة.</string>
+
+    <!-- Reconcile -->
+    <string name="reconcile_button">تسوية</string>
+    <string name="reconcile_title">تسوية %1$s</string>
+    <string name="reconcile_body">ما هو الرصيد في بنكك الآن؟</string>
+    <string name="reconcile_input_label">الرصيد الحالي (%1$s)</string>
+    <string name="reconcile_mooney_shows">Mooney يعرض</string>
+    <string name="reconcile_delta_label">الفرق</string>
+    <string name="reconcile_cta">تسوية</string>
+    <string name="breakdown_long_press_hint">اضغط مطولًا على فئة لاستبعادها من المجاميع.</string>
+    <string name="category_excluded_tag">مستبعدة</string>
+    <string name="open_timeline">افتح الجدول الزمني الكامل</string>
+    <string name="spending_goal_label">الهدف</string>
+    <string name="spending_goal_empty">لم يتم تعيين هدف للإنفاق بعد</string>
+    <string name="spending_goal_set">تعيين هدف</string>
+    <string name="spending_goal_edit">تعديل هدف الإنفاق</string>
+    <string name="spending_goal_title">هدف الإنفاق الشهري</string>
+    <string name="spending_goal_hint">سنرسم خطًا أفقيًا على الرسم البياني لترى إذا كان إنفاقك يبقى تحت هذا المبلغ.</string>
+    <string name="flex_monthly_history">السجل الشهري</string>
+    <string name="flex_history_empty">ستظهر هنا قيمتك الصافية في نهاية كل شهر عند انتهائه.</string>
 </resources>

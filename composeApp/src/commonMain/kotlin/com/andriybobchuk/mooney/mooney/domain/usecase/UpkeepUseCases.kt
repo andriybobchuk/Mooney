@@ -121,7 +121,7 @@ class GetFrequentExpenseCategoryIdsUseCase(
     private val getAutoAddedPendingUseCase: GetAutoAddedPendingUseCase,
     private val repository: CoreRepository
 ) {
-    operator fun invoke(limit: Int = 6): Flow<List<String>> {
+    operator fun invoke(limit: Int = 8): Flow<List<String>> {
         return combine(
             repository.getAllTransactions(),
             getAutoAddedPendingUseCase()

@@ -88,7 +88,14 @@ data class Account(
     // vs receiving so the Add Transaction sheet can preselect the right
     // account per type without hunting. VM enforces "at most one per role".
     val isPrimaryForExpenses: Boolean = false,
-    val isPrimaryForIncome: Boolean = false
+    val isPrimaryForIncome: Boolean = false,
+    /** Instant of the last time the user ran the Reconcile wizard for this
+     *  account. Null = never reconciled. Powers the "Reconciled X ago"
+     *  subtitle on the Balance tab. */
+    val lastReconciledAt: kotlinx.datetime.Instant? = null,
+    /** Absolute path to a user-attached photo (Vehicle / Real Estate hero
+     *  header). Null = no image. Managed by ImageStorage. */
+    val imagePath: String? = null
 )
 
 data class UserCurrency(

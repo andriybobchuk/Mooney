@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
 import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.mooney.domain.usecase.screenshot.CommitScreenshotImportUseCase
+import com.andriybobchuk.mooney.mooney.domain.usecase.screenshot.ParseMode
 import com.andriybobchuk.mooney.mooney.domain.usecase.screenshot.ParsedCandidate
 import com.andriybobchuk.mooney.mooney.domain.usecase.screenshot.RunScreenshotImportUseCase
 import kotlin.coroutines.cancellation.CancellationException
@@ -61,8 +62,6 @@ sealed interface ScreenshotImportAction {
     data class ToggleRow(val index: Int) : ScreenshotImportAction
     /** Bulk-toggle everything that currently matches a given accepted state. */
     data class ToggleAll(val accepted: Boolean) : ScreenshotImportAction
-    /** Flip a dup to accepted (user overriding our recommendation). */
-    data class KeepAnyway(val index: Int) : ScreenshotImportAction
     /** Commit all accepted rows. */
     data object Commit : ScreenshotImportAction
     /** User tapped close / back. Fires cancellation telemetry if nothing
@@ -83,6 +82,13 @@ class ScreenshotImportViewModel(
     private val analyticsTracker: AnalyticsTracker
 ) : ViewModel() {
 
+    /** Which parser to use. Set by the caller BEFORE triggering Load. */
+    private var mode: ParseMode = ParseMode.NOTIFICATION
+
+    fun configure(mode: ParseMode) {
+        this.mode = mode
+    }
+
     private val _state = MutableStateFlow(ScreenshotImportState())
     val state: StateFlow<ScreenshotImportState> = _state.asStateFlow()
 
@@ -100,7 +106,6 @@ class ScreenshotImportViewModel(
             ScreenshotImportAction.Load -> loadPicker()
             is ScreenshotImportAction.ToggleRow -> toggleRow(action.index)
             is ScreenshotImportAction.ToggleAll -> toggleAll(action.accepted)
-            is ScreenshotImportAction.KeepAnyway -> toggleRow(action.index, forceAccepted = true)
             ScreenshotImportAction.Commit -> commit()
             ScreenshotImportAction.Dismiss -> dismiss()
         }
@@ -112,7 +117,7 @@ class ScreenshotImportViewModel(
         _state.update { it.copy(isPicking = true, errorMessage = null) }
         viewModelScope.launch {
             try {
-                val candidates = runScreenshotImportUseCase()
+                val candidates = runScreenshotImportUseCase(mode)
                 if (candidates.isEmpty()) {
                     _state.update { it.copy(isPicking = false, isCancelled = true) }
                     _events.trySend(ScreenshotImportEvent.DismissedEmpty)
@@ -151,17 +156,16 @@ class ScreenshotImportViewModel(
         }
     }
 
-    private fun toggleRow(index: Int, forceAccepted: Boolean? = null) {
+    private fun toggleRow(index: Int) {
         _state.update { s ->
             val row = s.rows.getOrNull(index) ?: return@update s
             if (row.candidate.status == ParsedCandidate.Status.PARSE_FAILED) {
                 // Parse-failed rows aren't actionable — ignore toggles.
                 return@update s
             }
-            val newAccepted = forceAccepted ?: !row.accepted
             s.copy(
                 rows = s.rows.toMutableList().apply {
-                    this[index] = row.copy(accepted = newAccepted)
+                    this[index] = row.copy(accepted = !row.accepted)
                 }
             )
         }

@@ -375,6 +375,38 @@ sealed interface AnalyticsEvent {
     data object ScreenshotImportCancelled : AnalyticsEvent {
         override val name = "screenshot_import_cancelled"
     }
+
+    /**
+     * Fires once per successful Reconcile wizard completion. The delta is
+     * bucketed into coarse bands (we care about the shape of the "automation
+     * gap" distribution, not individual amounts), and the adjustmentInserted
+     * flag tells us how often users ran reconcile just to tag the account
+     * as checked-in vs. actually correcting a drift.
+     */
+    data class ReconciliationCompleted(
+        val delta: Double,
+        val adjustmentInserted: Boolean
+    ) : AnalyticsEvent {
+        override val name = "reconciliation_completed"
+        override val params = mapOf(
+            "delta_bucket" to bucketDelta(delta),
+            "adjustment_inserted" to adjustmentInserted.toString()
+        )
+    }
+}
+
+private fun bucketDelta(delta: Double): String {
+    val abs = kotlin.math.abs(delta)
+    val sign = if (delta < 0) "neg" else "pos"
+    val magnitude = when {
+        abs < 1.0 -> "0"
+        abs < 10.0 -> "lt10"
+        abs < 100.0 -> "lt100"
+        abs < 1000.0 -> "lt1k"
+        abs < 10000.0 -> "lt10k"
+        else -> "gte10k"
+    }
+    return "${sign}_$magnitude"
 }
 
 internal fun bucketCount(n: Int): String = when {

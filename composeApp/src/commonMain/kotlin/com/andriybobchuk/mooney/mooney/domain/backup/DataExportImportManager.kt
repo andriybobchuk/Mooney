@@ -76,7 +76,13 @@ class DataExportImportManager(
         val currentMarketValue: Double? = null,
         val includeInNetWorth: Boolean = true,
         val isPrimaryForExpenses: Boolean = false,
-        val isPrimaryForIncome: Boolean = false
+        val isPrimaryForIncome: Boolean = false,
+        // v7 — persisted so restoring a backup doesn't lose the user's
+        // reconciliation history. Null for pre-v7 exports.
+        val lastReconciledAt: String? = null,
+        // v8 — attached photo path (Vehicle / Real Estate hero header).
+        // Null for pre-v8 exports and for any account without a photo.
+        val imagePath: String? = null
     )
 
     @Serializable
@@ -312,7 +318,9 @@ class DataExportImportManager(
                         currentMarketValue = acc.currentMarketValue,
                         includeInNetWorth = acc.includeInNetWorth,
                         isPrimaryForExpenses = acc.isPrimaryForExpenses,
-                        isPrimaryForIncome = acc.isPrimaryForIncome
+                        isPrimaryForIncome = acc.isPrimaryForIncome,
+                        lastReconciledAt = acc.lastReconciledAt,
+                        imagePath = acc.imagePath
                     )
                 )
                 counts = counts.copy(accounts = counts.accounts + 1)
@@ -491,7 +499,9 @@ class DataExportImportManager(
         currentMarketValue = currentMarketValue,
         includeInNetWorth = includeInNetWorth,
         isPrimaryForExpenses = isPrimaryForExpenses,
-        isPrimaryForIncome = isPrimaryForIncome
+        isPrimaryForIncome = isPrimaryForIncome,
+        lastReconciledAt = lastReconciledAt,
+        imagePath = imagePath
     )
 
     private fun GoalEntity.toExport() = GoalExport(
@@ -610,6 +620,6 @@ class DataExportImportManager(
         // correct behavior.
         // Bumped to v6 for the addedByAutomation flag on TransactionExport.
         // v5 exports import cleanly because the field has a Boolean default.
-        const val CURRENT_EXPORT_VERSION = 6
+        const val CURRENT_EXPORT_VERSION = 8
     }
 }

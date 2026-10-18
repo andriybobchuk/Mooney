@@ -29,7 +29,8 @@ class ConvertAccountsToUiUseCase(
                     currentMarketValue = account.currentMarketValue,
                     includeInNetWorth = account.includeInNetWorth,
                     isPrimaryForExpenses = account.isPrimaryForExpenses,
-                    isPrimaryForIncome = account.isPrimaryForIncome
+                    isPrimaryForIncome = account.isPrimaryForIncome,
+                    imagePath = account.imagePath
                 )
             } else {
                 account?.let {
@@ -46,7 +47,12 @@ class ConvertAccountsToUiUseCase(
                         assetCategory = account.assetCategory,
                         assetCategoryId = account.assetCategoryId,
                         isPrimary = account.isPrimary,
-                        isLiability = account.isLiability
+                        isLiability = account.isLiability,
+                        currentMarketValue = account.currentMarketValue,
+                        includeInNetWorth = account.includeInNetWorth,
+                        isPrimaryForExpenses = account.isPrimaryForExpenses,
+                        isPrimaryForIncome = account.isPrimaryForIncome,
+                        imagePath = account.imagePath
                     )
                 }
             }

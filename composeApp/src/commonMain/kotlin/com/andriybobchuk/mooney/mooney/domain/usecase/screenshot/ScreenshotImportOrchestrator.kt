@@ -5,7 +5,6 @@ import com.andriybobchuk.mooney.mooney.domain.CategoryType
 import com.andriybobchuk.mooney.mooney.domain.CoreRepository
 import com.andriybobchuk.mooney.mooney.domain.Transaction
 import com.andriybobchuk.mooney.mooney.domain.usecase.AddTransactionUseCase
-import com.andriybobchuk.mooney.mooney.domain.usecase.GetSmartCategoryForMerchantUseCase
 import com.andriybobchuk.mooney.mooney.domain.settings.PreferencesRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Clock
@@ -32,29 +31,34 @@ class RunScreenshotImportUseCase(
     private val repository: CoreRepository
 ) {
 
-    suspend operator fun invoke(): List<ParsedCandidate> {
+    suspend operator fun invoke(mode: ParseMode): List<ParsedCandidate> {
         val ocrResults = parser.pickAndExtractText()
         if (ocrResults.isEmpty()) return emptyList()
 
-        val candidates = ocrResults.flatMap { parseScreenshotUseCase(it) }
+        val candidates = ocrResults.flatMap { parseScreenshotUseCase(it, mode) }
 
         val existingSignatures = buildExistingSignatures()
         return dedupScreenshotCandidatesUseCase(candidates, existingSignatures)
     }
 
     /**
-     * Signatures of the user's last 7 days of transactions on any account.
-     * Pass A of the dedup compares each candidate against this set.
+     * Signatures of the user's last 60 days of transactions, across all
+     * accounts. Pass A of the dedup compares each candidate against this
+     * set using the strict amount-only [TxSignature].
      *
-     * We use any-account rather than primary-only because Wallet events
-     * on a non-primary card still land in the DB on whichever account the
-     * Shortcut selected — a notification OCR of the same payment should
+     * **Lookback window = 60 days** so the "end-of-month, feed 50 screenshots
+     * of the whole bank history" workflow correctly flags transactions the
+     * user already entered weeks ago. A 7-day window would miss them and
+     * produce false NEWs.
+     *
+     * All-accounts (not primary-only) because Wallet events can land on a
+     * non-primary card and a notification OCR of the same payment should
      * still be flagged as a duplicate.
      */
     private suspend fun buildExistingSignatures(): Set<TxSignature> {
         val today = Clock.System.now()
             .toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val cutoffDaysAgo = 7
+        val cutoffDaysAgo = 60
         val cutoffEpochDays = today.toEpochDays() - cutoffDaysAgo
 
         val recentTxs = repository.getAllTransactions().first()
@@ -64,8 +68,7 @@ class RunScreenshotImportUseCase(
         return recentTxs.asSequence()
             .map { tx ->
                 TxSignature(
-                    amountCents = (tx.amount * 100).roundToLong(),
-                    bucketKey = tx.date.hashCode().toLong()
+                    amountCents = (tx.amount * 100).roundToLong()
                 )
             }
             .toSet()
@@ -79,11 +82,13 @@ class RunScreenshotImportUseCase(
  *
  * Each inserted row:
  * - Uses the user's primary-for-expenses account (fallback: first account).
- * - Resolves category via the smart merchant→category history populated by
- *   Phase 1 Upkeep reviews, falling back to the user's default expense
- *   category. Reusing the Phase 1 learning is intentional: a notification
- *   OCR for "Biedronka 42,50 zł" should land under Groceries if the user
- *   already taught Mooney that mapping from a Wallet-created tx.
+ * - Always lands under the user's default expense category. We intentionally
+ *   DO NOT consult the smart merchant→category history here: screenshot OCR
+ *   produces noisy, non-repeatable merchant names (merchant terminals append
+ *   store codes like "ZABKA ZE209 K.3" or "PRIMARK 768 Krakow") that would
+ *   pollute the learning dictionary with uniques. Smart learning stays
+ *   restricted to Shortcut/Wallet-sourced txs where the Wallet magic
+ *   variable gives us a clean, repeating merchant string.
  * - Sets [Transaction.addedByAutomation] = true, so the row ships straight
  *   into the Upkeep queue and the user can bulk-correct categories via the
  *   same card-at-a-time flow (reusing Phase 1's UI).
@@ -94,7 +99,6 @@ class RunScreenshotImportUseCase(
 class CommitScreenshotImportUseCase(
     private val repository: CoreRepository,
     private val addTransactionUseCase: AddTransactionUseCase,
-    private val getSmartCategoryForMerchantUseCase: GetSmartCategoryForMerchantUseCase,
     private val preferencesRepository: PreferencesRepository
 ) {
 
@@ -110,6 +114,8 @@ class CommitScreenshotImportUseCase(
             } ?: return 0
 
         val prefs = preferencesRepository.getCurrentPreferences()
+        val defaultCategory = repository.getCategoryById(prefs.defaultExpenseCategory)
+            ?: return 0
         var inserted = 0
         accepted.forEach { candidate ->
             if (candidate.status != ParsedCandidate.Status.NEW &&
@@ -121,10 +127,22 @@ class CommitScreenshotImportUseCase(
                 return@forEach
             }
 
-            val smartCategoryId = getSmartCategoryForMerchantUseCase(candidate.description)
-            val categoryId = smartCategoryId ?: prefs.defaultExpenseCategory
-            val category = repository.getCategoryById(categoryId) ?: return@forEach
+            val category = defaultCategory
             if (category.type != CategoryType.EXPENSE) return@forEach
+
+            // Description is REQUIRED on every scanned transaction — users
+            // explicitly asked that scanned rows always carry a label so they
+            // can identify what the amount was for in the Review flow
+            // without having to go back to the bank. If the parser couldn't
+            // extract a merchant we fall back to the ISO date so there's
+            // still SOMETHING distinguishing the row. "Scanned transaction"
+            // is deliberately generic — the amount + date already carry
+            // most of the signal, and vague is better than false precision.
+            val resolvedDescription = candidate.description
+                ?.trim()
+                ?.takeIf { it.isNotEmpty() }
+                ?.replaceFirstChar { it.uppercase() }
+                ?: "Scanned transaction · ${candidate.date}"
 
             val tx = Transaction(
                 id = 0,
@@ -132,10 +150,7 @@ class CommitScreenshotImportUseCase(
                 amount = candidate.amount,
                 account = account,
                 date = candidate.date,
-                description = candidate.description
-                    ?.trim()
-                    ?.takeIf { it.isNotEmpty() }
-                    ?.replaceFirstChar { it.uppercase() },
+                description = resolvedDescription,
                 addedByAutomation = true
             )
             addTransactionUseCase(tx)

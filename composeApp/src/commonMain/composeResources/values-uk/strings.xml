@@ -787,4 +787,24 @@
     <string name="screenshot_import_keep_anyway">Все одно додати</string>
     <string name="screenshot_import_empty_title">Нічого імпортувати</string>
     <string name="screenshot_import_empty_body">Виберіть скріншоти сповіщень банку чи Apple Pay, щоб додати транзакції одразу.</string>
+
+    <!-- Reconcile -->
+    <string name="reconcile_button">Звірити</string>
+    <string name="reconcile_title">Звірити %1$s</string>
+    <string name="reconcile_body">Який баланс зараз у вашому банку?</string>
+    <string name="reconcile_input_label">Поточний баланс (%1$s)</string>
+    <string name="reconcile_mooney_shows">Mooney показує</string>
+    <string name="reconcile_delta_label">Різниця</string>
+    <string name="reconcile_cta">Звірити</string>
+    <string name="breakdown_long_press_hint">Утримуйте категорію, щоб виключити її з підсумків.</string>
+    <string name="category_excluded_tag">ВИКЛЮЧЕНО</string>
+    <string name="open_timeline">Відкрити повну хронологію</string>
+    <string name="spending_goal_label">Ціль</string>
+    <string name="spending_goal_empty">Ціль витрат ще не задана</string>
+    <string name="spending_goal_set">Задати ціль</string>
+    <string name="spending_goal_edit">Редагувати ціль витрат</string>
+    <string name="spending_goal_title">Місячна ціль витрат</string>
+    <string name="spending_goal_hint">Намалюємо горизонтальну лінію на графіку, щоб ви бачили, чи вкладаєтеся в бюджет.</string>
+    <string name="flex_monthly_history">Місячна історія</string>
+    <string name="flex_history_empty">Ваш капітал на кінець місяця з\'явиться тут, коли місяць завершиться.</string>
 </resources>

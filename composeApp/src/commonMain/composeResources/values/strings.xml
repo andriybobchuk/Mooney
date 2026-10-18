@@ -552,7 +552,7 @@
     <!-- Upkeep review flow — AUTO-tagged transaction categorisation UX -->
     <string name="upkeep_banner_title">%1$d auto-added to review</string>
     <string name="upkeep_banner_subtitle">Confirm or change their categories</string>
-    <string name="upkeep_title">Upkeep</string>
+    <string name="upkeep_title">Review</string>
     <string name="upkeep_card_header">%1$s</string>
     <string name="upkeep_more_categories">More categories…</string>
     <string name="upkeep_all_caught_up_title">All caught up</string>
@@ -573,6 +573,24 @@
     <string name="screenshot_import_keep_anyway">Keep anyway</string>
     <string name="screenshot_import_empty_title">Nothing to import</string>
     <string name="screenshot_import_empty_body">Pick screenshots of your bank or Apple Pay notifications to add transactions in bulk.</string>
+    <string name="scan_notifications_cd">Scan notification screenshots</string>
+    <string name="scan_bank_history_cd">Scan bank history screenshots</string>
+    <string name="screenshot_import_possible_duplicate">Possible duplicate</string>
+    <string name="asset_detail_recent_transactions">Recent transactions</string>
+    <string name="asset_detail_no_recent">No transactions on this account yet.</string>
+    <string name="asset_detail_include_in_networth">Include in net worth</string>
+    <string name="asset_detail_add_photo">Add photo</string>
+    <string name="asset_detail_change_photo">Change photo</string>
+    <string name="asset_detail_remove_photo">Remove</string>
+
+    <!-- Reconcile account wizard -->
+    <string name="reconcile_button">Reconcile</string>
+    <string name="reconcile_title">Reconcile %1$s</string>
+    <string name="reconcile_body">What\'s the balance in your bank right now?</string>
+    <string name="reconcile_input_label">Current balance (%1$s)</string>
+    <string name="reconcile_mooney_shows">Mooney shows</string>
+    <string name="reconcile_delta_label">Difference</string>
+    <string name="reconcile_cta">Reconcile</string>
 
     <!-- Net worth share text -->
     <string name="share_my_net_worth">My net worth:</string>
@@ -891,5 +909,16 @@
     <string name="category_asset_loan">Loan</string>
     <string name="category_asset_credit_card">Credit Card</string>
     <string name="category_asset_debt">Debt</string>
+    <string name="breakdown_long_press_hint">Long-press a category to exclude it from the totals.</string>
+    <string name="category_excluded_tag">EXCLUDED</string>
+    <string name="open_timeline">Open full timeline</string>
+    <string name="spending_goal_label">Goal</string>
+    <string name="spending_goal_empty">No spending goal yet</string>
+    <string name="spending_goal_set">Set a goal</string>
+    <string name="spending_goal_edit">Edit spending goal</string>
+    <string name="spending_goal_title">Monthly spending goal</string>
+    <string name="spending_goal_hint">We\'ll draw a flat guideline on the chart so you can see if your cumulative spending stays under this amount.</string>
+    <string name="flex_monthly_history">Monthly history</string>
+    <string name="flex_history_empty">Your month-end net worth will appear here once a month ends.</string>
 
 </resources>

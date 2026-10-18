@@ -1,6 +1,7 @@
 package com.andriybobchuk.mooney.core.presentation.designsystem.components
 
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -31,6 +32,10 @@ fun MooneyBottomSheet(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    /** Pass `null` to render edge-to-edge content from the sheet's top
+     *  edge (e.g. a full-width image hero). Default is the standard
+     *  Material drag indicator. */
+    dragHandle: @Composable (() -> Unit)? = { BottomSheetDefaults.DragHandle() },
     content: @Composable ColumnScope.() -> Unit
 ) {
     val bottomInsets = platformBottomSafeInsets()
@@ -43,6 +48,7 @@ fun MooneyBottomSheet(
         tonalElevation = 0.dp,
         contentWindowInsets = { bottomInsets },
         scrimColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f),
+        dragHandle = dragHandle,
         content = content
     )
 }

@@ -189,8 +189,33 @@ private class PickerDelegate: NSObject, PHPickerViewControllerDelegate {
         }
 
         guard let observations = request.results else { return [] }
+
+        // CRITICAL: Vision returns observations in NO guaranteed order —
+        // it's based on recognition pass order, not reading order. For
+        // the Kotlin parser to find merchants and amounts in the correct
+        // relationship (merchant precedes its amount), observations must
+        // be sorted top-to-bottom first, then left-to-right within the
+        // same visual row.
+        //
+        // Vision uses a NORMALIZED coordinate system where origin (0,0)
+        // is BOTTOM-LEFT and y increases upward. So higher y = higher
+        // on screen, and we want descending y for top-to-bottom reading.
+        //
+        // "Same row" = y values within 1% of each other (the row-grouping
+        // tolerance). For rows in the same tolerance, sort left-to-right
+        // (ascending x) so merchant-on-left comes before amount-on-right
+        // on the same visual line.
+        let sorted = observations.sorted { lhs, rhs in
+            let lhsY = lhs.boundingBox.midY
+            let rhsY = rhs.boundingBox.midY
+            if abs(lhsY - rhsY) < 0.01 {
+                return lhs.boundingBox.minX < rhs.boundingBox.minX
+            }
+            return lhsY > rhsY
+        }
+
         var lines: [String] = []
-        for observation in observations {
+        for observation in sorted {
             if let candidate = observation.topCandidates(1).first {
                 lines.append(candidate.string)
             }

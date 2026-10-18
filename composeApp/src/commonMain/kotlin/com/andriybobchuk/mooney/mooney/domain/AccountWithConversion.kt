@@ -18,7 +18,8 @@ data class AccountWithConversion(
     val currentMarketValue: Double? = null,
     val includeInNetWorth: Boolean = true,
     val isPrimaryForExpenses: Boolean = false,
-    val isPrimaryForIncome: Boolean = false
+    val isPrimaryForIncome: Boolean = false,
+    val imagePath: String? = null
 ) {
     fun toAccount(): Account = Account(
         id = id,
@@ -33,6 +34,7 @@ data class AccountWithConversion(
         currentMarketValue = currentMarketValue,
         includeInNetWorth = includeInNetWorth,
         isPrimaryForExpenses = isPrimaryForExpenses,
-        isPrimaryForIncome = isPrimaryForIncome
+        isPrimaryForIncome = isPrimaryForIncome,
+        imagePath = imagePath
     )
 }

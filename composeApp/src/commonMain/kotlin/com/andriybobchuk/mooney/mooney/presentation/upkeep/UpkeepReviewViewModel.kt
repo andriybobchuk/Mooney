@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.andriybobchuk.mooney.core.analytics.AnalyticsEvent
 import com.andriybobchuk.mooney.core.analytics.AnalyticsTracker
 import com.andriybobchuk.mooney.mooney.domain.Category
+import com.andriybobchuk.mooney.mooney.domain.CoreRepository
 import com.andriybobchuk.mooney.mooney.domain.Transaction
 import com.andriybobchuk.mooney.mooney.domain.usecase.DeleteTransactionUseCase
 import com.andriybobchuk.mooney.mooney.domain.usecase.GetAutoAddedPendingUseCase
@@ -20,6 +21,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.plus
 
 data class UpkeepReviewState(
     /** All pending auto-added txs — snapshot taken on screen entry so reviewing
@@ -31,8 +34,11 @@ data class UpkeepReviewState(
     /** Resolved category objects for the chip grid. Order matches
      *  frequency rank (most-used first). "More…" opens the full picker. */
     val frequentCategories: List<Category> = emptyList(),
-    /** Fallback full category list used by the "More…" picker. */
-    val allExpenseCategories: List<Category> = emptyList(),
+    /** Full category list — passed to the shared
+     *  [CategorySelectionBottomSheet] which filters by type/kind
+     *  internally. Must include general categories AND subcategories
+     *  so the picker can drill down. */
+    val allCategories: List<Category> = emptyList(),
     /** True while initial queue + category lookup is in flight. */
     val isLoading: Boolean = true,
     /** True once the user has reached the end of the queue — triggers the
@@ -53,6 +59,13 @@ sealed interface UpkeepReviewAction {
     /** User opened the full-category "More…" picker. */
     data object OpenCategoryPicker : UpkeepReviewAction
     data object DismissCategoryPicker : UpkeepReviewAction
+    /** User swiped the pager — syncs VM's currentIndex with the pager's
+     *  position so the subsequent chip tap commits the right card. */
+    data class SwipedToPage(val index: Int) : UpkeepReviewAction
+    /** Prev/next day arrow on the current card. Signed delta in days.
+     *  Persists the new date to the DB and updates the queue in-place
+     *  so the card re-renders with the new date. */
+    data class ShiftCurrentCardDate(val deltaDays: Int) : UpkeepReviewAction
     /** User closed the review screen before reaching the end. Fires a
      *  session-completed event with the partial count. */
     data object OnDismiss : UpkeepReviewAction
@@ -65,7 +78,8 @@ class UpkeepReviewViewModel(
     private val getFrequentExpenseCategoryIdsUseCase: GetFrequentExpenseCategoryIdsUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
     @Suppress("unused") private val deleteTransactionUseCase: DeleteTransactionUseCase,
-    private val analyticsTracker: AnalyticsTracker
+    private val analyticsTracker: AnalyticsTracker,
+    private val repository: CoreRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UpkeepReviewState())
@@ -89,30 +103,30 @@ class UpkeepReviewViewModel(
                 getFrequentExpenseCategoryIdsUseCase()
             ) { pending, frequentIds ->
                 val frequentCategories = frequentIds.mapNotNull { getCategoriesUseCase(it) }
-                val allExpense = getCategoriesUseCase().filter {
-                    it.type == com.andriybobchuk.mooney.mooney.domain.CategoryType.EXPENSE &&
-                        it.parent != null // only subcategories (same filter as Add Transaction sheet)
-                }
-                Triple(pending, frequentCategories, allExpense)
+                // Pass the FULL list — the shared CategorySelectionBottomSheet
+                // handles the tab/type filtering and drill-down internally.
+                val allCategories = getCategoriesUseCase()
+                Triple(pending, frequentCategories, allCategories)
             }
-                .onEach { (pending, frequentCategories, allExpense) ->
+                .onEach { (pending, frequentCategories, allCategories) ->
                     _state.update {
                         // Only seed the queue on the FIRST emission — subsequent
                         // emissions would shift indices as the user reviews.
-                        val seededQueue = if (it.queue.isEmpty() && !it.isCompleted) {
-                            pending
-                        } else {
-                            it.queue
-                        }
+                        val isFirstSeed = it.queue.isEmpty() && !it.isCompleted
+                        val seededQueue = if (isFirstSeed) pending else it.queue
                         it.copy(
                             queue = seededQueue,
                             frequentCategories = frequentCategories,
-                            allExpenseCategories = allExpense,
+                            allCategories = allCategories,
                             isLoading = false,
-                            // If the queue was empty from the start, flip
-                            // straight to the completion state so the user
-                            // sees "all caught up" instead of a blank card.
-                            isCompleted = seededQueue.isEmpty()
+                            // Only compute isCompleted on first seed. Subsequent
+                            // emissions must preserve whatever advanceToNextCard
+                            // set — otherwise reviewing the last card re-emits
+                            // the (shorter) pending list, this onEach re-fires,
+                            // and we clobber the just-set isCompleted = true,
+                            // leaving the UI with queue=[tx1], currentIndex=1
+                            // (past the end), isCompleted=false → blank screen.
+                            isCompleted = if (isFirstSeed) seededQueue.isEmpty() else it.isCompleted
                         )
                     }
                 }
@@ -127,7 +141,29 @@ class UpkeepReviewViewModel(
                 _state.update { it.copy(isCategoryPickerOpen = true) }
             UpkeepReviewAction.DismissCategoryPicker ->
                 _state.update { it.copy(isCategoryPickerOpen = false) }
+            is UpkeepReviewAction.SwipedToPage -> _state.update {
+                it.copy(currentIndex = action.index.coerceIn(0, (it.queue.size - 1).coerceAtLeast(0)))
+            }
+            is UpkeepReviewAction.ShiftCurrentCardDate -> shiftCurrentCardDate(action.deltaDays)
             UpkeepReviewAction.OnDismiss -> emitSessionCompletedEvent()
+        }
+    }
+
+    private fun shiftCurrentCardDate(deltaDays: Int) {
+        val current = _state.value.currentCard ?: return
+        val newDate = current.date.plus(deltaDays, DateTimeUnit.DAY)
+        val updated = current.copy(date = newDate)
+        // Update the queue in-place so the card re-renders with the new date
+        // immediately; persist in the background. The DB write doesn't affect
+        // the auto-added flag — the row stays in the Review queue until the
+        // user picks a category.
+        _state.update { s ->
+            s.copy(
+                queue = s.queue.toMutableList().apply { this[s.currentIndex] = updated }
+            )
+        }
+        viewModelScope.launch {
+            repository.upsertTransaction(updated)
         }
     }
 

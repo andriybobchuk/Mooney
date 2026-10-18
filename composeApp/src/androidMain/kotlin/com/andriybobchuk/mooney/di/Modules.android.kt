@@ -25,6 +25,7 @@ actual val platformModule: Module
         single { PreferencesDataStoreFactory(androidApplication()) }
         single { FilePickerLauncher() }
         single { FileHandler(androidApplication(), get()) }
+        single { com.andriybobchuk.mooney.core.data.ImageStorage(androidApplication()) }
         single { ActivityProvider() }
         single<BillingManager> { AndroidBillingManager(androidApplication(), get()) }
         single { AppRestarter() }

@@ -26,7 +26,18 @@ data class AccountEntity(
     // for salary). The invariant "at most one account per role" is enforced
     // by the ViewModel — no DB check, keeps the flag simple.
     val isPrimaryForExpenses: Boolean = false,
-    val isPrimaryForIncome: Boolean = false
+    val isPrimaryForIncome: Boolean = false,
+    // ISO-8601 instant of the last time the user ran the Reconcile wizard
+    // against this account. Null = never reconciled. Powers the "Reconciled
+    // X days ago" subtitle on the Balance tab and future "nudge to reconcile"
+    // banners after N days of inactivity.
+    val lastReconciledAt: String? = null,
+    // Absolute path to a user-attached photo. Primarily for Vehicle +
+    // Real Estate accounts where the image serves as a visual anchor on the
+    // detail sheet (hero header). Null = no image. Stored under the app's
+    // documents directory so it survives app upgrades. ImageStorage owns the
+    // write/read/delete lifecycle; this entity just points at the file.
+    val imagePath: String? = null
 )
 
 @Entity(tableName = "categories")
@@ -184,4 +195,45 @@ data class MerchantCategoryHistoryEntity(
     @PrimaryKey val merchantKey: String,
     val categoryId: String,
     val updatedAt: String
+)
+
+/**
+ * Per-account monthly net-worth snapshot. ONE row per (accountId, date) —
+ * date is the ISO LocalDate of a month-end (e.g. "2026-09-30"). The
+ * catch-up job writes a batch of these on app open when a new month has
+ * started since the last snapshot.
+ *
+ * We store BOTH the original account currency amount AND the already-
+ * converted base-currency amount, plus which base currency was active at
+ * snapshot time. This way:
+ * - Display path doesn't need to re-run FX conversion for every snapshot.
+ * - If the user later changes base currency, old snapshots stay honest
+ *   ("your net worth was 50,000 PLN then, which is X EUR today" — we can
+ *   either keep the historical PLN value OR convert via live FX, caller's
+ *   choice).
+ *
+ * `isReconstructed = true` marks rows that were backward-calculated from
+ * current balance − post-date transactions (approximation for history
+ * before the feature shipped). `false` = snapshot captured live when the
+ * month actually ended. The timeline UI can label these differently.
+ */
+@Entity(
+    tableName = "net_worth_snapshots",
+    indices = [
+        androidx.room.Index(value = ["date"]),
+        androidx.room.Index(value = ["accountId", "date"], unique = true)
+    ]
+)
+data class NetWorthSnapshotEntity(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    /** ISO LocalDate of the month-end this snapshot represents. */
+    val date: String,
+    val accountId: Int,
+    val originalCurrency: String,
+    val originalAmount: Double,
+    val baseCurrency: String,
+    val baseAmount: Double,
+    val isReconstructed: Boolean,
+    /** ISO Instant when the snapshot row was actually written. */
+    val createdAt: String
 )

@@ -812,4 +812,24 @@
     <string name="screenshot_import_keep_anyway">Dodaj mimo to</string>
     <string name="screenshot_import_empty_title">Nic do zaimportowania</string>
     <string name="screenshot_import_empty_body">Wybierz zrzuty powiadomień banku lub Apple Pay, aby dodać transakcje hurtowo.</string>
+
+    <!-- Reconcile -->
+    <string name="reconcile_button">Uzgodnij</string>
+    <string name="reconcile_title">Uzgodnij %1$s</string>
+    <string name="reconcile_body">Jaki jest teraz stan konta w Twoim banku?</string>
+    <string name="reconcile_input_label">Aktualny stan konta (%1$s)</string>
+    <string name="reconcile_mooney_shows">Mooney pokazuje</string>
+    <string name="reconcile_delta_label">Różnica</string>
+    <string name="reconcile_cta">Uzgodnij</string>
+    <string name="breakdown_long_press_hint">Przytrzymaj kategorię, aby wyłączyć ją z sum.</string>
+    <string name="category_excluded_tag">WYKLUCZONA</string>
+    <string name="open_timeline">Otwórz pełną oś czasu</string>
+    <string name="spending_goal_label">Cel</string>
+    <string name="spending_goal_empty">Brak celu wydatków</string>
+    <string name="spending_goal_set">Ustaw cel</string>
+    <string name="spending_goal_edit">Edytuj cel wydatków</string>
+    <string name="spending_goal_title">Miesięczny cel wydatków</string>
+    <string name="spending_goal_hint">Narysujemy poziomą linię na wykresie, abyś widział, czy mieścisz się w budżecie.</string>
+    <string name="flex_monthly_history">Historia miesięczna</string>
+    <string name="flex_history_empty">Twój kapitał na koniec miesiąca pojawi się tutaj po zakończeniu miesiąca.</string>
 </resources>

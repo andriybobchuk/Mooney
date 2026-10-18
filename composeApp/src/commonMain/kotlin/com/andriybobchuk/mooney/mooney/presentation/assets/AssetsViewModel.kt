@@ -38,7 +38,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlin.coroutines.cancellation.CancellationException
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions")
 class AssetsViewModel(
     private val getAccountsUseCase: GetAccountsUseCase,
     private val addAccountUseCase: AddAccountUseCase,
@@ -57,7 +57,13 @@ class AssetsViewModel(
     private val calculateRatePercentileUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.CalculateRatePercentileUseCase,
     private val dataStore: androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>,
     private val trackFirstEventUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.TrackFirstEventUseCase,
-    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache
+    private val appDataCache: com.andriybobchuk.mooney.mooney.domain.cache.AppDataCache,
+    private val reconcileAccountFromBalanceUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.ReconcileAccountFromBalanceUseCase,
+    private val accountImagePickerFacade: com.andriybobchuk.mooney.core.platform.AccountImagePickerFacade,
+    private val imageStorage: com.andriybobchuk.mooney.core.data.ImageStorage,
+    private val catchUpNetWorthSnapshotsUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.networth.CatchUpNetWorthSnapshotsUseCase,
+    private val getNetWorthHistoryUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.networth.GetNetWorthHistoryUseCase,
+    private val setManualNetWorthUseCase: com.andriybobchuk.mooney.mooney.domain.usecase.networth.SetManualNetWorthUseCase
 ) : ViewModel() {
 
     private var observeAccountsJob: Job? = null
@@ -92,6 +98,8 @@ class AssetsViewModel(
             // Refresh rates BEFORE observing assets so conversions use live rates
             ensureRatesLoaded()
             observeAssets()
+            observeRecentTransactions()
+            catchUpNetWorthSnapshots()
         }
         .stateIn(
             viewModelScope,
@@ -164,6 +172,29 @@ class AssetsViewModel(
         // Clear the initial-load shimmer once the rate attempt has resolved
         // (success or failure) so we never get stuck shimmering forever.
         _uiState.update { it.copy(isInitialLoading = false) }
+    }
+
+    /** Mirrors the shared cache's transaction list into our state so the
+     *  AssetDetailSheet can show per-account recent-transaction history
+     *  without needing its own DAO reference. */
+    /**
+     * Fires once per Balance-tab visit. Backfills any month-ends that
+     * elapsed since the last snapshot (idempotent — unique index on the
+     * table makes repeat runs a no-op for already-captured months). Runs
+     * on IO; silent failures by design — snapshot history is a convenience
+     * feature, never block UI if the catch-up hits a transient error.
+     */
+    private fun catchUpNetWorthSnapshots() {
+        viewModelScope.launch(Dispatchers.IO) {
+            catchUpNetWorthSnapshotsUseCase()
+        }
+    }
+
+    private fun observeRecentTransactions() {
+        appDataCache.snapshot
+            .map { it.transactions }
+            .onEach { txs -> _uiState.update { it.copy(recentTransactions = txs) } }
+            .launchIn(viewModelScope)
     }
 
     private fun observeAssets() {
@@ -399,14 +430,16 @@ class AssetsViewModel(
                 }
             }
 
-            // Preserve isPrimary when editing existing account
-            val existingIsPrimary = if (id != 0) {
-                getAccountsUseCase(id)?.isPrimary ?: false
-            } else false
-
-            val existingIsLiability = if (id != 0) {
-                getAccountsUseCase(id)?.isLiability ?: isLiability
-            } else isLiability
+            // Preserve ALL fields the edit sheet doesn't manage. The sheet
+            // only collects form inputs; anything else (isPrimary legacy
+            // flag, reconciliation history, photo path) must be carried
+            // forward from the existing row — otherwise saving the form
+            // nulls out those fields. The user hit this with "updating the
+            // account title fully removes the photo from it" — that was
+            // this exact class of bug.
+            val existing = if (id != 0) getAccountsUseCase(id) else null
+            val existingIsPrimary = existing?.isPrimary ?: false
+            val existingIsLiability = existing?.isLiability ?: isLiability
 
             val account = Account(
                 id = id,
@@ -421,7 +454,9 @@ class AssetsViewModel(
                 currentMarketValue = currentMarketValue,
                 includeInNetWorth = includeInNetWorth,
                 isPrimaryForExpenses = isPrimaryForExpenses,
-                isPrimaryForIncome = isPrimaryForIncome
+                isPrimaryForIncome = isPrimaryForIncome,
+                lastReconciledAt = existing?.lastReconciledAt,
+                imagePath = existing?.imagePath
             )
 
             // Single-primary-per-role invariant. If this account is being
@@ -501,6 +536,138 @@ class AssetsViewModel(
         }
     }
 
+    /**
+     * Reconcile wizard commit — delegates to [ReconcileAccountFromBalanceUseCase]
+     * which inserts the adjustment transaction (if any) and overwrites the
+     * account balance to exactly the user's input in one atomic sequence.
+     * Fires `reconciliation_completed` analytics with a signed-delta bucket.
+     */
+    fun reconcileAccount(accountId: Int, newBalance: Double) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                _uiState.update { it.copy(isReconciling = true) }
+                val outcome = reconcileAccountFromBalanceUseCase(accountId, newBalance)
+                if (outcome != null) {
+                    analyticsTracker.trackEvent(
+                        AnalyticsEvent.ReconciliationCompleted(
+                            delta = outcome.delta,
+                            adjustmentInserted = outcome.adjustmentInserted
+                        )
+                    )
+                }
+                val accounts = getAccountsUseCase().first()
+                withContext(Dispatchers.Main) {
+                    _uiState.update {
+                        it.copy(
+                            assets = convertAccountsToUiUseCase(accounts).filterNotNull(),
+                            isReconciling = false,
+                            lastReconcileOutcome = outcome
+                        )
+                    }
+                    updateTotalNetWorth()
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isReconciling = false) }
+                analyticsTracker.recordException(e, "Reconcile")
+            }
+        }
+    }
+
+    fun clearReconcileOutcome() {
+        _uiState.update { it.copy(lastReconcileOutcome = null) }
+    }
+
+    /**
+     * Flips the account's `includeInNetWorth` flag inline from the detail
+     * sheet, without opening the full Edit flow. Persists via the same
+     * upsert path the Add/Edit screen uses.
+     */
+    /**
+     * Launches the native photo picker, saves the chosen image under the
+     * app's Documents directory, deletes any previous image on this
+     * account, and persists the new path on the Account.
+     */
+    fun pickAccountImage(accountId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            withContext(Dispatchers.Main) { _uiState.update { it.copy(isPickingImage = true) } }
+            try {
+                val newPath = accountImagePickerFacade.pickImage()
+                if (newPath == null) {
+                    withContext(Dispatchers.Main) { _uiState.update { it.copy(isPickingImage = false) } }
+                    return@launch
+                }
+                val current = getAccountsUseCase(accountId) ?: run {
+                    withContext(Dispatchers.Main) { _uiState.update { it.copy(isPickingImage = false) } }
+                    return@launch
+                }
+                current.imagePath
+                    ?.takeIf { it.isNotBlank() && it != newPath }
+                    ?.let { oldPath -> runCatching { imageStorage.deleteImage(oldPath) } }
+                addAccountUseCase(current.copy(imagePath = newPath))
+                val accounts = getAccountsUseCase().first()
+                withContext(Dispatchers.Main) {
+                    _uiState.update {
+                        it.copy(
+                            assets = convertAccountsToUiUseCase(accounts).filterNotNull(),
+                            isPickingImage = false
+                        )
+                    }
+                }
+            } catch (e: CancellationException) {
+                withContext(Dispatchers.Main) { _uiState.update { it.copy(isPickingImage = false) } }
+                throw e
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) { _uiState.update { it.copy(isPickingImage = false) } }
+                analyticsTracker.recordException(e, "AccountImage")
+            }
+        }
+    }
+
+    /** Removes the current image from storage + clears the path on account. */
+    fun removeAccountImage(accountId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val current = getAccountsUseCase(accountId) ?: return@launch
+                current.imagePath
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { path -> runCatching { imageStorage.deleteImage(path) } }
+                addAccountUseCase(current.copy(imagePath = null))
+                val accounts = getAccountsUseCase().first()
+                withContext(Dispatchers.Main) {
+                    _uiState.update {
+                        it.copy(assets = convertAccountsToUiUseCase(accounts).filterNotNull())
+                    }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                analyticsTracker.recordException(e, "AccountImage")
+            }
+        }
+    }
+
+    fun toggleIncludeInNetWorth(accountId: Int, include: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val current = getAccountsUseCase(accountId) ?: return@launch
+                addAccountUseCase(current.copy(includeInNetWorth = include))
+                val accounts = getAccountsUseCase().first()
+                withContext(Dispatchers.Main) {
+                    _uiState.update {
+                        it.copy(assets = convertAccountsToUiUseCase(accounts).filterNotNull())
+                    }
+                    updateTotalNetWorth()
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                analyticsTracker.recordException(e, "Assets")
+            }
+        }
+    }
+
     fun selectTab(tab: AssetsTab) {
         _uiState.update { it.copy(selectedTab = tab) }
     }
@@ -517,6 +684,37 @@ class AssetsViewModel(
                 category = categoryId,
                 currentExpanded = state.value.expandedCategories
             )
+        }
+    }
+
+    /**
+     * Pulls the snapshot timeline for the Flex screen. Called from the
+     * Balance screen the moment the user long-presses the net-worth header.
+     * The catch-up job runs on tab visit, so the DB should already be fresh
+     * — this is just a point-in-time read.
+     */
+    fun loadNetWorthHistory() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val points = getNetWorthHistoryUseCase()
+            withContext(Dispatchers.Main) {
+                _uiState.update { it.copy(netWorthHistory = points) }
+            }
+        }
+    }
+
+    /**
+     * User-entered override from the Flex screen's inline edit. Writes the
+     * manual value, then re-reads history so the UI reflects it. Uses the
+     * last day of the month as the canonical date key — matches the
+     * month-end dates used by the catch-up job.
+     */
+    fun setManualNetWorth(monthEnd: kotlinx.datetime.LocalDate, netWorth: Double) {
+        viewModelScope.launch(Dispatchers.IO) {
+            setManualNetWorthUseCase(monthEnd, netWorth)
+            val points = getNetWorthHistoryUseCase()
+            withContext(Dispatchers.Main) {
+                _uiState.update { it.copy(netWorthHistory = points) }
+            }
         }
     }
 
@@ -559,5 +757,25 @@ data class AssetsState(
      * Toggle from the overflow menu in the top bar — only useful for users
      * who track liabilities and want a clean view of just what they own.
      */
-    val showAssetsOnlyInTopBar: Boolean = false
+    val showAssetsOnlyInTopBar: Boolean = false,
+    /** All transactions, straight from the app cache. The AssetDetailSheet
+     *  filters by accountId + takes the last 15 to show recent activity on
+     *  the selected account — keeps the ViewModel out of per-account
+     *  filtering logic. Lifetime matches the Assets screen; cheap to pass
+     *  since Transaction is a value class and the cache already keeps the
+     *  authoritative list in memory. */
+    val recentTransactions: List<com.andriybobchuk.mooney.mooney.domain.Transaction> = emptyList(),
+    /** True while [ReconcileAccountFromBalanceUseCase] is inserting the
+     *  adjustment + updating the account. Drives the sheet's spinner. */
+    val isReconciling: Boolean = false,
+    /** True while the native photo picker is up AND / OR we're saving the
+     *  picked image. The AssetDetailSheet shows a loading overlay on the
+     *  hero slot while this is true. */
+    val isPickingImage: Boolean = false,
+    /** Monthly net-worth history for the Flex screen's timeline. Loaded
+     *  lazily when the Flex sheet opens; refreshed after a manual edit. */
+    val netWorthHistory: List<com.andriybobchuk.mooney.mooney.domain.usecase.networth.GetNetWorthHistoryUseCase.Point> = emptyList(),
+    /** Set after reconciliation completes; the Balance screen reads this to
+     *  show a toast with the delta. Cleared via [clearReconcileOutcome]. */
+    val lastReconcileOutcome: com.andriybobchuk.mooney.mooney.domain.usecase.ReconcileOutcome? = null
 )

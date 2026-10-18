@@ -496,7 +496,8 @@ fun NavigationHost() {
                     },
                     onNavigateToAndrewEats = { navController.navigate(Route.AndrewEats) },
                     onNavigateToUpkeep = { navController.navigate(Route.UpkeepReview) },
-                    onNavigateToScreenshotImport = { navController.navigate(Route.ScreenshotImport) }
+                    onScanNotifications = { navController.navigate(Route.ScreenshotImportNotifications) },
+                    onScanBankHistory = { navController.navigate(Route.ScreenshotImportBankHistory) }
                 )
             }
             composable<Route.Accounts> { entry ->
@@ -526,8 +527,14 @@ fun NavigationHost() {
 
             composable<Route.Analytics> {
                 val viewModel = it.sharedKoinViewModel<AnalyticsViewModel>(navController)
+                // Share the AssetsViewModel across the nav graph so the
+                // Analytics screen's "Net Income" card can open the same
+                // net-worth Flex sheet the Balance tab uses, with warm
+                // state (history already loaded on first Balance visit).
+                val assetsVm = it.sharedKoinViewModel<com.andriybobchuk.mooney.mooney.presentation.assets.AssetsViewModel>(navController)
                 AnalyticsScreen(
                     viewModel = viewModel,
+                    assetsViewModel = assetsVm,
                     bottomNavbar = { BottomNavigationBar(navController, 3) },
                     onSettingsClick = { navController.navigate(Route.Settings) },
                     onNavigateToTransactions = {
@@ -540,8 +547,16 @@ fun NavigationHost() {
                             "TAXES" -> navController.navigate(Route.AnalyticsTaxes)
                         }
                     },
-                    onNavigateToNetIncome = { navController.navigate(Route.AnalyticsNetIncome) },
-                    onNavigateToNetWorth = { navController.navigate(Route.NetWorthDetail) }
+                    onNavigateToNetWorth = { navController.navigate(Route.NetWorthDetail) },
+                    onNavigateToTimeline = { navController.navigate(Route.AnalyticsTimeline) }
+                )
+            }
+
+            composable<Route.AnalyticsTimeline> { entry ->
+                val viewModel = entry.sharedKoinViewModel<AnalyticsViewModel>(navController)
+                com.andriybobchuk.mooney.mooney.presentation.analytics.AnalyticsTimelineScreen(
+                    viewModel = viewModel,
+                    onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() }
                 )
             }
 
@@ -626,15 +641,26 @@ fun NavigationHost() {
                 )
             }
 
-            composable<Route.ScreenshotImport> {
+            composable<Route.ScreenshotImportNotifications> {
                 val viewModel = koinViewModel<com.andriybobchuk.mooney.mooney.presentation.screenshot.ScreenshotImportViewModel>()
                 com.andriybobchuk.mooney.mooney.presentation.screenshot.ScreenshotImportScreen(
                     viewModel = viewModel,
+                    mode = com.andriybobchuk.mooney.mooney.domain.usecase.screenshot.ParseMode.NOTIFICATION,
                     onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() },
-                    // Commit flow pops back to Transactions. The committed rows
-                    // show up there as auto-added transactions and the user can
-                    // bulk-correct categories via the existing Phase 1 Upkeep
-                    // card flow — no extra UX needed on the Transactions side.
+                    onFinished = { _ ->
+                        if (navController.previousBackStackEntry != null) {
+                            navController.navigateUp()
+                        }
+                    }
+                )
+            }
+
+            composable<Route.ScreenshotImportBankHistory> {
+                val viewModel = koinViewModel<com.andriybobchuk.mooney.mooney.presentation.screenshot.ScreenshotImportViewModel>()
+                com.andriybobchuk.mooney.mooney.presentation.screenshot.ScreenshotImportScreen(
+                    viewModel = viewModel,
+                    mode = com.andriybobchuk.mooney.mooney.domain.usecase.screenshot.ParseMode.BANK_HISTORY,
+                    onBackClick = { if (navController.previousBackStackEntry != null) navController.navigateUp() },
                     onFinished = { _ ->
                         if (navController.previousBackStackEntry != null) {
                             navController.navigateUp()

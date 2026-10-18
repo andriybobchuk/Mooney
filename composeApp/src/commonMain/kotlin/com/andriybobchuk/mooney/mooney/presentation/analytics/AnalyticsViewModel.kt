@@ -74,7 +74,23 @@ data class AnalyticsState(
      * (dots under each cell) and, load-bearing, the future-month unlock: any
      * future month with count > 0 becomes selectable in the picker.
      */
-    val monthlyTransactionCounts: Map<MonthKey, Int> = emptyMap()
+    val monthlyTransactionCounts: Map<MonthKey, Int> = emptyMap(),
+    /**
+     * User-deselected category ids on the breakdown screen — long-press a row
+     * to toggle. Lets the user ask "what would my spending look like without
+     * Food?" Rows in this set render muted + strikethrough; the hero total
+     * and every bar in the 6-month trend chart subtract their contribution.
+     * Sticky across month changes so the question doesn't reset mid-flow;
+     * cleared when switching sheet type (expenses ↔ revenue).
+     */
+    val deselectedCategoryIds: Set<String> = emptySet(),
+    /**
+     * Per-month base-currency sum of transactions whose category (or parent
+     * category) is in [deselectedCategoryIds] AND whose type matches the
+     * currently-loaded sheet type. Computed lazily on toggle. The breakdown
+     * chart subtracts `monthlyDeductions[snapshot.month]` from each bar.
+     */
+    val monthlyDeductions: Map<MonthKey, Double> = emptyMap()
 )
 
 @Suppress("LongParameterList")
@@ -253,6 +269,10 @@ class AnalyticsViewModel(
     fun onMonthSelected(month: MonthKey) {
         _state.update { it.copy(selectedMonth = month) }
         loadMetricsForMonth(month)
+        // Deductions are keyed to the selected month only — refresh them
+        // so the chart's bar for the new month reflects any active
+        // category exclusions.
+        recomputeMonthlyDeductions(_state.value.deselectedCategoryIds)
     }
 
     private fun loadMetricsForMonth(month: MonthKey) {
@@ -503,7 +523,97 @@ class AnalyticsViewModel(
                 exchangeRates = exchangeRates
             )
 
-            _state.update { it.copy(sheetCategories = categories, lastLoadedSheetType = sheetType) }
+            // Switching sheet type (Revenue ↔ Expenses ↔ Taxes) invalidates
+            // the user's deselection — the IDs would no longer match the row
+            // list. Keep deselection sticky WITHIN a sheet type (month changes
+            // etc.) but reset ACROSS types so there's no "ghost" deselection.
+            val shouldResetSelection = _state.value.lastLoadedSheetType != sheetType
+            _state.update {
+                it.copy(
+                    sheetCategories = categories,
+                    lastLoadedSheetType = sheetType,
+                    deselectedCategoryIds = if (shouldResetSelection) emptySet() else it.deselectedCategoryIds,
+                    monthlyDeductions = if (shouldResetSelection) emptyMap() else it.monthlyDeductions
+                )
+            }
+            // Note: a bare sheetCategories reload for a different month does
+            // NOT need to recompute monthlyDeductions — those are keyed off
+            // the raw transaction list by month, so they stay valid across
+            // month changes.
+        }
+    }
+
+    /**
+     * Flips a category's selected state on the Expenses/Revenue breakdown.
+     * Hooked up to the row's long-press. Immediately recomputes
+     * [AnalyticsState.monthlyDeductions] so both the hero total and the
+     * 6-month bar chart update in a single tick.
+     */
+    fun toggleCategorySelection(categoryId: String) {
+        val current = _state.value.deselectedCategoryIds
+        val next = if (categoryId in current) current - categoryId else current + categoryId
+        _state.update { it.copy(deselectedCategoryIds = next) }
+        recomputeMonthlyDeductions(next)
+    }
+
+    /**
+     * Builds [AnalyticsState.monthlyDeductions] for the CURRENTLY SELECTED
+     * month only. Previously computed deductions for every historical
+     * month, which meant excluding "Food" dimmed the Food contribution
+     * from June, July, August, etc. — not what the user wants when they
+     * long-press to ask "what did I spend THIS MONTH minus Food?".
+     *
+     * The chart subtracts `monthlyDeductions[month]` from each bar;
+     * populating only the selected month means every other bar stays at
+     * the raw historical value, so the user can still see "what did my
+     * September spending actually look like" without the hypothetical
+     * exclusion bleeding into unrelated months.
+     */
+    private fun recomputeMonthlyDeductions(deselected: Set<String>) {
+        if (deselected.isEmpty()) {
+            _state.update { it.copy(monthlyDeductions = emptyMap()) }
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val sheetType = _state.value.lastLoadedSheetType ?: return@launch
+                val selectedMonth = _state.value.selectedMonth
+                val relevantType = when (sheetType) {
+                    CategorySheetType.REVENUE -> com.andriybobchuk.mooney.mooney.domain.CategoryType.INCOME
+                    CategorySheetType.OPERATING_COSTS,
+                    CategorySheetType.TAXES -> com.andriybobchuk.mooney.mooney.domain.CategoryType.EXPENSE
+                }
+                val exchangeRates = currencyManagerUseCase.getCurrentExchangeRates()
+                val base = baseCurrency
+                val transactions = appDataCache.snapshot.value.transactions
+                val deductionForSelected = transactions
+                    .asSequence()
+                    .filter { tx ->
+                        tx.subcategory.type == relevantType &&
+                            MonthKey(tx.date.year, tx.date.monthNumber) == selectedMonth
+                    }
+                    .filter { tx ->
+                        val cat = tx.subcategory
+                        cat.id in deselected ||
+                            cat.parent?.id in deselected ||
+                            cat.getRoot().id in deselected
+                    }
+                    .sumOf { tx ->
+                        if (tx.account.currency != base) {
+                            exchangeRates.convert(tx.amount, tx.account.currency, base)
+                        } else {
+                            tx.amount
+                        }
+                    }
+                _state.update {
+                    it.copy(monthlyDeductions = mapOf(selectedMonth to deductionForSelected))
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Deductions are a view-only convenience — never crash the
+                // breakdown screen if a conversion fails.
+            }
         }
     }
 }

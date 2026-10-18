@@ -651,13 +651,75 @@ val MIGRATION_21_22 = object : Migration(21, 22) {
     }
 }
 
+/**
+ * v22 → v23 — Reconciliation feature. Adds `lastReconciledAt` to AccountEntity
+ * so we can show "Reconciled 3 days ago" on account cards and later nudge
+ * users who haven't reconciled in a while. Nullable TEXT (ISO-8601 instant)
+ * because every pre-existing account has never been reconciled yet.
+ */
+val MIGRATION_22_23 = object : Migration(22, 23) {
+    override fun migrate(connection: SQLiteConnection) {
+        if (!hasColumn(connection, "AccountEntity", "lastReconciledAt")) {
+            connection.execSQL(
+                "ALTER TABLE AccountEntity ADD COLUMN lastReconciledAt TEXT DEFAULT NULL"
+            )
+        }
+    }
+}
+
+/**
+ * v23 → v24 — Image hero. Adds `imagePath` to AccountEntity so Vehicle /
+ * Real Estate accounts can show a user-attached photo as the hero header
+ * on the detail sheet. Null for every existing row (defaults to no image).
+ */
+val MIGRATION_23_24 = object : Migration(23, 24) {
+    override fun migrate(connection: SQLiteConnection) {
+        if (!hasColumn(connection, "AccountEntity", "imagePath")) {
+            connection.execSQL(
+                "ALTER TABLE AccountEntity ADD COLUMN imagePath TEXT DEFAULT NULL"
+            )
+        }
+    }
+}
+
+/**
+ * v24 → v25 — Net worth snapshots. One row per (accountId, month-end).
+ * App-open catch-up populates missing month-ends. UNIQUE index on
+ * (accountId, date) + Upsert in the DAO means repeat runs are idempotent.
+ */
+val MIGRATION_24_25 = object : Migration(24, 25) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS net_worth_snapshots (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "date TEXT NOT NULL, " +
+                "accountId INTEGER NOT NULL, " +
+                "originalCurrency TEXT NOT NULL, " +
+                "originalAmount REAL NOT NULL, " +
+                "baseCurrency TEXT NOT NULL, " +
+                "baseAmount REAL NOT NULL, " +
+                "isReconstructed INTEGER NOT NULL, " +
+                "createdAt TEXT NOT NULL" +
+                ")"
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS index_net_worth_snapshots_date " +
+                "ON net_worth_snapshots(date)"
+        )
+        connection.execSQL(
+            "CREATE UNIQUE INDEX IF NOT EXISTS index_net_worth_snapshots_accountId_date " +
+                "ON net_worth_snapshots(accountId, date)"
+        )
+    }
+}
+
 val ALL_MIGRATIONS = listOf(
     MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
     MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9,
     MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13,
     MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17,
     MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21,
-    MIGRATION_21_22,
+    MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24, MIGRATION_24_25,
 )
 
 /**

@@ -18,9 +18,10 @@ import androidx.room.RoomDatabase
         AssetCategoryEntity::class,
         HistoricalRateEntity::class,
         RateWatchAlertEntity::class,
-        MerchantCategoryHistoryEntity::class
+        MerchantCategoryHistoryEntity::class,
+        NetWorthSnapshotEntity::class
     ],
-    version = 22,
+    version = 25,
     exportSchema = true
 )
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -38,6 +39,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract val historicalRateDao: HistoricalRateDao
     abstract val rateWatchAlertDao: RateWatchAlertDao
     abstract val merchantCategoryHistoryDao: MerchantCategoryHistoryDao
+    abstract val netWorthSnapshotDao: NetWorthSnapshotDao
 
     companion object {
         const val DB_NAME = "mooney.db"

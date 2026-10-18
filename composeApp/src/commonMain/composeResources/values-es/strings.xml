@@ -812,4 +812,24 @@
     <string name="screenshot_import_keep_anyway">Añadir igual</string>
     <string name="screenshot_import_empty_title">Nada que importar</string>
     <string name="screenshot_import_empty_body">Elige capturas de notificaciones de tu banco o Apple Pay para añadir transacciones en lote.</string>
+
+    <!-- Reconcile -->
+    <string name="reconcile_button">Conciliar</string>
+    <string name="reconcile_title">Conciliar %1$s</string>
+    <string name="reconcile_body">¿Cuál es el saldo en tu banco ahora mismo?</string>
+    <string name="reconcile_input_label">Saldo actual (%1$s)</string>
+    <string name="reconcile_mooney_shows">Mooney muestra</string>
+    <string name="reconcile_delta_label">Diferencia</string>
+    <string name="reconcile_cta">Conciliar</string>
+    <string name="breakdown_long_press_hint">Mantén pulsada una categoría para excluirla de los totales.</string>
+    <string name="category_excluded_tag">EXCLUIDA</string>
+    <string name="open_timeline">Abrir línea de tiempo</string>
+    <string name="spending_goal_label">Meta</string>
+    <string name="spending_goal_empty">Aún no has fijado una meta</string>
+    <string name="spending_goal_set">Fijar meta</string>
+    <string name="spending_goal_edit">Editar meta de gasto</string>
+    <string name="spending_goal_title">Meta mensual de gasto</string>
+    <string name="spending_goal_hint">Dibujaremos una guía horizontal en el gráfico para que veas si tu gasto se mantiene por debajo.</string>
+    <string name="flex_monthly_history">Historial mensual</string>
+    <string name="flex_history_empty">Tu patrimonio al cierre del mes aparecerá aquí cuando termine el mes.</string>
 </resources>

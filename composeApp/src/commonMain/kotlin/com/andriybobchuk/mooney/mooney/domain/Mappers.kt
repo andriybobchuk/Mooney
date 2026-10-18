@@ -16,7 +16,9 @@ fun Account.toEntity(): AccountEntity = AccountEntity(
     currentMarketValue = currentMarketValue,
     includeInNetWorth = includeInNetWorth,
     isPrimaryForExpenses = isPrimaryForExpenses,
-    isPrimaryForIncome = isPrimaryForIncome
+    isPrimaryForIncome = isPrimaryForIncome,
+    lastReconciledAt = lastReconciledAt?.toString(),
+    imagePath = imagePath
 )
 
 fun Transaction.toEntity(): TransactionEntity = TransactionEntity(

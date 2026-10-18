@@ -812,4 +812,24 @@
     <string name="screenshot_import_keep_anyway">仍然添加</string>
     <string name="screenshot_import_empty_title">无内容可导入</string>
     <string name="screenshot_import_empty_body">选择银行或 Apple Pay 通知的截图以批量添加交易。</string>
+
+    <!-- Reconcile -->
+    <string name="reconcile_button">对账</string>
+    <string name="reconcile_title">对账 %1$s</string>
+    <string name="reconcile_body">您的银行现在显示的余额是多少？</string>
+    <string name="reconcile_input_label">当前余额 (%1$s)</string>
+    <string name="reconcile_mooney_shows">Mooney 显示</string>
+    <string name="reconcile_delta_label">差额</string>
+    <string name="reconcile_cta">对账</string>
+    <string name="breakdown_long_press_hint">长按分类可将其排除在合计之外。</string>
+    <string name="category_excluded_tag">已排除</string>
+    <string name="open_timeline">打开完整时间轴</string>
+    <string name="spending_goal_label">目标</string>
+    <string name="spending_goal_empty">尚未设置支出目标</string>
+    <string name="spending_goal_set">设置目标</string>
+    <string name="spending_goal_edit">编辑支出目标</string>
+    <string name="spending_goal_title">每月支出目标</string>
+    <string name="spending_goal_hint">我们会在图表上绘制一条横线，让你看到支出是否低于目标。</string>
+    <string name="flex_monthly_history">月度历史</string>
+    <string name="flex_history_empty">月末后，你的净资产将显示在这里。</string>
 </resources>

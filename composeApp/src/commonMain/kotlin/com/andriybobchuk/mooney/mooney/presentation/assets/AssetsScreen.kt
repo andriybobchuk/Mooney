@@ -125,6 +125,7 @@ fun AssetsScreen(
     var showSheet by remember { mutableStateOf(false) }
     var editingAsset by remember { mutableStateOf<UiAsset?>(null) }
     var detailAsset by remember { mutableStateOf<UiAsset?>(null) }
+    var reconcilingAsset by remember { mutableStateOf<UiAsset?>(null) }
     var showFlexSheet by remember { mutableStateOf(false) }
     // Overflow-menu visibility for the top-bar 3-dot button. Only ever opened
     // when state.hasLiabilities is true (button itself is hidden otherwise).
@@ -134,6 +135,7 @@ fun AssetsScreen(
     val flexCoroutineScope = rememberCoroutineScope()
     val fileHandler = org.koin.compose.koinInject<com.andriybobchuk.mooney.core.platform.FileHandler>()
     val requestReviewUseCase = org.koin.compose.koinInject<com.andriybobchuk.mooney.core.review.RequestReviewUseCase>()
+    val imageStorage = org.koin.compose.koinInject<com.andriybobchuk.mooney.core.data.ImageStorage>()
     // Wrapped shimmer flag — guarantees a visible loading state on cold start
     // even when the cache resolves within a frame.
     val showShimmer by com.andriybobchuk.mooney.core.presentation.rememberMinDisplayShimmer(state.isInitialLoading)
@@ -150,12 +152,15 @@ fun AssetsScreen(
             Toolbars.Primary(
                 containerColor = Color.Transparent,
                 titleContent = {
+                    // Currency-cycle tap removed — header always renders
+                    // in base currency. Long-press still opens the Flex
+                    // screen (the full-screen flex-with-chart surface).
                     @OptIn(ExperimentalFoundationApi::class)
                     Column(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
                             .combinedClickable(
-                                onClick = { viewModel.onNetWorthLabelClick() },
+                                onClick = {},
                                 onLongClick = { showFlexSheet = true }
                             )
                             .padding(horizontal = 4.dp, vertical = 2.dp)
@@ -354,29 +359,81 @@ fun AssetsScreen(
         }
     )
 
-    // Asset detail sheet
-    detailAsset?.let { asset ->
+    // Asset detail sheet. CRITICAL: re-derive `freshAsset` from state.assets
+    // every recomposition so that mutations (image add/remove, toggle,
+    // reconcile, delete) land in the sheet immediately — the previous
+    // `detailAsset` closure captured a frozen UiAsset snapshot and never
+    // picked up the VM's updates, which was the "sheet doesn't update
+    // when the image is added" bug the user flagged.
+    detailAsset?.let { originalAsset ->
+        val freshAsset = state.assets.firstOrNull { it.id == originalAsset.id } ?: originalAsset
+        val hasImage = freshAsset.imagePath != null &&
+            (freshAsset.assetCategoryId == "VEHICLE" || freshAsset.assetCategoryId == "REAL_ESTATE")
         MooneyBottomSheet(
             onDismissRequest = { detailAsset = null },
-            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            // Drop the drag handle when the hero image is present so the
+            // image reaches the sheet's top edge — zero white strip above
+            // the photo, per the user's "edgeless on top" ask.
+            dragHandle = if (hasImage) null else {
+                @Composable { androidx.compose.material3.BottomSheetDefaults.DragHandle() }
+            }
         ) {
             AssetDetailSheet(
-                asset = asset,
+                asset = freshAsset,
                 baseCurrency = GlobalConfig.baseCurrency,
-                historicalRates = state.historicalRates[asset.originalCurrency] ?: emptyList(),
-                currentRate = state.currentRates[asset.originalCurrency],
-                percentile = state.percentiles[asset.originalCurrency],
+                historicalRates = state.historicalRates[freshAsset.originalCurrency] ?: emptyList(),
+                currentRate = state.currentRates[freshAsset.originalCurrency],
+                percentile = state.percentiles[freshAsset.originalCurrency],
                 baseNetWorth = state.baseNetWorth,
+                allTransactions = state.recentTransactions,
+                isPickingImage = state.isPickingImage,
                 onEdit = {
                     detailAsset = null
-                    editingAsset = asset
+                    editingAsset = freshAsset
                     showSheet = true
                 },
                 onDelete = {
-                    viewModel.deleteAsset(asset.id)
+                    viewModel.deleteAsset(freshAsset.id)
                     detailAsset = null
+                },
+                onReconcile = {
+                    detailAsset = null
+                    reconcilingAsset = freshAsset
+                },
+                onToggleIncludeInNetWorth = { include ->
+                    viewModel.toggleIncludeInNetWorth(freshAsset.id, include)
+                },
+                onPickImage = { viewModel.pickAccountImage(freshAsset.id) },
+                onRemoveImage = { viewModel.removeAccountImage(freshAsset.id) },
+                imageStorage = imageStorage
+            )
+        }
+    }
+
+    // Reconcile sheet — opens from AssetDetailSheet, closes on confirm.
+    reconcilingAsset?.let { asset ->
+        MooneyBottomSheet(
+            onDismissRequest = { reconcilingAsset = null },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ) {
+            com.andriybobchuk.mooney.mooney.presentation.reconcile.ReconcileAccountSheet(
+                account = asset.toAccount(),
+                isSubmitting = state.isReconciling,
+                onConfirm = { newBalance ->
+                    viewModel.reconcileAccount(asset.id, newBalance)
                 }
             )
+        }
+    }
+
+    // Dismiss reconcile sheet + fire telemetry acknowledgement once the VM
+    // reports the outcome. State is cleared immediately so a second reconcile
+    // doesn't re-fire this effect.
+    LaunchedEffect(state.lastReconcileOutcome) {
+        if (state.lastReconcileOutcome != null) {
+            reconcilingAsset = null
+            viewModel.clearReconcileOutcome()
         }
     }
 
@@ -392,12 +449,15 @@ fun AssetsScreen(
     }
 
     if (showFlexSheet) {
+        LaunchedEffect(Unit) { viewModel.loadNetWorthHistory() }
         val otherCurrencies = state.userCurrencies.filter { it != GlobalConfig.baseCurrency }
         NetWorthFlexSheet(
             totalInBaseCurrency = state.totalAssetsBase - state.totalLiabilitiesBase,
             baseCurrency = GlobalConfig.baseCurrency,
             otherCurrencies = otherCurrencies,
             exchangeRates = state.exchangeRates,
+            history = state.netWorthHistory,
+            onEditMonth = { date, value -> viewModel.setManualNetWorth(date, value) },
             onShareClick = { text ->
                 flexCoroutineScope.launch {
                     fileHandler.shareText(text)

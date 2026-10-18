@@ -3,8 +3,12 @@ package com.andriybobchuk.mooney.mooney.presentation.analytics
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -103,15 +107,21 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun AnalyticsScreen(
     viewModel: AnalyticsViewModel = koinViewModel(),
+    /** Shared with the Balance tab so the Flex sheet opens with warm
+     *  net-worth state (history already loaded) rather than re-fetching. */
+    assetsViewModel: com.andriybobchuk.mooney.mooney.presentation.assets.AssetsViewModel = koinViewModel(),
     bottomNavbar: @Composable () -> Unit,
     onSettingsClick: () -> Unit = {},
     onNavigateToTransactions: () -> Unit = {},
     onNavigateToBreakdown: (String) -> Unit = {},
-    onNavigateToNetIncome: () -> Unit = {},
     onNavigateToNetWorth: () -> Unit = {},
+    /** Opens the full-screen zoomable multi-metric timeline. */
+    onNavigateToTimeline: () -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val assetsState by assetsViewModel.state.collectAsStateWithLifecycle()
     var showAnalyticsRequestSheet by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    var showNetWorthFlex by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
 
     // Refresh data each time the screen appears
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
@@ -293,7 +303,10 @@ fun AnalyticsScreen(
                             metric = metric,
                             onClick = {
                                 when (metric.title) {
-                                    METRIC_NET_INCOME -> onNavigateToNetIncome()
+                                    METRIC_NET_INCOME -> {
+                                        assetsViewModel.loadNetWorthHistory()
+                                        showNetWorthFlex = true
+                                    }
                                     METRIC_REVENUE -> onNavigateToBreakdown("REVENUE")
                                     METRIC_EXPENSES -> onNavigateToBreakdown("OPERATING_COSTS")
                                     METRIC_TAXES -> onNavigateToBreakdown("TAXES")
@@ -319,6 +332,21 @@ fun AnalyticsScreen(
                     AnalyticsRequestCard(
                         onClick = { showAnalyticsRequestSheet = true }
                     )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Trigger for the full-screen zoomable timeline. Lives at
+                    // the bottom of the metric list so the natural "scroll
+                    // down to see more" gesture finds it, and reads as "want
+                    // the deep view? here it is." The timeline screen is the
+                    // dedicated full-view route (rotation-based gating was
+                    // too easy to miss and bad for accessibility).
+                    MooneyButton(
+                        text = stringResource(Res.string.open_timeline),
+                        onClick = onNavigateToTimeline,
+                        variant = ButtonVariant.SECONDARY,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -328,6 +356,20 @@ fun AnalyticsScreen(
             if (showAnalyticsRequestSheet) {
                 com.andriybobchuk.mooney.core.feedback.FeedbackSheet(
                     onDismiss = { showAnalyticsRequestSheet = false }
+                )
+            }
+
+            if (showNetWorthFlex) {
+                val otherCurrencies = assetsState.userCurrencies.filter { it != GlobalConfig.baseCurrency }
+                com.andriybobchuk.mooney.mooney.presentation.assets.NetWorthFlexSheet(
+                    totalInBaseCurrency = assetsState.totalAssetsBase - assetsState.totalLiabilitiesBase,
+                    baseCurrency = GlobalConfig.baseCurrency,
+                    otherCurrencies = otherCurrencies,
+                    exchangeRates = assetsState.exchangeRates,
+                    history = assetsState.netWorthHistory,
+                    onEditMonth = { date, value -> assetsViewModel.setManualNetWorth(date, value) },
+                    onShareClick = { /* share is a nice-to-have; wire later */ },
+                    onDismiss = { showNetWorthFlex = false }
                 )
             }
 
@@ -381,10 +423,13 @@ fun AnalyticsScreen(
 }
 
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CategoryItem(
     topCategorySummary: TopCategorySummary,
     onClick: () -> Unit = {},
+    onLongClick: () -> Unit = {},
+    isDeselected: Boolean = false,
     /**
      * Show the ±% MoM trend pill on the right-hand side. Off on the
      * Expenses breakdown because the delta was noisy — one bad month
@@ -392,12 +437,63 @@ fun CategoryItem(
      */
     showTrendPill: Boolean = true
 ) {
+  val rowAlpha = if (isDeselected) 0.4f else 1f
+  // Budget → whole-row background fill. Expense categories with a
+  // monthlyLimit get a horizontal green/amber/red progress rect painted
+  // behind the entire card instead of a dedicated LinearProgressIndicator
+  // under the title. Reads as "this category's spend is this much of its
+  // budget" at a glance and tightens the row vertically. Mirrors the
+  // Assets screen's per-account fill treatment.
+  val limit = topCategorySummary.category.monthlyLimit
+  val hasBudget = topCategorySummary.category.type == CategoryType.EXPENSE &&
+    limit != null && limit > 0.0
+  val fillRatio: Float
+  val fillColor: Color
+  if (hasBudget && limit != null) {
+    val r = (topCategorySummary.amount / limit).toFloat().coerceIn(0f, 1.25f)
+    fillRatio = r.coerceAtMost(1f)
+    fillColor = when {
+      r >= 1f -> Color(0xFFE53935)
+      r >= 0.7f -> Color(0xFFD4A017)
+      else -> Color(0xFF43A047)
+    }
+  } else {
+    fillRatio = 0f
+    fillColor = Color.Transparent
+  }
+
+  Box(modifier = Modifier.fillMaxWidth()) {
+    if (hasBudget) {
+      // Mirrors the Assets screen's per-asset Canvas-based tile fill —
+      // two drawRect passes on a single matchParentSize Canvas. The
+      // earlier attempt layered two Boxes with fillMaxWidth(fillRatio)
+      // + matchParentSize but matchParentSize wins over any width
+      // modifier, so the fill always ended up at 100% and looked
+      // uniform. Canvas gives us an exact fillRatio × size.width
+      // without that collision.
+      androidx.compose.foundation.Canvas(
+        modifier = Modifier.matchParentSize()
+      ) {
+        drawRect(
+          color = fillColor.copy(alpha = 0.07f),
+          size = size
+        )
+        drawRect(
+          color = fillColor.copy(alpha = 0.22f),
+          size = androidx.compose.ui.geometry.Size(
+            width = size.width * fillRatio,
+            height = size.height
+          )
+        )
+      }
+    }
   Column(modifier = Modifier.fillMaxWidth()) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(vertical = 5.dp, horizontal = 16.dp),
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .padding(vertical = 5.dp, horizontal = 16.dp)
+            .alpha(rowAlpha),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -418,10 +514,37 @@ fun CategoryItem(
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Normal, fontSize = 15.sp),
                 color = MaterialTheme.colorScheme.onSurface
             )
+            // Budget subtitle — just the "spent / limit" line now that
+            // the progress indicator is painted as the row's whole-width
+            // background fill. Slightly larger font than the previous
+            // inline bar's 10sp since it's doing more communicative work
+            // on its own.
+            if (hasBudget && limit != null) {
+                Spacer(Modifier.height(1.dp))
+                Text(
+                    text = "${topCategorySummary.amount.formatWithCommas()} / ${limit.formatWithCommas()} ${GlobalConfig.baseCurrency.symbol}",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.sp
+                    ),
+                    color = fillColor
+                )
+            }
             if (topCategorySummary.category.isSubCategory()) {
                 Text(
                     topCategorySummary.category.parent?.let { localizedCategoryTitle(it) } ?: "???",
                     style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                )
+            }
+            if (isDeselected) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = stringResource(Res.string.category_excluded_tag),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 1.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -459,56 +582,8 @@ fun CategoryItem(
             }
         }
     }
-    // Budget progress — only expense categories with a monthlyLimit render
-    // this. Bar color escalates green → amber → red as the user closes in on
-    // and past the limit, and the tail text reads "spent / budget" so the
-    // number is legible without doing mental math.
-    val limit = topCategorySummary.category.monthlyLimit
-    if (topCategorySummary.category.type == CategoryType.EXPENSE && limit != null && limit > 0.0) {
-        BudgetProgressRow(
-            spent = topCategorySummary.amount,
-            limit = limit,
-            currency = GlobalConfig.baseCurrency
-        )
-    }
   }
-}
-
-@Composable
-private fun BudgetProgressRow(
-    spent: Double,
-    limit: Double,
-    currency: com.andriybobchuk.mooney.mooney.domain.Currency
-) {
-    val ratio = (spent / limit).toFloat().coerceIn(0f, 1.25f)
-    val displayRatio = ratio.coerceAtMost(1f)
-    val color = when {
-        ratio >= 1f -> Color(0xFFE53935)
-        ratio >= 0.7f -> Color(0xFFD4A017)
-        else -> Color(0xFF43A047)
-    }
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 74.dp, end = 16.dp, bottom = 8.dp)
-    ) {
-        LinearProgressIndicator(
-            progress = { displayRatio },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(6.dp)
-                .clip(RoundedCornerShape(3.dp)),
-            color = color,
-            trackColor = color.copy(alpha = 0.15f),
-            drawStopIndicator = {}
-        )
-        Spacer(Modifier.height(3.dp))
-        Text(
-            text = "${spent.formatWithCommas()} / ${limit.formatWithCommas()} ${currency.symbol}",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
+  } // close outer Box with background fill
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1075,6 +1150,14 @@ fun CategoryBreakdownSheet(
     onMonthSelected: (MonthKey) -> Unit = {},
     onCategoryClick: (com.andriybobchuk.mooney.mooney.domain.Category) -> Unit,
     onDismiss: () -> Unit,
+    /** Category IDs the user long-pressed to exclude from totals + bars. */
+    deselectedCategoryIds: Set<String> = emptySet(),
+    /** Called on long-press of a row — toggles selection. */
+    onToggleSelection: (String) -> Unit = {},
+    /** Per-month base-currency sum of deselected categories' transactions.
+     *  Chart bars subtract these; hero total already reflects selection via
+     *  the `categories` list. */
+    monthlyDeductions: Map<MonthKey, Double> = emptyMap(),
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -1083,80 +1166,103 @@ fun CategoryBreakdownSheet(
             .padding(bottom = 8.dp)
     ) {
 
-        // 6-month trend mini chart
+        // Horizontally-scrollable trend chart — shows every historical month
+        // available (12 by default via LoadHistoricalAnalyticsUseCase). Fixed
+        // bar width + horizontal scroll means more context fits without
+        // compressing each bar into a sliver. Amount sits on top of the bar,
+        // month label underneath — bigger font than the previous inline
+        // 6-bar layout since we're no longer sharing a 20dp-padded row with
+        // five siblings.
         if (historicalData.isNotEmpty()) {
-            val chartData = historicalData.takeLast(6)
+            val horizontalScroll = androidx.compose.foundation.rememberScrollState()
+            // Compute values + max ONCE outside the row so maxVal spans all
+            // visible bars (otherwise clipping to a window would re-scale
+            // each pane and break the "which month was my biggest" read).
+            val values = historicalData.map { snapshot ->
+                val raw = when (sheetType) {
+                    CategorySheetType.REVENUE -> snapshot.revenue
+                    CategorySheetType.TAXES -> snapshot.taxes
+                    CategorySheetType.OPERATING_COSTS -> snapshot.operatingCosts
+                }
+                val deduction = monthlyDeductions[snapshot.month] ?: 0.0
+                (raw - deduction).coerceAtLeast(0.0)
+            }
+            val maxVal = values.maxOrNull()?.coerceAtLeast(1.0) ?: 1.0
 
-            Box(
+            // Auto-scroll to the end on first composition so the newest
+            // month is in view — users want "this month" first.
+            LaunchedEffect(historicalData.size) {
+                horizontalScroll.scrollTo(horizontalScroll.maxValue)
+            }
+
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(140.dp)
-                    .padding(horizontal = 20.dp)
-                    .padding(top = 8.dp, bottom = 8.dp)
+                    .horizontalScroll(horizontalScroll)
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.Bottom,
+                // Nearly touching — each column wraps the width of its
+                // labels (amount on top, month on bottom), and a 1dp gap
+                // just prevents hit-targets from fusing.
+                horizontalArrangement = Arrangement.spacedBy(1.dp)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    val values = chartData.map { snapshot ->
-                        when (sheetType) {
-                            CategorySheetType.REVENUE -> snapshot.revenue
-                            CategorySheetType.TAXES -> snapshot.taxes
-                            CategorySheetType.OPERATING_COSTS -> snapshot.operatingCosts
-                        }
-                    }
-                    val maxVal = values.maxOrNull()?.coerceAtLeast(1.0) ?: 1.0
-
-                    chartData.forEachIndexed { index, snapshot ->
-                        val value = values[index]
-                        val barHeight = ((value / maxVal) * 80).dp.coerceAtLeast(4.dp)
-                        val isSelected = selectedMonth == snapshot.month
-                        // Bars are tappable — a tap on Sep's bar sets the
-                        // month to Sep so the categories below refilter to
-                        // that month's spending. Selected month reads with
-                        // full-strength primary + a small accent underline
-                        // so the current filter is visible at a glance.
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
+                historicalData.forEachIndexed { index, snapshot ->
+                    val value = values[index]
+                    val targetBarHeight = ((value / maxVal) * 72).dp.coerceAtLeast(4.dp)
+                    val barHeight by androidx.compose.animation.core.animateDpAsState(
+                        targetValue = targetBarHeight,
+                        animationSpec = androidx.compose.animation.core.tween(durationMillis = 300),
+                        label = "breakdownBarHeight"
+                    )
+                    val isSelected = selectedMonth == snapshot.month
+                    // Fixed 40dp column width — enough to fit "100.5k" and
+                    // "Oct 26" at 11sp without truncation, and keeps every
+                    // bar comfortably visible instead of collapsing to a
+                    // 2-3dp sliver as the earlier wrap-content attempt did.
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Bottom,
+                        modifier = Modifier
+                            .width(46.dp)
+                            .clickable { onMonthSelected(snapshot.month) }
+                    ) {
+                        Text(
+                            text = value.formatToShortString(),
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                            ),
+                            color = if (isSelected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface,
+                            fontSize = 11.sp,
+                            maxLines = 1
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        // Bar fills column width, grows upward from the
+                        // bottom of the row (Row verticalAlignment=Bottom
+                        // + column arrangement Bottom means short bars sit
+                        // flush with tall ones' bases, labels on top).
+                        Box(
                             modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 2.dp)
-                                .clickable { onMonthSelected(snapshot.month) }
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(barHeight)
-                                    .background(
-                                        MaterialTheme.colorScheme.primary.copy(
-                                            alpha = if (isSelected) 1f else 0.6f
-                                        ),
-                                        RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
-                                    )
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = snapshot.month.toShortDisplayString(),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 9.sp,
-                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                            )
-                            Text(
-                                text = when (sheetType) {
-                                    CategorySheetType.REVENUE -> snapshot.revenue.formatToShortString()
-                                    CategorySheetType.TAXES -> snapshot.taxes.formatToShortString()
-                                    CategorySheetType.OPERATING_COSTS -> snapshot.operatingCosts.formatToShortString()
-                                },
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 8.sp
-                            )
-                        }
+                                .fillMaxWidth()
+                                .height(barHeight)
+                                .background(
+                                    MaterialTheme.colorScheme.primary.copy(
+                                        alpha = if (isSelected) 1f else 0.6f
+                                    ),
+                                    RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                                )
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = snapshot.month.toShortDisplayString(),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 11.sp,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            maxLines = 1
+                        )
                     }
                 }
             }
@@ -1169,6 +1275,8 @@ fun CategoryBreakdownSheet(
                 CategoryItem(
                     topCategorySummary = category,
                     onClick = { onCategoryClick(category.category) },
+                    onLongClick = { onToggleSelection(category.category.id) },
+                    isDeselected = category.category.id in deselectedCategoryIds,
                     showTrendPill = showTrend
                 )
             }

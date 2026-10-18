@@ -21,6 +21,7 @@ actual val platformModule: Module
         single { MooneyDatabaseFactory(get()) }
         single { PreferencesDataStoreFactory() }
         single { FileHandler() }
+        single { com.andriybobchuk.mooney.core.data.ImageStorage() }
         single<BillingManager> { IosBillingManager() }
         single { AppRestarter() }
     }

@@ -1,6 +1,7 @@
 package com.andriybobchuk.mooney.mooney.data.settings
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
@@ -49,6 +50,13 @@ object PreferencesKeys {
      * spending trends, currency rates and the suggest-a-widget card.
      */
     val WIDGET_PAGER_ENABLED = booleanPreferencesKey("widget_pager_enabled")
+    /**
+     * User-set monthly spending goal in base currency. Null = not set.
+     * Rendered as a flat horizontal guideline on the SpendingGoalChart
+     * widget (second page of the Transactions widget pager); a button
+     * on that widget opens the editor bottom sheet.
+     */
+    val MONTHLY_SPENDING_GOAL = doublePreferencesKey("monthly_spending_goal")
     // Analytics — first-time event flags. Each guards a one-shot event so we
     // can distinguish activation moments (first transaction, first account)
     // from ongoing engagement in Firebase funnels.

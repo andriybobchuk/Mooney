@@ -52,6 +52,13 @@ sealed interface Route {
     @Serializable
     data object AnalyticsNetIncome : Route
 
+    /** Full-screen zoomable timeline chart — opens from a FAB on the main
+     *  Analytics screen. Shows every available month end-to-end with
+     *  pinch-zoom + horizontal scroll and an overlay card tied to the
+     *  user's current month selection on the chart. */
+    @Serializable
+    data object AnalyticsTimeline : Route
+
     @Serializable
     data object NetWorthDetail : Route
 
@@ -63,11 +70,20 @@ sealed interface Route {
     @Serializable
     data object UpkeepReview : Route
 
-    /** Full-screen screenshot-import preview — user picks screenshots of bank
-     *  / Apple Pay notifications, Mooney OCRs them and shows the parsed
-     *  candidates with per-row keep/drop + dedup warnings before commit. */
+    /** Screenshot-import preview — notification-centre layout.
+     *  Picks screenshots of iOS notifications ("Nowa transakcja kartą ... w
+     *  wysokości X PLN w <merchant>."), parses them with the notification
+     *  regex, and shows the parsed candidates before commit. */
     @Serializable
-    data object ScreenshotImport : Route
+    data object ScreenshotImportNotifications : Route
+
+    /** Screenshot-import preview — bank-history list layout.
+     *  Picks screenshots of the in-bank-app transaction history ("<merchant>
+     *  Card operation -X,XX PLN" rows under date headers), parses with the
+     *  bank-history regex (PLN-only, negative amounts only), and shows the
+     *  parsed candidates before commit. */
+    @Serializable
+    data object ScreenshotImportBankHistory : Route
 
     /**
      * Full-screen WebView hosting the AndrewEats web app. Only reachable via

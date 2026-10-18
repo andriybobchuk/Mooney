@@ -10,6 +10,7 @@ import com.andriybobchuk.mooney.mooney.domain.GoalGroup
 import com.andriybobchuk.mooney.mooney.domain.GoalTrackingType
 import com.andriybobchuk.mooney.mooney.domain.Transaction
 import com.andriybobchuk.mooney.mooney.domain.UserCurrency
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 
 fun AccountEntity.toDomain(): Account = Account(
@@ -25,7 +26,9 @@ fun AccountEntity.toDomain(): Account = Account(
     currentMarketValue = currentMarketValue,
     includeInNetWorth = includeInNetWorth,
     isPrimaryForExpenses = isPrimaryForExpenses,
-    isPrimaryForIncome = isPrimaryForIncome
+    isPrimaryForIncome = isPrimaryForIncome,
+    lastReconciledAt = lastReconciledAt?.let { runCatching { Instant.parse(it) }.getOrNull() },
+    imagePath = imagePath
 )
 
 fun CategoryEntity.toDomain(parent: Category? = null): Category = Category(

@@ -47,6 +47,8 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.NotificationsNone
+import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Info
@@ -181,7 +183,8 @@ fun TransactionsScreen(
     // Hidden dev-only nav target — the "Eats" pill in the quick-actions
     // row only fires this when `DISPLAY_EATS_ENABLED` is on.
     onNavigateToAndrewEats: () -> Unit = {},
-    onNavigateToScreenshotImport: () -> Unit = {},
+    onScanNotifications: () -> Unit = {},
+    onScanBankHistory: () -> Unit = {},
     // Tap on the "N auto-added to review" banner → opens UpkeepReviewScreen.
     onNavigateToUpkeep: () -> Unit = {},
 ) {
@@ -267,15 +270,13 @@ fun TransactionsScreen(
                     //
                     // Tap now deep-links to the Analytics → Expenses breakdown
                     // (the most useful "why did I spend that much?" surface).
-                    // Long-press preserves the previous behavior of cycling
-                    // through display currencies for users who liked that.
+                    // Currency-cycle gesture removed per user request —
+                    // the header always renders the base currency now,
+                    // which is simpler and matches the Balance tab.
                     Column(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .combinedClickable(
-                                onClick = { onNavigateToExpensesBreakdown() },
-                                onLongClick = { viewModel.onTotalCurrencyClick() }
-                            )
+                            .clickable { onNavigateToExpensesBreakdown() }
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
                         Text(
@@ -313,28 +314,74 @@ fun TransactionsScreen(
         bottomBar = { bottomNavbar() },
         floatingActionButton = {
             val hasAccounts = state.accounts.filterNotNull().isNotEmpty()
-            // Show the FAB whenever the empty state isn't rendering — the
+            // Show the FABs whenever the empty state isn't rendering — the
             // empty state has its own "Add transaction" CTA so two entry
             // points on the same screen would be redundant. But when the
             // list has only pending txs (no real txs), the empty state ISN'T
             // shown, so the user needs the FAB to add real ones. Prior gate
             // on `hasTransactions` missed that case.
             if (!isEmptyState && hasAccounts) {
-                FloatingActionButton(
-                    onClick = {
-                        // Clear edit context — without this a stale transactionToEdit
-                        // from a previous edit/dismiss can cause "+" to open in edit mode.
-                        transactionToEdit = null
-                        preselectedCategory = null
-                        isBottomSheetOpen = true
-                    },
-                    modifier = Modifier.mooneyTestTag(TestTags.FAB_ADD_TXN),
-                    content = {
-                        Icon(Icons.Outlined.Add, contentDescription = stringResource(Res.string.cd_add_transaction))
-                    },
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                // Stacked FABs — two secondary scan FABs above the primary
+                // "+" FAB. The user explicitly asked for "two buttons
+                // separately instead of one OCR button" since the two
+                // parsers (notification format vs bank-history list format)
+                // are now fully separate and work best when the user
+                // explicitly chooses which to run against the screenshots
+                // they're about to pick.
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    androidx.compose.material3.SmallFloatingActionButton(
+                        onClick = onScanBankHistory,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        elevation = androidx.compose.material3.FloatingActionButtonDefaults.elevation(
+                            defaultElevation = 0.dp,
+                            pressedElevation = 2.dp,
+                            focusedElevation = 0.dp,
+                            hoveredElevation = 0.dp
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.ReceiptLong,
+                            contentDescription = stringResource(Res.string.scan_bank_history_cd),
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    androidx.compose.material3.SmallFloatingActionButton(
+                        onClick = onScanNotifications,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        elevation = androidx.compose.material3.FloatingActionButtonDefaults.elevation(
+                            defaultElevation = 0.dp,
+                            pressedElevation = 2.dp,
+                            focusedElevation = 0.dp,
+                            hoveredElevation = 0.dp
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.NotificationsNone,
+                            contentDescription = stringResource(Res.string.scan_notifications_cd),
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    FloatingActionButton(
+                        onClick = {
+                            // Clear edit context — without this a stale transactionToEdit
+                            // from a previous edit/dismiss can cause "+" to open in edit mode.
+                            transactionToEdit = null
+                            preselectedCategory = null
+                            isBottomSheetOpen = true
+                        },
+                        modifier = Modifier.mooneyTestTag(TestTags.FAB_ADD_TXN),
+                        content = {
+                            Icon(Icons.Outlined.Add, contentDescription = stringResource(Res.string.cd_add_transaction))
+                        },
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         },
         content = { paddingValues ->
@@ -361,8 +408,7 @@ fun TransactionsScreen(
                             onGoalsClick = onNavigateToGoals,
                             onCategoriesClick = onNavigateToTransactionCategories,
                             eatsEnabled = displayEatsEnabled,
-                            onEatsClick = onNavigateToAndrewEats,
-                            onScreenshotImportClick = onNavigateToScreenshotImport
+                            onEatsClick = onNavigateToAndrewEats
                         )
                     }
 
@@ -389,7 +435,7 @@ fun TransactionsScreen(
                             selectedMonth = state.selectedMonth,
                             dailyTotals = state.dailyTotals,
                             hasAccounts = state.accounts.filterNotNull().isNotEmpty(),
-                            onCurrencyClick = viewModel::onTotalCurrencyClick,
+                            onCurrencyClick = {},
                             onEdit = {
                                 transactionToEdit = it
                                 isBottomSheetOpen = true
@@ -1190,10 +1236,13 @@ private fun AutoTag() {
             fontWeight = FontWeight.SemiBold,
             letterSpacing = 0.5.sp
         ),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+        // Muted onSurfaceVariant on surfaceVariant — the AUTO chip is
+        // informational, it shouldn't scream for attention next to the
+        // category text. Reads as a quiet marker on both themes.
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier
             .clip(RoundedCornerShape(4.dp))
-            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(horizontal = 6.dp, vertical = 2.dp)
     )
 }
@@ -1210,13 +1259,14 @@ private fun UpkeepBanner(count: Int, onClick: () -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+            // Muted surface tone — the previous primaryContainer was far
+            // too saturated against the surrounding list. surfaceVariant
+            // reads as "informational row" rather than "alert".
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
             .clickable { onClick() }
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = "⚡", fontSize = 20.sp)
-        Spacer(modifier = Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stringResource(Res.string.upkeep_banner_title, count),
@@ -1232,7 +1282,7 @@ private fun UpkeepBanner(count: Int, onClick: () -> Unit) {
         Icon(
             painter = com.andriybobchuk.mooney.core.presentation.Icons.ChevronRightIcon(),
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(18.dp)
         )
     }
@@ -1316,7 +1366,13 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
                                 text = secondary,
                                 style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
                                 maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                // weight(1f) with fill=true tells Compose to
+                                // CONSTRAIN this Text to the remaining space
+                                // in the Row (after AUTO tag), which forces
+                                // the Ellipsis to actually fire. With
+                                // fill=false the Text was free to overshoot.
+                                modifier = Modifier.weight(1f)
                             )
                         }
                     }
@@ -1324,7 +1380,15 @@ fun TransactionItem(transaction: Transaction, accounts: List<UiAccount?>) {
             }
         }
 
-        Column(horizontalAlignment = Alignment.End) {
+        // Explicit padding-start — without it the subtitle text (or AUTO
+        // tag + category) butts right up against the amount with zero
+        // breathing room. Also forces the weighted Column(primary+secondary)
+        // to the left to actually TRIGGER ellipsis instead of letting the
+        // secondary line expand into this column's airspace.
+        Column(
+            horizontalAlignment = Alignment.End,
+            modifier = Modifier.padding(start = 12.dp)
+        ) {
             Text(
                 "${transaction.amount.formatWithCommas()} ${transaction.account.currency.symbol}",
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium, fontSize = 14.5.sp),
@@ -2899,7 +2963,15 @@ fun CategorySelectionBottomSheet(
             val filteredCategories by remember(selectedTabIndex, categories, categoryOrder) {
                 derivedStateOf {
                     val categoryType = if (selectedTabIndex == 0) CategoryType.EXPENSE else CategoryType.INCOME
-                    val pool = categories.filter { it.isGeneralCategory() && it.type == categoryType }
+                    val pool = categories
+                        .filter { it.isGeneralCategory() && it.type == categoryType }
+                        // Hide the reconciliation categories from the general
+                        // Add Transaction picker — they're now reachable ONLY
+                        // via the dedicated Reconcile wizard on the Balance
+                        // tab. Keeps the picker clean and prevents the user
+                        // from accidentally creating a one-off "I lost 42 PLN"
+                        // entry under the wrong flow.
+                        .filter { it.id != "reconciliation" && it.id != "positive_reconciliation" }
                     val orderIndex = categoryOrder.withIndex().associate { (i, id) -> id to i }
                     pool.sortedWith(
                         compareBy<Category>(
@@ -3325,7 +3397,7 @@ fun TransactionPagerView(
         return
     }
 
-    val pageCount = 4  // calendar, line chart, currency rates, suggest card
+    val pageCount = 5  // calendar, goal-guideline chart, line chart (6mo avg), currency rates, suggest card
     val dataStore = org.koin.compose.koinInject<androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>>()
 
     // Initial page comes from DataStore so we restore the user's last selection
@@ -3371,13 +3443,18 @@ fun TransactionPagerView(
                     dailyTotals = dailyTotals,
                     modifier = Modifier.fillMaxSize()
                 )
-                1 -> SpendingLineChart(
+                1 -> SpendingGoalChart(
                     selectedMonth = selectedMonth,
                     dailyTotals = dailyTotals,
                     modifier = Modifier.fillMaxSize()
                 )
-                2 -> CurrencyRatesWidget(modifier = Modifier.fillMaxSize())
-                3 -> SuggestWidgetCard(modifier = Modifier.fillMaxSize())
+                2 -> SpendingLineChart(
+                    selectedMonth = selectedMonth,
+                    dailyTotals = dailyTotals,
+                    modifier = Modifier.fillMaxSize()
+                )
+                3 -> CurrencyRatesWidget(modifier = Modifier.fillMaxSize())
+                4 -> SuggestWidgetCard(modifier = Modifier.fillMaxSize())
             }
         }
 
@@ -3562,6 +3639,278 @@ private fun SuggestWidgetCard(modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * Spending-vs-monthly-goal line chart. Second page of the Transactions
+ * widget pager. Same cumulative-current-month line as
+ * [SpendingLineChart], but the dashed reference line is a flat
+ * horizontal guideline at the user's set monthly spending goal (stored
+ * in [PreferencesKeys.MONTHLY_SPENDING_GOAL]) instead of the rolling
+ * 6-month average. Lets the user ask "am I on track for my X/month
+ * budget?" at a glance.
+ *
+ * Tap the pencil button to open an editor sheet that saves the goal.
+ */
+@Composable
+fun SpendingGoalChart(
+    selectedMonth: MonthKey,
+    dailyTotals: Map<Int, Double>,
+    modifier: Modifier = Modifier
+) {
+    val year = selectedMonth.year
+    val month = selectedMonth.month
+    val daysInMonth = remember(year, month) { getDaysInMonth(year, month) }
+    val today = remember {
+        kotlinx.datetime.Clock.System.now()
+            .toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date
+    }
+    val todayDay = if (today.year == year && today.monthNumber == month) today.dayOfMonth else null
+
+    val dataStore = org.koin.compose.koinInject<androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>>()
+    val goal by dataStore.data
+        .map { it[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.MONTHLY_SPENDING_GOAL] }
+        .collectAsStateWithLifecycle(initialValue = null)
+
+    var showEditor by remember { mutableStateOf(false) }
+    val baseCurrency = com.andriybobchuk.mooney.mooney.data.GlobalConfig.baseCurrency
+
+    Box(modifier = modifier.padding(horizontal = 16.dp)) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .background(MaterialTheme.colorScheme.primary, CircleShape)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(Res.string.current),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Canvas(modifier = Modifier.size(12.dp, 2.dp)) {
+                        drawLine(
+                            color = Color.Gray,
+                            start = androidx.compose.ui.geometry.Offset(0f, center.y),
+                            end = androidx.compose.ui.geometry.Offset(size.width, center.y),
+                            strokeWidth = 2.dp.toPx(),
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 5f))
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = goal?.let {
+                            "${stringResource(Res.string.spending_goal_label)} · ${it.formatToShortString()} ${baseCurrency.symbol}"
+                        } ?: stringResource(Res.string.spending_goal_label),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(top = 8.dp)
+            ) {
+                val currentTotal = dailyTotals.values.sum()
+                val goalValue = goal ?: 0.0
+
+                if (currentTotal == 0.0 && goalValue == 0.0) {
+                    // No spend and no goal — nudge the user to set one.
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.spending_goal_empty),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        androidx.compose.material3.TextButton(onClick = { showEditor = true }) {
+                            Text(stringResource(Res.string.spending_goal_set))
+                        }
+                    }
+                } else {
+                    val primaryColor = MaterialTheme.colorScheme.primary
+                    val todayMarkerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val maxTotal = maxOf(currentTotal, goalValue).coerceAtLeast(1.0)
+                        val width = size.width
+                        val height = size.height
+                        val dayWidth = width / daysInMonth
+
+                        // Today marker.
+                        if (todayDay != null) {
+                            val todayX = (todayDay - 1) * dayWidth + dayWidth / 2
+                            drawLine(
+                                color = todayMarkerColor,
+                                start = androidx.compose.ui.geometry.Offset(todayX, 0f),
+                                end = androidx.compose.ui.geometry.Offset(todayX, height),
+                                strokeWidth = 1.dp.toPx()
+                            )
+                        }
+
+                        // Diagonal pacing trendline. Goes from (day 1, 0)
+                        // to (last day, goal) so the user can read "if I
+                        // stay on-pace, my cumulative line should hug
+                        // this one". Previously drawn as a flat line AT
+                        // the goal, which only told them "did I hit the
+                        // goal or not" — this version tells them "am I
+                        // on track right now mid-month".
+                        if (goalValue > 0) {
+                            val firstX = dayWidth / 2
+                            val lastX = (daysInMonth - 1) * dayWidth + dayWidth / 2
+                            val startY = height
+                            val endY = (height - (goalValue / maxTotal) * height * 0.8f).toFloat()
+                            drawLine(
+                                color = Color.Gray,
+                                start = androidx.compose.ui.geometry.Offset(firstX, startY),
+                                end = androidx.compose.ui.geometry.Offset(lastX, endY),
+                                strokeWidth = 3.dp.toPx(),
+                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f))
+                            )
+                        }
+
+                        // Cumulative current-month line.
+                        val currentPath = Path()
+                        var currentCumulative = 0.0
+                        var currentStarted = false
+                        for (day in 1..daysInMonth) {
+                            val x = (day - 1) * dayWidth + dayWidth / 2
+                            currentCumulative += dailyTotals[day] ?: 0.0
+                            val currentY = height - (currentCumulative / maxTotal) * height * 0.8f
+                            if (!currentStarted) {
+                                currentPath.moveTo(x, currentY.toFloat())
+                                currentStarted = true
+                            } else {
+                                currentPath.lineTo(x, currentY.toFloat())
+                            }
+                        }
+                        drawPath(
+                            path = currentPath,
+                            color = primaryColor,
+                            style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
+                        )
+                    }
+                }
+            }
+        }
+
+        // Edit button pinned to the top-right of the widget. Pencil icon
+        // so it reads as "configure this chart" rather than another nav.
+        IconButton(
+            onClick = { showEditor = true },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .size(32.dp)
+        ) {
+            Icon(
+                imageVector = androidx.compose.material.icons.Icons.Outlined.Edit,
+                contentDescription = stringResource(Res.string.spending_goal_edit),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+    }
+
+    if (showEditor) {
+        SpendingGoalEditorSheet(
+            initialValue = goal,
+            onDismiss = { showEditor = false },
+            onSave = { newGoal ->
+                showEditor = false
+                kotlinx.coroutines.MainScope().launch {
+                    runCatching {
+                        dataStore.edit { prefs ->
+                            if (newGoal == null) {
+                                prefs.remove(com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.MONTHLY_SPENDING_GOAL)
+                            } else {
+                                prefs[com.andriybobchuk.mooney.mooney.data.settings.PreferencesKeys.MONTHLY_SPENDING_GOAL] = newGoal
+                            }
+                        }
+                    }
+                }
+            }
+        )
+    }
+}
+
+/** Editor bottom sheet — numeric input + Save / Clear. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun SpendingGoalEditorSheet(
+    initialValue: Double?,
+    onDismiss: () -> Unit,
+    onSave: (Double?) -> Unit
+) {
+    val baseCurrency = com.andriybobchuk.mooney.mooney.data.GlobalConfig.baseCurrency
+    var input by remember(initialValue) {
+        mutableStateOf(initialValue?.let { it.toLong().toString() } ?: "")
+    }
+    val sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    androidx.compose.material3.ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 8.dp)
+                .padding(bottom = 20.dp)
+        ) {
+            Text(
+                text = stringResource(Res.string.spending_goal_title),
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = stringResource(Res.string.spending_goal_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(16.dp))
+            androidx.compose.material3.OutlinedTextField(
+                value = input,
+                onValueChange = { raw -> input = raw.filter { it.isDigit() || it == '.' || it == ',' } },
+                label = { Text(baseCurrency.symbol) },
+                singleLine = true,
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                androidx.compose.material3.TextButton(
+                    onClick = { onSave(null) },
+                    modifier = Modifier.weight(1f)
+                ) { Text(stringResource(Res.string.clear)) }
+                androidx.compose.material3.Button(
+                    onClick = {
+                        val parsed = input.replace(",", ".").toDoubleOrNull()
+                        onSave(parsed?.takeIf { it > 0 })
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = input.replace(",", ".").toDoubleOrNull().let { it != null && it > 0 }
+                ) { Text(stringResource(Res.string.save)) }
+            }
+        }
+    }
+}
+
 @Composable
 fun SpendingLineChart(
     selectedMonth: MonthKey,
@@ -3640,12 +3989,9 @@ fun SpendingLineChart(
     val baseCurrency = com.andriybobchuk.mooney.mooney.data.GlobalConfig.baseCurrency
 
     Column(modifier = modifier.padding(horizontal = 16.dp)) {
-        Text(
-            text = stringResource(Res.string.spending_comparison),
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
+        // Title removed — the legend (dots + "current" / "6mo avg") +
+        // the chart underneath already explain the widget. The title
+        // took up vertical space the chart could use.
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -4107,7 +4453,6 @@ private fun QuickActionChipsRow(
     onCategoriesClick: () -> Unit,
     eatsEnabled: Boolean,
     onEatsClick: () -> Unit,
-    onScreenshotImportClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     androidx.compose.foundation.lazy.LazyRow(
@@ -4154,27 +4499,6 @@ private fun QuickActionChipsRow(
                 label = stringResource(Res.string.quick_categories),
                 icon = com.andriybobchuk.mooney.core.presentation.Icons.CategoriesIcon(),
                 onClick = onCategoriesClick
-            )
-        }
-        // Screenshot bulk-import — Phase 3 "second line of automation".
-        // Chip uses an emoji in the label so we don't have to ship a new
-        // SVG for this one entry point; aligns with the ⚡ convention used
-        // for the Upkeep banner.
-        item {
-            androidx.compose.material3.AssistChip(
-                onClick = onScreenshotImportClick,
-                label = {
-                    Text(
-                        text = "📸  " + stringResource(Res.string.screenshot_import_chip),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                },
-                shape = RoundedCornerShape(50),
-                colors = androidx.compose.material3.AssistChipDefaults.assistChipColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-                ),
-                border = null
             )
         }
     }
